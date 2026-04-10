@@ -1,23 +1,45 @@
+import { useState } from 'react'
+import { useAnswers } from './hooks/useAnswers'
+import { CATEGORIES } from './data/categories'
+import { HomeView } from './views/HomeView'
+import { QuizView } from './views/QuizView'
+import { ArchiveView } from './views/ArchiveView'
 import './App.css'
 
-function App() {
+type View = { name: 'home' } | { name: 'quiz'; categoryId: string } | { name: 'archive' }
+
+export default function App() {
+  const { profile, answers, saveAnswer, getAnswer, getCategoryProgress } = useAnswers()
+  const [view, setView] = useState<View>({ name: 'home' })
+
+  if (view.name === 'quiz') {
+    const category = CATEGORIES.find(c => c.id === view.categoryId)
+    if (!category) return null
+    return (
+      <QuizView
+        category={category}
+        getAnswer={getAnswer}
+        onSave={saveAnswer}
+        onBack={() => setView({ name: 'home' })}
+      />
+    )
+  }
+
+  if (view.name === 'archive') {
+    return (
+      <ArchiveView
+        answers={answers}
+        onBack={() => setView({ name: 'home' })}
+      />
+    )
+  }
+
   return (
-    <div className="app">
-      <header className="app-header">
-        <h1>Remember Me</h1>
-        <p>PWA für Trainingsplanung und Übungsverwaltung</p>
-      </header>
-      <main className="app-main">
-        <div className="card">
-          <h2>Willkommen</h2>
-          <p>
-            Deine persönliche Trainings-App ist bereit. Erstelle und verwalte
-            deine Trainingspläne – auch offline.
-          </p>
-        </div>
-      </main>
-    </div>
+    <HomeView
+      getCategoryProgress={getCategoryProgress}
+      onSelectCategory={id => setView({ name: 'quiz', categoryId: id })}
+      onOpenArchive={() => setView({ name: 'archive' })}
+      profileName={profile?.name ?? ''}
+    />
   )
 }
-
-export default App

@@ -1,70 +1,19 @@
 # Module - Remember Me
 
-Übersicht aller Module im Projekt mit Links zu deren Dokumentation.
-
----
-
-## 📋 Modulverzeichnis
-
-### Module Hinzufügen
-
-Um ein neues Modul hinzuzufügen:
-
-1. Kopiere den Ordner `MODULE_TEMPLATE/`
-2. Benenne ihn zu `[modul-name]/`
-3. Fülle folgende Dateien aus:
-   - `README.md` - Modulübersicht
-   - `SPECIFICATION.md` - Technische Spezifikation
-   - `REQUIREMENTS.md` - Funktionale Anforderungen
-   - `ARCHITECTURE.md` - System-Design
-   - `CHANGELOG.md` - Versionshistorie
-
-4. Füge die Zeile unten in diese README ein:
-
-```markdown
-| [Modul Name] | [Kurzbeschreibung] | [Status] |
-```
+Übersicht aller technischen Module der App.
 
 ---
 
 ## 📦 Verfügbare Module
 
 | Modulname | Beschreibung | Status | Dateien |
-|-----------|------------|--------|---------|
-| **Core** | PWA Foundation, Service Worker, Layout | 🟢 DRAFT | [README](./core/README.md) • [Spec](./core/SPECIFICATION.md) • [Req](./core/REQUIREMENTS.md) • [Arch](./core/ARCHITECTURE.md) |
-| **Workout** | Trainingsplan Management & Übungen | 🟢 DRAFT | [README](./workout/README.md) • [Spec](./workout/SPECIFICATION.md) • [Req](./workout/REQUIREMENTS.md) • [Arch](./workout/ARCHITECTURE.md) |
-| **Data Layer** | Storage, Synchronisation, Backends | 🟢 DRAFT | [README](./data/README.md) • [Spec](./data/SPECIFICATION.md) • [Req](./data/REQUIREMENTS.md) • [Arch](./data/ARCHITECTURE.md) |
-| **UI** | Components, Design System, Responsive Design | 🟢 DRAFT | [README](./ui/README.md) • [Spec](./ui/SPECIFICATION.md) • [Req](./ui/REQUIREMENTS.md) • [Arch](./ui/ARCHITECTURE.md) |
-| **Offline** | Service Worker, Caching, Offline-First | 🟢 DRAFT | [README](./offline/README.md) • [Spec](./offline/SPECIFICATION.md) • [Req](./offline/REQUIREMENTS.md) • [Arch](./offline/ARCHITECTURE.md) |
-| **MODULE_TEMPLATE** | Vorlage für neue Module | 🟢 DRAFT | [README](./MODULE_TEMPLATE/README.md) • [Spec](./MODULE_TEMPLATE/SPECIFICATION.md) • [Req](./MODULE_TEMPLATE/REQUIREMENTS.md) • [Arch](./MODULE_TEMPLATE/ARCHITECTURE.md) |
-
----
-
-## 🎯 Schnellnavigation
-
-### Neue Module initialisieren
-
-```bash
-# 1. Kopiere das Template
-cp -r MODULE_TEMPLATE/ [new-module]/
-
-# 2. Bearbeite die Dateien
-# 3. Commit mit git
-git add docs/modules/[new-module]/
-git commit -m "docs: Add [module-name] module documentation"
-```
-
----
-
-## 📊 Modul-Status-Übersicht
-
-```
-Legend:
-🟢 DRAFT      = In Entwicklung
-🟡 REVIEW     = Zur Überprüfung
-✅ APPROVED   = Genehmigt und aktiv
-🔴 DEPRECATED = Nicht mehr in Verwendung
-```
+|-----------|-------------|--------|---------|
+| **Core** | PWA Foundation, Service Worker, App Shell, Layout | 🔵 IN PROGRESS | [README](./core/README.md) • [Spec](./core/SPECIFICATION.md) • [Req](./core/REQUIREMENTS.md) • [Arch](./core/ARCHITECTURE.md) |
+| **Questions** | Frage-Engine, Fragenkatalog, Kategorien, Frage-Flow | 🟢 DRAFT | [README](./questions/README.md) |
+| **Stories** | Lebensarchiv, Antworten anzeigen & verwalten | 🟢 DRAFT | [README](./stories/README.md) |
+| **Data** | Lokale Speicherung (localStorage/IndexedDB), Synchronisation | 🟢 DRAFT | [README](./data/README.md) • [Spec](./data/SPECIFICATION.md) |
+| **Export** | PDF-Export, Druckansicht, Teilen-Links | 🟢 DRAFT | – |
+| **UI** | Design System, Komponenten, Responsive Design | 🟢 DRAFT | [README](./ui/README.md) • [Spec](./ui/SPECIFICATION.md) |
 
 ---
 
@@ -74,59 +23,52 @@ Legend:
 ┌─────────────────────────────────────┐
 │   Core (PWA Foundation)             │
 │   - Service Worker                  │
-│   - App Shell                       │
-│   - Responsive Layout               │
-└──────────────┬──────────────────────┘
-               │
-       ┌───────┼────────┬─────────┐
-       ▼       ▼        ▼         ▼
-   ┌────┐  ┌──────┐  ┌────┐  ┌────────┐
-   │Data│  │ UI   │  │Offl│ │Workout │
-   │    │  │      │  │ine │ │        │
-   └────┘  └──────┘  └────┘  └────────┘
-       │       │        │         │
-       └───────┼────────┴─────────┘
-               ▼
-        Workout Management
+│   - App Shell / Layout              │
+│   - Routing                         │
+└──────┬──────────┬──────────┬────────┘
+       │          │          │
+       ▼          ▼          ▼
+  ┌────────┐ ┌────────┐ ┌────────┐
+  │  Data  │ │   UI   │ │ Quest. │
+  │        │ │        │ │        │
+  └────┬───┘ └───┬────┘ └───┬────┘
+       │         │          │
+       └────┬────┘          │
+            ▼               ▼
+       ┌─────────┐    ┌──────────┐
+       │ Stories │◄───│ (Answers)│
+       └────┬────┘    └──────────┘
+            │
+            ▼
+       ┌─────────┐
+       │ Export  │
+       └─────────┘
 ```
 
 **Abhängigkeits-Details:**
-- **Core:** Basis für alle anderen Module (keine Abhängigkeiten)
-- **Data:** Hängt von Core ab (für Storage & Caching)
-- **UI:** Hängt von Core ab (für Responsive Design)
-- **Offline:** Hängt von Core ab (für Service Worker)
-- **Workout:** Hängt von Core, Data, UI und Offline ab
+- **Core:** Basis für alle (keine Abhängigkeiten)
+- **Data:** hängt von Core ab – speichert alle Antworten und Profile
+- **UI:** hängt von Core ab – stellt alle visuellen Komponenten bereit
+- **Questions:** hängt von Core + Data ab – lädt Fragen, speichert Antworten
+- **Stories:** hängt von Data + UI ab – zeigt Lebensarchiv an
+- **Export:** hängt von Stories + Data ab – exportiert das Archiv
 
 ---
 
 ## 📈 Modul-Roadmap
 
-| Phase | Module | Zeitrahmen | Status |
-|-------|--------|-----------|--------|
-| Phase 1: Foundation | Core, Offline | Q2 2026 | 🟢 Spezifikation in Arbeit |
-| Phase 2: Data & UI | Data, UI | Q2 2026 | 🟢 Spezifikation in Arbeit |
-| Phase 3: Features | Workout Management | Q2-Q3 2026 | 🟢 Anforderungen definiert |
-| Phase 4: Optimierung | Performance, Analytics | Q3 2026 | 🟡 Geplant |
-
----
-
-## 📚 Dokumentationsstruktur jedes Moduls
-
-```
-[module-name]/
-├── README.md                # Modulübersicht
-├── SPECIFICATION.md         # Technische Details
-├── REQUIREMENTS.md          # Funktionale Anforderungen
-├── ARCHITECTURE.md          # Architektur-Design
-└── CHANGELOG.md             # Versionshistorie
-```
+| Phase | Module | Status |
+|-------|--------|--------|
+| Phase 1 – Foundation | Core, Data (localStorage), UI Basics | 🔵 In Arbeit |
+| Phase 2 – Core Feature | Questions Engine, Fragenkatalog | 🟢 Geplant |
+| Phase 3 – Archiv | Stories View, Bearbeitungsfunktion | 🟢 Geplant |
+| Phase 4 – Export | PDF-Export, Teilen | 🟢 Geplant |
+| Phase 5 – Erweiterung | Medienanhänge, Familienfreigabe | 🟡 Zukunft |
 
 ---
 
 ## 🔗 Verwandte Dokumentation
 
 - [Hauptdokumentation](../README.md)
-- [Anforderungen](../requirements/)
+- [Anforderungen](../requirements/README.md)
 - [Design System](../design/DESIGN_SYSTEM.md)
-- [Contributing Guide](../guides/CONTRIBUTING.md)
-
