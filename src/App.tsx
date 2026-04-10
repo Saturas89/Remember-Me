@@ -67,6 +67,7 @@ export default function App() {
         answers={answers}
         friendAnswers={friendAnswers}
         friends={friends}
+        profileName={profile?.name ?? ''}
         onBack={() => setView({ name: 'home' })}
       />
     )

@@ -6,10 +6,11 @@ interface Props {
   answers: Record<string, Answer>
   friendAnswers: FriendAnswer[]
   friends: Friend[]
+  profileName: string
   onBack: () => void
 }
 
-export function ArchiveView({ answers, friendAnswers, friends, onBack }: Props) {
+export function ArchiveView({ answers, friendAnswers, friends, profileName, onBack }: Props) {
   const categoriesWithAnswers = CATEGORIES.filter(cat =>
     cat.questions.some(q => answers[q.id]?.value.trim()),
   )
@@ -76,9 +77,10 @@ export function ArchiveView({ answers, friendAnswers, friends, onBack }: Props) 
                 </div>
                 {thisAnswers.map(a => {
                   const q = FRIEND_QUESTIONS.find(fq => fq.id === a.questionId)
+                  const questionText = (q?.text ?? a.questionId).replace(/\{name\}/g, profileName || 'dir')
                   return (
                     <div key={a.id} className="archive-entry archive-entry--friend">
-                      <p className="archive-entry__question">{q?.text ?? a.questionId}</p>
+                      <p className="archive-entry__question">{questionText}</p>
                       <p className="archive-entry__answer">{a.value}</p>
                       <span className="archive-entry__date">
                         {new Date(a.createdAt).toLocaleDateString('de-DE')}
