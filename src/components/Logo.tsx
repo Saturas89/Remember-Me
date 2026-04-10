@@ -37,10 +37,12 @@ export function Logo({ size = 'md' }: Props) {
 export function HeroLogo() {
   return (
     <div className="hero-logo" aria-label="Remember Me">
+      {/* viewBox has extra padding so drop-shadow is never clipped */}
       <svg
         className="hero-logo__heart"
-        viewBox="0 0 48 44"
+        viewBox="-6 -6 60 56"
         fill="none"
+        overflow="visible"
         aria-hidden="true"
       >
         <path
