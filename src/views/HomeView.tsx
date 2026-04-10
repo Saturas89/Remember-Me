@@ -1,6 +1,9 @@
 import { useState } from 'react'
 import { CATEGORIES } from '../data/categories'
 import { CategoryCard } from '../components/CategoryCard'
+import { HeroLogo } from '../components/Logo'
+import { ThemeSwitcher } from '../components/ThemeSwitcher'
+import { useTheme } from '../hooks/useTheme'
 import type { Friend, FriendAnswer } from '../types'
 
 interface Props {
@@ -24,6 +27,7 @@ export function HomeView({
   onOpenFriends,
   onSaveName,
 }: Props) {
+  const { theme, setTheme } = useTheme()
   const [editingName, setEditingName] = useState(!profileName)
   const [nameInput, setNameInput] = useState(profileName)
 
@@ -45,10 +49,18 @@ export function HomeView({
   return (
     <div className="home-view">
       <header className="home-header">
+        {/* Theme switcher top-right */}
+        <div className="home-topbar">
+          <ThemeSwitcher current={theme} onChange={setTheme} />
+        </div>
+
+        {/* Logo */}
+        <HeroLogo />
+
+        {/* Profile name */}
         {editingName ? (
           <div className="home-name-setup">
-            <h1 className="home-title">Remember Me</h1>
-            <p className="home-subtitle">Wie heißt du? Das hilft beim Einladen von Freunden.</p>
+            <p>Wie heißt du? Das hilft beim Einladen von Freunden.</p>
             <div className="home-name-row">
               <input
                 className="input-text"
@@ -65,16 +77,20 @@ export function HomeView({
           </div>
         ) : (
           <>
-            <h1 className="home-title">Remember Me</h1>
-            <button className="home-name-btn" onClick={() => { setNameInput(profileName); setEditingName(true) }}>
-              {profileName}
+            <button
+              className="home-name-btn"
+              onClick={() => { setNameInput(profileName); setEditingName(true) }}
+            >
+              {profileName} ✎
             </button>
-            <div className="home-overall">
-              <span>{overallProgress}% deiner Geschichte erzählt</span>
-              <div className="home-overall-bar">
-                <div className="home-overall-fill" style={{ width: `${overallProgress}%` }} />
+            {overallProgress > 0 && (
+              <div className="home-overall">
+                <span>{overallProgress}% deiner Geschichte erzählt</span>
+                <div className="home-overall-bar">
+                  <div className="home-overall-fill" style={{ width: `${overallProgress}%` }} />
+                </div>
               </div>
-            </div>
+            )}
           </>
         )}
       </header>
@@ -102,7 +118,7 @@ export function HomeView({
             <span className="friend-badge">{friends.length}</span>
           )}
           {totalFriendAnswers > 0 && (
-            <span className="friend-answer-badge">{totalFriendAnswers} Antworten</span>
+            <span className="friend-answer-badge">{totalFriendAnswers}</span>
           )}
         </button>
       </div>

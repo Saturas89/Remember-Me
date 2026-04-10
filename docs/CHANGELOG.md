@@ -7,6 +7,34 @@ Versionierung folgt [Semantic Versioning](https://semver.org/lang/de/).
 
 ---
 
+## [1.2.0] – 2026-04-10
+
+### Hinzugefügt
+
+#### Logo & Themes
+- **`HeroLogo`-Komponente** – Zentrierter Schriftzug für die Startseite: animiertes Herz-SVG, „REMEMBER" in dünner Versalschrift, „Me" in Fettschrift mit Akzentfarbe
+- **`Logo`-Komponente** – Kompakte Variante für Kopfzeilen (`sm`/`md`/`lg`)
+- **4 wechselbare Themes** über `data-theme`-Attribut am `<html>`-Element:
+  | Theme | Farbschema |
+  |-------|-----------|
+  | 🌙 **Nacht** | Dunkelblau + Rot (Standard) |
+  | ☀️ **Hell** | Weiß / Hellgrau + Dunkelrot |
+  | 📜 **Sepia** | Warmes Pergament + Braun |
+  | 🌊 **Ozean** | Tiefblau + Cyan |
+- **`ThemeSwitcher`-Komponente** – 4 Emoji-Buttons oben rechts auf der Startseite
+- **`useTheme`-Hook** – Speichert gewähltes Theme in `localStorage`, wendet es sofort an
+- **FOUC-Schutz** in `index.html` – Inline-Script setzt Theme vor dem ersten Paint
+- **CSS-Variablen-System** – Alle Farben in `App.css` durch Variablen ersetzt (`--bg`, `--surface`, `--accent`, `--text-muted`, …)
+- **Herzschlag-Animation** auf dem Herz-Logo (subtil, 3,5 s Zyklus)
+
+### Geändert
+- `src/index.css`: Vollständig neu mit 4 Theme-Definitionen als CSS-Custom-Properties
+- `src/App.css`: Alle hardcodierten Farben durch CSS-Variablen ersetzt
+- `HomeView`: Neues Hero-Layout mit Logo und Theme-Switcher, Name-Button kompakter
+- `index.html`: FOUC-Schutz und aktualisierte Meta-Description
+
+---
+
 ## [1.1.0] – 2026-04-10
 
 ### Hinzugefügt
@@ -96,7 +124,8 @@ Versionierung folgt [Semantic Versioning](https://semver.org/lang/de/).
 
 | Version | Inhalt | Status |
 |---------|--------|--------|
-| **1.2.0** | Profil-Seite, Antworten bearbeitbar im Archiv | Geplant |
+| **1.2.0** | Logo, 4 Themes, CSS-Variablen | ✔️ Fertig |
+| **1.3.0** | Profil-Seite, Antworten bearbeitbar im Archiv | Geplant |
 | **1.3.0** | PDF/Druck-Export des Lebensarchivs | Geplant |
 | **1.4.0** | Medienanhänge (Fotos zu Antworten) | Geplant |
 | **2.0.0** | Backend-Sync, Familien-Freigabe-Links | Zukunft |

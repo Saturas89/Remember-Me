@@ -4,24 +4,105 @@
   padding: 0;
 }
 
+/* ── Theme variables ─────────────────────────────────── */
+
+:root, [data-theme="nacht"] {
+  --bg:             #1a1a2e;
+  --surface:        #16213e;
+  --surface-raised: #0f3460;
+  --border:         #0f3460;
+  --border-focus:   #1a4a80;
+
+  --text:           #eaeaea;
+  --text-muted:     #a0a0b0;
+  --text-faint:     #55607a;
+
+  --accent:         #e94560;
+  --accent-tinted:  rgba(233, 69, 96, 0.14);
+
+  --success:        #2ecc71;
+  --success-bg:     #0a2a18;
+  --success-text:   #2ecc71;
+  --warn:           #f0a500;
+  --warn-bg:        #1a1400;
+  --error-bg:       #2a0a12;
+}
+
+[data-theme="hell"] {
+  --bg:             #f5f5f0;
+  --surface:        #ffffff;
+  --surface-raised: #ecedef;
+  --border:         #dde0e8;
+  --border-focus:   #b0b8c8;
+
+  --text:           #1a1a2e;
+  --text-muted:     #667080;
+  --text-faint:     #aab0bc;
+
+  --accent:         #c0392b;
+  --accent-tinted:  rgba(192, 57, 43, 0.09);
+
+  --success:        #27ae60;
+  --success-bg:     #eafaf1;
+  --success-text:   #1e8449;
+  --warn:           #d35400;
+  --warn-bg:        #fef5e7;
+  --error-bg:       #fdecea;
+}
+
+[data-theme="sepia"] {
+  --bg:             #f2ebe0;
+  --surface:        #fdf7ef;
+  --surface-raised: #e8d5bc;
+  --border:         #d4b896;
+  --border-focus:   #b89060;
+
+  --text:           #3d2b1f;
+  --text-muted:     #8b7355;
+  --text-faint:     #c0a882;
+
+  --accent:         #7b3f00;
+  --accent-tinted:  rgba(123, 63, 0, 0.1);
+
+  --success:        #4a7a2a;
+  --success-bg:     #eef4e8;
+  --success-text:   #3a5a20;
+  --warn:           #a0522d;
+  --warn-bg:        #fef3e8;
+  --error-bg:       #fdecea;
+}
+
+[data-theme="ozean"] {
+  --bg:             #0a1628;
+  --surface:        #0e2040;
+  --surface-raised: #0f2850;
+  --border:         #0f2850;
+  --border-focus:   #1a3a70;
+
+  --text:           #e0f4ff;
+  --text-muted:     #7ab0cc;
+  --text-faint:     #3a6a8a;
+
+  --accent:         #00bcd4;
+  --accent-tinted:  rgba(0, 188, 212, 0.12);
+
+  --success:        #00bfa5;
+  --success-bg:     #0a2820;
+  --success-text:   #00bfa5;
+  --warn:           #ffa726;
+  --warn-bg:        #2a1a0a;
+  --error-bg:       #2a0a0a;
+}
+
+/* ── Base ────────────────────────────────────────────── */
 :root {
-  --color-bg: #1a1a2e;
-  --color-surface: #16213e;
-  --color-primary: #0f3460;
-  --color-accent: #e94560;
-  --color-text: #eaeaea;
-  --color-text-muted: #a0a0b0;
   font-family: system-ui, -apple-system, sans-serif;
   font-size: 16px;
-  color: var(--color-text);
-  background-color: var(--color-bg);
+  color: var(--text);
+  background-color: var(--bg);
   -webkit-font-smoothing: antialiased;
+  transition: background-color 0.25s ease, color 0.25s ease;
 }
 
-body {
-  min-height: 100dvh;
-}
-
-#root {
-  min-height: 100dvh;
-}
+body { min-height: 100dvh; }
+#root { min-height: 100dvh; }
