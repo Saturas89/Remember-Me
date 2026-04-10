@@ -7,6 +7,31 @@ Versionierung folgt [Semantic Versioning](https://semver.org/lang/de/).
 
 ---
 
+## [1.3.1] – 2026-04-10
+
+### Hinzugefügt / Geändert
+
+#### PWA – Installierbar auf iOS & Android
+- **App-Icons** generiert: `pwa-192x192.png`, `pwa-512x512.png`, `apple-touch-icon.png` (180×180)
+  - Herz-Symbol auf `#1a1a2e`-Hintergrund, passend zum App-Design
+  - Generiert via `scripts/generate-icons.mjs` (reproduzierbar mit `npm run generate-icons`)
+- **iOS-Unterstützung** in `index.html`:
+  - `<link rel="apple-touch-icon">` – Icon für „Zum Home-Bildschirm hinzufügen"
+  - `<meta name="apple-mobile-web-app-capable" content="yes">` – Startet ohne Safari-UI (Standalone)
+  - `<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">` – Statusleiste transparent
+  - `<meta name="apple-mobile-web-app-title" content="Remember Me">` – Label unter dem App-Icon
+  - `viewport-fit=cover` im `viewport`-Meta für Geräte mit Notch (iPhone X+)
+- **Android-Unterstützung** in `index.html`:
+  - `<meta name="mobile-web-app-capable" content="yes">` – Chrome Install-Banner
+- **Web-Manifest** bereinigt:
+  - Beschreibung korrigiert (war noch von simple-workout)
+  - `lang: 'de'`, `orientation: 'portrait'`, `categories: ['lifestyle', 'social']` ergänzt
+  - `purpose: 'maskable'` Icon für Android adaptive Icons korrekt gesetzt
+- Precache-Einträge: 6 → 13 (Icons nun eingeschlossen)
+- **REQ-001** PWA Foundation als `✔️ COMPLETED` markiert
+
+---
+
 ## [1.3.0] – 2026-04-10
 
 ### Hinzugefügt

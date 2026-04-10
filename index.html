@@ -2,11 +2,24 @@
 <html lang="de">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+
+    <!-- PWA / Home Screen -->
     <meta name="theme-color" content="#1a1a2e" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+    <!-- iOS standalone mode -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Remember Me" />
+
+    <!-- Android Chrome -->
+    <meta name="mobile-web-app-capable" content="yes" />
+
     <meta name="description" content="Remember Me – Halte deine Lebensgeschichte für die Nachwelt fest" />
     <title>Remember Me</title>
+
     <!-- Apply saved theme before first paint to prevent flash -->
     <script>try{var t=localStorage.getItem('rm-theme');if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
   </head>

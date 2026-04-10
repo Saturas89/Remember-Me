@@ -8,7 +8,7 @@ Alle funktionalen und nicht-funktionalen Anforderungen des Projekts.
 
 | ID | Titel | Modul | Priorität | Status |
 |----|-------|-------|-----------|--------|
-| [REQ-001](./REQ-001-pwa-foundation-clean.md) | PWA Foundation & Responsive Design | Core | High | 🔵 IN PROGRESS |
+| [REQ-001](./REQ-001-pwa-foundation-clean.md) | PWA Foundation & Responsive Design | Core | High | ✔️ COMPLETED |
 | [REQ-002](./REQ-002-question-engine.md) | Frage-Engine & Fragenkatalog | Questions | High | 🟢 DRAFT |
 | [REQ-003](./REQ-003-story-storage.md) | Lebensarchiv & Datenspeicherung | Data / Stories | High | 🟢 DRAFT |
 | [REQ-004](./REQ-004-export-sharing.md) | Export & Teilen | Export | Medium | 🟢 DRAFT |
