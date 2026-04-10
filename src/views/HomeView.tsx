@@ -4,16 +4,19 @@ import { CategoryCard } from '../components/CategoryCard'
 import { HeroLogo } from '../components/Logo'
 import { ThemeSwitcher } from '../components/ThemeSwitcher'
 import { useTheme } from '../hooks/useTheme'
-import type { Friend, FriendAnswer } from '../types'
+import type { Friend, FriendAnswer, CustomQuestion } from '../types'
 
 interface Props {
   profileName: string
   friends: Friend[]
   friendAnswers: FriendAnswer[]
+  customQuestions: CustomQuestion[]
   getCategoryProgress: (categoryId: string, total: number) => number
   onSelectCategory: (categoryId: string) => void
   onOpenArchive: () => void
   onOpenFriends: () => void
+  onOpenProfile: () => void
+  onOpenCustomQuestions: () => void
   onSaveName: (name: string) => void
 }
 
@@ -21,10 +24,13 @@ export function HomeView({
   profileName,
   friends,
   friendAnswers,
+  customQuestions,
   getCategoryProgress,
   onSelectCategory,
   onOpenArchive,
   onOpenFriends,
+  onOpenProfile,
+  onOpenCustomQuestions,
   onSaveName,
 }: Props) {
   const { theme, setTheme } = useTheme()
@@ -77,10 +83,7 @@ export function HomeView({
           </div>
         ) : (
           <>
-            <button
-              className="home-name-btn"
-              onClick={() => { setNameInput(profileName); setEditingName(true) }}
-            >
+            <button className="home-name-btn" onClick={onOpenProfile}>
               {profileName} ✎
             </button>
             {overallProgress > 0 && (
@@ -119,6 +122,12 @@ export function HomeView({
           )}
           {totalFriendAnswers > 0 && (
             <span className="friend-answer-badge">{totalFriendAnswers}</span>
+          )}
+        </button>
+        <button className="btn btn--friends" onClick={onOpenCustomQuestions}>
+          ✏️ Eigene Fragen
+          {customQuestions.length > 0 && (
+            <span className="friend-badge">{customQuestions.length}</span>
           )}
         </button>
       </div>

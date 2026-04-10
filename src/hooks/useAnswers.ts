@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react'
-import type { Profile, AppState, Friend, FriendAnswer, AnswerExport } from '../types'
+import type { Profile, AppState, Friend, FriendAnswer, AnswerExport, CustomQuestion } from '../types'
 
 const STORAGE_KEY = 'remember-me-state'
 
@@ -14,12 +14,13 @@ function loadState(): AppState {
         answers: parsed.answers ?? {},
         friends: parsed.friends ?? [],
         friendAnswers: parsed.friendAnswers ?? [],
+        customQuestions: parsed.customQuestions ?? [],
       }
     }
   } catch {
     // ignore corrupt data
   }
-  return { profile: null, answers: {}, friends: [], friendAnswers: [] }
+  return { profile: null, answers: {}, friends: [], friendAnswers: [], customQuestions: [] }
 }
 
 function saveState(state: AppState): void {
@@ -121,8 +122,64 @@ export function useAnswers() {
     })
   }, [])
 
+  // ── Custom questions ─────────────────────────────────────
+
+  const addCustomQuestion = useCallback((
+    text: string,
+    type: CustomQuestion['type'] = 'text',
+    helpText?: string,
+    options?: string[],
+  ): CustomQuestion => {
+    const q: CustomQuestion = {
+      id: `cq-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      text: text.trim(),
+      type,
+      helpText,
+      options,
+      createdAt: new Date().toISOString(),
+    }
+    setState(prev => {
+      const next: AppState = { ...prev, customQuestions: [...prev.customQuestions, q] }
+      saveState(next)
+      return next
+    })
+    return q
+  }, [])
+
+  const removeCustomQuestion = useCallback((id: string) => {
+    setState(prev => {
+      const next: AppState = {
+        ...prev,
+        customQuestions: prev.customQuestions.filter(q => q.id !== id),
+      }
+      saveState(next)
+      return next
+    })
+  }, [])
+
+  /** Import a question pack – skip questions already present (by text match) */
+  const importCustomQuestions = useCallback((incoming: CustomQuestion[]) => {
+    setState(prev => {
+      const existingTexts = new Set(prev.customQuestions.map(q => q.text.trim().toLowerCase()))
+      const toAdd = incoming.filter(q => !existingTexts.has(q.text.trim().toLowerCase()))
+      if (toAdd.length === 0) return prev
+      const next: AppState = {
+        ...prev,
+        customQuestions: [...prev.customQuestions, ...toAdd],
+      }
+      saveState(next)
+      return next
+    })
+  }, [])
+
   const clearAll = useCallback(() => {
-    const fresh: AppState = { profile: null, answers: {}, friends: [], friendAnswers: [] }
+    const fresh: AppState = {
+      profile: null,
+      answers: {},
+      friends: [],
+      friendAnswers: [],
+      customQuestions: [],
+    }
     saveState(fresh)
     setState(fresh)
   }, [])
@@ -155,12 +212,16 @@ export function useAnswers() {
     answers: state.answers,
     friends: state.friends,
     friendAnswers: state.friendAnswers,
+    customQuestions: state.customQuestions,
     saveAnswer,
     deleteAnswer,
     saveProfile,
     addFriend,
     removeFriend,
     importFriendAnswers,
+    addCustomQuestion,
+    removeCustomQuestion,
+    importCustomQuestions,
     clearAll,
     getAnswer,
     getCategoryProgress,

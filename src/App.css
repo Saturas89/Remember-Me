@@ -807,3 +807,222 @@
 .btn--success { background: var(--success); color: #fff; }
 
 .btn--sm { padding: 0.45rem 0.9rem; font-size: 0.85rem; }
+
+/* ── Profile view ────────────────────────────────────── */
+.profile-view {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 1rem 4rem;
+}
+
+.profile-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 0.75rem;
+  margin: 1.25rem 0 2rem;
+}
+
+.profile-stat {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1rem 0.75rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.profile-stat__value {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--accent);
+  line-height: 1;
+}
+
+.profile-stat__label {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.profile-form {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.profile-since {
+  font-size: 0.8rem;
+  color: var(--text-faint);
+  text-align: center;
+}
+
+/* ── Custom questions view ───────────────────────────── */
+.custom-q-view {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 1rem 4rem;
+}
+
+.custom-q-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.custom-q-item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1rem;
+}
+
+.custom-q-item__header {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.custom-q-item__text {
+  flex: 1;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.4;
+}
+
+.custom-q-delete {
+  flex-shrink: 0;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.75rem;
+  color: var(--text-faint);
+  border-color: transparent;
+}
+
+.custom-q-delete:hover { color: var(--accent); border-color: var(--accent); }
+
+.custom-q-item__answer-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.custom-q-item__answer {
+  flex: 1;
+  font-size: 0.9rem;
+  color: var(--text);
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.custom-q-item__unanswered {
+  flex: 1;
+  font-size: 0.85rem;
+  color: var(--text-faint);
+  font-style: italic;
+}
+
+.custom-q-item__answer-form {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Archive inline edit ─────────────────────────────── */
+.archive-entry__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 0.4rem;
+}
+
+.archive-entry__edit-btn {
+  background: none;
+  border: none;
+  color: var(--text-faint);
+  cursor: pointer;
+  font-size: 0.85rem;
+  padding: 0.1rem 0.3rem;
+  border-radius: 4px;
+  transition: color 0.15s;
+}
+
+.archive-entry__edit-btn:hover { color: var(--accent); }
+
+.archive-entry__edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.archive-entry__edit-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* ── Print / PDF export ──────────────────────────────── */
+@media print {
+  .no-print { display: none !important; }
+
+  body {
+    background: #fff;
+    color: #111;
+    font-size: 11pt;
+  }
+
+  .archive-view {
+    max-width: 100%;
+    padding: 0;
+  }
+
+  .archive-topbar {
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .archive-title {
+    font-size: 16pt;
+    color: #111;
+  }
+
+  .archive-section-title {
+    font-size: 12pt;
+    color: #333;
+    border-bottom: 1px solid #ccc;
+  }
+
+  .archive-entry {
+    background: none;
+    border: none;
+    border-left: 2px solid #ccc;
+    border-radius: 0;
+    padding: 0.4rem 0.75rem;
+    margin-bottom: 0.75rem;
+    page-break-inside: avoid;
+  }
+
+  .archive-entry--friend { border-left-color: #888; }
+
+  .archive-entry__question { color: #555; }
+  .archive-entry__answer   { color: #111; }
+  .archive-entry__date     { color: #888; }
+
+  .archive-section--friends {
+    border-top: 1px solid #ccc;
+  }
+
+  .friend-contribution__name  { color: #111; }
+  .friend-contribution__count { color: #666; }
+}

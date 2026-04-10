@@ -7,6 +7,9 @@ import { QuizView } from './views/QuizView'
 import { ArchiveView } from './views/ArchiveView'
 import { FriendsView } from './views/FriendsView'
 import { FriendAnswerView } from './views/FriendAnswerView'
+import { ProfileView } from './views/ProfileView'
+import { CustomQuestionsView } from './views/CustomQuestionsView'
+import type { Category } from './types'
 import './App.css'
 
 type View =
@@ -14,6 +17,8 @@ type View =
   | { name: 'quiz'; categoryId: string }
   | { name: 'archive' }
   | { name: 'friends' }
+  | { name: 'profile' }
+  | { name: 'custom-questions' }
 
 // Check on load whether this session was opened via an invite link
 const inviteFromUrl = parseInviteFromHash()
@@ -24,11 +29,15 @@ export default function App() {
     answers,
     friends,
     friendAnswers,
+    customQuestions,
     saveAnswer,
     saveProfile,
     addFriend,
     removeFriend,
     importFriendAnswers,
+    addCustomQuestion,
+    removeCustomQuestion,
+    importCustomQuestions,
     getAnswer,
     getCategoryProgress,
   } = useAnswers()
@@ -49,14 +58,37 @@ export default function App() {
   }
 
   if (view.name === 'quiz') {
-    const category = CATEGORIES.find(c => c.id === view.categoryId)
+    // Support virtual 'custom' category built from user's custom questions
+    let category: Category | undefined
+    if (view.categoryId === 'custom') {
+      category = {
+        id: 'custom',
+        title: 'Eigene Fragen',
+        description: 'Von dir erstellte Fragen',
+        emoji: '✏️',
+        questions: customQuestions.map(q => ({
+          id: q.id,
+          categoryId: 'custom',
+          type: q.type,
+          text: q.text,
+          helpText: q.helpText,
+          options: q.options,
+        })),
+      }
+    } else {
+      category = CATEGORIES.find(c => c.id === view.categoryId)
+    }
     if (!category) return null
     return (
       <QuizView
         category={category}
         getAnswer={getAnswer}
         onSave={saveAnswer}
-        onBack={() => setView({ name: 'home' })}
+        onBack={() =>
+          view.categoryId === 'custom'
+            ? setView({ name: 'custom-questions' })
+            : setView({ name: 'home' })
+        }
       />
     )
   }
@@ -67,7 +99,9 @@ export default function App() {
         answers={answers}
         friendAnswers={friendAnswers}
         friends={friends}
+        customQuestions={customQuestions}
         profileName={profile?.name ?? ''}
+        onSaveAnswer={saveAnswer}
         onBack={() => setView({ name: 'home' })}
       />
     )
@@ -87,15 +121,45 @@ export default function App() {
     )
   }
 
+  if (view.name === 'profile') {
+    return (
+      <ProfileView
+        profile={profile}
+        answers={answers}
+        friendCount={friends.length}
+        onSave={saveProfile}
+        onBack={() => setView({ name: 'home' })}
+      />
+    )
+  }
+
+  if (view.name === 'custom-questions') {
+    return (
+      <CustomQuestionsView
+        customQuestions={customQuestions}
+        profileName={profile?.name ?? ''}
+        getAnswer={getAnswer}
+        onSave={saveAnswer}
+        onAdd={addCustomQuestion}
+        onRemove={removeCustomQuestion}
+        onImport={importCustomQuestions}
+        onBack={() => setView({ name: 'home' })}
+      />
+    )
+  }
+
   return (
     <HomeView
       profileName={profile?.name ?? ''}
       friends={friends}
       friendAnswers={friendAnswers}
+      customQuestions={customQuestions}
       getCategoryProgress={getCategoryProgress}
       onSelectCategory={id => setView({ name: 'quiz', categoryId: id })}
       onOpenArchive={() => setView({ name: 'archive' })}
       onOpenFriends={() => setView({ name: 'friends' })}
+      onOpenProfile={() => setView({ name: 'profile' })}
+      onOpenCustomQuestions={() => setView({ name: 'custom-questions' })}
       onSaveName={handleSaveName}
     />
   )

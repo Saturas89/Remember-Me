@@ -7,6 +7,49 @@ Versionierung folgt [Semantic Versioning](https://semver.org/lang/de/).
 
 ---
 
+## [1.3.0] – 2026-04-10
+
+### Hinzugefügt
+
+#### Profil-Seite
+- **`ProfileView`** – Eigene Ansicht für Profilinformationen:
+  - Statistik-Kacheln: Antworten, Abschluss-%, Freunde, Tage dabei
+  - Felder für Name und Geburtsjahr bearbeitbar
+  - „Mitglied seit"-Datum
+- Klick auf den Namen auf der Startseite öffnet direkt die Profil-Seite
+
+#### Bearbeitbare Antworten im Archiv
+- Jede Antwort im Archiv hat einen Bearbeiten-Button (✎)
+- Inline-Edit-Formular: Klick → Textarea öffnet sich mit aktuellem Inhalt → Speichern/Abbrechen
+- Kein Seitenwechsel nötig
+
+#### PDF/Druck-Export
+- **Drucken-Button** in der Archiv-Topbar (🖨 Drucken)
+- `window.print()` öffnet den Browser-Druckdialog → „Als PDF speichern" möglich
+- `@media print` CSS: Navigation/Buttons ausgeblendet, sauberes Drucklayout mit Rahmenlinien
+
+#### Eigene Fragen
+- **`CustomQuestion`-Datenmodell** – User kann beliebige eigene Fragen anlegen und persistent speichern
+- **`CustomQuestionsView`** – Verwaltungsseite:
+  - Frage hinzufügen (Texteingabe + Enter)
+  - Inline-Antworten direkt in der Liste bearbeiten
+  - Fragen einzeln löschen
+- **Eigene Fragen im Archiv** – Abschnitt „✏️ Eigene Fragen" mit denselben Bearbeiten-Buttons
+- **Eigene Fragen teilen** – Fragen-Code (base64-codiertes JSON) generieren und kopieren
+- **Fragen importieren** – Code einfügen, Duplikate werden automatisch übersprungen
+- **`QuestionPack`-Datenmodell** – `{ questions, createdBy? }` für Teilen/Import
+- `encodeQuestionPack` / `decodeQuestionPack` in `src/utils/sharing.ts`
+
+### Geändert
+- `AppState` erweitert um `customQuestions: CustomQuestion[]`
+- `useAnswers`-Hook um `addCustomQuestion`, `removeCustomQuestion`, `importCustomQuestions` erweitert
+- `ArchiveView`: Props `onSaveAnswer` + `customQuestions` hinzugefügt; Antworten editierbar
+- `HomeView`: Eigene-Fragen-Button mit Badge + Name-Button navigiert zu ProfileView
+- `App.tsx`: Neue Views `profile` und `custom-questions` im Router
+- Rückwärtskompatibel: `customQuestions: []` wird bei fehlenden Daten automatisch ergänzt
+
+---
+
 ## [1.2.0] – 2026-04-10
 
 ### Hinzugefügt
@@ -125,7 +168,7 @@ Versionierung folgt [Semantic Versioning](https://semver.org/lang/de/).
 | Version | Inhalt | Status |
 |---------|--------|--------|
 | **1.2.0** | Logo, 4 Themes, CSS-Variablen | ✔️ Fertig |
-| **1.3.0** | Profil-Seite, Antworten bearbeitbar im Archiv | Geplant |
-| **1.3.0** | PDF/Druck-Export des Lebensarchivs | Geplant |
+| **1.3.0** | Profil-Seite, Archiv bearbeitbar, PDF-Export, Eigene Fragen + Teilen | ✔️ Fertig |
 | **1.4.0** | Medienanhänge (Fotos zu Antworten) | Geplant |
-| **2.0.0** | Backend-Sync, Familien-Freigabe-Links | Zukunft |
+| **1.5.0** | IndexedDB-Migration + optionaler E2EE-Sync (Web Crypto API + Supabase) | Geplant |
+| **2.0.0** | Backend-Sync, Familien-Freigabe-Links mit geteilten Schlüsseln | Zukunft |

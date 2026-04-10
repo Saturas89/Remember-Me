@@ -1,4 +1,4 @@
-import type { InviteData, AnswerExport } from '../types'
+import type { InviteData, AnswerExport, QuestionPack } from '../types'
 
 export function encodeInvite(data: InviteData): string {
   return btoa(encodeURIComponent(JSON.stringify(data)))
@@ -37,4 +37,20 @@ export function parseInviteFromHash(): InviteData | null {
   const match = hash.match(/^#invite\/(.+)$/)
   if (!match) return null
   return decodeInvite(match[1])
+}
+
+/** Encode a question pack as a shareable text code */
+export function encodeQuestionPack(data: QuestionPack): string {
+  return btoa(encodeURIComponent(JSON.stringify(data)))
+}
+
+/** Decode a question pack code; returns null on any error */
+export function decodeQuestionPack(code: string): QuestionPack | null {
+  try {
+    const parsed = JSON.parse(decodeURIComponent(atob(code.trim()))) as QuestionPack
+    if (!Array.isArray(parsed.questions)) return null
+    return parsed
+  } catch {
+    return null
+  }
 }
