@@ -26,7 +26,7 @@ Er enthält:
 ### Schritt 1: Clone den Branch
 
 ```bash
-git clone https://github.com/saturas89/simple-workout.git my-new-project
+git clone https://github.com/saturas89/remember-me.git my-new-project
 cd my-new-project
 git checkout new-project
 ```

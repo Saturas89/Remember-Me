@@ -1,4 +1,4 @@
-# Projektübersicht - Simple Workout
+# Projektübersicht - Remember Me
 
 **Status:** 🟢 DRAFT  
 **Version:** 1.0.0  
@@ -6,7 +6,7 @@
 
 ## Projektbeschreibung
 
-**Simple Workout** ist eine Progressive Web App (PWA) für Trainingsplanung und Übungsverwaltung. Die Anwendung ermöglicht es Benutzern, ihre Trainingsroutinen zu erstellen, zu verfolgen und zu optimieren. 
+**Remember Me** ist eine Progressive Web App (PWA) für Trainingsplanung und Übungsverwaltung. Die Anwendung ermöglicht es Benutzern, ihre Trainingsroutinen zu erstellen, zu verfolgen und zu optimieren. 
 
 Die App ist vollständig responsiv und funktioniert nahtlos auf:
 - 📱 Mobilgeräten (mit touch-optimierter Steuerung)

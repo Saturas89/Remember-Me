@@ -1,4 +1,4 @@
-# Simple Workout - Dokumentation Index
+# Remember Me - Dokumentation Index
 
 **Stand:** 2026-04-03
 
@@ -141,7 +141,7 @@ Deployment:
   ☐ Tests funktionieren lokal
   ☐ git push origin main
   ☐ Vercel deployt automatisch
-  ☐ App auf https://simple-workout.vercel.app live!
+  ☐ App auf https://remember-me.vercel.app live!
 ```
 
 ---

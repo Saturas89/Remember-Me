@@ -27,7 +27,7 @@ Jetzt einfach:
 ## 📋 Dein Setup
 
 ```
-Repository: saturas89/simple-workout
+Repository: saturas89/remember-me
 ├── vercel.json (Konfiguration)
 ├── package.json (Scripts)
 └── .github/ (Optional: GitHub Actions später)
@@ -184,7 +184,7 @@ Zeit: 3-8 Minuten
 ✓ Deploy to CDN
 ✓ Ready
 
-URL: https://simple-workout.vercel.app
+URL: https://remember-me.vercel.app
 ```
 
 ### Fehlgeschlagen:
@@ -212,7 +212,7 @@ Falls deine App `.env` Variables braucht:
 ```
 Vercel.com
   → Dashboard
-  → Project: simple-workout
+  → Project: remember-me
   → Settings
   → Environment Variables
 ```

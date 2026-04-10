@@ -1,4 +1,4 @@
-# Module - Simple Workout
+# Module - Remember Me
 
 Übersicht aller Module im Projekt mit Links zu deren Dokumentation.
 

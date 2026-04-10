@@ -1,4 +1,4 @@
-# Anforderungen - Simple Workout
+# Anforderungen - Remember Me
 
 Zentrale Sammlungsstelle für alle Anforderungen des Projekts.
 

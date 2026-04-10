@@ -1,4 +1,4 @@
-# Contribution Guide - Simple Workout
+# Contribution Guide - Remember Me
 
 Danke dass du zu diesem Projekt beitragen möchtest! Diese Richtlinien helfen uns, einen konsistenten und hochwertigen Kodex zu pflegen.
 

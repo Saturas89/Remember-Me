@@ -187,8 +187,8 @@ const dbUrl = process.env.DATABASE_URL
 
 ```bash
 # 1. Clone repository
-git clone https://github.com/saturas89/simple-workout.git
-cd simple-workout
+git clone https://github.com/saturas89/remember-me.git
+cd remember-me
 
 # 2. Überprüfe .gitignore
 cat .gitignore | grep ".env"
@@ -348,7 +348,7 @@ Dashboard → Environment Variables
 Production:
   NODE_ENV: production
   DATABASE_PASSWORD: (set via Vercel UI)
-  API_ENDPOINT: https://api.simple-workout.com
+  API_ENDPOINT: https://api.remember-me.com
 ```
 
 ---
@@ -410,7 +410,7 @@ Production:
 ## 11. Beispiel: README.md
 
 ```markdown
-# Simple Workout
+# Remember Me
 
 ## Setup
 

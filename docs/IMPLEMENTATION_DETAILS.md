@@ -118,7 +118,7 @@ Vercel CI:
   4. Deploy zu CDN
   5. Health Check
        ↓
-✅ App LIVE auf https://simple-workout.vercel.app
+✅ App LIVE auf https://remember-me.vercel.app
 ```
 
 ---
@@ -221,7 +221,7 @@ const theme = localStorage.getItem('theme')
 ### IndexedDB (für Workouts)
 
 ```typescript
-const db = await openDB('simple-workout')
+const db = await openDB('remember-me')
 
 // Speichern
 await db.put('workouts', workout)
@@ -267,7 +267,7 @@ VITE_ENV=development
 ### Production (Vercel Dashboard)
 
 ```
-VITE_API_URL=https://api.simple-workout.com
+VITE_API_URL=https://api.remember-me.com
 VITE_ENV=production
 ```
 

@@ -1,6 +1,6 @@
-# Dokumentation - Simple Workout
+# Dokumentation - Remember Me
 
-Vollständige Dokumentation für das Simple Workout Projekt.
+Vollständige Dokumentation für das Remember Me Projekt.
 
 ## 🚀 Quick Navigation
 

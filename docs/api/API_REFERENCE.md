@@ -1,4 +1,4 @@
-# API Referenz - Simple Workout
+# API Referenz - Remember Me
 
 **Status:** 🟢 DRAFT  
 **Version:** 1.0.0  

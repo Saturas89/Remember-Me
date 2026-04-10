@@ -1,4 +1,4 @@
-# Design System - Simple Workout
+# Design System - Remember Me
 
 **Status:** 🟢 DRAFT  
 **Version:** 1.0.0  
