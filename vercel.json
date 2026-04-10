@@ -1,18 +1,7 @@
 {
-  "buildCommand": "npm run build",
-  "devCommand": "npm run dev",
-  "installCommand": "npm ci",
+  "buildCommand": "npm install && npm run build",
   "outputDirectory": "dist",
-  "env": {
-    "NODE_ENV": "production"
-  },
   "rewrites": [
-    { "source": "/((?!api/).*)", "destination": "/index.html" }
-  ],
-  "functions": {
-    "api/**/*.ts": {
-      "memory": 1024,
-      "maxDuration": 60
-    }
-  }
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
 }
