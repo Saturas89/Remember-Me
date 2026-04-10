@@ -1,36 +1,82 @@
+import { useState } from 'react'
 import { CATEGORIES } from '../data/categories'
 import { CategoryCard } from '../components/CategoryCard'
+import type { Friend, FriendAnswer } from '../types'
 
 interface Props {
+  profileName: string
+  friends: Friend[]
+  friendAnswers: FriendAnswer[]
   getCategoryProgress: (categoryId: string, total: number) => number
   onSelectCategory: (categoryId: string) => void
   onOpenArchive: () => void
-  profileName: string
+  onOpenFriends: () => void
+  onSaveName: (name: string) => void
 }
 
-export function HomeView({ getCategoryProgress, onSelectCategory, onOpenArchive, profileName }: Props) {
+export function HomeView({
+  profileName,
+  friends,
+  friendAnswers,
+  getCategoryProgress,
+  onSelectCategory,
+  onOpenArchive,
+  onOpenFriends,
+  onSaveName,
+}: Props) {
+  const [editingName, setEditingName] = useState(!profileName)
+  const [nameInput, setNameInput] = useState(profileName)
+
   const totalQuestions = CATEGORIES.reduce((s, c) => s + c.questions.length, 0)
   const totalAnswered = CATEGORIES.reduce(
-    (s, c) => s + Math.round((getCategoryProgress(c.id, c.questions.length) / 100) * c.questions.length),
+    (s, c) =>
+      s + Math.round((getCategoryProgress(c.id, c.questions.length) / 100) * c.questions.length),
     0,
   )
   const overallProgress = Math.round((totalAnswered / totalQuestions) * 100)
+  const totalFriendAnswers = friendAnswers.filter(a => a.value.trim()).length
+
+  function handleSaveName() {
+    if (!nameInput.trim()) return
+    onSaveName(nameInput.trim())
+    setEditingName(false)
+  }
 
   return (
     <div className="home-view">
       <header className="home-header">
-        <h1 className="home-title">Remember Me</h1>
-        <p className="home-subtitle">
-          {profileName
-            ? `Hallo, ${profileName} – schön, dass du weiter machst.`
-            : 'Halte deine Geschichte fest – für alle, die nach dir kommen.'}
-        </p>
-        <div className="home-overall">
-          <span>{overallProgress}% deiner Geschichte erzählt</span>
-          <div className="home-overall-bar">
-            <div className="home-overall-fill" style={{ width: `${overallProgress}%` }} />
+        {editingName ? (
+          <div className="home-name-setup">
+            <h1 className="home-title">Remember Me</h1>
+            <p className="home-subtitle">Wie heißt du? Das hilft beim Einladen von Freunden.</p>
+            <div className="home-name-row">
+              <input
+                className="input-text"
+                value={nameInput}
+                onChange={e => setNameInput(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleSaveName()}
+                placeholder="Dein Name..."
+                autoFocus
+              />
+              <button className="btn btn--primary" onClick={handleSaveName} disabled={!nameInput.trim()}>
+                Speichern
+              </button>
+            </div>
           </div>
-        </div>
+        ) : (
+          <>
+            <h1 className="home-title">Remember Me</h1>
+            <button className="home-name-btn" onClick={() => { setNameInput(profileName); setEditingName(true) }}>
+              {profileName}
+            </button>
+            <div className="home-overall">
+              <span>{overallProgress}% deiner Geschichte erzählt</span>
+              <div className="home-overall-bar">
+                <div className="home-overall-fill" style={{ width: `${overallProgress}%` }} />
+              </div>
+            </div>
+          </>
+        )}
       </header>
 
       <section className="categories-grid">
@@ -44,13 +90,22 @@ export function HomeView({ getCategoryProgress, onSelectCategory, onOpenArchive,
         ))}
       </section>
 
-      {totalAnswered > 0 && (
-        <div className="home-archive-hint">
+      <div className="home-actions">
+        {totalAnswered > 0 && (
           <button className="btn btn--outline" onClick={onOpenArchive}>
-            📖 Mein Lebensarchiv ansehen ({totalAnswered} Antworten)
+            📖 Mein Archiv ({totalAnswered} Antworten)
           </button>
-        </div>
-      )}
+        )}
+        <button className="btn btn--friends" onClick={onOpenFriends}>
+          👥 Freunde einladen
+          {friends.length > 0 && (
+            <span className="friend-badge">{friends.length}</span>
+          )}
+          {totalFriendAnswers > 0 && (
+            <span className="friend-answer-badge">{totalFriendAnswers} Antworten</span>
+          )}
+        </button>
+      </div>
     </div>
   )
 }

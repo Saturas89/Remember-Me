@@ -432,3 +432,401 @@
   padding: 0.45rem 0.9rem;
   font-size: 0.85rem;
 }
+
+.btn--success {
+  background: #2ecc71;
+}
+
+.btn--friends {
+  background: #0f3460;
+  color: #eaeaea;
+  border: 1px solid #1a4a80;
+  position: relative;
+}
+
+.btn--friends:hover:not(:disabled) {
+  border-color: #e94560;
+}
+
+/* ── Home – name setup & actions ─────────────────────── */
+.home-name-setup {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.home-name-row {
+  display: flex;
+  gap: 0.6rem;
+  width: 100%;
+  max-width: 400px;
+}
+
+.home-name-btn {
+  background: none;
+  border: none;
+  color: #a0a0b0;
+  font-size: 0.9rem;
+  cursor: pointer;
+  text-decoration: underline dotted;
+  margin-bottom: 0.5rem;
+}
+
+.home-name-btn:hover {
+  color: #eaeaea;
+}
+
+.home-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 2rem;
+  align-items: center;
+}
+
+.friend-badge,
+.friend-answer-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 0.1rem 0.5rem;
+  margin-left: 0.35rem;
+}
+
+.friend-badge {
+  background: #e94560;
+  color: #fff;
+}
+
+.friend-answer-badge {
+  background: #2ecc71;
+  color: #0a0a1a;
+}
+
+/* ── Input primitives ────────────────────────────────── */
+.input-text {
+  flex: 1;
+  background: #16213e;
+  border: 1px solid #0f3460;
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  color: #eaeaea;
+  font-size: 1rem;
+  font-family: inherit;
+  transition: border-color 0.2s;
+}
+
+.input-text:focus {
+  outline: none;
+  border-color: #e94560;
+}
+
+.input-label {
+  display: block;
+  font-size: 0.85rem;
+  color: #a0a0b0;
+  margin-bottom: 0.4rem;
+}
+
+/* ── Friends view ────────────────────────────────────── */
+.friends-view {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 1rem 4rem;
+}
+
+.friends-intro {
+  color: #a0a0b0;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin-bottom: 1.5rem;
+}
+
+.friends-section {
+  margin-bottom: 2rem;
+}
+
+.friends-section-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #eaeaea;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid #0f3460;
+}
+
+.friends-add-row {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.friends-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.friends-hint {
+  font-size: 0.85rem;
+  color: #a0a0b0;
+  margin-bottom: 0.75rem;
+  line-height: 1.5;
+}
+
+.friends-hint--warn {
+  color: #f0a500;
+  background: #1a1400;
+  border-radius: 8px;
+  padding: 0.6rem 0.8rem;
+  margin-bottom: 1rem;
+}
+
+.invite-box {
+  background: #0f3460;
+  border: 1px solid #1a4a80;
+  border-radius: 12px;
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.invite-box__label {
+  font-size: 0.85rem;
+  color: #a0a0b0;
+  margin-bottom: 0.6rem;
+}
+
+.invite-box__url {
+  background: #1a1a2e;
+  border-radius: 8px;
+  padding: 0.75rem;
+  font-size: 0.78rem;
+  color: #eaeaea;
+  word-break: break-all;
+  font-family: monospace;
+  margin-bottom: 0.75rem;
+  line-height: 1.5;
+}
+
+.invite-box__actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.import-msg {
+  font-size: 0.85rem;
+  border-radius: 8px;
+  padding: 0.5rem 0.8rem;
+  margin: 0.5rem 0;
+}
+
+.import-msg--error {
+  color: #e94560;
+  background: #2a0a12;
+}
+
+.import-msg--success {
+  color: #2ecc71;
+  background: #0a2a18;
+}
+
+/* ── Friend card ─────────────────────────────────────── */
+.friend-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: #16213e;
+  border: 1px solid #0f3460;
+  border-radius: 12px;
+  padding: 1rem;
+}
+
+.friend-card__avatar {
+  width: 2.8rem;
+  height: 2.8rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.friend-card__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.friend-card__name {
+  font-weight: 700;
+  font-size: 0.97rem;
+  color: #eaeaea;
+}
+
+.friend-card__status {
+  font-size: 0.78rem;
+  color: #a0a0b0;
+}
+
+.friend-progress-bar {
+  height: 4px;
+  background: #0f3460;
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 0.25rem;
+}
+
+.friend-progress-fill {
+  height: 100%;
+  background: #2ecc71;
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.friend-card__actions {
+  display: flex;
+  gap: 0.4rem;
+  flex-shrink: 0;
+}
+
+/* ── Friend answer view ──────────────────────────────── */
+.friend-answer-view {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 1rem 4rem;
+}
+
+.friend-welcome {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 1rem;
+  padding: 3rem 0 2rem;
+}
+
+.friend-welcome__icon {
+  font-size: 3.5rem;
+}
+
+.friend-welcome h1 {
+  font-size: clamp(1.8rem, 5vw, 2.5rem);
+  font-weight: 800;
+  color: #eaeaea;
+}
+
+.friend-welcome p {
+  color: #a0a0b0;
+  line-height: 1.6;
+  max-width: 480px;
+}
+
+.friend-name-input {
+  width: 100%;
+  max-width: 360px;
+  text-align: left;
+}
+
+.friend-welcome__note {
+  font-size: 0.82rem;
+  color: #555;
+}
+
+.export-done {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 1.25rem;
+  padding: 3rem 0;
+}
+
+.export-done__icon {
+  font-size: 3.5rem;
+}
+
+.export-done h2 {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #eaeaea;
+}
+
+.export-done p {
+  color: #a0a0b0;
+  line-height: 1.6;
+  max-width: 480px;
+}
+
+.export-code {
+  background: #16213e;
+  border: 1px solid #0f3460;
+  border-radius: 10px;
+  padding: 1rem;
+  font-size: 0.72rem;
+  font-family: monospace;
+  word-break: break-all;
+  color: #eaeaea;
+  line-height: 1.6;
+  width: 100%;
+  max-width: 480px;
+  text-align: left;
+}
+
+.export-hint {
+  font-size: 0.82rem;
+  color: #555;
+  max-width: 400px;
+}
+
+/* ── Archive – friend contributions ──────────────────── */
+.archive-section--friends {
+  border-top: 2px solid #0f3460;
+  padding-top: 1.5rem;
+  margin-top: 1rem;
+}
+
+.archive-section-title--friends {
+  color: #2ecc71;
+}
+
+.friend-contribution {
+  margin-bottom: 1.5rem;
+}
+
+.friend-contribution__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.friend-contribution__name {
+  font-weight: 700;
+  color: #eaeaea;
+  font-size: 0.97rem;
+}
+
+.friend-contribution__count {
+  font-size: 0.78rem;
+  color: #a0a0b0;
+}
+
+.archive-entry--friend {
+  border-left: 3px solid #2ecc71;
+}
+

@@ -4,7 +4,7 @@ export interface Question {
   id: string
   categoryId: string
   type: QuestionType
-  text: string
+  text: string          // may contain {name} placeholder
   helpText?: string
   options?: string[]
   scaleMin?: string
@@ -34,7 +34,37 @@ export interface Profile {
   createdAt: string
 }
 
+export interface Friend {
+  id: string
+  name: string
+  addedAt: string
+}
+
+export interface FriendAnswer {
+  id: string
+  friendId: string
+  friendName: string
+  questionId: string
+  value: string
+  createdAt: string
+}
+
 export interface AppState {
   profile: Profile | null
   answers: Record<string, Answer>
+  friends: Friend[]
+  friendAnswers: FriendAnswer[]
+}
+
+/** Encoded inside the invite URL shared with a friend */
+export interface InviteData {
+  profileName: string
+  friendId: string
+}
+
+/** Encoded as a text code that the friend sends back after answering */
+export interface AnswerExport {
+  friendId: string
+  friendName: string
+  answers: Array<{ questionId: string; value: string }>
 }
