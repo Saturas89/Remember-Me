@@ -33,6 +33,7 @@ export default function App() {
     friendAnswers,
     customQuestions,
     saveAnswer,
+    setAnswerImages,
     saveProfile,
     addFriend,
     removeFriend,
@@ -41,6 +42,7 @@ export default function App() {
     removeCustomQuestion,
     importCustomQuestions,
     getAnswer,
+    getAnswerImageIds,
     getCategoryProgress,
   } = useAnswers()
 
@@ -87,7 +89,9 @@ export default function App() {
         <QuizView
           category={category}
           getAnswer={getAnswer}
+          getAnswerImageIds={getAnswerImageIds}
           onSave={saveAnswer}
+          onSetImages={setAnswerImages}
           onBack={() =>
             view.categoryId === 'custom'
               ? setView({ name: 'custom-questions' })
@@ -110,6 +114,7 @@ export default function App() {
           customQuestions={customQuestions}
           profileName={profile?.name ?? ''}
           onSaveAnswer={saveAnswer}
+          onSetImages={setAnswerImages}
           onBack={() => setView({ name: 'home' })}
         />
         {installVisible && <InstallBanner state={installState} onInstall={triggerInstall} onDismiss={dismissInstall} />}

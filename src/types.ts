@@ -24,6 +24,7 @@ export interface Answer {
   questionId: string
   categoryId: string
   value: string
+  imageIds?: string[]
   createdAt: string
   updatedAt: string
 }

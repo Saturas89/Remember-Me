@@ -1,7 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { CATEGORIES } from '../data/categories'
 import { FRIEND_QUESTIONS } from '../data/friendQuestions'
 import { exportAsMarkdown, exportAsEnrichedJSON, downloadFile } from '../utils/export'
+import { ImageAttachment } from '../components/ImageAttachment'
+import { useImageStore } from '../hooks/useImageStore'
 import type { Answer, FriendAnswer, Friend, CustomQuestion, Profile } from '../types'
 
 interface Props {
@@ -12,6 +14,7 @@ interface Props {
   customQuestions: CustomQuestion[]
   profileName: string
   onSaveAnswer: (questionId: string, categoryId: string, value: string) => void
+  onSetImages: (questionId: string, categoryId: string, imageIds: string[]) => void
   onBack: () => void
 }
 
@@ -23,10 +26,25 @@ export function ArchiveView({
   customQuestions,
   profileName,
   onSaveAnswer,
+  onSetImages,
   onBack,
 }: Props) {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editValue, setEditValue] = useState('')
+  const { cache, loadImages, removeImage } = useImageStore()
+
+  // Pre-load all images referenced by any answer
+  useEffect(() => {
+    const allIds = Object.values(answers).flatMap(a => a.imageIds ?? [])
+    if (allIds.length > 0) loadImages(allIds)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  async function handleRemoveImage(questionId: string, categoryId: string, imgId: string) {
+    await removeImage(imgId)
+    const next = (answers[questionId]?.imageIds ?? []).filter(i => i !== imgId)
+    onSetImages(questionId, categoryId, next)
+  }
 
   const exportData = { profile, answers, friends, friendAnswers, customQuestions }
   const safeName = (profile?.name ?? 'lebensarchiv').replace(/\s+/g, '-').toLowerCase()
@@ -49,11 +67,16 @@ export function ArchiveView({
     setEditingId(null)
   }
 
+  function hasContent(questionId: string) {
+    const a = answers[questionId]
+    return a && (a.value.trim() !== '' || (a.imageIds?.length ?? 0) > 0)
+  }
+
   const categoriesWithAnswers = CATEGORIES.filter(cat =>
-    cat.questions.some(q => answers[q.id]?.value.trim()),
+    cat.questions.some(q => hasContent(q.id)),
   )
 
-  const customWithAnswers = customQuestions.filter(q => answers[q.id]?.value.trim())
+  const customWithAnswers = customQuestions.filter(q => hasContent(q.id))
 
   // Group friend answers by friend
   const friendsWithAnswers = friends.filter(f =>
@@ -110,7 +133,7 @@ export function ArchiveView({
             {cat.emoji} {cat.title}
           </h3>
           {cat.questions
-            .filter(q => answers[q.id]?.value.trim())
+            .filter(q => hasContent(q.id))
             .map(q => (
               <div key={q.id} className="archive-entry">
                 <p className="archive-entry__question">{q.text}</p>
@@ -141,7 +164,17 @@ export function ArchiveView({
                   </div>
                 ) : (
                   <>
-                    <p className="archive-entry__answer">{answers[q.id].value}</p>
+                    {answers[q.id].value && (
+                      <p className="archive-entry__answer">{answers[q.id].value}</p>
+                    )}
+                    {(answers[q.id].imageIds?.length ?? 0) > 0 && (
+                      <ImageAttachment
+                        imageIds={answers[q.id].imageIds!}
+                        cache={cache}
+                        onLoad={loadImages}
+                        onRemove={imgId => handleRemoveImage(q.id, cat.id, imgId)}
+                      />
+                    )}
                     <div className="archive-entry__footer">
                       <span className="archive-entry__date">
                         {new Date(answers[q.id].updatedAt).toLocaleDateString('de-DE')}
@@ -195,7 +228,17 @@ export function ArchiveView({
                 </div>
               ) : (
                 <>
-                  <p className="archive-entry__answer">{answers[q.id].value}</p>
+                  {answers[q.id].value && (
+                    <p className="archive-entry__answer">{answers[q.id].value}</p>
+                  )}
+                  {(answers[q.id].imageIds?.length ?? 0) > 0 && (
+                    <ImageAttachment
+                      imageIds={answers[q.id].imageIds!}
+                      cache={cache}
+                      onLoad={loadImages}
+                      onRemove={imgId => handleRemoveImage(q.id, 'custom', imgId)}
+                    />
+                  )}
                   <div className="archive-entry__footer">
                     <span className="archive-entry__date">
                       {new Date(answers[q.id].updatedAt).toLocaleDateString('de-DE')}

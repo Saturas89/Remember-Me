@@ -1,18 +1,28 @@
 import { useState, useEffect } from 'react'
+import { ImageAttachment } from './ImageAttachment'
 import type { Question } from '../types'
 
 interface Props {
   question: Question
   initialValue: string
+  imageIds: string[]
+  imageCache: Record<string, string>
   index: number
   total: number
   onSave: (value: string) => void
+  onLoadImages: (ids: string[]) => void
+  onAddImage: (file: File) => void
+  onRemoveImage: (id: string) => void
   onNext: () => void
   onPrev: () => void
   canGoBack: boolean
 }
 
-export function QuestionCard({ question, initialValue, index, total, onSave, onNext, onPrev, canGoBack }: Props) {
+export function QuestionCard({
+  question, initialValue, imageIds, imageCache,
+  index, total, onSave, onLoadImages, onAddImage, onRemoveImage,
+  onNext, onPrev, canGoBack,
+}: Props) {
   const [value, setValue] = useState(initialValue)
 
   useEffect(() => {
@@ -38,13 +48,22 @@ export function QuestionCard({ question, initialValue, index, total, onSave, onN
 
       <div className="question-card__input">
         {question.type === 'text' && (
-          <textarea
-            className="input-textarea"
-            value={value}
-            onChange={e => handleChange(e.target.value)}
-            placeholder="Deine Antwort..."
-            rows={5}
-          />
+          <>
+            <textarea
+              className="input-textarea"
+              value={value}
+              onChange={e => handleChange(e.target.value)}
+              placeholder="Deine Antwort..."
+              rows={5}
+            />
+            <ImageAttachment
+              imageIds={imageIds}
+              cache={imageCache}
+              onLoad={onLoadImages}
+              onAdd={onAddImage}
+              onRemove={onRemoveImage}
+            />
+          </>
         )}
 
         {question.type === 'choice' && question.options && (

@@ -55,6 +55,30 @@ export function useAnswers() {
     })
   }, [])
 
+  const setAnswerImages = useCallback((questionId: string, categoryId: string, imageIds: string[]) => {
+    setState(prev => {
+      const existing = prev.answers[questionId]
+      const now = new Date().toISOString()
+      const next: AppState = {
+        ...prev,
+        answers: {
+          ...prev.answers,
+          [questionId]: {
+            id: questionId,
+            questionId,
+            categoryId,
+            value: existing?.value ?? '',
+            imageIds,
+            createdAt: existing?.createdAt ?? now,
+            updatedAt: now,
+          },
+        },
+      }
+      saveState(next)
+      return next
+    })
+  }, [])
+
   const deleteAnswer = useCallback((questionId: string) => {
     setState(prev => {
       const { [questionId]: _removed, ...rest } = prev.answers
@@ -191,10 +215,17 @@ export function useAnswers() {
     [state.answers],
   )
 
+  const getAnswerImageIds = useCallback(
+    (questionId: string): string[] => state.answers[questionId]?.imageIds ?? [],
+    [state.answers],
+  )
+
   const getCategoryProgress = useCallback(
     (categoryId: string, totalQuestions: number): number => {
       const answered = Object.values(state.answers).filter(
-        a => a.categoryId === categoryId && a.value.trim() !== '',
+        a =>
+          a.categoryId === categoryId &&
+          (a.value.trim() !== '' || (a.imageIds?.length ?? 0) > 0),
       ).length
       return totalQuestions > 0 ? Math.round((answered / totalQuestions) * 100) : 0
     },
@@ -214,6 +245,7 @@ export function useAnswers() {
     friendAnswers: state.friendAnswers,
     customQuestions: state.customQuestions,
     saveAnswer,
+    setAnswerImages,
     deleteAnswer,
     saveProfile,
     addFriend,
@@ -224,6 +256,7 @@ export function useAnswers() {
     importCustomQuestions,
     clearAll,
     getAnswer,
+    getAnswerImageIds,
     getCategoryProgress,
     getFriendAnswers,
   }

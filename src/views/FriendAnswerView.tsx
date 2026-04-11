@@ -136,9 +136,14 @@ export function FriendAnswerView({ invite }: Props) {
       <QuestionCard
         question={question}
         initialValue={localAnswers[question.id] ?? ''}
+        imageIds={[]}
+        imageCache={{}}
         index={index}
         total={questions.length}
         onSave={handleSave}
+        onLoadImages={() => {}}
+        onAddImage={() => {}}
+        onRemoveImage={() => {}}
         onNext={handleNext}
         onPrev={() => setIndex(i => Math.max(0, i - 1))}
         canGoBack={index > 0}
