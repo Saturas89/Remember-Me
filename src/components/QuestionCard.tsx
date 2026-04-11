@@ -34,6 +34,11 @@ export function QuestionCard({
     onSave(next)
   }
 
+  const hasAnswer =
+    question.type === 'text'
+      ? value.trim() !== '' || imageIds.length > 0
+      : value !== ''
+
   return (
     <div className="question-card">
       <div className="question-card__meta">
@@ -117,6 +122,12 @@ export function QuestionCard({
           {index + 1 < total ? 'Weiter →' : 'Fertig ✓'}
         </button>
       </div>
+
+      {!hasAnswer && (
+        <button type="button" className="question-card__skip" onClick={onNext}>
+          Frage überspringen
+        </button>
+      )}
     </div>
   )
 }

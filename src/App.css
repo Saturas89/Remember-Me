@@ -362,6 +362,21 @@
   padding-top: 0.5rem;
 }
 
+.question-card__skip {
+  background: none;
+  border: none;
+  color: var(--text-faint);
+  font-size: 0.82rem;
+  cursor: pointer;
+  padding: 0.25rem 0;
+  text-align: center;
+  width: 100%;
+  transition: color 0.15s;
+  font-family: inherit;
+}
+
+.question-card__skip:hover { color: var(--text-muted); }
+
 /* ── Input primitives ────────────────────────────────── */
 .input-text {
   flex: 1;

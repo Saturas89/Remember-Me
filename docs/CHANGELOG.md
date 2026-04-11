@@ -5,6 +5,18 @@ Alle veröffentlichten Versionen des Projekts, absteigend sortiert.
 Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 Versionierung folgt [Semantic Versioning](https://semver.org/lang/de/).
 
+## [1.5.1] – 2026-04-11
+
+### Hinzugefügt
+
+#### Fragen überspringen
+- **„Frage überspringen"**-Link unterhalb der Navigationsleiste in `QuestionCard`
+- Erscheint nur wenn die aktuelle Frage noch keine Antwort hat (kein Text, keine Fotos) – bei beantworteten Fragen reicht „Weiter"
+- Gilt für beide Flows: eigene Fragen beantworten **und** als eingeladener Freund
+- Keine Datenbankänderung nötig – übersprungene Fragen hinterlassen keinen leeren Eintrag
+
+---
+
 ## [1.5.0] – 2026-04-11
 
 ### Hinzugefügt
@@ -282,6 +294,7 @@ Versionierung folgt [Semantic Versioning](https://semver.org/lang/de/).
 | **1.3.2** | Install-Prompt (Android nativ, iOS Anleitung), Logo-Redesign | ✔️ Fertig |
 | **1.4.0** | KI-lesbarer Datenexport (Markdown + Enriched JSON) | ✔️ Fertig |
 | **1.5.0** | Foto-Anhänge (IndexedDB), Themen-Auswahl für Freundes-Fragen | ✔️ Fertig |
+| **1.5.1** | Fragen überspringen (eigener Flow + Freunde-Flow) | ✔️ Fertig |
 | **1.6.0** | Optionaler E2EE-Sync (Web Crypto API + Supabase, opt-in) | Geplant |
 | **2.0.0** | Backend-Sync, Familien-Freigabe-Links mit geteilten Schlüsseln | Zukunft |
 | **2.1.0** | LLM-Direktintegration: Biografie auf Knopfdruck in der App | Zukunft |

@@ -62,6 +62,7 @@ Teilen / Exportieren (PDF, Freunde einladen, KI-Export)
 - [x] KI-lesbarer Export: Markdown (`.md`) + Enriched JSON (`.json`) im Archiv – v1.4.0
 - [x] Foto-Anhänge zu Antworten (IndexedDB, Komprimierung, Lightbox) – v1.5.0
 - [x] Themen-Auswahl für Freundes-Einladungen (4 Themen × 5 Fragen) – v1.5.0
+- [x] Fragen überspringen (eigener Flow + Freunde-Flow) – v1.5.1
 - [ ] Optionaler E2EE-Sync (Web Crypto API + Supabase, opt-in) – v1.6.0
 - [ ] Push Notifications (Erinnerung zum Weitermachen)
 - [ ] Backend-Sync + Familien-Freigabe-Links – v2.0.0
