@@ -5,6 +5,28 @@ Alle veröffentlichten Versionen des Projekts, absteigend sortiert.
 Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 Versionierung folgt [Semantic Versioning](https://semver.org/lang/de/).
 
+## [1.5.4] – 2026-04-11
+
+### Geändert
+
+#### Profil-Seite UX-Redesign + Typografie-Verbesserungen
+
+**Profil-Seite komplett überarbeitet:**
+- **Identity-Header**: Großes Avatar-Kreise (Initialen, Akzentfarbe + Glüheffekt), Name als dominante Headline, „Dabei seit…"-Meta subtil darunter
+- **Profil-Karten** (`.profile-card`): Abgerundete Karten mit einheitlichem Padding; Überschriften als kleine, gepunktete ALL-CAPS Labels (0.68 rem, 0.12em Abstand) — klar ohne aufdringlich zu sein
+- **Formularfelder**: iOS-Settings-Stil — `Name` / `Geburtsjahr` in eingebetteten Zeilen mit Label links, Wert rechts; kein Rahmen im Feld, der Container gibt die Kontur vor
+- **Stats-Kacheln**: Kompaktere Raster, akzentuierte Zahl, kleinere Label; passen jetzt platzsparender rein
+- **Theme-Karten**: 2×2-Grid mit farbigem Punkt + Emoji + Label; aktive Karte hebt sich durch Akzentrand + getönten Hintergrund ab; ✓-Haken erscheint rechts
+
+**App-weite Typografie verbessert:**
+- `index.css`: Schriftfamilie um `'Segoe UI'`, `Roboto`, `Helvetica` erweitert; `text-rendering: optimizeLegibility`; `-moz-osx-font-smoothing`; globale Heading-Basisstile (`h1–h4`: `letter-spacing: -0.02em`)
+- **Archiv-Eintragsköpfe** (Fragenzeile): von normaler Schriftgröße auf `0.78 rem font-weight 600` — Frage vs. Antwort sind jetzt klar unterscheidbar
+- **Archiv-Abschnittsüberschriften**: ALL-CAPS mit Buchstabenabstand (analog zu Profil-Karten-Headings)
+- **Datumsangaben**: Leicht verfeinerter Zeichenabstand
+- **Monospace**: Konsistente Schriftfamilie für Code-Blöcke / Export-Codes
+
+---
+
 ## [1.5.3] – 2026-04-11
 
 ### Geändert

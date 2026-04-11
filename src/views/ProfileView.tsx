@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { CATEGORIES } from '../data/categories'
-import { ThemeSwitcher } from '../components/ThemeSwitcher'
+import { THEMES } from '../hooks/useTheme'
 import { useTheme } from '../hooks/useTheme'
 import type { Profile, Answer } from '../types'
 
@@ -21,20 +21,24 @@ export function ProfileView({ profile, answers, friendCount, onSave, onBack }: P
   const [saved, setSaved] = useState(false)
 
   const totalQuestions = CATEGORIES.reduce((s, c) => s + c.questions.length, 0)
-  const totalAnswered = Object.values(answers).filter(a => a.value.trim()).length
+  const totalAnswered = Object.values(answers).filter(
+    a => a.value.trim() || (a.imageIds?.length ?? 0) > 0,
+  ).length
   const overallPct = totalQuestions > 0 ? Math.round((totalAnswered / totalQuestions) * 100) : 0
 
   const memberSince = profile?.createdAt
     ? new Date(profile.createdAt).toLocaleDateString('de-DE', {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
+        day: 'numeric', month: 'long', year: 'numeric',
       })
     : null
 
   const daysSince = profile?.createdAt
     ? Math.floor((Date.now() - new Date(profile.createdAt).getTime()) / 86_400_000)
     : 0
+
+  const initials = name.trim()
+    ? name.trim().split(/\s+/).map(w => w[0]).slice(0, 2).join('').toUpperCase()
+    : '?'
 
   function handleSave() {
     if (!name.trim()) return
@@ -49,78 +53,111 @@ export function ProfileView({ profile, answers, friendCount, onSave, onBack }: P
 
   return (
     <div className="profile-view">
-      <div className="archive-topbar">
+
+      {/* Topbar */}
+      <div className="profile-topbar">
         <button className="btn btn--ghost btn--sm" onClick={onBack}>
           ← Zurück
         </button>
-        <h2 className="archive-title">👤 Mein Profil</h2>
       </div>
 
-      {/* Stats */}
-      <div className="profile-stats">
-        <div className="profile-stat">
-          <span className="profile-stat__value">{totalAnswered}</span>
-          <span className="profile-stat__label">Antworten</span>
-        </div>
-        <div className="profile-stat">
-          <span className="profile-stat__value">{overallPct}%</span>
-          <span className="profile-stat__label">Abgeschlossen</span>
-        </div>
-        <div className="profile-stat">
-          <span className="profile-stat__value">{friendCount}</span>
-          <span className="profile-stat__label">Freunde</span>
-        </div>
-        {daysSince > 0 && (
-          <div className="profile-stat">
-            <span className="profile-stat__value">{daysSince}</span>
-            <span className="profile-stat__label">Tage dabei</span>
-          </div>
+      {/* Identity header */}
+      <div className="profile-identity">
+        <div className="profile-avatar" aria-hidden="true">{initials}</div>
+        <h1 className="profile-identity__name">{profile?.name}</h1>
+        {memberSince && (
+          <p className="profile-identity__meta">Dabei seit {memberSince}</p>
         )}
       </div>
 
-      {/* Edit form */}
-      <div className="profile-form">
-        <label className="input-label" htmlFor="profile-name">Name</label>
-        <input
-          id="profile-name"
-          className="input-text"
-          value={name}
-          onChange={e => setName(e.target.value)}
-          placeholder="Dein Name..."
-          style={{ width: '100%', marginBottom: '1.25rem' }}
-        />
+      {/* Progress stats */}
+      <section className="profile-card">
+        <h2 className="profile-card__heading">Fortschritt</h2>
+        <div className="profile-stats">
+          <div className="profile-stat">
+            <span className="profile-stat__value">{totalAnswered}</span>
+            <span className="profile-stat__label">Antworten</span>
+          </div>
+          <div className="profile-stat">
+            <span className="profile-stat__value">{overallPct}%</span>
+            <span className="profile-stat__label">Abgeschlossen</span>
+          </div>
+          <div className="profile-stat">
+            <span className="profile-stat__value">{friendCount}</span>
+            <span className="profile-stat__label">Freunde</span>
+          </div>
+          {daysSince > 0 && (
+            <div className="profile-stat">
+              <span className="profile-stat__value">{daysSince}</span>
+              <span className="profile-stat__label">Tage dabei</span>
+            </div>
+          )}
+        </div>
+      </section>
 
-        <label className="input-label" htmlFor="profile-year">Geburtsjahr</label>
-        <input
-          id="profile-year"
-          className="input-year"
-          type="number"
-          min={1900}
-          max={new Date().getFullYear()}
-          value={birthYear}
-          onChange={e => setBirthYear(e.target.value)}
-          placeholder="z.B. 1970"
-          style={{ display: 'block', marginBottom: '1.5rem' }}
-        />
-
+      {/* Profil bearbeiten */}
+      <section className="profile-card">
+        <h2 className="profile-card__heading">Angaben</h2>
+        <div className="profile-fields">
+          <div className="profile-field-row">
+            <label className="profile-field-label" htmlFor="profile-name">Name</label>
+            <input
+              id="profile-name"
+              className="input-text profile-field-input"
+              value={name}
+              onChange={e => setName(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleSave()}
+              placeholder="Dein Name…"
+            />
+          </div>
+          <div className="profile-field-row profile-field-row--top-border">
+            <label className="profile-field-label" htmlFor="profile-year">Geburtsjahr</label>
+            <input
+              id="profile-year"
+              className="input-year profile-field-input"
+              type="number"
+              min={1900}
+              max={new Date().getFullYear()}
+              value={birthYear}
+              onChange={e => setBirthYear(e.target.value)}
+              placeholder="z. B. 1970"
+            />
+          </div>
+        </div>
         <button
-          className={`btn ${saved ? 'btn--success' : 'btn--primary'}`}
+          className={`btn ${saved ? 'btn--success' : 'btn--primary'} profile-save-btn`}
           onClick={handleSave}
           disabled={!name.trim()}
         >
           {saved ? '✓ Gespeichert' : 'Speichern'}
         </button>
-      </div>
+      </section>
 
-      {memberSince && (
-        <p className="profile-since">Mitglied seit {memberSince}</p>
-      )}
+      {/* Erscheinungsbild */}
+      <section className="profile-card">
+        <h2 className="profile-card__heading">Erscheinungsbild</h2>
+        <div className="theme-cards">
+          {THEMES.map(t => (
+            <button
+              key={t.id}
+              type="button"
+              className={`theme-card ${theme === t.id ? 'theme-card--active' : ''}`}
+              onClick={() => setTheme(t.id)}
+              aria-pressed={theme === t.id}
+            >
+              <span
+                className="theme-card__dot"
+                style={{ background: t.color }}
+                aria-hidden="true"
+              />
+              <span className="theme-card__emoji">{t.emoji}</span>
+              <span className="theme-card__label">{t.label}</span>
+              {theme === t.id && <span className="theme-card__check" aria-hidden="true">✓</span>}
+            </button>
+          ))}
+        </div>
+      </section>
 
-      {/* Appearance */}
-      <div className="profile-section">
-        <h3 className="profile-section-title">Erscheinungsbild</h3>
-        <ThemeSwitcher current={theme} onChange={setTheme} />
-      </div>
     </div>
   )
 }
