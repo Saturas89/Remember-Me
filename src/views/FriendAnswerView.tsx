@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { QuestionCard } from '../components/QuestionCard'
 import { ProgressBar } from '../components/ProgressBar'
-import { FRIEND_QUESTIONS } from '../data/friendQuestions'
+import { FRIEND_TOPICS } from '../data/friendQuestions'
 import { encodeAnswerExport } from '../utils/sharing'
 import type { InviteData, AnswerExport } from '../types'
 
@@ -22,7 +22,10 @@ export function FriendAnswerView({ invite }: Props) {
   const [exportCode, setExportCode] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
 
-  const questions = FRIEND_QUESTIONS.map(q => ({
+  const topic =
+    FRIEND_TOPICS.find(t => t.id === invite.topicId) ?? FRIEND_TOPICS[0]
+
+  const questions = topic.questions.map(q => ({
     ...q,
     text: resolve(q.text, invite.profileName),
     helpText: q.helpText ? resolve(q.helpText, invite.profileName) : undefined,
@@ -114,7 +117,7 @@ export function FriendAnswerView({ invite }: Props) {
             Los geht's →
           </button>
           <p className="friend-welcome__note">
-            {questions.length} Fragen · dauert ca. 5–10 Minuten
+            {topic.emoji} {topic.title} · {questions.length} Fragen · ca. 5 Minuten
           </p>
         </div>
       </div>

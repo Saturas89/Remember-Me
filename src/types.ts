@@ -77,6 +77,7 @@ export interface QuestionPack {
 export interface InviteData {
   profileName: string
   friendId: string
+  topicId?: string
 }
 
 /** Encoded as a text code that the friend sends back after answering */

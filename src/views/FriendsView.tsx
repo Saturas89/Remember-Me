@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { FriendCard } from '../components/FriendCard'
 import { generateInviteUrl, decodeAnswerExport } from '../utils/sharing'
+import { FRIEND_TOPICS } from '../data/friendQuestions'
 import type { Friend, FriendAnswer, AnswerExport } from '../types'
 
 interface Props {
@@ -23,7 +24,9 @@ export function FriendsView({
   onBack,
 }: Props) {
   const [newName, setNewName] = useState('')
+  const [selectedTopicId, setSelectedTopicId] = useState(FRIEND_TOPICS[0].id)
   const [inviteUrl, setInviteUrl] = useState<string | null>(null)
+  const [inviteTopicLabel, setInviteTopicLabel] = useState('')
   const [copied, setCopied] = useState(false)
   const [importCode, setImportCode] = useState('')
   const [importError, setImportError] = useState<string | null>(null)
@@ -32,12 +35,14 @@ export function FriendsView({
   function handleAdd() {
     if (!newName.trim()) return
     const friend = onAddFriend(newName)
-    showInvite(profileName || 'mir', friend.id)
+    showInvite(profileName || 'mir', friend.id, selectedTopicId)
     setNewName('')
   }
 
-  function showInvite(name: string, friendId: string) {
-    setInviteUrl(generateInviteUrl(name, friendId))
+  function showInvite(name: string, friendId: string, topicId: string) {
+    const topic = FRIEND_TOPICS.find(t => t.id === topicId) ?? FRIEND_TOPICS[0]
+    setInviteUrl(generateInviteUrl(name, friendId, topicId))
+    setInviteTopicLabel(`${topic.emoji} ${topic.title}`)
     setCopied(false)
   }
 
@@ -88,10 +93,33 @@ export function FriendsView({
             placeholder="Name des Freundes / der Freundin..."
             onKeyDown={e => e.key === 'Enter' && handleAdd()}
           />
-          <button className="btn btn--primary" onClick={handleAdd} disabled={!newName.trim()}>
-            Hinzufügen & Link erstellen
-          </button>
         </div>
+
+        {/* Topic selector */}
+        <p className="friends-topic-label">Thema der Fragen:</p>
+        <div className="friends-topic-grid">
+          {FRIEND_TOPICS.map(topic => (
+            <button
+              key={topic.id}
+              type="button"
+              className={`friend-topic-card ${selectedTopicId === topic.id ? 'friend-topic-card--active' : ''}`}
+              onClick={() => setSelectedTopicId(topic.id)}
+            >
+              <span className="friend-topic-card__emoji">{topic.emoji}</span>
+              <span className="friend-topic-card__title">{topic.title}</span>
+              <span className="friend-topic-card__desc">{topic.description}</span>
+            </button>
+          ))}
+        </div>
+
+        <button
+          className="btn btn--primary"
+          onClick={handleAdd}
+          disabled={!newName.trim()}
+          style={{ marginTop: '1rem' }}
+        >
+          Hinzufügen &amp; Einladung erstellen
+        </button>
       </section>
 
       {/* Invite URL */}
@@ -100,6 +128,7 @@ export function FriendsView({
           <p className="invite-box__label">
             Sende diesen Link an deinen Freund – er öffnet die App direkt im Antwortmodus:
           </p>
+          <div className="invite-box__topic-chip">{inviteTopicLabel} · 5 Fragen</div>
           <div className="invite-box__url">{inviteUrl}</div>
           <div className="invite-box__actions">
             <button
@@ -125,7 +154,7 @@ export function FriendsView({
                 key={f.id}
                 friend={f}
                 answers={friendAnswers.filter(a => a.friendId === f.id)}
-                onInvite={() => showInvite(profileName || 'mir', f.id)}
+                onInvite={() => showInvite(profileName || 'mir', f.id, selectedTopicId)}
                 onRemove={() => onRemoveFriend(f.id)}
               />
             ))}

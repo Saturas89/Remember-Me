@@ -5,6 +5,45 @@ Alle veröffentlichten Versionen des Projekts, absteigend sortiert.
 Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 Versionierung folgt [Semantic Versioning](https://semver.org/lang/de/).
 
+## [1.5.0] – 2026-04-11
+
+### Hinzugefügt
+
+#### Foto-Anhänge
+- **Bilder zu Antworten hinzufügen** – Bei Text-Fragen erscheint eine Foto-Leiste unterhalb des Textfeldes
+- **`useImageStore`-Hook** – IndexedDB-basierter Bildspeicher (kein 5MB-Limit wie bei localStorage):
+  - Bilder werden vor dem Speichern auf max. 1200px JPEG/82% komprimiert
+  - Lazy Loading mit In-Memory-Cache; verhindert doppeltes Laden via `pendingRef`
+- **`ImageAttachment`-Komponente** – Thumbnail-Leiste mit:
+  - 📷 Foto-Button öffnet nativen Datei-Picker (Kamera oder Galerie)
+  - Thumbnails mit ✕-Lösch-Button
+  - Tippen auf Thumbnail → Vollbild-Lightbox mit Schließen-Button
+  - Maximale Anzahl: 5 Fotos pro Antwort
+- **Fotos im Archiv** – Thumbnails werden in jeder Antwort-Kachel angezeigt, löschen direkt möglich
+- `Answer.imageIds?: string[]` – neues optionales Feld in `AppState`; rückwärtskompatibel
+- `setAnswerImages()` + `getAnswerImageIds()` in `useAnswers`
+- `getCategoryProgress` zählt jetzt auch reine Foto-Antworten (ohne Text) als beantwortet
+
+#### Themen-Auswahl für Freundes-Einladungen
+- **4 Themen × 5 Fragen** statt bisher 10 Fragen ohne Auswahl:
+  | Thema | Emoji | Fokus |
+  |-------|-------|-------|
+  | Unsere Freundschaft | 🤝 | Wie ihr euch kennt, erste Eindrücke, gemeinsame Momente |
+  | Persönlichkeit | ✨ | Charakter, Stärken, was andere sehen |
+  | Gemeinsame Erlebnisse | 🌟 | Lustige Momente, Abenteuer, Veränderungen |
+  | Familie | 👨‍👩‍👧 | Familienerinnerungen, Weitergabe, Werte |
+- **Topic-Karten** in `FriendsView` – kompaktes 2×2-Grid; ausgewähltes Thema hervorgehoben
+- **Invite-URL** enthält `topicId` – `FriendAnswerView` zeigt automatisch nur die 5 Fragen des gewählten Themas
+- Rückwärtskompatibel: alte Links ohne `topicId` verwenden automatisch „Unsere Freundschaft"
+- `InviteData.topicId?: string` in `types.ts`
+- `FRIEND_TOPICS: FriendTopic[]` in `src/data/friendQuestions.ts`; `FRIEND_QUESTIONS` bleibt als flaches Array für Archiv-Auflösung erhalten
+
+### Geändert
+- `package.json` Version 1.5.0
+- Willkommens-Hinweis in `FriendAnswerView` zeigt Thema-Emoji + Name + „5 Fragen · ca. 5 Minuten"
+
+---
+
 ## [1.4.0] – 2026-04-11
 
 ### Hinzugefügt
@@ -242,7 +281,7 @@ Versionierung folgt [Semantic Versioning](https://semver.org/lang/de/).
 | **1.3.1** | PWA installierbar (Icons, iOS/Android Meta-Tags, Manifest) | ✔️ Fertig |
 | **1.3.2** | Install-Prompt (Android nativ, iOS Anleitung), Logo-Redesign | ✔️ Fertig |
 | **1.4.0** | KI-lesbarer Datenexport (Markdown + Enriched JSON) | ✔️ Fertig |
-| **1.5.0** | Medienanhänge (Fotos zu Antworten), IndexedDB-Migration | Geplant |
+| **1.5.0** | Foto-Anhänge (IndexedDB), Themen-Auswahl für Freundes-Fragen | ✔️ Fertig |
 | **1.6.0** | Optionaler E2EE-Sync (Web Crypto API + Supabase, opt-in) | Geplant |
 | **2.0.0** | Backend-Sync, Familien-Freigabe-Links mit geteilten Schlüsseln | Zukunft |
 | **2.1.0** | LLM-Direktintegration: Biografie auf Knopfdruck in der App | Zukunft |

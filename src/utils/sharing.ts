@@ -24,8 +24,8 @@ export function decodeAnswerExport(code: string): AnswerExport | null {
   }
 }
 
-export function generateInviteUrl(profileName: string, friendId: string): string {
-  const data: InviteData = { profileName, friendId }
+export function generateInviteUrl(profileName: string, friendId: string, topicId?: string): string {
+  const data: InviteData = { profileName, friendId, topicId }
   const encoded = encodeInvite(data)
   const base = window.location.origin + window.location.pathname
   return `${base}#invite/${encoded}`

@@ -592,6 +592,59 @@
   display: flex;
   gap: 0.6rem;
   flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.friends-topic-label {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 0.6rem;
+}
+
+.friends-topic-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+}
+
+.friend-topic-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.friend-topic-card:hover {
+  border-color: var(--accent);
+}
+
+.friend-topic-card--active {
+  border-color: var(--accent);
+  background: var(--accent-tinted);
+}
+
+.friend-topic-card__emoji {
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.friend-topic-card__title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.friend-topic-card__desc {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  line-height: 1.3;
 }
 
 .friends-list           { display: flex; flex-direction: column; gap: 0.75rem; }
@@ -635,6 +688,19 @@
   font-family: monospace;
   margin-bottom: 0.75rem;
   line-height: 1.5;
+}
+
+.invite-box__topic-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: var(--accent-tinted);
+  color: var(--accent);
+  border-radius: 999px;
+  padding: 0.2rem 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
 }
 
 .invite-box__actions    { display: flex; gap: 0.5rem; }

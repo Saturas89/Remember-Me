@@ -1,7 +1,7 @@
 # Projektübersicht – Remember Me
 
 **Status:** 🔵 IN PROGRESS  
-**Version:** 1.4.0  
+**Version:** 1.5.0  
 **Letzte Aktualisierung:** 2026-04-11
 
 ---
@@ -60,8 +60,8 @@ Teilen / Exportieren (PDF, Freunde einladen, KI-Export)
 
 ### Geplant 📋
 - [x] KI-lesbarer Export: Markdown (`.md`) + Enriched JSON (`.json`) im Archiv – v1.4.0
-- [ ] Medienanhänge (Fotos zu Antworten) – v1.5.0
-- [ ] IndexedDB statt localStorage (für große Mediendaten) – v1.5.0
+- [x] Foto-Anhänge zu Antworten (IndexedDB, Komprimierung, Lightbox) – v1.5.0
+- [x] Themen-Auswahl für Freundes-Einladungen (4 Themen × 5 Fragen) – v1.5.0
 - [ ] Optionaler E2EE-Sync (Web Crypto API + Supabase, opt-in) – v1.6.0
 - [ ] Push Notifications (Erinnerung zum Weitermachen)
 - [ ] Backend-Sync + Familien-Freigabe-Links – v2.0.0
@@ -80,7 +80,7 @@ Teilen / Exportieren (PDF, Freunde einladen, KI-Export)
 | Erinnerungen & Erlebnisse | 📸 | 7 | ✔️ |
 | Wünsche & Vermächtnis | ✉️ | 6 | ✔️ |
 | **Eigene Fragen** | ✏️ | unbegrenzt | ✔️ |
-| **Freunde-Perspektive** | 👥 | 10 | ✔️ |
+| **Freunde-Perspektive** | 👥 | 4 Themen × 5 | ✔️ |
 
 ---
 
@@ -92,7 +92,7 @@ Teilen / Exportieren (PDF, Freunde einladen, KI-Export)
 | Build | Vite 6 |
 | PWA | vite-plugin-pwa + Workbox |
 | Styling | CSS Custom Properties (4 Themes) |
-| Persistenz | localStorage (→ IndexedDB geplant) |
+| Persistenz | localStorage (Zustand) + IndexedDB (Bilder) |
 | Deployment | Vercel (static SPA) |
 | Icons | sharp (SVG → PNG, `npm run generate-icons`) |
 
@@ -104,13 +104,16 @@ Teilen / Exportieren (PDF, Freunde einladen, KI-Export)
 AppState (localStorage: 'remember-me-state')
 ├── profile: { name, birthYear?, createdAt }
 ├── answers: Record<questionId, Answer>
-│   └── Answer: { id, questionId, categoryId, value, createdAt, updatedAt }
+│   └── Answer: { id, questionId, categoryId, value, imageIds?, createdAt, updatedAt }
 ├── friends: Friend[]
 │   └── Friend: { id, name, addedAt }
 ├── friendAnswers: FriendAnswer[]
 │   └── FriendAnswer: { id, friendId, friendName, questionId, value, createdAt }
 └── customQuestions: CustomQuestion[]
     └── CustomQuestion: { id, text, type, helpText?, options?, createdAt }
+
+IndexedDB: 'rm-images' (store: 'images')
+└── key: imageId ('img-{timestamp}-{random}') → value: JPEG data URL (max 1200px, 82% quality)
 ```
 
 Vollständige Typ-Definitionen: `src/types.ts`  
@@ -129,7 +132,8 @@ Zustandsverwaltung: `src/hooks/useAnswers.ts`
 | Eintrag | Eine beantwortete Frage mit Datum |
 | QuestionPack | Shareable Bundle eigener Fragen (base64-codiert) |
 | AnswerExport | Antworten eines Freundes (base64-codierter Code) |
-| InviteData | Daten im Einladungslink (profileName + friendId) |
+| InviteData | Daten im Einladungslink (profileName + friendId + topicId?) |
+| FriendTopic | Thema für Freundes-Einladung (id, title, emoji, description, 5 questions) |
 | E2EE | Ende-zu-Ende-Verschlüsselung (geplant für Sync) |
 | KI-Export | Archiv in KI-lesbarem Format (Markdown/JSON, geplant) |
 
