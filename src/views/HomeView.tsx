@@ -2,8 +2,6 @@ import { useState } from 'react'
 import { CATEGORIES } from '../data/categories'
 import { CategoryCard } from '../components/CategoryCard'
 import { HeroLogo } from '../components/Logo'
-import { ThemeSwitcher } from '../components/ThemeSwitcher'
-import { useTheme } from '../hooks/useTheme'
 import type { Friend, FriendAnswer, CustomQuestion } from '../types'
 
 interface Props {
@@ -33,7 +31,6 @@ export function HomeView({
   onOpenCustomQuestions,
   onSaveName,
 }: Props) {
-  const { theme, setTheme } = useTheme()
   const [editingName, setEditingName] = useState(false)
   const [nameInput, setNameInput] = useState(profileName)
 
@@ -55,11 +52,6 @@ export function HomeView({
   return (
     <div className="home-view">
       <header className="home-header">
-        {/* Theme switcher top-right */}
-        <div className="home-topbar">
-          <ThemeSwitcher current={theme} onChange={setTheme} />
-        </div>
-
         {/* Logo */}
         <HeroLogo />
 

@@ -1,7 +1,5 @@
 import { useState } from 'react'
 import { HeroLogo } from '../components/Logo'
-import { useTheme } from '../hooks/useTheme'
-import { ThemeSwitcher } from '../components/ThemeSwitcher'
 import type { Profile } from '../types'
 
 interface Props {
@@ -15,7 +13,6 @@ const FEATURES = [
 ]
 
 export function OnboardingView({ onComplete }: Props) {
-  const { theme, setTheme } = useTheme()
   const [name, setName] = useState('')
 
   function handleStart() {
@@ -29,11 +26,6 @@ export function OnboardingView({ onComplete }: Props) {
 
   return (
     <div className="onboarding">
-      {/* Theme switcher top-right */}
-      <div className="onboarding__topbar">
-        <ThemeSwitcher current={theme} onChange={setTheme} />
-      </div>
-
       {/* Hero */}
       <div className="onboarding__hero">
         <HeroLogo />

@@ -5,6 +5,19 @@ Alle veröffentlichten Versionen des Projekts, absteigend sortiert.
 Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 Versionierung folgt [Semantic Versioning](https://semver.org/lang/de/).
 
+## [1.5.3] – 2026-04-11
+
+### Geändert
+
+#### Theme-Auswahl ins Profil-Menü verschoben
+- **ThemeSwitcher** aus `HomeView` und `OnboardingView` entfernt – war zu prominent auf dem Hauptscreen
+- Neuer Abschnitt **„Erscheinungsbild"** in `ProfileView` (Profil → unterhalb des Edit-Formulars):
+  - Überschrift + die 4 Theme-Buttons (🌙 🌞 📜 🌊) in einer Zeile
+- `.home-topbar` CSS-Klasse und `position: absolute`-Positionierung entfernt
+- `.profile-section` / `.profile-section-title` als neue CSS-Klassen für den Einstellungs-Bereich
+
+---
+
 ## [1.5.2] – 2026-04-11
 
 ### Hinzugefügt
@@ -315,6 +328,7 @@ Versionierung folgt [Semantic Versioning](https://semver.org/lang/de/).
 | **1.5.0** | Foto-Anhänge (IndexedDB), Themen-Auswahl für Freundes-Fragen | ✔️ Fertig |
 | **1.5.1** | Fragen überspringen (eigener Flow + Freunde-Flow) | ✔️ Fertig |
 | **1.5.2** | Onboarding-Screen beim Erststart | ✔️ Fertig |
+| **1.5.3** | Theme-Auswahl ins Profil-Menü verschoben | ✔️ Fertig |
 | **1.6.0** | Optionaler E2EE-Sync (Web Crypto API + Supabase, opt-in) | Geplant |
 | **2.0.0** | Backend-Sync, Familien-Freigabe-Links mit geteilten Schlüsseln | Zukunft |
 | **2.1.0** | LLM-Direktintegration: Biografie auf Knopfdruck in der App | Zukunft |

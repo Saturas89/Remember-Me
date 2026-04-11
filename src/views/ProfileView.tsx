@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { CATEGORIES } from '../data/categories'
+import { ThemeSwitcher } from '../components/ThemeSwitcher'
+import { useTheme } from '../hooks/useTheme'
 import type { Profile, Answer } from '../types'
 
 interface Props {
@@ -11,6 +13,7 @@ interface Props {
 }
 
 export function ProfileView({ profile, answers, friendCount, onSave, onBack }: Props) {
+  const { theme, setTheme } = useTheme()
   const [name, setName] = useState(profile?.name ?? '')
   const [birthYear, setBirthYear] = useState(
     profile?.birthYear ? String(profile.birthYear) : '',
@@ -112,6 +115,12 @@ export function ProfileView({ profile, answers, friendCount, onSave, onBack }: P
       {memberSince && (
         <p className="profile-since">Mitglied seit {memberSince}</p>
       )}
+
+      {/* Appearance */}
+      <div className="profile-section">
+        <h3 className="profile-section-title">Erscheinungsbild</h3>
+        <ThemeSwitcher current={theme} onChange={setTheme} />
+      </div>
     </div>
   )
 }
