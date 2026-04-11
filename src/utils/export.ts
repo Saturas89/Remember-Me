@@ -1,0 +1,189 @@
+import { CATEGORIES } from '../data/categories'
+import { FRIEND_QUESTIONS } from '../data/friendQuestions'
+import type { Answer, Friend, FriendAnswer, CustomQuestion, Profile } from '../types'
+
+export interface ExportData {
+  profile: Profile | null
+  answers: Record<string, Answer>
+  friends: Friend[]
+  friendAnswers: FriendAnswer[]
+  customQuestions: CustomQuestion[]
+}
+
+// ── Helpers ──────────────────────────────────────────────
+
+function formatDate(iso: string): string {
+  return new Date(iso).toLocaleDateString('de-DE', {
+    day: 'numeric', month: 'long', year: 'numeric',
+  })
+}
+
+function resolveQuestion(questionId: string): string {
+  for (const cat of CATEGORIES) {
+    const q = cat.questions.find(q => q.id === questionId)
+    if (q) return q.text
+  }
+  const fq = FRIEND_QUESTIONS.find(q => q.id === questionId)
+  if (fq) return fq.text
+  return questionId
+}
+
+/** Trigger a browser file download */
+export function downloadFile(content: string, filename: string, mime: string): void {
+  const blob = new Blob([content], { type: mime })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
+}
+
+// ── Markdown export ───────────────────────────────────────
+
+export function exportAsMarkdown(data: ExportData): string {
+  const { profile, answers, friends, friendAnswers, customQuestions } = data
+  const name = profile?.name ?? 'Unbekannt'
+  const year = profile?.birthYear ? ` (geb. ${profile.birthYear})` : ''
+  const today = formatDate(new Date().toISOString())
+
+  const lines: string[] = []
+
+  lines.push(`# Lebensgeschichte von ${name}${year}`)
+  lines.push('')
+  lines.push(`*Exportiert am ${today} · Remember Me*`)
+  lines.push('')
+  lines.push('---')
+
+  // Own answers by category
+  for (const cat of CATEGORIES) {
+    const catAnswers = cat.questions.filter(q => answers[q.id]?.value.trim())
+    if (catAnswers.length === 0) continue
+
+    lines.push('')
+    lines.push(`## ${cat.emoji} ${cat.title}`)
+    lines.push('')
+
+    for (const q of catAnswers) {
+      lines.push(`**${q.text}**`)
+      lines.push(answers[q.id].value.trim())
+      lines.push('')
+    }
+
+    lines.push('---')
+  }
+
+  // Custom questions
+  const customAnswered = customQuestions.filter(q => answers[q.id]?.value.trim())
+  if (customAnswered.length > 0) {
+    lines.push('')
+    lines.push('## ✏️ Eigene Fragen')
+    lines.push('')
+
+    for (const q of customAnswered) {
+      lines.push(`**${q.text}**`)
+      lines.push(answers[q.id].value.trim())
+      lines.push('')
+    }
+
+    lines.push('---')
+  }
+
+  // Friend perspectives
+  const friendsWithAnswers = friends.filter(f =>
+    friendAnswers.some(a => a.friendId === f.id && a.value.trim()),
+  )
+
+  if (friendsWithAnswers.length > 0) {
+    lines.push('')
+    lines.push('## 👥 Was Freunde über mich sagen')
+
+    for (const friend of friendsWithAnswers) {
+      const thisAnswers = friendAnswers.filter(
+        a => a.friendId === friend.id && a.value.trim(),
+      )
+      lines.push('')
+      lines.push(`### ${friend.name}`)
+      lines.push('')
+
+      for (const a of thisAnswers) {
+        const questionText = resolveQuestion(a.questionId)
+          .replace(/\{name\}/g, name)
+        lines.push(`**${questionText}**`)
+        lines.push(a.value.trim())
+        lines.push('')
+      }
+    }
+
+    lines.push('---')
+  }
+
+  lines.push('')
+  lines.push('*Erstellt mit Remember Me – Lebensgeschichten für die Nachwelt.*')
+
+  return lines.join('\n')
+}
+
+// ── Enriched JSON export ──────────────────────────────────
+
+export function exportAsEnrichedJSON(data: ExportData): string {
+  const { profile, answers, friends, friendAnswers, customQuestions } = data
+  const name = profile?.name ?? 'Unbekannt'
+
+  const categories = CATEGORIES
+    .map(cat => {
+      const catAnswers = cat.questions
+        .filter(q => answers[q.id]?.value.trim())
+        .map(q => ({
+          questionId: q.id,
+          question: q.text,
+          answer: answers[q.id].value.trim(),
+          answeredAt: answers[q.id].updatedAt.split('T')[0],
+        }))
+      if (catAnswers.length === 0) return null
+      return { id: cat.id, title: cat.title, emoji: cat.emoji, answers: catAnswers }
+    })
+    .filter(Boolean)
+
+  const customAnswered = customQuestions
+    .filter(q => answers[q.id]?.value.trim())
+    .map(q => ({
+      questionId: q.id,
+      question: q.text,
+      answer: answers[q.id].value.trim(),
+      answeredAt: answers[q.id].updatedAt.split('T')[0],
+    }))
+
+  const friendPerspectives = friends
+    .map(friend => {
+      const thisAnswers = friendAnswers
+        .filter(a => a.friendId === friend.id && a.value.trim())
+        .map(a => ({
+          question: resolveQuestion(a.questionId).replace(/\{name\}/g, name),
+          answer: a.value.trim(),
+          submittedAt: a.createdAt.split('T')[0],
+        }))
+      if (thisAnswers.length === 0) return null
+      return { friendName: friend.name, answers: thisAnswers }
+    })
+    .filter(Boolean)
+
+  const payload = {
+    $schema: 'https://remember-me.app/schema/export/v1.json',
+    exportVersion: '1',
+    exportedAt: new Date().toISOString(),
+    app: 'Remember Me',
+    profile: {
+      name: profile?.name ?? null,
+      birthYear: profile?.birthYear ?? null,
+      memberSince: profile?.createdAt ? profile.createdAt.split('T')[0] : null,
+    },
+    categories,
+    customQuestions: customAnswered.length > 0 ? customAnswered : undefined,
+    friendPerspectives: friendPerspectives.length > 0 ? friendPerspectives : undefined,
+  }
+
+  return JSON.stringify(payload, null, 2)
+}

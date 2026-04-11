@@ -13,7 +13,7 @@ Alle funktionalen und nicht-funktionalen Anforderungen des Projekts.
 | [REQ-003](./REQ-003-story-storage.md) | Lebensarchiv & Datenspeicherung | Data | High | ✔️ COMPLETED |
 | [REQ-004](./REQ-004-export-sharing.md) | Export & Teilen | Export | Medium | 🔵 IN PROGRESS |
 | [REQ-005](./REQ-005-ci-cd-pipeline.md) | CI/CD Pipeline | DevOps | Low | ✔️ COMPLETED |
-| REQ-006 | KI-lesbarer Datenexport | Export | Medium | 🟢 DRAFT |
+| REQ-006 | KI-lesbarer Datenexport | Export | Medium | ✔️ COMPLETED |
 | REQ-007 | Medienanhänge (Fotos) | Data | Low | 🟢 DRAFT |
 | REQ-008 | E2EE-Sync (opt-in) | Core | Low | 🟢 DRAFT |
 
@@ -37,7 +37,7 @@ Alle funktionalen und nicht-funktionalen Anforderungen des Projekts.
 - [x] Eigene Fragen erstellen und teilen
 
 ### COULD – Geplant 📋
-- [ ] KI-lesbarer Export (Markdown + Enriched JSON) → REQ-006, v1.4.0
+- [x] KI-lesbarer Export (Markdown + Enriched JSON) → REQ-006, v1.4.0
 - [ ] Fotos zu Antworten hinzufügen → REQ-007, v1.5.0
 - [ ] Push Notifications als Erinnerung
 - [ ] Mehrsprachigkeit (DE / EN)

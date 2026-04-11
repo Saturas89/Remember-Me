@@ -1,7 +1,6 @@
 # KI-lesbarer Datenexport – Konzept & Vorschläge
 
-**Status:** 🟢 DRAFT  
-**Geplante Version:** 1.4.0  
+**Status:** ✔️ COMPLETED (v1.4.0)  
 **Anforderung:** REQ-006
 
 ---
@@ -224,24 +223,34 @@ friendPerspectives:
 | **LLM-Prompt-Template** | Direkte KI-Nutzung | Sehr gering |
 | YAML | Technisch affine Nutzer | Mittel |
 
-**Phase 1 (v1.4.0):** Markdown-Export + Enriched JSON im Archiv  
-**Phase 2 (v2.x):** LLM-Direktintegration (Biografie auf Knopfdruck)
+**Phase 1 (v1.4.0):** ✔️ Markdown-Export + Enriched JSON im Archiv – implementiert  
+**Phase 2 (v2.1.0):** LLM-Direktintegration (Biografie auf Knopfdruck) – geplant
 
 ---
 
-## Implementierungsplan (v1.4.0)
+## Implementierung (v1.4.0) – Abgeschlossen
 
-### Neue Funktion `src/utils/export.ts`
+### `src/utils/export.ts`
 
 ```typescript
-import { CATEGORIES } from '../data/categories'
-import { FRIEND_QUESTIONS } from '../data/friendQuestions'
-import type { AppState } from '../types'
-
-export function exportAsMarkdown(state: AppState): string { ... }
-export function exportAsJSON(state: AppState): object { ... }
-export function exportAsPrompt(state: AppState): string { ... }
+export function exportAsMarkdown(data: ExportData): string
+export function exportAsEnrichedJSON(data: ExportData): string  // gibt JSON.stringify zurück
+export function downloadFile(content, filename, mime): void
 ```
+
+- Frage-IDs werden zu vollständigen Texten aufgelöst (Lookup in `CATEGORIES` + `FRIEND_QUESTIONS`)
+- `{name}`-Platzhalter in Freunde-Fragen werden mit dem Profilnamen ersetzt
+- `downloadFile` nutzt `Blob` + `URL.createObjectURL` – kein Backend nötig
+- Dateiname: `[profilname].md` / `[profilname].json`
+
+### UI – Export-Buttons im Archiv
+
+```
+[← Zurück]  📖 Mein Lebensarchiv  [📄 .md] [{ } JSON] [🖨]
+```
+
+- Rechts in der Topbar, ausgeblendet bei `@media print`
+- Tooltip erklärt den Zweck jedes Buttons
 
 Die Funktion löst Frage-IDs zu vollständigen Texten auf, indem sie
 `CATEGORIES` und `FRIEND_QUESTIONS` als Lookup-Tabellen nutzt.
@@ -282,8 +291,64 @@ Datenschutzbedingungen. Die App soll deshalb einen deutlichen Hinweis zeigen:
 
 ---
 
+---
+
+## Roadmap: LLM-Direktintegration (v2.1.0)
+
+Statt den Export manuell in einen KI-Chat zu kopieren, soll die App selbst
+mit einem LLM kommunizieren und direkt eine Biografie generieren.
+
+### Konzept
+
+```
+User klickt "Biografie schreiben lassen"
+      ↓
+App baut Markdown-Export intern (clientseitig)
+      ↓
+Schickt ihn an Claude/OpenAI API
+      ↓
+Zeigt die generierte Biografie in der App an
+      ↓
+User kann sie bearbeiten, drucken oder teilen
+```
+
+### Mögliche Implementierungen
+
+| Ansatz | Beschreibung | Datenschutz |
+|--------|-------------|-------------|
+| **Eigener API-Key** | User trägt seinen Anthropic/OpenAI-Key ein, Calls gehen direkt vom Browser | Hoch – Daten gehen nur an Anbieter, den User wählt |
+| **Remember Me Backend** | App hat eigenen Proxy-Server | Mittel – Betreiber sieht Metadaten |
+| **Lokales LLM** | Ollama o.ä. lokal auf dem Gerät | Maximal – keine Daten verlassen das Gerät |
+
+**Empfehlung für v2.1:** Eigener API-Key (User bringt seinen Schlüssel mit).
+Keine Daten gehen an Remember Me – maximale Transparenz.
+
+### Prompt-Vorlage (Entwurf)
+
+```
+Du bist ein einfühlsamer Biograf. Schreibe aus den folgenden Antworten
+eine persönliche Biografie in der dritten Person, ca. 600–800 Wörter,
+auf Deutsch. Schreibe warm, persönlich und respektvoll. Erfinde nichts –
+halte dich exakt an die gegebenen Informationen.
+
+[Markdown-Export wird hier eingefügt]
+```
+
+---
+
+## Datenschutz-Hinweis
+
+Der KI-Export enthält alle persönlichen Antworten im Klartext. Beim Teilen
+des Exports mit KI-Diensten (ChatGPT, Claude, etc.) gelten deren
+Datenschutzbedingungen. Die App zeigt beim Export einen Hinweis:
+
+> *„Dieser Export enthält persönliche Daten. Stelle sicher, dass du den
+> Datenschutzrichtlinien des KI-Dienstes, den du nutzt, vertraust."*
+
+---
+
 ## Referenzen
 
 - [Aktuelles Datenmodell](../PROJECT.md#datenmodell-aktuell)
 - [REQ-004 Export & Teilen](./REQ-004-export-sharing.md)
-- [CHANGELOG v1.4.0 (geplant)](../CHANGELOG.md)
+- [CHANGELOG](../CHANGELOG.md)

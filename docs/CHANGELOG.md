@@ -5,7 +5,27 @@ Alle veröffentlichten Versionen des Projekts, absteigend sortiert.
 Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 Versionierung folgt [Semantic Versioning](https://semver.org/lang/de/).
 
-## [1.3.2] – 2026-04-10
+## [1.4.0] – 2026-04-11
+
+### Hinzugefügt
+
+#### KI-lesbarer Datenexport
+- **`src/utils/export.ts`** – Neue Export-Utility mit zwei Formaten:
+  - `exportAsMarkdown(data)` – Menschlich & KI-lesbar; löst Frage-IDs zu vollständigen Texten auf; enthält eigene Fragen + Freunde-Perspektiven
+  - `exportAsEnrichedJSON(data)` – Strukturierter JSON-Export mit `$schema`, `exportVersion`, vollständigen Fragetexten, Datumsangaben
+  - `downloadFile(content, filename, mime)` – Clientseitiger Browser-Download ohne Backend
+- **Export-Buttons im Archiv** (Topbar, rechts):
+  - `📄 .md` → lädt `[name].md` herunter (ideal zum Einfügen in Claude/ChatGPT)
+  - `{ } JSON` → lädt `[name].json` herunter (strukturiert, maschinenlesbar)
+  - `🖨` → Drucken (unverändert)
+- `ArchiveView` erhält neues `profile`-Prop für Geburtsjahr + Mitglied-seit im Export
+
+### Geändert
+- `package.json` Version 1.4.0
+
+---
+
+## [1.3.2] – 2026-04-11
 
 ### Hinzugefügt
 
@@ -221,7 +241,8 @@ Versionierung folgt [Semantic Versioning](https://semver.org/lang/de/).
 | **1.3.0** | Profil-Seite, Archiv bearbeitbar, PDF-Export, Eigene Fragen + Teilen | ✔️ Fertig |
 | **1.3.1** | PWA installierbar (Icons, iOS/Android Meta-Tags, Manifest) | ✔️ Fertig |
 | **1.3.2** | Install-Prompt (Android nativ, iOS Anleitung), Logo-Redesign | ✔️ Fertig |
-| **1.4.0** | KI-lesbarer Datenexport (Markdown + Enriched JSON) | Geplant |
+| **1.4.0** | KI-lesbarer Datenexport (Markdown + Enriched JSON) | ✔️ Fertig |
 | **1.5.0** | Medienanhänge (Fotos zu Antworten), IndexedDB-Migration | Geplant |
 | **1.6.0** | Optionaler E2EE-Sync (Web Crypto API + Supabase, opt-in) | Geplant |
 | **2.0.0** | Backend-Sync, Familien-Freigabe-Links mit geteilten Schlüsseln | Zukunft |
+| **2.1.0** | LLM-Direktintegration: Biografie auf Knopfdruck in der App | Zukunft |

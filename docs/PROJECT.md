@@ -1,7 +1,7 @@
 # Projektübersicht – Remember Me
 
 **Status:** 🔵 IN PROGRESS  
-**Version:** 1.3.2  
+**Version:** 1.4.0  
 **Letzte Aktualisierung:** 2026-04-11
 
 ---
@@ -59,12 +59,13 @@ Teilen / Exportieren (PDF, Freunde einladen, KI-Export)
 - [x] Install-Prompt: Android nativ (`beforeinstallprompt`), iOS Anleitung
 
 ### Geplant 📋
-- [ ] KI-lesbarer Datenexport (Markdown + Enriched JSON) – v1.4.0
+- [x] KI-lesbarer Export: Markdown (`.md`) + Enriched JSON (`.json`) im Archiv – v1.4.0
 - [ ] Medienanhänge (Fotos zu Antworten) – v1.5.0
 - [ ] IndexedDB statt localStorage (für große Mediendaten) – v1.5.0
 - [ ] Optionaler E2EE-Sync (Web Crypto API + Supabase, opt-in) – v1.6.0
 - [ ] Push Notifications (Erinnerung zum Weitermachen)
 - [ ] Backend-Sync + Familien-Freigabe-Links – v2.0.0
+- [ ] LLM-Direktintegration: Biografie auf Knopfdruck – v2.1.0
 
 ---
 

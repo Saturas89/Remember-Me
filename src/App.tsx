@@ -96,6 +96,7 @@ export default function App() {
   if (view.name === 'archive') {
     return (
       <ArchiveView
+        profile={profile}
         answers={answers}
         friendAnswers={friendAnswers}
         friends={friends}
