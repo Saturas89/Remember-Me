@@ -5,6 +5,29 @@ Alle veröffentlichten Versionen des Projekts, absteigend sortiert.
 Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 Versionierung folgt [Semantic Versioning](https://semver.org/lang/de/).
 
+## [1.3.2] – 2026-04-10
+
+### Hinzugefügt
+
+#### PWA Install-Prompt
+- **`useInstallPrompt`-Hook** – Erkennt Installationsmöglichkeit auf Android und iOS:
+  - Android/Chrome: fängt `beforeinstallprompt`-Event ab, löst nativen Install-Dialog aus
+  - iOS/Safari: erkennt iPhone/iPad per UserAgent, zeigt manuelle Anleitung
+  - Bereits installiert (`display-mode: standalone`)? → kein Banner
+  - Dismissal persistent in `localStorage` (`rm-install-dismissed`)
+- **`InstallBanner`-Komponente** – Erscheint zwischen Logo und Kategorien:
+  - Android: „Installieren"-Button → öffnet nativen Chrome/Edge-Installationsdialog
+  - iOS: Share-Icon (SVG) + Text „Tippe auf [↑] und dann ‚Zum Home-Bildschirm'"
+  - ✕-Button schließt dauerhaft; Slide-in-Animation; Akzent-Linksrahmen
+
+#### Design – Logo & App-Icon
+- **`public/favicon.svg`** neu: Herz mit Coral→Crimson-Gradient + Soft Drop Shadow + Shine-Highlight auf navy-blauem Hintergrund
+- **App-Icons** (192×192, 512×512, apple-touch 180×180) überarbeitet:
+  - Tieferes Hintergrund-Gradient (`#1e2647` → `#0c1120`)
+  - Radiale Glow-Ellipse hinter dem Herz
+  - Herz: Gradient coral→crimson + Schattenlayer + inneres Highlight-Oval + Shine-Arc
+  - Reproduzierbar: `npm run generate-icons`
+
 ---
 
 ## [1.3.1] – 2026-04-10
@@ -188,12 +211,17 @@ Versionierung folgt [Semantic Versioning](https://semver.org/lang/de/).
 
 ---
 
-## Geplante Versionen
+## Versionsübersicht
 
 | Version | Inhalt | Status |
 |---------|--------|--------|
+| **1.0.0** | PWA-Grundstruktur, Frage-Engine, Lebensarchiv | ✔️ Fertig |
+| **1.1.0** | Freunde-Feature (Einladungslinks, Antwort-Codes) | ✔️ Fertig |
 | **1.2.0** | Logo, 4 Themes, CSS-Variablen | ✔️ Fertig |
 | **1.3.0** | Profil-Seite, Archiv bearbeitbar, PDF-Export, Eigene Fragen + Teilen | ✔️ Fertig |
-| **1.4.0** | Medienanhänge (Fotos zu Antworten) | Geplant |
-| **1.5.0** | IndexedDB-Migration + optionaler E2EE-Sync (Web Crypto API + Supabase) | Geplant |
+| **1.3.1** | PWA installierbar (Icons, iOS/Android Meta-Tags, Manifest) | ✔️ Fertig |
+| **1.3.2** | Install-Prompt (Android nativ, iOS Anleitung), Logo-Redesign | ✔️ Fertig |
+| **1.4.0** | KI-lesbarer Datenexport (Markdown + Enriched JSON) | Geplant |
+| **1.5.0** | Medienanhänge (Fotos zu Antworten), IndexedDB-Migration | Geplant |
+| **1.6.0** | Optionaler E2EE-Sync (Web Crypto API + Supabase, opt-in) | Geplant |
 | **2.0.0** | Backend-Sync, Familien-Freigabe-Links mit geteilten Schlüsseln | Zukunft |
