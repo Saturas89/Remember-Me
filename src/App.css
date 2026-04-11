@@ -816,61 +816,205 @@
 
 .btn--sm { padding: 0.45rem 0.9rem; font-size: 0.85rem; }
 
-/* ── Install banner ──────────────────────────────────── */
-.install-banner {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
+/* ── Install modal ───────────────────────────────────── */
+.install-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 100;
+  animation: fade-in 0.2s ease;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.install-modal {
+  position: fixed;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  width: min(480px, 100vw);
   background: var(--surface);
   border: 1px solid var(--border-focus);
-  border-left: 3px solid var(--accent);
-  border-radius: 12px;
-  padding: 0.85rem 1rem;
-  margin: 1.25rem 0 0.5rem;
-  animation: slide-in 0.3s ease;
+  border-bottom: none;
+  border-radius: 24px 24px 0 0;
+  padding: 1.75rem 1.75rem 2.5rem;
+  z-index: 101;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.9rem;
+  animation: slide-up 0.3s cubic-bezier(0.32, 0.72, 0, 1);
 }
 
-@keyframes slide-in {
-  from { opacity: 0; transform: translateY(-8px); }
-  to   { opacity: 1; transform: translateY(0); }
+@keyframes slide-up {
+  from { transform: translateX(-50%) translateY(100%); }
+  to   { transform: translateX(-50%) translateY(0); }
 }
 
-.install-banner__icon { font-size: 1.4rem; flex-shrink: 0; }
+/* Handle bar */
+.install-modal::before {
+  content: '';
+  width: 40px;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  position: absolute;
+  top: 0.6rem;
+  left: 50%;
+  transform: translateX(-50%);
+}
 
-.install-banner__body { flex: 1; min-width: 0; }
+.install-modal__close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: var(--surface-raised);
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.8rem;
+  width: 1.8rem;
+  height: 1.8rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, color 0.15s;
+}
 
-.install-banner__title {
-  font-size: 0.88rem;
+.install-modal__close:hover {
+  background: var(--border);
+  color: var(--text);
+}
+
+.install-modal__brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.install-modal__heart {
+  width: 3.5rem;
+  height: 3.2rem;
+  overflow: visible;
+  filter: drop-shadow(0 4px 12px color-mix(in srgb, var(--accent) 50%, transparent));
+}
+
+.install-modal__app-name {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: -0.02em;
+}
+
+.install-modal__title {
+  font-size: 1.2rem;
   font-weight: 700;
   color: var(--text);
-  margin-bottom: 0.15rem;
+  margin: 0;
 }
 
-.install-banner__sub {
-  font-size: 0.78rem;
+.install-modal__desc {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  line-height: 1.55;
+  max-width: 320px;
+  margin: 0;
+}
+
+.install-modal__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  width: 100%;
+  max-width: 280px;
+  margin-top: 0.25rem;
+}
+
+.install-modal__actions .btn { width: 100%; }
+
+/* iOS step list */
+.install-modal__steps {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  text-align: left;
+  width: 100%;
+  max-width: 300px;
+}
+
+.install-modal__steps li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  font-size: 0.9rem;
   color: var(--text-muted);
   line-height: 1.4;
 }
 
-.install-banner__share-icon {
+.install-modal__steps li::before {
+  content: counter(step);
+  counter-increment: step;
+  min-width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  background: var(--accent-tinted);
   color: var(--accent);
-}
-
-.install-banner__close {
-  background: none;
-  border: none;
-  color: var(--text-faint);
-  cursor: pointer;
-  font-size: 0.85rem;
-  padding: 0.2rem 0.35rem;
-  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
-  transition: color 0.15s;
+  margin-top: 0.05rem;
 }
 
-.install-banner__close:hover { color: var(--text); }
+.install-modal__steps { counter-reset: step; }
 
-.install-banner--ios { border-left-color: var(--accent); }
+.install-modal__share-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.15rem 0.4rem;
+  color: var(--accent);
+  vertical-align: middle;
+}
+
+.install-modal__arrow-hint {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  color: var(--text-faint);
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+.install-modal__arrow-hint span:first-child {
+  font-size: 1.4rem;
+  animation: bounce 1.4s ease-in-out infinite;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(5px); }
+}
+
+.install-modal__arrow-label { letter-spacing: 0.06em; text-transform: uppercase; }
 
 /* ── Profile view ────────────────────────────────────── */
 .profile-view {

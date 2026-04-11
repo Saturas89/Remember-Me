@@ -3,9 +3,7 @@ import { CATEGORIES } from '../data/categories'
 import { CategoryCard } from '../components/CategoryCard'
 import { HeroLogo } from '../components/Logo'
 import { ThemeSwitcher } from '../components/ThemeSwitcher'
-import { InstallBanner } from '../components/InstallBanner'
 import { useTheme } from '../hooks/useTheme'
-import { useInstallPrompt } from '../hooks/useInstallPrompt'
 import type { Friend, FriendAnswer, CustomQuestion } from '../types'
 
 interface Props {
@@ -36,7 +34,6 @@ export function HomeView({
   onSaveName,
 }: Props) {
   const { theme, setTheme } = useTheme()
-  const { state: installState, visible: installVisible, triggerInstall, dismiss: dismissInstall } = useInstallPrompt()
   const [editingName, setEditingName] = useState(!profileName)
   const [nameInput, setNameInput] = useState(profileName)
 
@@ -112,13 +109,6 @@ export function HomeView({
         ))}
       </section>
 
-      {installVisible && (
-        <InstallBanner
-          state={installState}
-          onInstall={triggerInstall}
-          onDismiss={dismissInstall}
-        />
-      )}
 
       <div className="home-actions">
         {totalAnswered > 0 && (
