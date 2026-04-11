@@ -5,6 +5,25 @@ Alle veröffentlichten Versionen des Projekts, absteigend sortiert.
 Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 Versionierung folgt [Semantic Versioning](https://semver.org/lang/de/).
 
+## [1.5.2] – 2026-04-11
+
+### Hinzugefügt
+
+#### Onboarding-Screen (Erststart)
+- **`OnboardingView`** – Erscheint genau einmal beim ersten Öffnen der App (wenn noch kein Profil existiert)
+- Aufbau des Screens:
+  - **Hero**: Animiertes Logo + Tagline „Deine Geschichte verdient es, erzählt zu werden."
+  - **Story**: Zwei Absätze über das Konzept (verblassende Erinnerungen, Fragen die nie gestellt wurden)
+  - **Feature-Kacheln** (animiert eingeblendet): 🔒 Privat · 📴 Offline · ❤️ Für immer – je mit kurzer Erklärung
+  - **Namenseingabe**: Eingabefeld + „Loslegen →"-Button
+  - **Footer-Hinweis**: „Kostenlos · Keine Anmeldung nötig · Deine Daten bleiben auf deinem Gerät"
+- Alle Sektionen mit gestaffelten `fade-slide-up`-Animationen eingeblendet
+- Theme-Switcher oben rechts auch auf dem Onboarding-Screen verfügbar
+- Nach Bestätigung wird direkt das Profil gespeichert und die Hauptansicht gezeigt
+- `HomeView`: `editingName` startet nicht mehr als `true` – Name-Erfassung erfolgt vollständig über Onboarding
+
+---
+
 ## [1.5.1] – 2026-04-11
 
 ### Hinzugefügt
@@ -295,6 +314,7 @@ Versionierung folgt [Semantic Versioning](https://semver.org/lang/de/).
 | **1.4.0** | KI-lesbarer Datenexport (Markdown + Enriched JSON) | ✔️ Fertig |
 | **1.5.0** | Foto-Anhänge (IndexedDB), Themen-Auswahl für Freundes-Fragen | ✔️ Fertig |
 | **1.5.1** | Fragen überspringen (eigener Flow + Freunde-Flow) | ✔️ Fertig |
+| **1.5.2** | Onboarding-Screen beim Erststart | ✔️ Fertig |
 | **1.6.0** | Optionaler E2EE-Sync (Web Crypto API + Supabase, opt-in) | Geplant |
 | **2.0.0** | Backend-Sync, Familien-Freigabe-Links mit geteilten Schlüsseln | Zukunft |
 | **2.1.0** | LLM-Direktintegration: Biografie auf Knopfdruck in der App | Zukunft |

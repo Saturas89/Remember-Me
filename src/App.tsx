@@ -10,6 +10,7 @@ import { FriendsView } from './views/FriendsView'
 import { FriendAnswerView } from './views/FriendAnswerView'
 import { ProfileView } from './views/ProfileView'
 import { CustomQuestionsView } from './views/CustomQuestionsView'
+import { OnboardingView } from './views/OnboardingView'
 import { InstallBanner } from './components/InstallBanner'
 import type { Category } from './types'
 import './App.css'
@@ -52,6 +53,16 @@ export default function App() {
   // If opened via invite link, show the friend answering flow instead of the regular app
   if (inviteFromUrl) {
     return <FriendAnswerView invite={inviteFromUrl} />
+  }
+
+  // First-time open: show onboarding before anything else
+  if (!profile) {
+    return (
+      <>
+        <OnboardingView onComplete={saveProfile} />
+        {installVisible && <InstallBanner state={installState} onInstall={triggerInstall} onDismiss={dismissInstall} />}
+      </>
+    )
   }
 
   function handleSaveName(name: string) {

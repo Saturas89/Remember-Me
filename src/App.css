@@ -1,3 +1,149 @@
+/* ── Onboarding ──────────────────────────────────────── */
+.onboarding {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  max-width: 520px;
+  margin: 0 auto;
+  padding: env(safe-area-inset-top, 0px) 1.5rem calc(3rem + env(safe-area-inset-bottom, 0px));
+  animation: fade-in 0.4s ease;
+}
+
+.onboarding__topbar {
+  align-self: flex-end;
+  padding-top: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.onboarding__hero {
+  padding: 1.5rem 0 0.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.onboarding__tagline {
+  font-size: clamp(1.05rem, 3vw, 1.25rem);
+  color: var(--text-muted);
+  line-height: 1.55;
+  font-weight: 300;
+  letter-spacing: 0.01em;
+  margin: 0;
+}
+
+.onboarding__story {
+  margin: 1.75rem 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  animation: fade-slide-up 0.5s ease 0.1s both;
+}
+
+.onboarding__story p {
+  font-size: 0.97rem;
+  color: var(--text-muted);
+  line-height: 1.7;
+  margin: 0;
+}
+
+.onboarding__story strong { color: var(--text); }
+
+.onboarding__features {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1.75rem;
+  width: 100%;
+  animation: fade-slide-up 0.5s ease 0.2s both;
+}
+
+.onboarding__feature {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1rem 0.5rem;
+  animation: fade-slide-up 0.45s ease both;
+}
+
+.onboarding__feature-icon { font-size: 1.5rem; line-height: 1; }
+
+.onboarding__feature-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.onboarding__feature-desc {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  line-height: 1.35;
+}
+
+.onboarding__divider {
+  width: 40px;
+  height: 2px;
+  background: var(--border);
+  border-radius: 2px;
+  margin: 2rem 0;
+  animation: fade-in 0.5s ease 0.35s both;
+}
+
+.onboarding__form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  animation: fade-slide-up 0.5s ease 0.3s both;
+}
+
+.onboarding__label {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.onboarding__label-hint {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin: -0.25rem 0 0;
+  line-height: 1.5;
+}
+
+.onboarding__input {
+  width: 100%;
+  max-width: 360px;
+  font-size: 1.05rem;
+  text-align: center;
+}
+
+.onboarding__cta {
+  width: 100%;
+  max-width: 360px;
+  padding: 0.9rem 2rem;
+  font-size: 1rem;
+}
+
+.onboarding__footer {
+  margin-top: 2rem;
+  font-size: 0.75rem;
+  color: var(--text-faint);
+  line-height: 1.6;
+  animation: fade-in 0.5s ease 0.5s both;
+}
+
+@keyframes fade-slide-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
 /* ── Shared layout ───────────────────────────────────── */
 .home-view,
 .quiz-view,

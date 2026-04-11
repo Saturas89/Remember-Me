@@ -1,7 +1,7 @@
 # Projektübersicht – Remember Me
 
 **Status:** 🔵 IN PROGRESS  
-**Version:** 1.5.0  
+**Version:** 1.5.2  
 **Letzte Aktualisierung:** 2026-04-11
 
 ---
@@ -63,6 +63,7 @@ Teilen / Exportieren (PDF, Freunde einladen, KI-Export)
 - [x] Foto-Anhänge zu Antworten (IndexedDB, Komprimierung, Lightbox) – v1.5.0
 - [x] Themen-Auswahl für Freundes-Einladungen (4 Themen × 5 Fragen) – v1.5.0
 - [x] Fragen überspringen (eigener Flow + Freunde-Flow) – v1.5.1
+- [x] Onboarding-Screen beim Erststart (Erklärung, Offline-Hinweis, Namenseingabe) – v1.5.2
 - [ ] Optionaler E2EE-Sync (Web Crypto API + Supabase, opt-in) – v1.6.0
 - [ ] Push Notifications (Erinnerung zum Weitermachen)
 - [ ] Backend-Sync + Familien-Freigabe-Links – v2.0.0

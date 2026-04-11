@@ -34,7 +34,7 @@ export function HomeView({
   onSaveName,
 }: Props) {
   const { theme, setTheme } = useTheme()
-  const [editingName, setEditingName] = useState(!profileName)
+  const [editingName, setEditingName] = useState(false)
   const [nameInput, setNameInput] = useState(profileName)
 
   const totalQuestions = CATEGORIES.reduce((s, c) => s + c.questions.length, 0)
