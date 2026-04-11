@@ -1,7 +1,7 @@
 # Projektübersicht – Remember Me
 
 **Status:** 🔵 IN PROGRESS  
-**Version:** 1.5.4  
+**Version:** 1.5.5  
 **Letzte Aktualisierung:** 2026-04-11
 
 ---

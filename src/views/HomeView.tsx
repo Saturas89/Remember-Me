@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { CATEGORIES } from '../data/categories'
 import { CategoryCard } from '../components/CategoryCard'
 import { HeroLogo } from '../components/Logo'
@@ -11,11 +10,6 @@ interface Props {
   customQuestions: CustomQuestion[]
   getCategoryProgress: (categoryId: string, total: number) => number
   onSelectCategory: (categoryId: string) => void
-  onOpenArchive: () => void
-  onOpenFriends: () => void
-  onOpenProfile: () => void
-  onOpenCustomQuestions: () => void
-  onSaveName: (name: string) => void
 }
 
 export function HomeView({
@@ -25,15 +19,7 @@ export function HomeView({
   customQuestions,
   getCategoryProgress,
   onSelectCategory,
-  onOpenArchive,
-  onOpenFriends,
-  onOpenProfile,
-  onOpenCustomQuestions,
-  onSaveName,
 }: Props) {
-  const [editingName, setEditingName] = useState(false)
-  const [nameInput, setNameInput] = useState(profileName)
-
   const totalQuestions = CATEGORIES.reduce((s, c) => s + c.questions.length, 0)
   const totalAnswered = CATEGORIES.reduce(
     (s, c) =>
@@ -41,52 +27,24 @@ export function HomeView({
     0,
   )
   const overallProgress = Math.round((totalAnswered / totalQuestions) * 100)
-  const totalFriendAnswers = friendAnswers.filter(a => a.value.trim()).length
 
-  function handleSaveName() {
-    if (!nameInput.trim()) return
-    onSaveName(nameInput.trim())
-    setEditingName(false)
-  }
+  void friends
+  void friendAnswers
 
   return (
     <div className="home-view">
       <header className="home-header">
-        {/* Logo */}
         <HeroLogo />
-
-        {/* Profile name */}
-        {editingName ? (
-          <div className="home-name-setup">
-            <p>Wie heißt du? Das hilft beim Einladen von Freunden.</p>
-            <div className="home-name-row">
-              <input
-                className="input-text"
-                value={nameInput}
-                onChange={e => setNameInput(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && handleSaveName()}
-                placeholder="Dein Name..."
-                autoFocus
-              />
-              <button className="btn btn--primary" onClick={handleSaveName} disabled={!nameInput.trim()}>
-                Speichern
-              </button>
+        {profileName && (
+          <p className="home-greeting">Hallo, {profileName}</p>
+        )}
+        {overallProgress > 0 && (
+          <div className="home-overall">
+            <span>{overallProgress}% deiner Geschichte erzählt</span>
+            <div className="home-overall-bar">
+              <div className="home-overall-fill" style={{ width: `${overallProgress}%` }} />
             </div>
           </div>
-        ) : (
-          <>
-            <button className="home-name-btn" onClick={onOpenProfile}>
-              {profileName} ✎
-            </button>
-            {overallProgress > 0 && (
-              <div className="home-overall">
-                <span>{overallProgress}% deiner Geschichte erzählt</span>
-                <div className="home-overall-bar">
-                  <div className="home-overall-fill" style={{ width: `${overallProgress}%` }} />
-                </div>
-              </div>
-            )}
-          </>
         )}
       </header>
 
@@ -99,31 +57,23 @@ export function HomeView({
             onClick={() => onSelectCategory(cat.id)}
           />
         ))}
+        {/* Custom questions as a special category card */}
+        <button
+          type="button"
+          className="category-card category-card--custom"
+          onClick={() => onSelectCategory('custom')}
+        >
+          <span className="category-card__emoji">✏️</span>
+          <div className="category-card__body">
+            <h3 className="category-card__title">Eigene Fragen</h3>
+            <p className="category-card__desc">
+              {customQuestions.length > 0
+                ? `${customQuestions.length} eigene Fragen`
+                : 'Erstelle deine eigenen Fragen'}
+            </p>
+          </div>
+        </button>
       </section>
-
-
-      <div className="home-actions">
-        {totalAnswered > 0 && (
-          <button className="btn btn--outline" onClick={onOpenArchive}>
-            📖 Mein Archiv ({totalAnswered} Antworten)
-          </button>
-        )}
-        <button className="btn btn--friends" onClick={onOpenFriends}>
-          👥 Freunde einladen
-          {friends.length > 0 && (
-            <span className="friend-badge">{friends.length}</span>
-          )}
-          {totalFriendAnswers > 0 && (
-            <span className="friend-answer-badge">{totalFriendAnswers}</span>
-          )}
-        </button>
-        <button className="btn btn--friends" onClick={onOpenCustomQuestions}>
-          ✏️ Eigene Fragen
-          {customQuestions.length > 0 && (
-            <span className="friend-badge">{customQuestions.length}</span>
-          )}
-        </button>
-      </div>
     </div>
   )
 }

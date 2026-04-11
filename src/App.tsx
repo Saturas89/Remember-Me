@@ -12,6 +12,7 @@ import { ProfileView } from './views/ProfileView'
 import { CustomQuestionsView } from './views/CustomQuestionsView'
 import { OnboardingView } from './views/OnboardingView'
 import { InstallBanner } from './components/InstallBanner'
+import { BottomNav } from './components/BottomNav'
 import type { Category } from './types'
 import './App.css'
 
@@ -22,6 +23,8 @@ type View =
   | { name: 'friends' }
   | { name: 'profile' }
   | { name: 'custom-questions' }
+
+type MainTab = 'home' | 'archive' | 'custom-questions' | 'friends' | 'profile'
 
 // Check on load whether this session was opened via an invite link
 const inviteFromUrl = parseInviteFromHash()
@@ -65,16 +68,16 @@ export default function App() {
     )
   }
 
-  function handleSaveName(name: string) {
-    saveProfile({
-      name,
-      birthYear: profile?.birthYear,
-      createdAt: profile?.createdAt ?? new Date().toISOString(),
-    })
+  function navigate(tab: MainTab) {
+    setView({ name: tab } as View)
   }
 
+  const friendsBadge = friendAnswers.filter(a => a.value.trim()).length
+
+  // Bottom nav shown on all main views (not during focused quiz/friend-answer)
+  const showNav = view.name !== 'quiz'
+
   if (view.name === 'quiz') {
-    // Support virtual 'custom' category built from user's custom questions
     let category: Category | undefined
     if (view.categoryId === 'custom') {
       category = {
@@ -114,9 +117,9 @@ export default function App() {
     )
   }
 
-  if (view.name === 'archive') {
-    return (
-      <>
+  return (
+    <>
+      {view.name === 'archive' && (
         <ArchiveView
           profile={profile}
           answers={answers}
@@ -128,14 +131,9 @@ export default function App() {
           onSetImages={setAnswerImages}
           onBack={() => setView({ name: 'home' })}
         />
-        {installVisible && <InstallBanner state={installState} onInstall={triggerInstall} onDismiss={dismissInstall} />}
-      </>
-    )
-  }
+      )}
 
-  if (view.name === 'friends') {
-    return (
-      <>
+      {view.name === 'friends' && (
         <FriendsView
           profileName={profile?.name ?? ''}
           friends={friends}
@@ -145,14 +143,9 @@ export default function App() {
           onImportAnswers={importFriendAnswers}
           onBack={() => setView({ name: 'home' })}
         />
-        {installVisible && <InstallBanner state={installState} onInstall={triggerInstall} onDismiss={dismissInstall} />}
-      </>
-    )
-  }
+      )}
 
-  if (view.name === 'profile') {
-    return (
-      <>
+      {view.name === 'profile' && (
         <ProfileView
           profile={profile}
           answers={answers}
@@ -160,14 +153,9 @@ export default function App() {
           onSave={saveProfile}
           onBack={() => setView({ name: 'home' })}
         />
-        {installVisible && <InstallBanner state={installState} onInstall={triggerInstall} onDismiss={dismissInstall} />}
-      </>
-    )
-  }
+      )}
 
-  if (view.name === 'custom-questions') {
-    return (
-      <>
+      {view.name === 'custom-questions' && (
         <CustomQuestionsView
           customQuestions={customQuestions}
           profileName={profile?.name ?? ''}
@@ -178,26 +166,27 @@ export default function App() {
           onImport={importCustomQuestions}
           onBack={() => setView({ name: 'home' })}
         />
-        {installVisible && <InstallBanner state={installState} onInstall={triggerInstall} onDismiss={dismissInstall} />}
-      </>
-    )
-  }
+      )}
 
-  return (
-    <>
-      <HomeView
-        profileName={profile?.name ?? ''}
-        friends={friends}
-        friendAnswers={friendAnswers}
-        customQuestions={customQuestions}
-        getCategoryProgress={getCategoryProgress}
-        onSelectCategory={id => setView({ name: 'quiz', categoryId: id })}
-        onOpenArchive={() => setView({ name: 'archive' })}
-        onOpenFriends={() => setView({ name: 'friends' })}
-        onOpenProfile={() => setView({ name: 'profile' })}
-        onOpenCustomQuestions={() => setView({ name: 'custom-questions' })}
-        onSaveName={handleSaveName}
-      />
+      {view.name === 'home' && (
+        <HomeView
+          profileName={profile?.name ?? ''}
+          friends={friends}
+          friendAnswers={friendAnswers}
+          customQuestions={customQuestions}
+          getCategoryProgress={getCategoryProgress}
+          onSelectCategory={id => setView({ name: 'quiz', categoryId: id })}
+        />
+      )}
+
+      {showNav && (
+        <BottomNav
+          current={view.name}
+          onNavigate={navigate}
+          friendsBadge={friendsBadge}
+        />
+      )}
+
       {installVisible && <InstallBanner state={installState} onInstall={triggerInstall} onDismiss={dismissInstall} />}
     </>
   )

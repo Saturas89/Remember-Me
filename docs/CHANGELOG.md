@@ -5,6 +5,29 @@ Alle veröffentlichten Versionen des Projekts, absteigend sortiert.
 Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 Versionierung folgt [Semantic Versioning](https://semver.org/lang/de/).
 
+## [1.5.5] – 2026-04-11
+
+### Geändert
+
+#### Bottom-Tab-Navigation + Profil-Stats-Ausrichtung
+
+**Moderne Bottom-Tab-Bar (iOS/Android-Stil):**
+- Neue Komponente **`BottomNav`**: 5 Tabs — 🏠 Start · 📖 Archiv · ✏️ Fragen · 👥 Freunde · 👤 Profil
+- Fixierte Navigation am unteren Bildschirmrand mit Blur-Hintergrund (`backdrop-filter: blur(18px)`) und `safe-area-inset-bottom`
+- Aktiver Tab: Akzentfarbe + Icon-Bounce-Animation (`translateY(-2px) scale(1.12)`)
+- Freunde-Tab zeigt Badge-Zähler für neue Freundesantworten
+- `HomeView` bereinigt: `home-actions`-Buttons entfernt (Archiv, Freunde, Eigene Fragen – jetzt in Nav)
+- **„Eigene Fragen"** als gestrichelte Karte im Kategorien-Raster eingebaut (`.category-card--custom`)
+- Gruß-Zeile „Hallo, {Name}" als dezente Sub-Headline im Home-Header
+- `ProfileView` / alle Views: Bottom-Padding auf `4.5rem` angepasst (= Tab-Bar-Höhe)
+
+**Profil-Stats Ausrichtung:**
+- `.profile-stats` von `auto-fit minmax(88px, 1fr)` auf `repeat(2, 1fr)` umgestellt
+- Bei 3 Kacheln: drittes Element zentriert per `grid-column: 1/-1; justify-self: center`
+- Verhindert Zeilen-Wrap bei „ABGESCHLOSSEN" auf schmalen Displays
+
+---
+
 ## [1.5.4] – 2026-04-11
 
 ### Geändert
