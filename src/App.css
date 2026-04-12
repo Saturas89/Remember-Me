@@ -2158,65 +2158,77 @@
 .audio-player {
   display: flex;
   align-items: center;
-  gap: 0.55rem;
+  gap: 0.75rem;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 0.45rem 0.75rem;
+  border-radius: 20px;
+  padding: 0.6rem 0.9rem;
   margin: 0.4rem 0;
 }
 
-.audio-player__icon { font-size: 0.95rem; flex-shrink: 0; }
-
 .audio-player__play {
-  background: none;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--accent);
   border: none;
   cursor: pointer;
-  font-size: 1rem;
-  line-height: 1;
-  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
-  padding: 0.1rem 0.25rem;
-  border-radius: 50%;
-  transition: background 0.15s;
+  color: #fff;
+  transition: background 0.15s, transform 0.1s;
 }
 .audio-player__play:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  background: color-mix(in srgb, var(--accent) 82%, #000);
+  transform: scale(1.06);
 }
-.audio-player__play:disabled { opacity: 0.5; cursor: default; }
+.audio-player__play:active:not(:disabled) { transform: scale(0.95); }
+.audio-player__play:disabled { opacity: 0.45; cursor: default; }
 
-.audio-player__track {
+.audio-player__spinner {
+  width: 13px;
+  height: 13px;
+  border: 2px solid rgba(255,255,255,0.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  display: block;
+}
+
+.audio-player__body {
   flex: 1;
-  height: 4px;
-  background: var(--border);
-  border-radius: 2px;
-  position: relative;
-  overflow: hidden;
-}
-.audio-player__fill {
-  height: 100%;
-  background: var(--accent);
-  border-radius: 2px;
-  transition: width 0.1s linear;
-  pointer-events: none;
-}
-.audio-player__seek {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  opacity: 0;
-  cursor: pointer;
-  margin: 0;
-  padding: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
 }
 
-.audio-player__time {
-  font-size: 0.75rem;
+.audio-waveform {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 28px;
+  cursor: pointer;
+  padding: 2px 0;
+}
+.audio-waveform__bar {
+  flex: 1;
+  border-radius: 1px;
+  background: var(--border);
+  min-height: 3px;
+  transition: background 0.08s;
+}
+.audio-waveform__bar--played { background: var(--accent); }
+
+.audio-player__times {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.68rem;
   font-variant-numeric: tabular-nums;
   color: var(--text-muted);
-  white-space: nowrap;
-  flex-shrink: 0;
+  line-height: 1;
 }
 
 .audio-player__error {

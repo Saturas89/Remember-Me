@@ -12,6 +12,9 @@ function fmt(secs: number): string {
   return `${m}:${s}`
 }
 
+// Decorative waveform heights (percent of max bar height, 30 bars)
+const WAVEFORM = [40,62,80,55,90,70,45,85,60,75,50,92,65,82,40,70,88,55,92,60,74,48,82,65,52,94,70,42,86,60]
+
 export function AudioPlayer({ audioId }: Props) {
   const [url,         setUrl]         = useState<string | null>(null)
   const [loading,     setLoading]     = useState(false)
@@ -20,20 +23,18 @@ export function AudioPlayer({ audioId }: Props) {
   const [currentTime, setCurrentTime] = useState(0)
   const [duration,    setDuration]    = useState(0)
 
-  const audioRef      = useRef<HTMLAudioElement>(null)
-  const urlRef        = useRef<string | null>(null)
-  const pendingPlay   = useRef(false)
+  const audioRef    = useRef<HTMLAudioElement>(null)
+  const urlRef      = useRef<string | null>(null)
+  const pendingPlay = useRef(false)
 
-  // Revoke Object URL on unmount
   useEffect(() => () => {
     if (urlRef.current) URL.revokeObjectURL(urlRef.current)
   }, [])
 
-  // Auto-play once URL is available if the user already clicked play
   useEffect(() => {
     if (url && pendingPlay.current && audioRef.current) {
       pendingPlay.current = false
-      audioRef.current.play().catch(() => { /* ignore autoplay block */ })
+      audioRef.current.play().catch(() => {})
     }
   }, [url])
 
@@ -63,25 +64,22 @@ export function AudioPlayer({ audioId }: Props) {
     const audio = audioRef.current
     if (!audio) return
     if (playing) audio.pause()
-    else audio.play().catch(() => { /* ignore */ })
+    else audio.play().catch(() => {})
   }
 
-  function handleSeek(e: React.ChangeEvent<HTMLInputElement>) {
-    const audio = audioRef.current
-    if (!audio || !duration) return
-    audio.currentTime = Number(e.target.value)
+  function handleWaveformClick(e: React.MouseEvent<HTMLDivElement>) {
+    const rect = e.currentTarget.getBoundingClientRect()
+    const pct  = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width))
+    if (!url || !audioRef.current || !duration) return
+    audioRef.current.currentTime = pct * duration
   }
 
-  if (error) {
-    return <p className="audio-player__error">Audiodatei nicht verfügbar.</p>
-  }
+  if (error) return <p className="audio-player__error">Audiodatei nicht verfügbar.</p>
 
   const pct = duration > 0 ? (currentTime / duration) * 100 : 0
 
   return (
     <div className="audio-player">
-      <span className="audio-player__icon" aria-hidden="true">🎙</span>
-
       <button
         type="button"
         className="audio-player__play"
@@ -89,39 +87,48 @@ export function AudioPlayer({ audioId }: Props) {
         aria-label={playing ? 'Pause' : 'Aufnahme abspielen'}
         disabled={loading}
       >
-        {loading ? '…' : playing ? '⏸' : '▶'}
+        {loading
+          ? <span className="audio-player__spinner" />
+          : playing
+            ? <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor" aria-hidden="true"><rect x="5" y="4" width="4" height="16" rx="1"/><rect x="15" y="4" width="4" height="16" rx="1"/></svg>
+            : <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor" aria-hidden="true"><polygon points="6,3 21,12 6,21"/></svg>
+        }
       </button>
 
-      <div className="audio-player__track" aria-hidden="true">
-        <div className="audio-player__fill" style={{ width: `${pct}%` }} />
-        {url && (
-          <input
-            type="range"
-            className="audio-player__seek"
-            min={0}
-            max={duration || 0}
-            step={0.1}
-            value={currentTime}
-            onChange={handleSeek}
-            aria-label="Abspielposition"
-          />
-        )}
+      <div className="audio-player__body">
+        <div
+          className="audio-waveform"
+          onClick={handleWaveformClick}
+          role="slider"
+          aria-label="Abspielposition"
+          aria-valuenow={Math.round(pct)}
+          aria-valuemin={0}
+          aria-valuemax={100}
+        >
+          {WAVEFORM.map((h, i) => {
+            const barPct = (i / WAVEFORM.length) * 100
+            return (
+              <span
+                key={i}
+                className={`audio-waveform__bar${barPct < pct ? ' audio-waveform__bar--played' : ''}`}
+                style={{ height: `${h}%` }}
+              />
+            )
+          })}
+        </div>
+        <div className="audio-player__times">
+          <span>{fmt(currentTime)}</span>
+          {duration > 0 && <span>{fmt(duration)}</span>}
+        </div>
       </div>
 
-      <span className="audio-player__time">
-        {duration > 0
-          ? `${fmt(currentTime)} / ${fmt(duration)}`
-          : fmt(currentTime)}
-      </span>
-
-      {/* Hidden audio element — always rendered so ref is available */}
       <audio
         ref={audioRef}
         src={url ?? undefined}
-        onPlay={()         => setPlaying(true)}
-        onPause={()        => setPlaying(false)}
-        onEnded={()        => { setPlaying(false); setCurrentTime(0) }}
-        onTimeUpdate={()   => setCurrentTime(audioRef.current?.currentTime ?? 0)}
+        onPlay={()          => setPlaying(true)}
+        onPause={()         => setPlaying(false)}
+        onEnded={()         => { setPlaying(false); setCurrentTime(0) }}
+        onTimeUpdate={()    => setCurrentTime(audioRef.current?.currentTime ?? 0)}
         onLoadedMetadata={() => setDuration(audioRef.current?.duration ?? 0)}
         style={{ display: 'none' }}
         preload="none"
