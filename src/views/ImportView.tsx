@@ -35,7 +35,7 @@ const INSTAGRAM_STEPS = [
   { icon: '☰',  text: 'Tippe oben rechts auf das Menü-Symbol (drei Striche)' },
   { icon: '⚙️', text: 'Wähle „Einstellungen und Aktivitäten"' },
   { icon: '📥', text: 'Suche nach „Deine Informationen und Berechtigungen"' },
-  { icon: '💾', text: 'Tippe auf „Deine Instagram-Informationen herunterladen"' },
+  { icon: '💾', text: 'Tippe auf „Deine Informationen exportieren"' },
   { icon: '📋', text: 'Wähle „Einige deiner Informationen"→ „Beiträge" auswählen' },
   { icon: '📄', text: 'Wähle Format: JSON (wichtig – nicht HTML!)' },
   { icon: '📧', text: 'Tippe auf „Anfrage erstellen" – du erhältst eine E-Mail mit dem Download-Link' },
