@@ -150,6 +150,8 @@ export function FriendAnswerView({ invite }: Props) {
         onLoadImages={() => {}}
         onAddImage={() => {}}
         onRemoveImage={() => {}}
+        onSaveAudio={async () => {}}
+        onRemoveAudio={() => {}}
         onNext={handleNext}
         onPrev={() => setIndex(i => Math.max(0, i - 1))}
         canGoBack={index > 0}

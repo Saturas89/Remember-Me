@@ -52,9 +52,11 @@ export default function App() {
     importCustomQuestions,
     importSocialMediaEntries,
     deleteAnswer,
+    setAnswerAudio,
     restoreBackup,
     getAnswer,
     getAnswerImageIds,
+    getAnswerAudioId,
     getCategoryProgress,
   } = useAnswers()
 
@@ -127,8 +129,10 @@ export default function App() {
           category={category}
           getAnswer={getAnswer}
           getAnswerImageIds={getAnswerImageIds}
+          getAnswerAudioId={getAnswerAudioId}
           onSave={saveAnswer}
           onSetImages={setAnswerImages}
+          onSetAudio={setAnswerAudio}
           onBack={() =>
             view.categoryId === 'custom'
               ? setView({ name: 'custom-questions' })
@@ -153,6 +157,7 @@ export default function App() {
           profileName={profile?.name ?? ''}
           onSaveAnswer={saveAnswer}
           onSetImages={setAnswerImages}
+          onSetAudio={setAnswerAudio}
           onDeleteAnswer={deleteAnswer}
           onDeleteEntry={id => { removeCustomQuestion(id); deleteAnswer(id) }}
           onBack={() => setView({ name: 'home' })}

@@ -3,7 +3,10 @@ import { CATEGORIES } from '../data/categories'
 import { FRIEND_QUESTIONS } from '../data/friendQuestions'
 import { exportAsMarkdown, exportAsEnrichedJSON, downloadFile } from '../utils/export'
 import { ImageAttachment } from '../components/ImageAttachment'
+import { AudioPlayer } from '../components/AudioPlayer'
+import { AudioRecorder } from '../components/AudioRecorder'
 import { useImageStore } from '../hooks/useImageStore'
+import { addAudio, removeAudio } from '../hooks/useAudioStore'
 import type { Answer, FriendAnswer, Friend, CustomQuestion, Profile } from '../types'
 
 interface Props {
@@ -15,6 +18,7 @@ interface Props {
   profileName: string
   onSaveAnswer: (questionId: string, categoryId: string, value: string) => void
   onSetImages: (questionId: string, categoryId: string, imageIds: string[]) => void
+  onSetAudio: (questionId: string, categoryId: string, audioId: string | undefined, audioTranscribedAt: string | undefined) => void
   onDeleteAnswer: (questionId: string) => void
   onDeleteEntry: (questionId: string) => void   // removes custom Q + its answer
   onBack: () => void
@@ -29,6 +33,7 @@ export function ArchiveView({
   profileName,
   onSaveAnswer,
   onSetImages,
+  onSetAudio,
   onDeleteAnswer,
   onDeleteEntry,
   onBack,
@@ -81,6 +86,28 @@ export function ArchiveView({
   function commitEdit(questionId: string, categoryId: string) {
     onSaveAnswer(questionId, categoryId, editValue)
     setEditingId(null)
+  }
+
+  // ── Audio handlers ───────────────────────────────────────
+
+  async function handleSaveAudio(
+    questionId: string,
+    categoryId: string,
+    transcript: string,
+    blob: Blob,
+  ) {
+    const oldId = answers[questionId]?.audioId
+    if (oldId) await removeAudio(oldId)
+    const newId = await addAudio(blob)
+    onSetAudio(questionId, categoryId, newId, new Date().toISOString())
+    if (transcript.trim() && editingId === questionId) {
+      setEditValue(prev => prev ? `${prev}\n\n${transcript}` : transcript)
+    }
+  }
+
+  async function handleDeleteAudio(questionId: string, categoryId: string, audioId: string) {
+    await removeAudio(audioId)
+    onSetAudio(questionId, categoryId, undefined, undefined)
   }
 
   // ── Delete handlers ──────────────────────────────────────
@@ -168,6 +195,17 @@ export function ArchiveView({
         >
           📷 Foto hinzufügen
         </button>
+        {/* Audio in edit mode */}
+        <AudioRecorder
+          existingAudioId={answer?.audioId}
+          onSave={(transcript, blob) =>
+            handleSaveAudio(questionId, categoryId, transcript, blob)
+          }
+          onRemove={answer?.audioId
+            ? () => handleDeleteAudio(questionId, categoryId, answer.audioId!)
+            : undefined
+          }
+        />
         <div className="archive-entry__edit-actions">
           <button
             className="btn btn--primary btn--sm"
@@ -262,6 +300,9 @@ export function ArchiveView({
                           onRemove={imgId => handleRemoveImage(q.id, cat.id, imgId)}
                         />
                       )}
+                      {answers[q.id].audioId && (
+                        <AudioPlayer audioId={answers[q.id].audioId!} />
+                      )}
                       <div className="archive-entry__footer">
                         <span className="archive-entry__date">
                           {displayDate(answers[q.id])}
@@ -270,6 +311,16 @@ export function ArchiveView({
                           )}
                         </span>
                         <div className="archive-entry__actions no-print">
+                          {answers[q.id].audioId && (
+                            <button
+                              className="archive-entry__delete-btn"
+                              onClick={() => handleDeleteAudio(q.id, cat.id, answers[q.id].audioId!)}
+                              aria-label="Aufnahme löschen"
+                              title="Aufnahme löschen"
+                            >
+                              🎙✕
+                            </button>
+                          )}
                           <button
                             className="archive-entry__edit-btn"
                             onClick={() => startEdit(q.id, answers[q.id].value)}
@@ -324,6 +375,9 @@ export function ArchiveView({
                           onRemove={imgId => handleRemoveImage(q.id, 'custom', imgId)}
                         />
                       )}
+                      {answer.audioId && (
+                        <AudioPlayer audioId={answer.audioId} />
+                      )}
                       <div className="archive-entry__footer">
                         <span className="archive-entry__date">
                           {displayDate(answer)}
@@ -332,6 +386,16 @@ export function ArchiveView({
                           )}
                         </span>
                         <div className="archive-entry__actions no-print">
+                          {answer.audioId && (
+                            <button
+                              className="archive-entry__delete-btn"
+                              onClick={() => handleDeleteAudio(q.id, 'custom', answer.audioId!)}
+                              aria-label="Aufnahme löschen"
+                              title="Aufnahme löschen"
+                            >
+                              🎙✕
+                            </button>
+                          )}
                           <button
                             className="archive-entry__edit-btn"
                             onClick={() => startEdit(q.id, answer.value)}

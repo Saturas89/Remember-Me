@@ -103,6 +103,7 @@ export function exportAsMarkdown(data: ExportData): string {
     for (const q of catAnswers) {
       lines.push(`**${q.text}**`)
       lines.push(answers[q.id].value.trim())
+      if (answers[q.id].audioId) lines.push('_🎙 Originalton vorhanden_')
       lines.push('')
     }
 
@@ -119,6 +120,7 @@ export function exportAsMarkdown(data: ExportData): string {
     for (const q of customAnswered) {
       lines.push(`**${q.text}**`)
       lines.push(answers[q.id].value.trim())
+      if (answers[q.id].audioId) lines.push('_🎙 Originalton vorhanden_')
       lines.push('')
     }
 

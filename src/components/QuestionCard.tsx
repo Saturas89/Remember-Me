@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { ImageAttachment } from './ImageAttachment'
+import { AudioRecorder } from './AudioRecorder'
 import type { Question } from '../types'
 
 interface Props {
@@ -7,20 +8,24 @@ interface Props {
   initialValue: string
   imageIds: string[]
   imageCache: Record<string, string>
+  audioId?: string
   index: number
   total: number
   onSave: (value: string) => void
   onLoadImages: (ids: string[]) => void
   onAddImage: (file: File) => void
   onRemoveImage: (id: string) => void
+  onSaveAudio: (transcript: string, blob: Blob) => Promise<void>
+  onRemoveAudio: () => void
   onNext: () => void
   onPrev: () => void
   canGoBack: boolean
 }
 
 export function QuestionCard({
-  question, initialValue, imageIds, imageCache,
+  question, initialValue, imageIds, imageCache, audioId,
   index, total, onSave, onLoadImages, onAddImage, onRemoveImage,
+  onSaveAudio, onRemoveAudio,
   onNext, onPrev, canGoBack,
 }: Props) {
   const [value, setValue] = useState(initialValue)
@@ -36,7 +41,7 @@ export function QuestionCard({
 
   const hasAnswer =
     question.type === 'text'
-      ? value.trim() !== '' || imageIds.length > 0
+      ? value.trim() !== '' || imageIds.length > 0 || !!audioId
       : value !== ''
 
   return (
@@ -58,7 +63,7 @@ export function QuestionCard({
               className="input-textarea"
               value={value}
               onChange={e => handleChange(e.target.value)}
-              placeholder="Deine Antwort..."
+              placeholder="Deine Antwort…"
               rows={5}
             />
             <ImageAttachment
@@ -67,6 +72,17 @@ export function QuestionCard({
               onLoad={onLoadImages}
               onAdd={onAddImage}
               onRemove={onRemoveImage}
+            />
+            <AudioRecorder
+              existingAudioId={audioId}
+              onSave={async (transcript, blob) => {
+                await onSaveAudio(transcript, blob)
+                // Fill textarea with transcript if it's currently empty
+                if (transcript.trim() && !value.trim()) {
+                  handleChange(transcript)
+                }
+              }}
+              onRemove={onRemoveAudio}
             />
           </>
         )}

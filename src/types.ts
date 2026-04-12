@@ -25,6 +25,10 @@ export interface Answer {
   categoryId: string
   value: string
   imageIds?: string[]
+  /** ID of the audio recording stored in IndexedDB ('rm-audio') */
+  audioId?: string
+  /** ISO 8601 timestamp of when the audio was transcribed */
+  audioTranscribedAt?: string
   createdAt: string
   updatedAt: string
   /** ISO 8601 date of the actual event (may differ from createdAt for imported entries) */

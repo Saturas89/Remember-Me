@@ -65,6 +65,7 @@ export function useAnswers() {
         answers: {
           ...prev.answers,
           [questionId]: {
+            ...existing,
             id: questionId,
             questionId,
             categoryId,
@@ -72,6 +73,37 @@ export function useAnswers() {
             imageIds,
             createdAt: existing?.createdAt ?? now,
             updatedAt: now,
+          },
+        },
+      }
+      saveState(next)
+      return next
+    })
+  }, [])
+
+  const setAnswerAudio = useCallback((
+    questionId: string,
+    categoryId: string,
+    audioId: string | undefined,
+    audioTranscribedAt: string | undefined,
+  ) => {
+    setState(prev => {
+      const existing = prev.answers[questionId]
+      const now = new Date().toISOString()
+      const next: AppState = {
+        ...prev,
+        answers: {
+          ...prev.answers,
+          [questionId]: {
+            ...existing,
+            id: questionId,
+            questionId,
+            categoryId,
+            value: existing?.value ?? '',
+            createdAt: existing?.createdAt ?? now,
+            updatedAt: now,
+            audioId,
+            audioTranscribedAt,
           },
         },
       }
@@ -288,6 +320,11 @@ export function useAnswers() {
     [state.answers],
   )
 
+  const getAnswerAudioId = useCallback(
+    (questionId: string): string | undefined => state.answers[questionId]?.audioId,
+    [state.answers],
+  )
+
   const getCategoryProgress = useCallback(
     (categoryId: string, totalQuestions: number): number => {
       const answered = Object.values(state.answers).filter(
@@ -314,6 +351,7 @@ export function useAnswers() {
     customQuestions: state.customQuestions,
     saveAnswer,
     setAnswerImages,
+    setAnswerAudio,
     deleteAnswer,
     saveProfile,
     addFriend,
@@ -327,6 +365,7 @@ export function useAnswers() {
     restoreBackup,
     getAnswer,
     getAnswerImageIds,
+    getAnswerAudioId,
     getCategoryProgress,
     getFriendAnswers,
   }

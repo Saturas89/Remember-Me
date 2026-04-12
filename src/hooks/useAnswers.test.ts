@@ -406,4 +406,51 @@ describe('useAnswers', () => {
       expect(result.current.profile?.name).toBe('Existing')
     })
   })
+
+  // ── setAnswerAudio / getAnswerAudioId (REQ-009) ─────────────────────────────
+
+  describe('setAnswerAudio (REQ-009)', () => {
+    it('stores audioId on a new answer', () => {
+      const { result } = renderHook(() => useAnswers())
+      act(() => {
+        result.current.setAnswerAudio('q-a', 'childhood', 'aud-001', '2024-06-01T10:00:00.000Z')
+      })
+      expect(result.current.getAnswerAudioId('q-a')).toBe('aud-001')
+    })
+
+    it('preserves existing value and imageIds when setting audio', () => {
+      const { result } = renderHook(() => useAnswers())
+      act(() => { result.current.saveAnswer('q-a', 'childhood', 'Meine Antwort') })
+      act(() => {
+        result.current.setAnswerAudio('q-a', 'childhood', 'aud-002', '2024-06-01T10:00:00.000Z')
+      })
+      expect(result.current.answers['q-a'].value).toBe('Meine Antwort')
+      expect(result.current.answers['q-a'].audioId).toBe('aud-002')
+    })
+
+    it('clears audioId when set to undefined', () => {
+      const { result } = renderHook(() => useAnswers())
+      act(() => {
+        result.current.setAnswerAudio('q-a', 'childhood', 'aud-003', '2024-06-01T10:00:00.000Z')
+      })
+      act(() => {
+        result.current.setAnswerAudio('q-a', 'childhood', undefined, undefined)
+      })
+      expect(result.current.getAnswerAudioId('q-a')).toBeUndefined()
+    })
+
+    it('returns undefined for a question with no audio', () => {
+      const { result } = renderHook(() => useAnswers())
+      expect(result.current.getAnswerAudioId('non-existent')).toBeUndefined()
+    })
+
+    it('persists audioId to localStorage', () => {
+      const { result } = renderHook(() => useAnswers())
+      act(() => {
+        result.current.setAnswerAudio('q-a', 'childhood', 'aud-persist', '2024-06-01T10:00:00.000Z')
+      })
+      const stored = JSON.parse(localStorage.getItem('remember-me-state')!)
+      expect(stored.answers['q-a'].audioId).toBe('aud-persist')
+    })
+  })
 })

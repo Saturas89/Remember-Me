@@ -2016,6 +2016,215 @@
   color: var(--text-primary);
 }
 
+/* ── Audio Recorder ─────────────────────────────────── */
+.audio-recorder {
+  margin-top: 0.6rem;
+}
+
+/* Record button (idle, no existing audio) */
+.audio-rec-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: none;
+  border: 1.5px dashed var(--border);
+  border-radius: 10px;
+  padding: 0.55rem 1rem;
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color 0.18s, color 0.18s;
+}
+.audio-rec-btn:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.audio-rec-btn:disabled { opacity: 0.6; cursor: default; }
+
+/* Recording indicator */
+.audio-rec-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.5rem;
+}
+
+.audio-rec-dot {
+  width: 0.65rem;
+  height: 0.65rem;
+  border-radius: 50%;
+  background: #ef4444;
+  flex-shrink: 0;
+  animation: rec-pulse 1s ease-in-out infinite;
+}
+@keyframes rec-pulse {
+  0%, 100% { opacity: 1;   transform: scale(1); }
+  50%       { opacity: 0.4; transform: scale(0.8); }
+}
+
+.audio-rec-bars {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 1.2rem;
+}
+.audio-rec-bar {
+  width: 3px;
+  border-radius: 2px;
+  background: var(--accent);
+  animation: bar-dance 0.6s ease-in-out infinite alternate;
+}
+@keyframes bar-dance {
+  from { height: 3px; }
+  to   { height: 18px; }
+}
+
+.audio-rec-time {
+  font-size: 0.88rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+  min-width: 3ch;
+}
+
+.audio-rec-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.audio-rec-live-transcript {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  font-style: italic;
+  margin: 0.25rem 0 0;
+  line-height: 1.5;
+}
+
+/* Preview state */
+.audio-rec-preview-audio {
+  width: 100%;
+  margin-bottom: 0.4rem;
+}
+
+.audio-rec-transcript {
+  background: color-mix(in srgb, var(--accent) 6%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--accent) 25%, var(--border));
+  border-radius: 8px;
+  padding: 0.6rem 0.8rem;
+  margin-bottom: 0.4rem;
+}
+.audio-rec-transcript__label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin: 0 0 0.25rem;
+}
+.audio-rec-transcript__text {
+  font-size: 0.88rem;
+  color: var(--text);
+  margin: 0;
+  line-height: 1.55;
+}
+
+.audio-rec-no-transcript {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin: 0 0 0.4rem;
+  line-height: 1.5;
+}
+
+.audio-rec-error {
+  font-size: 0.82rem;
+  color: #ef4444;
+  margin: 0.25rem 0 0;
+  line-height: 1.5;
+}
+
+/* Existing audio + replace/delete row */
+.audio-rec-existing-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.4rem;
+  flex-wrap: wrap;
+}
+.audio-rec-delete { color: #ef4444 !important; }
+.audio-rec-delete:hover { background: color-mix(in srgb, #ef4444 10%, transparent) !important; }
+
+/* ── Audio Player ────────────────────────────────────── */
+.audio-player {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.45rem 0.75rem;
+  margin: 0.4rem 0;
+}
+
+.audio-player__icon { font-size: 0.95rem; flex-shrink: 0; }
+
+.audio-player__play {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+  color: var(--accent);
+  flex-shrink: 0;
+  padding: 0.1rem 0.25rem;
+  border-radius: 50%;
+  transition: background 0.15s;
+}
+.audio-player__play:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+.audio-player__play:disabled { opacity: 0.5; cursor: default; }
+
+.audio-player__track {
+  flex: 1;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  position: relative;
+  overflow: hidden;
+}
+.audio-player__fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 2px;
+  transition: width 0.1s linear;
+  pointer-events: none;
+}
+.audio-player__seek {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  margin: 0;
+  padding: 0;
+}
+
+.audio-player__time {
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.audio-player__error {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin: 0.3rem 0;
+}
+
 /* ── Import view ─────────────────────────────────────── */
 .import-view {
   min-height: 100dvh;
