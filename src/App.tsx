@@ -51,6 +51,7 @@ export default function App() {
     removeCustomQuestion,
     importCustomQuestions,
     importSocialMediaEntries,
+    deleteAnswer,
     restoreBackup,
     getAnswer,
     getAnswerImageIds,
@@ -152,6 +153,8 @@ export default function App() {
           profileName={profile?.name ?? ''}
           onSaveAnswer={saveAnswer}
           onSetImages={setAnswerImages}
+          onDeleteAnswer={deleteAnswer}
+          onDeleteEntry={id => { removeCustomQuestion(id); deleteAnswer(id) }}
           onBack={() => setView({ name: 'home' })}
         />
       )}

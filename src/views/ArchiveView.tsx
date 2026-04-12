@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { CATEGORIES } from '../data/categories'
 import { FRIEND_QUESTIONS } from '../data/friendQuestions'
 import { exportAsMarkdown, exportAsEnrichedJSON, downloadFile } from '../utils/export'
@@ -15,6 +15,8 @@ interface Props {
   profileName: string
   onSaveAnswer: (questionId: string, categoryId: string, value: string) => void
   onSetImages: (questionId: string, categoryId: string, imageIds: string[]) => void
+  onDeleteAnswer: (questionId: string) => void
+  onDeleteEntry: (questionId: string) => void   // removes custom Q + its answer
   onBack: () => void
 }
 
@@ -27,11 +29,16 @@ export function ArchiveView({
   profileName,
   onSaveAnswer,
   onSetImages,
+  onDeleteAnswer,
+  onDeleteEntry,
   onBack,
 }: Props) {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editValue, setEditValue] = useState('')
-  const { cache, loadImages, removeImage } = useImageStore()
+  const { cache, loadImages, addImage, removeImage } = useImageStore()
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  // remember which entry the "Add photo" picker was opened for
+  const pendingTarget = useRef<{ questionId: string; categoryId: string } | null>(null)
 
   // Pre-load all images referenced by any answer
   useEffect(() => {
@@ -40,22 +47,31 @@ export function ArchiveView({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // ── Image handlers ───────────────────────────────────────
+
+  function openImagePicker(questionId: string, categoryId: string) {
+    pendingTarget.current = { questionId, categoryId }
+    fileInputRef.current?.click()
+  }
+
+  async function handlePickImage(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file || !pendingTarget.current) return
+    const { questionId, categoryId } = pendingTarget.current
+    const id = await addImage(file)
+    const current = answers[questionId]?.imageIds ?? []
+    onSetImages(questionId, categoryId, [...current, id])
+    e.target.value = ''
+    pendingTarget.current = null
+  }
+
   async function handleRemoveImage(questionId: string, categoryId: string, imgId: string) {
     await removeImage(imgId)
     const next = (answers[questionId]?.imageIds ?? []).filter(i => i !== imgId)
     onSetImages(questionId, categoryId, next)
   }
 
-  const exportData = { profile, answers, friends, friendAnswers, customQuestions }
-  const safeName = (profile?.name ?? 'lebensarchiv').replace(/\s+/g, '-').toLowerCase()
-
-  function handleMarkdownExport() {
-    downloadFile(exportAsMarkdown(exportData), `${safeName}.md`, 'text/markdown')
-  }
-
-  function handleJsonExport() {
-    downloadFile(exportAsEnrichedJSON(exportData), `${safeName}.json`, 'application/json')
-  }
+  // ── Edit handlers ────────────────────────────────────────
 
   function startEdit(questionId: string, currentValue: string) {
     setEditingId(questionId)
@@ -67,29 +83,122 @@ export function ArchiveView({
     setEditingId(null)
   }
 
+  // ── Delete handlers ──────────────────────────────────────
+
+  function handleDeleteAnswer(questionId: string) {
+    if (!window.confirm('Diese Antwort wirklich löschen?')) return
+    onDeleteAnswer(questionId)
+  }
+
+  function handleDeleteEntry(questionId: string) {
+    if (!window.confirm('Diesen Eintrag wirklich löschen?')) return
+    onDeleteEntry(questionId)
+  }
+
+  // ── Export ───────────────────────────────────────────────
+
+  const exportData = { profile, answers, friends, friendAnswers, customQuestions }
+  const safeName = (profile?.name ?? 'lebensarchiv').replace(/\s+/g, '-').toLowerCase()
+
+  function handleMarkdownExport() {
+    downloadFile(exportAsMarkdown(exportData), `${safeName}.md`, 'text/markdown')
+  }
+  function handleJsonExport() {
+    downloadFile(exportAsEnrichedJSON(exportData), `${safeName}.json`, 'application/json')
+  }
+
+  // ── Helpers ──────────────────────────────────────────────
+
   function hasContent(questionId: string) {
     const a = answers[questionId]
     return a && (a.value.trim() !== '' || (a.imageIds?.length ?? 0) > 0)
   }
 
+  function displayDate(answer: Answer): string {
+    const raw = answer.eventDate ?? answer.createdAt
+    return new Date(raw).toLocaleDateString('de-DE', {
+      day: 'numeric', month: 'long', year: 'numeric',
+    })
+  }
+
+  function wasEdited(answer: Answer): boolean {
+    return answer.updatedAt !== answer.createdAt
+  }
+
+  // ── Derived lists ────────────────────────────────────────
+
   const categoriesWithAnswers = CATEGORIES.filter(cat =>
     cat.questions.some(q => hasContent(q.id)),
   )
-
   const customWithAnswers = customQuestions.filter(q => hasContent(q.id))
-
-  // Group friend answers by friend
   const friendsWithAnswers = friends.filter(f =>
     friendAnswers.some(a => a.friendId === f.id && a.value.trim()),
   )
-
   const hasAnything =
     categoriesWithAnswers.length > 0 ||
     customWithAnswers.length > 0 ||
     friendsWithAnswers.length > 0
 
+  // ── Shared edit form ─────────────────────────────────────
+
+  function renderEditForm(questionId: string, categoryId: string) {
+    const answer = answers[questionId]
+    return (
+      <div className="archive-entry__edit-form">
+        <textarea
+          className="input-textarea"
+          rows={3}
+          value={editValue}
+          onChange={e => setEditValue(e.target.value)}
+          autoFocus
+        />
+        {/* Images in edit mode */}
+        {(answer?.imageIds?.length ?? 0) > 0 && (
+          <ImageAttachment
+            imageIds={answer.imageIds!}
+            cache={cache}
+            onLoad={loadImages}
+            onRemove={imgId => handleRemoveImage(questionId, categoryId, imgId)}
+          />
+        )}
+        <button
+          type="button"
+          className="archive-add-image-btn no-print"
+          onClick={() => openImagePicker(questionId, categoryId)}
+        >
+          📷 Foto hinzufügen
+        </button>
+        <div className="archive-entry__edit-actions">
+          <button
+            className="btn btn--primary btn--sm"
+            onClick={() => commitEdit(questionId, categoryId)}
+          >
+            Speichern
+          </button>
+          <button
+            className="btn btn--ghost btn--sm"
+            onClick={() => setEditingId(null)}
+          >
+            Abbrechen
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  // ── Render ───────────────────────────────────────────────
+
   return (
     <div className="archive-view">
+      {/* Hidden file input shared across all edit forms */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        style={{ display: 'none' }}
+        onChange={handlePickImage}
+      />
+
       <div className="archive-topbar">
         <button className="btn btn--ghost btn--sm no-print" onClick={onBack}>
           ← Zurück
@@ -126,7 +235,7 @@ export function ArchiveView({
         </p>
       )}
 
-      {/* Own answers grouped by category */}
+      {/* ── Own answers grouped by category ── */}
       {categoriesWithAnswers.map(cat => (
         <section key={cat.id} className="archive-section">
           <h3 className="archive-section-title">
@@ -138,127 +247,116 @@ export function ArchiveView({
               <div key={q.id} className="archive-entry">
                 <p className="archive-entry__question">{q.text}</p>
 
-                {editingId === q.id ? (
-                  <div className="archive-entry__edit-form">
-                    <textarea
-                      className="input-textarea"
-                      rows={3}
-                      value={editValue}
-                      onChange={e => setEditValue(e.target.value)}
-                      autoFocus
-                    />
-                    <div className="archive-entry__edit-actions">
-                      <button
-                        className="btn btn--primary btn--sm"
-                        onClick={() => commitEdit(q.id, cat.id)}
-                      >
-                        Speichern
-                      </button>
-                      <button
-                        className="btn btn--ghost btn--sm"
-                        onClick={() => setEditingId(null)}
-                      >
-                        Abbrechen
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <>
-                    {answers[q.id].value && (
-                      <p className="archive-entry__answer">{answers[q.id].value}</p>
-                    )}
-                    {(answers[q.id].imageIds?.length ?? 0) > 0 && (
-                      <ImageAttachment
-                        imageIds={answers[q.id].imageIds!}
-                        cache={cache}
-                        onLoad={loadImages}
-                        onRemove={imgId => handleRemoveImage(q.id, cat.id, imgId)}
-                      />
-                    )}
-                    <div className="archive-entry__footer">
-                      <span className="archive-entry__date">
-                        {new Date(answers[q.id].updatedAt).toLocaleDateString('de-DE')}
-                      </span>
-                      <button
-                        className="archive-entry__edit-btn no-print"
-                        onClick={() => startEdit(q.id, answers[q.id].value)}
-                        aria-label="Antwort bearbeiten"
-                      >
-                        ✎
-                      </button>
-                    </div>
-                  </>
-                )}
+                {editingId === q.id
+                  ? renderEditForm(q.id, cat.id)
+                  : (
+                    <>
+                      {answers[q.id].value && (
+                        <p className="archive-entry__answer">{answers[q.id].value}</p>
+                      )}
+                      {(answers[q.id].imageIds?.length ?? 0) > 0 && (
+                        <ImageAttachment
+                          imageIds={answers[q.id].imageIds!}
+                          cache={cache}
+                          onLoad={loadImages}
+                          onRemove={imgId => handleRemoveImage(q.id, cat.id, imgId)}
+                        />
+                      )}
+                      <div className="archive-entry__footer">
+                        <span className="archive-entry__date">
+                          {displayDate(answers[q.id])}
+                          {wasEdited(answers[q.id]) && (
+                            <span className="archive-entry__edited"> · bearbeitet</span>
+                          )}
+                        </span>
+                        <div className="archive-entry__actions no-print">
+                          <button
+                            className="archive-entry__edit-btn"
+                            onClick={() => startEdit(q.id, answers[q.id].value)}
+                            aria-label="Antwort bearbeiten"
+                          >
+                            ✎
+                          </button>
+                          <button
+                            className="archive-entry__delete-btn"
+                            onClick={() => handleDeleteAnswer(q.id)}
+                            aria-label="Antwort löschen"
+                          >
+                            🗑
+                          </button>
+                        </div>
+                      </div>
+                    </>
+                  )}
               </div>
             ))}
         </section>
       ))}
 
-      {/* Custom question answers */}
+      {/* ── Custom & imported entries ── */}
       {customWithAnswers.length > 0 && (
         <section className="archive-section">
-          <h3 className="archive-section-title">✏️ Eigene Fragen</h3>
-          {customWithAnswers.map(q => (
-            <div key={q.id} className="archive-entry">
-              <p className="archive-entry__question">{q.text}</p>
+          <h3 className="archive-section-title">✏️ Eigene Fragen &amp; Erinnerungen</h3>
+          {customWithAnswers.map(q => {
+            const answer = answers[q.id]
+            const src = answer.importSource
+            return (
+              <div key={q.id} className="archive-entry">
+                {src && (
+                  <span className="archive-entry__source-badge">
+                    {src.platform === 'instagram' ? '📷 Instagram' : '📘 Facebook'}
+                  </span>
+                )}
+                <p className="archive-entry__question">{q.text}</p>
 
-              {editingId === q.id ? (
-                <div className="archive-entry__edit-form">
-                  <textarea
-                    className="input-textarea"
-                    rows={3}
-                    value={editValue}
-                    onChange={e => setEditValue(e.target.value)}
-                    autoFocus
-                  />
-                  <div className="archive-entry__edit-actions">
-                    <button
-                      className="btn btn--primary btn--sm"
-                      onClick={() => commitEdit(q.id, 'custom')}
-                    >
-                      Speichern
-                    </button>
-                    <button
-                      className="btn btn--ghost btn--sm"
-                      onClick={() => setEditingId(null)}
-                    >
-                      Abbrechen
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <>
-                  {answers[q.id].value && (
-                    <p className="archive-entry__answer">{answers[q.id].value}</p>
+                {editingId === q.id
+                  ? renderEditForm(q.id, 'custom')
+                  : (
+                    <>
+                      {answer.value && (
+                        <p className="archive-entry__answer">{answer.value}</p>
+                      )}
+                      {(answer.imageIds?.length ?? 0) > 0 && (
+                        <ImageAttachment
+                          imageIds={answer.imageIds!}
+                          cache={cache}
+                          onLoad={loadImages}
+                          onRemove={imgId => handleRemoveImage(q.id, 'custom', imgId)}
+                        />
+                      )}
+                      <div className="archive-entry__footer">
+                        <span className="archive-entry__date">
+                          {displayDate(answer)}
+                          {wasEdited(answer) && (
+                            <span className="archive-entry__edited"> · bearbeitet</span>
+                          )}
+                        </span>
+                        <div className="archive-entry__actions no-print">
+                          <button
+                            className="archive-entry__edit-btn"
+                            onClick={() => startEdit(q.id, answer.value)}
+                            aria-label="Eintrag bearbeiten"
+                          >
+                            ✎
+                          </button>
+                          <button
+                            className="archive-entry__delete-btn"
+                            onClick={() => handleDeleteEntry(q.id)}
+                            aria-label="Eintrag löschen"
+                          >
+                            🗑
+                          </button>
+                        </div>
+                      </div>
+                    </>
                   )}
-                  {(answers[q.id].imageIds?.length ?? 0) > 0 && (
-                    <ImageAttachment
-                      imageIds={answers[q.id].imageIds!}
-                      cache={cache}
-                      onLoad={loadImages}
-                      onRemove={imgId => handleRemoveImage(q.id, 'custom', imgId)}
-                    />
-                  )}
-                  <div className="archive-entry__footer">
-                    <span className="archive-entry__date">
-                      {new Date(answers[q.id].updatedAt).toLocaleDateString('de-DE')}
-                    </span>
-                    <button
-                      className="archive-entry__edit-btn no-print"
-                      onClick={() => startEdit(q.id, answers[q.id].value)}
-                      aria-label="Antwort bearbeiten"
-                    >
-                      ✎
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
-          ))}
+              </div>
+            )
+          })}
         </section>
       )}
 
-      {/* Friend contributions */}
+      {/* ── Friend contributions ── */}
       {friendsWithAnswers.length > 0 && (
         <section className="archive-section archive-section--friends">
           <h3 className="archive-section-title archive-section-title--friends">
@@ -277,9 +375,6 @@ export function ArchiveView({
                   </span>
                 </div>
                 {thisAnswers.map(a => {
-                  // 1. Use the text stored at import time (already name-resolved)
-                  // 2. Fall back to static lookup + name substitution (current IDs)
-                  // 3. Last resort: show a placeholder instead of a raw technical ID
                   const q = FRIEND_QUESTIONS.find(fq => fq.id === a.questionId)
                   const questionText =
                     a.questionText ??

@@ -1872,28 +1872,80 @@
   margin-top: 0.4rem;
 }
 
-.archive-entry__edit-btn {
-  background: none;
-  border: none;
-  color: var(--text-faint);
-  cursor: pointer;
-  font-size: 0.85rem;
-  padding: 0.1rem 0.3rem;
-  border-radius: 4px;
-  transition: color 0.15s;
+.archive-entry__date {
+  font-size: 0.78rem;
+  color: var(--text-muted);
 }
 
-.archive-entry__edit-btn:hover { color: var(--accent); }
+.archive-entry__edited {
+  font-size: 0.72rem;
+  color: var(--text-faint);
+}
+
+.archive-entry__actions {
+  display: flex;
+  gap: 0.15rem;
+}
+
+.archive-entry__edit-btn,
+.archive-entry__delete-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.85rem;
+  padding: 0.15rem 0.35rem;
+  border-radius: 6px;
+  transition: color 0.15s, background 0.15s;
+  line-height: 1;
+}
+
+.archive-entry__edit-btn   { color: var(--text-faint); }
+.archive-entry__delete-btn { color: var(--text-faint); }
+
+.archive-entry__edit-btn:hover   { color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent); }
+.archive-entry__delete-btn:hover { color: #ef4444;        background: color-mix(in srgb, #ef4444 10%, transparent); }
 
 .archive-entry__edit-form {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  margin-top: 0.25rem;
 }
 
 .archive-entry__edit-actions {
   display: flex;
   gap: 0.5rem;
+}
+
+.archive-add-image-btn {
+  align-self: flex-start;
+  background: none;
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.archive-add-image-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Source badge for imported entries (Instagram, Facebook …) */
+.archive-entry__source-badge {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: var(--border);
+  border-radius: 20px;
+  padding: 0.1rem 0.55rem;
+  margin-bottom: 0.35rem;
+  letter-spacing: 0.02em;
 }
 
 /* ── Update banner ───────────────────────────────────── */
