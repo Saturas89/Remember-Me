@@ -67,8 +67,9 @@ Teilen / Exportieren (PDF, Freunde einladen, KI-Export)
 - [x] Profil-Seite UX-Redesign (Avatar, Karten, iOS-Settings-Felder, Theme-Grid) + App-weite Typografie – v1.5.4
 - [ ] Optionaler E2EE-Sync (Web Crypto API + Supabase, opt-in) – v1.6.0
 - [ ] Push Notifications (Erinnerung zum Weitermachen) – v1.6.x
-- [ ] **Lebenszeitlinie** – chronologische Ansicht aller Erlebnisse und Fotos auf einer visuellen Timeline, filterbar nach Jahr und Kategorie (REQ-006) – v1.7.0
+- [ ] **Lebenszeitlinie** – chronologische Ansicht aller Erlebnisse und Fotos auf einer visuellen Timeline, filterbar nach Jahr und Kategorie; optional ungefähres Alter pro Eintrag (z. B. „ca. 8 Jahre alt"), wird automatisch aus Geburtsjahr vorgeschlagen (REQ-006) – v1.7.0
 - [ ] **Social Media Import** – Erinnerungen und Fotos aus Facebook- und Instagram-Datenexporten importieren, mit optionaler eigener Beschreibung (REQ-007) – v1.8.0
+- [ ] **Audio-Aufnahme & Transkription** – Fragen einsprechen statt tippen; Originalton in IndexedDB gespeichert, automatische Transkription via Web Speech API (lokal, kein Cloud-Upload); Archiv zeigt Audio-Player neben dem Text (REQ-009) – v1.9.0
 - [ ] Backend-Sync + Familien-Freigabe-Links – v2.0.0
 - [ ] **Biografie erzeugen** – aus den gespeicherten Antworten per KI eine fertige, lesbare Lebensgeschichte in verschiedenen Stilen und Sprachen generieren, vorschau- und exportierbar (REQ-008) – v2.1.0
 
@@ -143,8 +144,10 @@ Update-Banner: `src/components/UpdateBanner.tsx` – Toast bei verfügbarem SW-U
 | FriendTopic | Thema für Freundes-Einladung (id, title, emoji, description, 5 questions) |
 | E2EE | Ende-zu-Ende-Verschlüsselung (geplant für Sync) |
 | KI-Export | Archiv in KI-lesbarem Format (Markdown/JSON, geplant) |
-| Lebenszeitlinie | Chronologische visuelle Ansicht aller Einträge und Fotos (geplant v1.7.0) |
+| Lebenszeitlinie | Chronologische visuelle Ansicht aller Einträge und Fotos; mit optionalem ca. Alter (geplant v1.7.0) |
 | Social Media Import | Import von Erinnerungen/Fotos aus Facebook-/Instagram-Datenexporten (geplant v1.8.0) |
+| Audio-Aufnahme | Fragen einsprechen statt tippen; Originalton + automatische Transkription (geplant v1.9.0) |
+| approxAge | Ungefähres Lebensalter zum Zeitpunkt eines Erlebnisses, für die Zeitlinie |
 | Biografie-Generator | KI-gestützte Umwandlung der Antworten in eine fertige Lebensgeschichte (geplant v2.1.0) |
 
 ---

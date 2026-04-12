@@ -39,13 +39,21 @@ Ein Benutzer öffnet die Timeline und sieht:
 - [ ] **FR-6.5:** Tippen auf eine Karte öffnet die vollständige Antwort in einem Detailblatt (Bottom Sheet oder Modal)
 - [ ] **FR-6.6:** Fotos in der Detailansicht sind als Lightbox vergrößerbar
 
-### 3.2 Ereignisdatum
+### 3.2 Ereignisdatum & ungefähres Alter
 
 Die Timeline basiert auf einem Ereignisdatum – nicht dem Eingabedatum. Für bestehende Einträge wird `createdAt` als Fallback verwendet.
 
 - [ ] **FR-6.7:** Jede Antwort kann optional ein `eventDate` (Jahreszahl oder Datum) erhalten
 - [ ] **FR-6.8:** Im QuizView und im Archiv-Edit-Modus ist `eventDate` editierbar
 - [ ] **FR-6.9:** Einträge ohne `eventDate` werden mit dem Eingabedatum (`createdAt`) einsortiert und visuell als „Eingabedatum" gekennzeichnet
+
+**Optionales ungefähres Alter:**
+
+- [ ] **FR-6.20:** Jeder Eintrag kann zusätzlich oder alternativ ein `approxAge` (ungefähre Lebensjahre zum Zeitpunkt des Erlebnisses) erhalten, z. B. „ca. 8 Jahre alt"
+- [ ] **FR-6.21:** Falls `profile.birthYear` bekannt ist, wird `approxAge` automatisch aus `eventDate − birthYear` vorgeschlagen und kann manuell korrigiert werden
+- [ ] **FR-6.22:** Falls kein `birthYear` bekannt ist, kann `approxAge` frei eingetragen werden (Ganzzahl, Eingabefeld)
+- [ ] **FR-6.23:** Auf der Zeitlinie wird das ungefähre Alter als Zusatzinformation angezeigt: z. B. „Sommer 1975 · ca. 8 Jahre alt"
+- [ ] **FR-6.24:** Bei Einträgen ohne exaktes Datum aber mit `approxAge` und bekanntem `birthYear` wird `birthYear + approxAge` als Sortierjahr verwendet
 
 ### 3.3 Filterung & Navigation
 
@@ -83,10 +91,12 @@ interface Answer {
   // NEU:
   eventDate?: string   // ISO 8601-Datum oder nur Jahr ('YYYY' oder 'YYYY-MM-DD')
                        // Optional: Zeitpunkt des beschriebenen Erlebnisses
+  approxAge?: number   // Ungefähres Alter des Benutzers zum Zeitpunkt des Erlebnisses
+                       // Wird auf der Zeitlinie angezeigt: „ca. 8 Jahre alt"
 }
 ```
 
-Die `eventDate`-Erweiterung ist **backward-compatible** (optionales Feld). Bestehende Antworten ohne `eventDate` verwenden `createdAt` als Fallback.
+Beide Erweiterungen sind **backward-compatible** (optionale Felder). Bestehende Antworten ohne `eventDate` / `approxAge` verwenden `createdAt` als Fallback und zeigen kein Alter an.
 
 ---
 
@@ -181,6 +191,8 @@ function sortForTimeline(entries: TimelineItem[]): TimelineItem[] {
 - [ ] Filter nach Kategorie blendet korrekte Einträge ein/aus
 - [ ] `eventDate` kann im QuizView gesetzt werden und wird auf der Timeline verwendet
 - [ ] Bestehende Daten ohne `eventDate` erscheinen mit `createdAt` und Kennzeichnung
+- [ ] `approxAge` wird angezeigt wenn vorhanden; bei bekanntem Geburtsjahr automatisch vorgeschlagen
+- [ ] Einträge mit nur `approxAge` (kein `eventDate`) werden über `birthYear + approxAge` einsortiert
 - [ ] Alle 4 Themes werden korrekt dargestellt
 
 ---
