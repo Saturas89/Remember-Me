@@ -70,7 +70,7 @@ Teilen / Exportieren (PDF, Freunde einladen, KI-Export)
 - [ ] **Lebenszeitlinie** – chronologische Ansicht aller Erlebnisse und Fotos auf einer visuellen Timeline, filterbar nach Jahr und Kategorie (REQ-006) – v1.7.0
 - [ ] **Social Media Import** – Erinnerungen und Fotos aus Facebook- und Instagram-Datenexporten importieren, mit optionaler eigener Beschreibung (REQ-007) – v1.8.0
 - [ ] Backend-Sync + Familien-Freigabe-Links – v2.0.0
-- [ ] LLM-Direktintegration: Biografie auf Knopfdruck – v2.1.0
+- [ ] **Biografie erzeugen** – aus den gespeicherten Antworten per KI eine fertige, lesbare Lebensgeschichte in verschiedenen Stilen und Sprachen generieren, vorschau- und exportierbar (REQ-008) – v2.1.0
 
 ---
 
@@ -145,6 +145,7 @@ Update-Banner: `src/components/UpdateBanner.tsx` – Toast bei verfügbarem SW-U
 | KI-Export | Archiv in KI-lesbarem Format (Markdown/JSON, geplant) |
 | Lebenszeitlinie | Chronologische visuelle Ansicht aller Einträge und Fotos (geplant v1.7.0) |
 | Social Media Import | Import von Erinnerungen/Fotos aus Facebook-/Instagram-Datenexporten (geplant v1.8.0) |
+| Biografie-Generator | KI-gestützte Umwandlung der Antworten in eine fertige Lebensgeschichte (geplant v2.1.0) |
 
 ---
 
