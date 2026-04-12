@@ -1655,7 +1655,7 @@
   background: transparent !important;
   padding: 0 !important;
   border-radius: 0 !important;
-  text-align: right;
+  text-align: left;
   color: var(--text) !important;
   font-size: 0.95rem !important;
   box-shadow: none !important;
