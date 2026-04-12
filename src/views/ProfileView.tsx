@@ -14,13 +14,14 @@ interface Props {
   onExportBackup: () => void
   onImportBackup: (json: string) => { ok: boolean; error?: string }
   onOpenImport: () => void
+  onOpenFaq: () => void
 }
 
 export function ProfileView({
   profile, answers, friendCount,
   onSave, onBack,
   onExportMarkdown, onExportJson, onExportBackup, onImportBackup,
-  onOpenImport,
+  onOpenImport, onOpenFaq,
 }: Props) {
   const { theme, setTheme } = useTheme()
   const [name, setName] = useState(profile?.name ?? '')
@@ -260,6 +261,20 @@ export function ProfileView({
             </p>
           )}
         </div>
+      </section>
+
+      {/* Hilfe & FAQ */}
+      <section className="profile-card">
+        <button type="button" className="profile-import-card" onClick={onOpenFaq}>
+          <span className="profile-import-card__icon">❓</span>
+          <span className="profile-import-card__body">
+            <span className="profile-import-card__title">Hilfe & FAQ</span>
+            <span className="profile-import-card__desc">
+              Datenschutz, Import, Export – häufige Fragen
+            </span>
+          </span>
+          <span className="profile-import-card__arrow">›</span>
+        </button>
       </section>
 
     </div>

@@ -10,6 +10,7 @@ interface Props {
   customQuestions: CustomQuestion[]
   getCategoryProgress: (categoryId: string, total: number) => number
   onSelectCategory: (categoryId: string) => void
+  onOpenFaq: () => void
 }
 
 export function HomeView({
@@ -19,6 +20,7 @@ export function HomeView({
   customQuestions,
   getCategoryProgress,
   onSelectCategory,
+  onOpenFaq,
 }: Props) {
   const totalQuestions = CATEGORIES.reduce((s, c) => s + c.questions.length, 0)
   const totalAnswered = CATEGORIES.reduce(
@@ -34,6 +36,15 @@ export function HomeView({
   return (
     <div className="home-view">
       <header className="home-header">
+        <button
+          type="button"
+          className="home-faq-btn"
+          onClick={onOpenFaq}
+          aria-label="Hilfe & FAQ"
+          title="Hilfe & FAQ"
+        >
+          ?
+        </button>
         <HeroLogo />
         {profileName && (
           <p className="home-greeting">Hallo, {profileName}</p>

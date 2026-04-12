@@ -16,6 +16,8 @@ Alle funktionalen und nicht-funktionalen Anforderungen des Projekts.
 | REQ-006 | KI-lesbarer Datenexport | Export | Medium | ✔️ COMPLETED |
 | REQ-007 | Medienanhänge (Fotos) | Data | Low | 🟢 DRAFT |
 | REQ-008 | E2EE-Sync (opt-in) | Core | Low | 🟢 DRAFT |
+| REQ-009 | Audio-Aufnahme & Transkription | Data | Medium | ✔️ COMPLETED |
+| REQ-010 | Hilfe & FAQ | UX | Low | ✔️ COMPLETED |
 
 ---
 
@@ -39,9 +41,11 @@ Alle funktionalen und nicht-funktionalen Anforderungen des Projekts.
 ### COULD – Geplant 📋
 - [x] KI-lesbarer Export (Markdown + Enriched JSON) → REQ-006, v1.4.0
 - [ ] Fotos zu Antworten hinzufügen → REQ-007, v1.5.0
+- [x] Audio-Aufnahme & Transkription → REQ-009, v1.6.0
+- [x] Hilfe & FAQ (Datenschutz, Import, Export) → REQ-010, v1.6.0
 - [ ] Push Notifications als Erinnerung
 - [ ] Mehrsprachigkeit (DE / EN)
-- [ ] Optionaler E2EE-Sync → REQ-008, v1.6.0
+- [ ] Optionaler E2EE-Sync → REQ-008
 
 ### WON'T – Bewusst ausgeschlossen
 - Eigenes Backend / Server in v1.x

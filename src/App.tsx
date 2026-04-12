@@ -11,6 +11,7 @@ import { FriendAnswerView } from './views/FriendAnswerView'
 import { ProfileView } from './views/ProfileView'
 import { CustomQuestionsView } from './views/CustomQuestionsView'
 import { ImportView } from './views/ImportView'
+import { FaqView } from './views/FaqView'
 import { OnboardingView } from './views/OnboardingView'
 import { InstallBanner } from './components/InstallBanner'
 import { UpdateBanner } from './components/UpdateBanner'
@@ -28,6 +29,7 @@ type View =
   | { name: 'profile' }
   | { name: 'custom-questions' }
   | { name: 'import' }
+  | { name: 'faq'; from: 'profile' | 'home' }
 
 type MainTab = 'home' | 'archive' | 'custom-questions' | 'friends' | 'profile'
 
@@ -99,8 +101,8 @@ export default function App() {
 
   const friendsBadge = friendAnswers.filter(a => a.value.trim()).length
 
-  // Bottom nav shown on all main views (not during focused quiz/friend-answer)
-  const showNav = view.name !== 'quiz'
+  // Bottom nav shown on all main views (not during focused quiz/friend-answer/faq)
+  const showNav = view.name !== 'quiz' && view.name !== 'faq'
 
   if (view.name === 'quiz') {
     let category: Category | undefined
@@ -188,6 +190,7 @@ export default function App() {
           onExportBackup={handleExportBackup}
           onImportBackup={restoreBackup}
           onOpenImport={() => setView({ name: 'import' })}
+          onOpenFaq={() => setView({ name: 'faq', from: 'profile' })}
         />
       )}
 
@@ -212,6 +215,10 @@ export default function App() {
         />
       )}
 
+      {view.name === 'faq' && (
+        <FaqView onBack={() => setView({ name: view.from } as View)} />
+      )}
+
       {view.name === 'home' && (
         <HomeView
           profileName={profile?.name ?? ''}
@@ -220,6 +227,7 @@ export default function App() {
           customQuestions={customQuestions}
           getCategoryProgress={getCategoryProgress}
           onSelectCategory={id => setView({ name: 'quiz', categoryId: id })}
+          onOpenFaq={() => setView({ name: 'faq', from: 'home' })}
         />
       )}
 
