@@ -1,8 +1,8 @@
 # Projektübersicht – Remember Me
 
 **Status:** 🔵 IN PROGRESS  
-**Version:** 1.5.7  
-**Letzte Aktualisierung:** 2026-04-11
+**Version:** 1.5.8  
+**Letzte Aktualisierung:** 2026-04-12
 
 ---
 
@@ -66,7 +66,9 @@ Teilen / Exportieren (PDF, Freunde einladen, KI-Export)
 - [x] Onboarding-Screen beim Erststart (Erklärung, Offline-Hinweis, Namenseingabe) – v1.5.2
 - [x] Profil-Seite UX-Redesign (Avatar, Karten, iOS-Settings-Felder, Theme-Grid) + App-weite Typografie – v1.5.4
 - [ ] Optionaler E2EE-Sync (Web Crypto API + Supabase, opt-in) – v1.6.0
-- [ ] Push Notifications (Erinnerung zum Weitermachen)
+- [ ] Push Notifications (Erinnerung zum Weitermachen) – v1.6.x
+- [ ] **Lebenszeitlinie** – chronologische Ansicht aller Erlebnisse und Fotos auf einer visuellen Timeline, filterbar nach Jahr und Kategorie (REQ-006) – v1.7.0
+- [ ] **Social Media Import** – Erinnerungen und Fotos aus Facebook- und Instagram-Datenexporten importieren, mit optionaler eigener Beschreibung (REQ-007) – v1.8.0
 - [ ] Backend-Sync + Familien-Freigabe-Links – v2.0.0
 - [ ] LLM-Direktintegration: Biografie auf Knopfdruck – v2.1.0
 
@@ -77,11 +79,11 @@ Teilen / Exportieren (PDF, Freunde einladen, KI-Export)
 | Kategorie | Emoji | Fragen | Status |
 |-----------|-------|--------|--------|
 | Kindheit & Jugend | 🧒 | 10 | ✔️ |
-| Familie & Beziehungen | 👨‍👩‍👧‍👦 | 8 | ✔️ |
-| Beruf & Leidenschaften | 💼 | 7 | ✔️ |
-| Werte & Überzeugungen | 🌟 | 6 | ✔️ |
-| Erinnerungen & Erlebnisse | 📸 | 7 | ✔️ |
-| Wünsche & Vermächtnis | ✉️ | 6 | ✔️ |
+| Familie & Beziehungen | 👨‍👩‍👧‍👦 | 10 | ✔️ |
+| Beruf & Leidenschaften | 💼 | 10 | ✔️ |
+| Werte & Überzeugungen | 🌟 | 10 | ✔️ |
+| Erinnerungen & Erlebnisse | 📸 | 10 | ✔️ |
+| Wünsche & Vermächtnis | ✉️ | 10 | ✔️ |
 | **Eigene Fragen** | ✏️ | unbegrenzt | ✔️ |
 | **Freunde-Perspektive** | 👥 | 4 Themen × 5 | ✔️ |
 
@@ -141,6 +143,8 @@ Update-Banner: `src/components/UpdateBanner.tsx` – Toast bei verfügbarem SW-U
 | FriendTopic | Thema für Freundes-Einladung (id, title, emoji, description, 5 questions) |
 | E2EE | Ende-zu-Ende-Verschlüsselung (geplant für Sync) |
 | KI-Export | Archiv in KI-lesbarem Format (Markdown/JSON, geplant) |
+| Lebenszeitlinie | Chronologische visuelle Ansicht aller Einträge und Fotos (geplant v1.7.0) |
+| Social Media Import | Import von Erinnerungen/Fotos aus Facebook-/Instagram-Datenexporten (geplant v1.8.0) |
 
 ---
 
