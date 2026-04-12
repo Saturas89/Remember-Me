@@ -50,6 +50,19 @@ Alle funktionalen und nicht-funktionalen Anforderungen des Projekts.
 
 ---
 
+## 🔒 Globales Prinzip: Rückwärtskompatibilität
+
+**Jedes Update muss abwärtskompatibel sein.** Benutzerdaten dürfen durch ein App-Update niemals verloren gehen oder unlesbar werden.
+
+Dieses Prinzip gilt für alle REQs, die Daten speichern oder exportieren:
+
+- Neue Felder in `localStorage` / IndexedDB sind immer **optional** und haben Defaults.
+- Bestehende Feldnamen und Speicherschlüssel werden **nicht umbenannt oder entfernt**.
+- Das Backup-Format (`$type: "remember-me-backup"`, `version: N`) erhält bei strukturellen Änderungen eine neue Versionsnummer; der Import-Handler befüllt fehlende Felder mit Defaults.
+- Detaillierte Regeln und die verbotenen Änderungstypen: → **[REQ-003, Abschnitt 4a](./REQ-003-story-storage.md#4a-rückwärtskompatibilität-breaking-change-verbot)**
+
+---
+
 ## 📊 Status-Legende
 
 | Symbol | Status | Bedeutung |

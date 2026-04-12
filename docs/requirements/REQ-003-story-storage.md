@@ -3,7 +3,7 @@
 **Status:** 🟢 DRAFT  
 **ID:** REQ-003  
 **Version:** 1.0.0  
-**Letzte Aktualisierung:** 2026-04-10  
+**Letzte Aktualisierung:** 2026-04-12  
 **Modul:** Data / Stories  
 **Priorität:** High  
 
@@ -84,6 +84,31 @@ interface AppState {
 | **Datenverfügbarkeit** | Auch ohne Internetverbindung vollständig nutzbar |
 | **Datengröße** | localStorage-Limit beachten (~5 MB); bei Überschreitung auf IndexedDB migrieren |
 | **Persistenz** | Daten überstehen Browser-Neustart und App-Updates |
+| **Rückwärtskompatibilität** | Jedes App-Update liest bestehende Benutzerdaten ohne Datenverlust |
+
+---
+
+## 4a. Rückwärtskompatibilität (Breaking-Change-Verbot)
+
+Alle Updates müssen abwärtskompatibel zum bestehenden Speicherformat sein, sodass Benutzer ihre Daten nach einem Update vollständig und verlustfrei weiter nutzen können.
+
+### Regeln für Schema-Änderungen
+
+| Änderung | Erlaubt? | Begründung |
+|----------|----------|------------|
+| Neues optionales Feld hinzufügen | ✅ Ja | Alte Daten lesen fehlende Felder als `undefined` |
+| Bestehendes Feld umbenennen | ❌ Nein | Bricht vorhandene gespeicherte Werte |
+| Bestehendes Feld entfernen | ❌ Nein | Datenverlust für Nutzer mit alten Daten |
+| Typ eines Feldes ändern | ❌ Nein | Führt zu Laufzeitfehlern |
+| Neue Pflichtfelder ohne Default | ❌ Nein | Alte Datensätze wären ungültig |
+
+### Umsetzung
+
+- **Neue Felder** werden stets als `optional` (`?`) im TypeScript-Interface deklariert.
+- **Lesecode** verwendet defensive Defaults: `answer.audioId ?? undefined`, `profile.birthYear ?? null`.
+- **Backup-Format** enthält ein `version`-Feld; beim Import wird die Version geprüft und ältere Strukturen werden mit Defaults aufgefüllt (keine harten Fehler).
+- **localStorage-Schlüssel** (`rm-state`) und **IndexedDB-Stores** (`rm-images`, `rm-audio`) werden nicht umbenannt.
+- Vor jeder Änderung am Datenformat: Prüfen, ob ein Migrations-Schritt im Import-Handler nötig ist.
 
 ---
 
@@ -100,4 +125,5 @@ interface AppState {
 
 | Version | Datum | Autor | Änderung |
 |---------|-------|-------|---------|
+| 1.1.0 | 2026-04-12 | Claude | Abschnitt 4a: Rückwärtskompatibilität + Breaking-Change-Verbot hinzugefügt |
 | 1.0.0 | 2026-04-10 | Claude | Initiale Version |
