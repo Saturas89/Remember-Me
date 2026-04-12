@@ -326,7 +326,7 @@ export function ArchiveView({
                             onClick={() => startEdit(q.id, answers[q.id].value)}
                             aria-label="Antwort bearbeiten"
                           >
-                            ✎
+                            ✏️
                           </button>
                           <button
                             className="archive-entry__delete-btn"
@@ -401,7 +401,7 @@ export function ArchiveView({
                             onClick={() => startEdit(q.id, answer.value)}
                             aria-label="Eintrag bearbeiten"
                           >
-                            ✎
+                            ✏️
                           </button>
                           <button
                             className="archive-entry__delete-btn"
