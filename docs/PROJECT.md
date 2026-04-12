@@ -1,7 +1,7 @@
 # Projektübersicht – Remember Me
 
 **Status:** 🔵 IN PROGRESS  
-**Version:** 1.5.6  
+**Version:** 1.5.7  
 **Letzte Aktualisierung:** 2026-04-11
 
 ---
@@ -111,7 +111,7 @@ AppState (localStorage: 'remember-me-state')
 ├── friends: Friend[]
 │   └── Friend: { id, name, addedAt }
 ├── friendAnswers: FriendAnswer[]
-│   └── FriendAnswer: { id, friendId, friendName, questionId, value, createdAt }
+│   └── FriendAnswer: { id, friendId, friendName, questionId, questionText?, value, createdAt }
 └── customQuestions: CustomQuestion[]
     └── CustomQuestion: { id, text, type, helpText?, options?, createdAt }
 

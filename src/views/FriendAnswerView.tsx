@@ -51,7 +51,10 @@ export function FriendAnswerView({ invite }: Props) {
       friendName: friendName.trim() || 'Anonym',
       answers: Object.entries(localAnswers)
         .filter(([, v]) => v.trim())
-        .map(([questionId, value]) => ({ questionId, value })),
+        .map(([questionId, value]) => {
+          const q = questions.find(q => q.id === questionId)
+          return { questionId, value, questionText: q?.text }
+        }),
     }
     setExportCode(encodeAnswerExport(data))
   }

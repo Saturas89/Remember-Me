@@ -136,6 +136,7 @@ export function useAnswers() {
           friendId: data.friendId,
           friendName: data.friendName,
           questionId: a.questionId,
+          questionText: a.questionText,
           value: a.value,
           createdAt: now,
         }))

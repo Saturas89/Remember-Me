@@ -277,11 +277,14 @@ export function ArchiveView({
                   </span>
                 </div>
                 {thisAnswers.map(a => {
+                  // 1. Use the text stored at import time (already name-resolved)
+                  // 2. Fall back to static lookup + name substitution (current IDs)
+                  // 3. Last resort: show a placeholder instead of a raw technical ID
                   const q = FRIEND_QUESTIONS.find(fq => fq.id === a.questionId)
-                  const questionText = (q?.text ?? a.questionId).replace(
-                    /\{name\}/g,
-                    profileName || 'dir',
-                  )
+                  const questionText =
+                    a.questionText ??
+                    q?.text.replace(/\{name\}/g, profileName || 'dir') ??
+                    'Frage nicht mehr verfügbar'
                   return (
                     <div key={a.id} className="archive-entry archive-entry--friend">
                       <p className="archive-entry__question">{questionText}</p>

@@ -18,14 +18,15 @@ function formatDate(iso: string): string {
   })
 }
 
-function resolveQuestion(questionId: string): string {
+function resolveQuestion(questionId: string, storedText?: string): string {
+  if (storedText) return storedText
   for (const cat of CATEGORIES) {
     const q = cat.questions.find(q => q.id === questionId)
     if (q) return q.text
   }
   const fq = FRIEND_QUESTIONS.find(q => q.id === questionId)
   if (fq) return fq.text
-  return questionId
+  return 'Frage nicht mehr verfügbar'
 }
 
 /** Trigger a browser file download */
@@ -142,7 +143,7 @@ export function exportAsMarkdown(data: ExportData): string {
       lines.push('')
 
       for (const a of thisAnswers) {
-        const questionText = resolveQuestion(a.questionId)
+        const questionText = resolveQuestion(a.questionId, a.questionText)
           .replace(/\{name\}/g, name)
         lines.push(`**${questionText}**`)
         lines.push(a.value.trim())
@@ -194,7 +195,7 @@ export function exportAsEnrichedJSON(data: ExportData): string {
       const thisAnswers = friendAnswers
         .filter(a => a.friendId === friend.id && a.value.trim())
         .map(a => ({
-          question: resolveQuestion(a.questionId).replace(/\{name\}/g, name),
+          question: resolveQuestion(a.questionId, a.questionText).replace(/\{name\}/g, name),
           answer: a.value.trim(),
           submittedAt: a.createdAt.split('T')[0],
         }))

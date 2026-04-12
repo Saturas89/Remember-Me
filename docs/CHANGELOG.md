@@ -5,6 +5,27 @@ Alle veröffentlichten Versionen des Projekts, absteigend sortiert.
 Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 Versionierung folgt [Semantic Versioning](https://semver.org/lang/de/).
 
+## [1.5.7] – 2026-04-12
+
+### Behoben
+
+#### Freundes-Fragen im Archiv zeigten ID-Platzhalter statt Fragentext
+
+**Ursache:** `ArchiveView` löste den Fragentext über `FRIEND_QUESTIONS.find(id)` auf. Gespeicherte Antworten mit veralteten Fragen-IDs (vor dem FRIEND_TOPICS-Umbau) wurden nicht gefunden; als Fallback erschien die rohe ID (z. B. `friend-f1`).
+
+**Fix – dreistellige Auflösung (Reihenfolge):**
+1. `a.questionText` – direkt im `FriendAnswer`-Objekt gespeicherter, bereits aufgelöster Text (neu)
+2. `FRIEND_QUESTIONS`-Lookup + `{name}`-Substitution (bisherige Lösung, Fallback für vorhandene Daten)
+3. `"Frage nicht mehr verfügbar"` – lesbarer Platzhalter statt roher ID
+
+**Datenmodell-Erweiterungen (backward-compatible, alle Felder optional):**
+- `FriendAnswer.questionText?: string` – aufgelöster Fragetext wird beim Import dauerhaft gespeichert
+- `AnswerExport.answers[].questionText?: string` – wird in `FriendAnswerView.finish()` befüllt
+- `importFriendAnswers()` überträgt `questionText` in die gespeicherte `FriendAnswer`
+- `resolveQuestion()` in `utils/export.ts` nimmt `storedText`-Parameter; nutzt ihn für Markdown- und JSON-Export
+
+---
+
 ## [1.5.6] – 2026-04-12
 
 ### Hinzugefügt

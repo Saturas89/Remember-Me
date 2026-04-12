@@ -46,6 +46,9 @@ export interface FriendAnswer {
   friendId: string
   friendName: string
   questionId: string
+  /** Resolved question text (with {name} substituted). Stored for resilience
+   *  so the archive never depends on runtime ID lookup. */
+  questionText?: string
   value: string
   createdAt: string
 }
@@ -84,5 +87,10 @@ export interface InviteData {
 export interface AnswerExport {
   friendId: string
   friendName: string
-  answers: Array<{ questionId: string; value: string }>
+  answers: Array<{
+    questionId: string
+    value: string
+    /** Resolved question text included so the receiver can display it without a lookup */
+    questionText?: string
+  }>
 }
