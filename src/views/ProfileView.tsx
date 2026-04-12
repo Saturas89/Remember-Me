@@ -1,7 +1,6 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { CATEGORIES } from '../data/categories'
-import { THEMES } from '../hooks/useTheme'
-import { useTheme } from '../hooks/useTheme'
+import { THEMES, useTheme } from '../hooks/useTheme'
 import type { Profile, Answer } from '../types'
 
 interface Props {
@@ -10,15 +9,25 @@ interface Props {
   friendCount: number
   onSave: (profile: Profile) => void
   onBack: () => void
+  onExportMarkdown: () => void
+  onExportJson: () => void
+  onExportBackup: () => void
+  onImportBackup: (json: string) => { ok: boolean; error?: string }
 }
 
-export function ProfileView({ profile, answers, friendCount, onSave, onBack }: Props) {
+export function ProfileView({
+  profile, answers, friendCount,
+  onSave, onBack,
+  onExportMarkdown, onExportJson, onExportBackup, onImportBackup,
+}: Props) {
   const { theme, setTheme } = useTheme()
   const [name, setName] = useState(profile?.name ?? '')
   const [birthYear, setBirthYear] = useState(
     profile?.birthYear ? String(profile.birthYear) : '',
   )
   const [saved, setSaved] = useState(false)
+  const [importStatus, setImportStatus] = useState<{ ok: boolean; message: string } | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const totalQuestions = CATEGORIES.reduce((s, c) => s + c.questions.length, 0)
   const totalAnswered = Object.values(answers).filter(
@@ -49,6 +58,30 @@ export function ProfileView({ profile, answers, friendCount, onSave, onBack }: P
     })
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)
+  }
+
+  async function handleImportFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    const ok = window.confirm(
+      'Dies überschreibt alle aktuellen Daten mit dem Backup. Fortfahren?'
+    )
+    if (!ok) {
+      e.target.value = ''
+      return
+    }
+
+    const text = await file.text()
+    const result = onImportBackup(text)
+    setImportStatus({
+      ok: result.ok,
+      message: result.ok
+        ? '✓ Backup erfolgreich wiederhergestellt.'
+        : (result.error ?? 'Import fehlgeschlagen.'),
+    })
+    e.target.value = ''
+    if (result.ok) setTimeout(() => setImportStatus(null), 4000)
   }
 
   return (
@@ -155,6 +188,60 @@ export function ProfileView({ profile, answers, friendCount, onSave, onBack }: P
               {theme === t.id && <span className="theme-card__check" aria-hidden="true">✓</span>}
             </button>
           ))}
+        </div>
+      </section>
+
+      {/* Exportieren & Sichern */}
+      <section className="profile-card">
+        <h2 className="profile-card__heading">Exportieren & Sichern</h2>
+
+        <p className="backup-desc">
+          Exportiere deine Lebensgeschichte als lesbare Datei oder erstelle ein vollständiges Backup zum Wiederherstellen.
+        </p>
+
+        <div className="backup-export-row">
+          <button className="btn btn--ghost backup-btn" onClick={onExportMarkdown}>
+            <span className="backup-btn__icon">📄</span>
+            <span className="backup-btn__label">Markdown</span>
+            <span className="backup-btn__hint">für KI &amp; Texteditoren</span>
+          </button>
+          <button className="btn btn--ghost backup-btn" onClick={onExportJson}>
+            <span className="backup-btn__icon">📊</span>
+            <span className="backup-btn__label">JSON</span>
+            <span className="backup-btn__hint">strukturierter Export</span>
+          </button>
+          <button className="btn btn--ghost backup-btn" onClick={onExportBackup}>
+            <span className="backup-btn__icon">💾</span>
+            <span className="backup-btn__label">Backup</span>
+            <span className="backup-btn__hint">vollständig wiederherstellbar</span>
+          </button>
+        </div>
+
+        <div className="backup-restore">
+          <p className="backup-restore__label">Backup wiederherstellen</p>
+          <p className="backup-restore__hint">
+            Lade eine Backup-Datei (.json) um alle Daten auf diesem Gerät wiederherzustellen.
+            Fotos sind nicht im Backup enthalten.
+          </p>
+          <button
+            type="button"
+            className="btn btn--outline backup-restore-btn"
+            onClick={() => fileInputRef.current?.click()}
+          >
+            📂 Backup-Datei laden…
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".json,application/json"
+            style={{ display: 'none' }}
+            onChange={handleImportFile}
+          />
+          {importStatus && (
+            <p className={`import-msg import-msg--${importStatus.ok ? 'success' : 'error'}`}>
+              {importStatus.message}
+            </p>
+          )}
         </div>
       </section>
 

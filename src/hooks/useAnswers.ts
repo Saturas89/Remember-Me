@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react'
+import { BACKUP_TYPE } from '../utils/export'
 import type { Profile, AppState, Friend, FriendAnswer, AnswerExport, CustomQuestion } from '../types'
 
 const STORAGE_KEY = 'remember-me-state'
@@ -208,6 +209,29 @@ export function useAnswers() {
     setState(fresh)
   }, [])
 
+  /** Restore a full backup created by exportAsBackup() */
+  const restoreBackup = useCallback((json: string): { ok: boolean; error?: string } => {
+    try {
+      const parsed = JSON.parse(json) as Record<string, unknown>
+      if (parsed.$type !== BACKUP_TYPE) {
+        return { ok: false, error: 'Unbekanntes Dateiformat. Bitte eine Backup-Datei von Remember Me verwenden.' }
+      }
+      const s = (parsed.state ?? {}) as Partial<AppState>
+      const restored: AppState = {
+        profile: s.profile ?? null,
+        answers: s.answers ?? {},
+        friends: s.friends ?? [],
+        friendAnswers: s.friendAnswers ?? [],
+        customQuestions: s.customQuestions ?? [],
+      }
+      saveState(restored)
+      setState(restored)
+      return { ok: true }
+    } catch {
+      return { ok: false, error: 'Die Datei konnte nicht gelesen werden. Ist es eine gültige Backup-Datei?' }
+    }
+  }, [])
+
   // ── Derived helpers ──────────────────────────────────────
 
   const getAnswer = useCallback(
@@ -255,6 +279,7 @@ export function useAnswers() {
     removeCustomQuestion,
     importCustomQuestions,
     clearAll,
+    restoreBackup,
     getAnswer,
     getAnswerImageIds,
     getCategoryProgress,

@@ -13,6 +13,7 @@ import { CustomQuestionsView } from './views/CustomQuestionsView'
 import { OnboardingView } from './views/OnboardingView'
 import { InstallBanner } from './components/InstallBanner'
 import { BottomNav } from './components/BottomNav'
+import { exportAsMarkdown, exportAsEnrichedJSON, exportAsBackup, downloadFile } from './utils/export'
 import type { Category } from './types'
 import './App.css'
 
@@ -45,10 +46,24 @@ export default function App() {
     addCustomQuestion,
     removeCustomQuestion,
     importCustomQuestions,
+    restoreBackup,
     getAnswer,
     getAnswerImageIds,
     getCategoryProgress,
   } = useAnswers()
+
+  const exportData = { profile, answers, friends, friendAnswers, customQuestions }
+  const safeName = (profile?.name ?? 'lebensarchiv').replace(/\s+/g, '-').toLowerCase()
+
+  function handleExportMarkdown() {
+    downloadFile(exportAsMarkdown(exportData), `${safeName}.md`, 'text/markdown')
+  }
+  function handleExportJson() {
+    downloadFile(exportAsEnrichedJSON(exportData), `${safeName}.json`, 'application/json')
+  }
+  function handleExportBackup() {
+    downloadFile(exportAsBackup(exportData), `remember-me-${safeName}-backup.json`, 'application/json')
+  }
 
   const [view, setView] = useState<View>({ name: 'home' })
   const { state: installState, visible: installVisible, triggerInstall, dismiss: dismissInstall } = useInstallPrompt()
@@ -152,6 +167,10 @@ export default function App() {
           friendCount={friends.length}
           onSave={saveProfile}
           onBack={() => setView({ name: 'home' })}
+          onExportMarkdown={handleExportMarkdown}
+          onExportJson={handleExportJson}
+          onExportBackup={handleExportBackup}
+          onImportBackup={restoreBackup}
         />
       )}
 

@@ -41,6 +41,39 @@ export function downloadFile(content: string, filename: string, mime: string): v
   URL.revokeObjectURL(url)
 }
 
+// ── Raw backup (for restore / re-install) ─────────────────
+export const BACKUP_TYPE = 'remember-me-backup'
+
+export interface BackupPayload {
+  $type: typeof BACKUP_TYPE
+  version: number
+  exportedAt: string
+  app: string
+  state: ExportData
+}
+
+/**
+ * Exports a full raw backup suitable for re-importing.
+ * Contains all text answers, profile, friends, friendAnswers, customQuestions.
+ * NOTE: Photo attachments (IndexedDB) are not included.
+ */
+export function exportAsBackup(data: ExportData): string {
+  const payload: BackupPayload = {
+    $type: BACKUP_TYPE,
+    version: 2,
+    exportedAt: new Date().toISOString(),
+    app: 'Remember Me',
+    state: {
+      profile: data.profile,
+      answers: data.answers,
+      friends: data.friends,
+      friendAnswers: data.friendAnswers,
+      customQuestions: data.customQuestions,
+    },
+  }
+  return JSON.stringify(payload, null, 2)
+}
+
 // ── Markdown export ───────────────────────────────────────
 
 export function exportAsMarkdown(data: ExportData): string {

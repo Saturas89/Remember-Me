@@ -5,6 +5,28 @@ Alle veröffentlichten Versionen des Projekts, absteigend sortiert.
 Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 Versionierung folgt [Semantic Versioning](https://semver.org/lang/de/).
 
+## [1.5.6] – 2026-04-12
+
+### Hinzugefügt
+
+#### Export & Backup-Funktion in der Profilansicht
+
+**Profil → „Exportieren & Sichern" (neue Karte):**
+- 3 Export-Buttons in einem 3-Spalten-Grid:
+  - **📄 Markdown** – Lebensgeschichte als `.md` (für KI & Texteditoren)
+  - **📊 JSON** – Angereichertes JSON (strukturierter Export, lesbar)
+  - **💾 Backup** – Vollständiges Rohdaten-Backup (für Wiederherstellung)
+- **Backup wiederherstellen**: Datei-Upload-Button für `.json`-Backup-Dateien; Bestätigungsdialog vor dem Überschreiben bestehender Daten; Erfolgs- / Fehlermeldung nach Import
+- Hinweis: Fotos (IndexedDB) sind nicht im Backup enthalten
+- Export-Buttons im Archiv-Topbar bleiben als Schnellzugriff erhalten
+
+**Neue Backup-Format-Spezifikation:**
+- `$type: "remember-me-backup"`, `version: 2`
+- Enthält vollständiges `state`-Objekt: `profile`, `answers`, `friends`, `friendAnswers`, `customQuestions`
+- `exportAsBackup()` in `utils/export.ts`, `restoreBackup()` in `useAnswers.ts`
+
+---
+
 ## [1.5.5] – 2026-04-11
 
 ### Geändert
