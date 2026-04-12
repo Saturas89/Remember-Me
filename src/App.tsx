@@ -12,7 +12,9 @@ import { ProfileView } from './views/ProfileView'
 import { CustomQuestionsView } from './views/CustomQuestionsView'
 import { OnboardingView } from './views/OnboardingView'
 import { InstallBanner } from './components/InstallBanner'
+import { UpdateBanner } from './components/UpdateBanner'
 import { BottomNav } from './components/BottomNav'
+import { useServiceWorker } from './hooks/useServiceWorker'
 import { exportAsMarkdown, exportAsEnrichedJSON, exportAsBackup, downloadFile } from './utils/export'
 import type { Category } from './types'
 import './App.css'
@@ -67,6 +69,7 @@ export default function App() {
 
   const [view, setView] = useState<View>({ name: 'home' })
   const { state: installState, visible: installVisible, triggerInstall, dismiss: dismissInstall } = useInstallPrompt()
+  const { needRefresh, applyUpdate, dismiss: dismissUpdate } = useServiceWorker()
 
   // If opened via invite link, show the friend answering flow instead of the regular app
   if (inviteFromUrl) {
@@ -79,6 +82,7 @@ export default function App() {
       <>
         <OnboardingView onComplete={saveProfile} />
         {installVisible && <InstallBanner state={installState} onInstall={triggerInstall} onDismiss={dismissInstall} />}
+        {needRefresh && <UpdateBanner onUpdate={applyUpdate} onDismiss={dismissUpdate} />}
       </>
     )
   }
@@ -128,6 +132,7 @@ export default function App() {
           }
         />
         {installVisible && <InstallBanner state={installState} onInstall={triggerInstall} onDismiss={dismissInstall} />}
+        {needRefresh && <UpdateBanner onUpdate={applyUpdate} onDismiss={dismissUpdate} />}
       </>
     )
   }
@@ -207,6 +212,7 @@ export default function App() {
       )}
 
       {installVisible && <InstallBanner state={installState} onInstall={triggerInstall} onDismiss={dismissInstall} />}
+      {needRefresh && <UpdateBanner onUpdate={applyUpdate} onDismiss={dismissUpdate} />}
     </>
   )
 }

@@ -120,7 +120,9 @@ IndexedDB: 'rm-images' (store: 'images')
 ```
 
 Vollständige Typ-Definitionen: `src/types.ts`  
-Zustandsverwaltung: `src/hooks/useAnswers.ts`
+Zustandsverwaltung: `src/hooks/useAnswers.ts`  
+PWA Service Worker: `src/hooks/useServiceWorker.ts` – `{ needRefresh, applyUpdate, dismiss }`  
+Update-Banner: `src/components/UpdateBanner.tsx` – Toast bei verfügbarem SW-Update
 
 ---
 

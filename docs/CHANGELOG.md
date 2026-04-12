@@ -5,6 +5,27 @@ Alle veröffentlichten Versionen des Projekts, absteigend sortiert.
 Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 Versionierung folgt [Semantic Versioning](https://semver.org/lang/de/).
 
+## [1.5.8] – 2026-04-12
+
+### Hinzugefügt
+
+#### PWA Update-Benachrichtigung
+
+Wenn im Hintergrund eine neue Version der App als Service Worker bereit steht, erscheint ein Banner am unteren Bildschirmrand:
+
+- **„Update verfügbar – Neue Version bereit zum Laden"**
+- Button **„Neu laden"** aktiviert `skipWaiting` und lädt die Seite neu (update wird sofort angewendet)
+- **×**-Button schließt das Banner ohne Update (kein erneutes Erscheinen bis zum nächsten Seitenaufruf)
+- Banner erscheint auf allen Ansichten (Home, Archiv, Profil, Quiz …)
+
+**Technische Details:**
+- `vite.config.ts`: `registerType: 'prompt'` (war `'autoUpdate'`) – SW wartet auf Nutzerbestätigung
+- `src/hooks/useServiceWorker.ts` – Wraps `useRegisterSW` aus `virtual:pwa-register/react`; stellt `needRefresh`, `applyUpdate()`, `dismiss()` bereit
+- `src/components/UpdateBanner.tsx` – Toast-Banner, `role="alert"`, `aria-live="polite"`
+- `src/App.tsx` – Hook aufgerufen, Banner in allen Render-Pfaden bedingt gerendert (`needRefresh && <UpdateBanner …>`)
+
+---
+
 ## [1.5.7] – 2026-04-12
 
 ### Behoben

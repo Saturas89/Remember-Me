@@ -1893,6 +1893,74 @@
   gap: 0.5rem;
 }
 
+/* ── Update banner ───────────────────────────────────── */
+.update-banner {
+  position: fixed;
+  bottom: calc(4rem + env(safe-area-inset-bottom, 0px));
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(480px, calc(100vw - 2rem));
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: var(--surface);
+  border: 1px solid var(--border-focus);
+  border-radius: 12px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+  z-index: 90;
+  animation: slide-up 0.25s ease;
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateX(-50%) translateY(1rem); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+.update-banner__icon {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.update-banner__text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.update-banner__text strong {
+  font-size: 0.875rem;
+  color: var(--text-primary);
+}
+
+.update-banner__text span {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.update-banner__btn {
+  flex-shrink: 0;
+}
+
+.update-banner__close {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 0.25rem;
+  font-size: 0.875rem;
+  line-height: 1;
+  border-radius: 4px;
+  transition: color 0.15s;
+}
+
+.update-banner__close:hover {
+  color: var(--text-primary);
+}
+
 /* ── Print / PDF export ──────────────────────────────── */
 @media print {
   .no-print { display: none !important; }
