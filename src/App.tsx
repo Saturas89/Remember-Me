@@ -10,6 +10,7 @@ import { FriendsView } from './views/FriendsView'
 import { FriendAnswerView } from './views/FriendAnswerView'
 import { ProfileView } from './views/ProfileView'
 import { CustomQuestionsView } from './views/CustomQuestionsView'
+import { ImportView } from './views/ImportView'
 import { OnboardingView } from './views/OnboardingView'
 import { InstallBanner } from './components/InstallBanner'
 import { UpdateBanner } from './components/UpdateBanner'
@@ -26,6 +27,7 @@ type View =
   | { name: 'friends' }
   | { name: 'profile' }
   | { name: 'custom-questions' }
+  | { name: 'import' }
 
 type MainTab = 'home' | 'archive' | 'custom-questions' | 'friends' | 'profile'
 
@@ -48,6 +50,7 @@ export default function App() {
     addCustomQuestion,
     removeCustomQuestion,
     importCustomQuestions,
+    importSocialMediaEntries,
     restoreBackup,
     getAnswer,
     getAnswerImageIds,
@@ -176,6 +179,15 @@ export default function App() {
           onExportJson={handleExportJson}
           onExportBackup={handleExportBackup}
           onImportBackup={restoreBackup}
+          onOpenImport={() => setView({ name: 'import' })}
+        />
+      )}
+
+      {view.name === 'import' && (
+        <ImportView
+          onImport={importSocialMediaEntries}
+          onBack={() => setView({ name: 'profile' })}
+          onDone={() => setView({ name: 'archive' })}
         />
       )}
 

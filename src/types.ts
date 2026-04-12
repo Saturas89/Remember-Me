@@ -27,6 +27,15 @@ export interface Answer {
   imageIds?: string[]
   createdAt: string
   updatedAt: string
+  /** ISO 8601 date of the actual event (may differ from createdAt for imported entries) */
+  eventDate?: string
+  /** Set when the answer was imported from a social media platform */
+  importSource?: {
+    platform: 'instagram' | 'facebook'
+    originalId: string
+    originalCaption?: string
+    importedAt: string
+  }
 }
 
 export interface Profile {

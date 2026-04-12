@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react'
 import { BACKUP_TYPE } from '../utils/export'
-import type { Profile, AppState, Friend, FriendAnswer, AnswerExport, CustomQuestion } from '../types'
+import type { Profile, AppState, Answer, Friend, FriendAnswer, AnswerExport, CustomQuestion } from '../types'
 
 const STORAGE_KEY = 'remember-me-state'
 
@@ -198,6 +198,49 @@ export function useAnswers() {
     })
   }, [])
 
+  /** Import a batch of social-media entries as custom questions + answers in one transaction */
+  const importSocialMediaEntries = useCallback((
+    entries: Array<{
+      questionText: string
+      description: string
+      imageIds: string[]
+      eventDate?: string
+      importSource?: Answer['importSource']
+    }>
+  ) => {
+    setState(prev => {
+      let next = prev
+      const now = new Date().toISOString()
+      for (const entry of entries) {
+        const qid = `imp-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
+        const q: CustomQuestion = {
+          id: qid,
+          text: entry.questionText || 'Importierte Erinnerung',
+          type: 'text',
+          createdAt: now,
+        }
+        const answer: Answer = {
+          id: qid,
+          questionId: qid,
+          categoryId: 'custom',
+          value: entry.description,
+          imageIds: entry.imageIds.length > 0 ? entry.imageIds : undefined,
+          createdAt: entry.eventDate ?? now,
+          updatedAt: now,
+          eventDate: entry.eventDate,
+          importSource: entry.importSource,
+        }
+        next = {
+          ...next,
+          customQuestions: [...next.customQuestions, q],
+          answers: { ...next.answers, [qid]: answer },
+        }
+      }
+      saveState(next)
+      return next
+    })
+  }, [])
+
   const clearAll = useCallback(() => {
     const fresh: AppState = {
       profile: null,
@@ -279,6 +322,7 @@ export function useAnswers() {
     addCustomQuestion,
     removeCustomQuestion,
     importCustomQuestions,
+    importSocialMediaEntries,
     clearAll,
     restoreBackup,
     getAnswer,

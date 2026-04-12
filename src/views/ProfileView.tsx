@@ -13,12 +13,14 @@ interface Props {
   onExportJson: () => void
   onExportBackup: () => void
   onImportBackup: (json: string) => { ok: boolean; error?: string }
+  onOpenImport: () => void
 }
 
 export function ProfileView({
   profile, answers, friendCount,
   onSave, onBack,
   onExportMarkdown, onExportJson, onExportBackup, onImportBackup,
+  onOpenImport,
 }: Props) {
   const { theme, setTheme } = useTheme()
   const [name, setName] = useState(profile?.name ?? '')
@@ -189,6 +191,21 @@ export function ProfileView({
             </button>
           ))}
         </div>
+      </section>
+
+      {/* Social-Media-Import */}
+      <section className="profile-card">
+        <h2 className="profile-card__heading">Importieren</h2>
+        <button type="button" className="profile-import-card" onClick={onOpenImport}>
+          <span className="profile-import-card__icon">📥</span>
+          <span className="profile-import-card__body">
+            <span className="profile-import-card__title">Social Media importieren</span>
+            <span className="profile-import-card__desc">
+              Fotos &amp; Erinnerungen von Instagram übernehmen
+            </span>
+          </span>
+          <span className="profile-import-card__arrow">›</span>
+        </button>
       </section>
 
       {/* Exportieren & Sichern */}
