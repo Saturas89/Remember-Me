@@ -1656,14 +1656,17 @@
   padding: 0 !important;
   border-radius: 0 !important;
   text-align: right;
-  color: var(--text-muted) !important;
+  color: var(--text) !important;
   font-size: 0.95rem !important;
   box-shadow: none !important;
 }
 
+.profile-field-input::placeholder {
+  color: var(--text-muted);
+}
+
 .profile-field-input:focus {
   outline: none !important;
-  color: var(--text) !important;
 }
 
 .profile-save-btn {
