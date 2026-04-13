@@ -21,13 +21,11 @@ interface Props {
   onOpenFaq: () => void
 }
 
-function BackupStatusRow() {
-  const last   = getLastBackupDate()
+function BackupStatusRow({ last }: { last: Date | null }) {
   const status = backupAgeStatus(last)
-
-  const icon  = status === 'fresh' ? '✓' : '⚠'
-  const age   = last ? backupAgeLabel(last) : ''
-  const label =
+  const icon   = status === 'fresh' ? '✓' : '⚠'
+  const age    = last ? backupAgeLabel(last) : ''
+  const label  =
     status === 'fresh' ? `Erinnerungen gesichert – ${age}` :
     status === 'stale' ? `Erinnerungen sichern – zuletzt ${age}` :
     status === 'old'   ? `Erinnerungen sichern – zuletzt ${age}` :
@@ -49,6 +47,7 @@ export function ProfileView({
   onOpenImport, onOpenFaq,
 }: Props) {
   const { theme, setTheme } = useTheme()
+  const [lastBackup, setLastBackup] = useState<Date | null>(() => getLastBackupDate())
   const [name, setName] = useState(profile?.name ?? '')
   const [birthYear, setBirthYear] = useState(
     profile?.birthYear ? String(profile.birthYear) : '',
@@ -154,7 +153,7 @@ export function ProfileView({
             </div>
           )}
         </div>
-        <BackupStatusRow />
+        <BackupStatusRow last={lastBackup} />
       </section>
 
       {/* Profil bearbeiten */}
@@ -238,7 +237,11 @@ export function ProfileView({
       {/* Erinnerungs-Archiv – hero export action */}
       <section className="profile-card">
         <h2 className="profile-card__heading">Sichern & Teilen</h2>
-        <ArchiveExportCard data={exportData} safeName={safeName} />
+        <ArchiveExportCard
+          data={exportData}
+          safeName={safeName}
+          onBackupRecorded={() => setLastBackup(new Date())}
+        />
       </section>
 
       {/* Weitere Exportformate */}

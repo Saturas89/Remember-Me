@@ -7,11 +7,12 @@ import type { ExportData } from '../utils/export'
 type Phase = 'idle' | 'building' | 'ready' | 'error'
 
 interface Props {
-  data:     ExportData
-  safeName: string
+  data:               ExportData
+  safeName:           string
+  onBackupRecorded?:  () => void
 }
 
-export function ArchiveExportCard({ data, safeName }: Props) {
+export function ArchiveExportCard({ data, safeName, onBackupRecorded }: Props) {
   const [phase,    setPhase]    = useState<Phase>('idle')
   const [step,     setStep]     = useState('')
   const [pct,      setPct]      = useState(0)
@@ -51,6 +52,7 @@ export function ArchiveExportCard({ data, safeName }: Props) {
   function handleSave() {
     if (!zipBlob) return
     recordBackup()
+    onBackupRecorded?.()
     const url = URL.createObjectURL(zipBlob)
     const a   = document.createElement('a')
     a.href     = url
@@ -73,6 +75,7 @@ export function ArchiveExportCard({ data, safeName }: Props) {
           text:  'Meine persönliche Lebensgeschichte – erstellt mit Remember Me.',
         })
         recordBackup()
+        onBackupRecorded?.()
         return
       }
     } catch (e) {
