@@ -292,7 +292,7 @@ describe('exportAsEnrichedJSON', () => {
 describe('downloadFile', () => {
   it('creates an object URL, appends an anchor, clicks it, and cleans up', () => {
     // Mock URL functions
-    const createObjectURL = vi.fn(() => 'blob:test-url')
+    const createObjectURL = vi.fn((_blob: Blob) => 'blob:test-url')
     const revokeObjectURL = vi.fn()
     vi.stubGlobal('URL', { createObjectURL, revokeObjectURL })
 
