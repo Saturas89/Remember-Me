@@ -214,7 +214,7 @@ export function useAnswers() {
     options?: string[],
   ): CustomQuestion => {
     const q: CustomQuestion = {
-      id: `cq-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      id: `cq-${crypto.randomUUID()}`,
       text: text.trim(),
       type,
       helpText,
@@ -269,7 +269,7 @@ export function useAnswers() {
       let next = prev
       const now = new Date().toISOString()
       for (const entry of entries) {
-        const qid = `imp-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
+        const qid = `imp-${crypto.randomUUID()}`
         const q: CustomQuestion = {
           id: qid,
           text: entry.questionText || 'Importierte Erinnerung',
