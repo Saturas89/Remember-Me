@@ -1,17 +1,15 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { CATEGORIES } from '../data/categories'
 import { FRIEND_QUESTIONS } from '../data/friendQuestions'
-import { exportAsMarkdown, exportAsEnrichedJSON, downloadFile } from '../utils/export'
 import { ImageAttachment } from '../components/ImageAttachment'
 import { VideoAttachment } from '../components/VideoAttachment'
 import { AudioPlayer } from '../components/AudioPlayer'
 import { AudioRecorder } from '../components/AudioRecorder'
 import { useImageStore } from '../hooks/useImageStore'
 import { addAudio, removeAudio } from '../hooks/useAudioStore'
-import type { Answer, FriendAnswer, Friend, CustomQuestion, Profile } from '../types'
+import type { Answer, FriendAnswer, Friend, CustomQuestion } from '../types'
 
 interface Props {
-  profile: Profile | null
   answers: Record<string, Answer>
   friendAnswers: FriendAnswer[]
   friends: Friend[]
@@ -26,7 +24,6 @@ interface Props {
 }
 
 export function ArchiveView({
-  profile,
   answers,
   friendAnswers,
   friends,
@@ -140,18 +137,6 @@ export function ArchiveView({
     onDeleteEntry(questionId)
   }
 
-  // ── Export ───────────────────────────────────────────────
-
-  const exportData = { profile, answers, friends, friendAnswers, customQuestions }
-  const safeName = (profile?.name ?? 'lebensarchiv').replace(/\s+/g, '-').toLowerCase()
-
-  function handleMarkdownExport() {
-    downloadFile(exportAsMarkdown(exportData), `${safeName}.md`, 'text/markdown')
-  }
-  function handleJsonExport() {
-    downloadFile(exportAsEnrichedJSON(exportData), `${safeName}.json`, 'application/json')
-  }
-
   // ── Helpers ──────────────────────────────────────────────
 
   function hasContent(questionId: string) {
@@ -261,29 +246,6 @@ export function ArchiveView({
           ← Zurück
         </button>
         <h2 className="archive-title">📖 Mein Lebensarchiv</h2>
-        <div className="archive-export-group no-print">
-          <button
-            className="btn btn--ghost btn--sm"
-            onClick={handleMarkdownExport}
-            title="Als Markdown-Datei herunterladen (ideal für KI-Tools)"
-          >
-            📄 .md
-          </button>
-          <button
-            className="btn btn--ghost btn--sm"
-            onClick={handleJsonExport}
-            title="Als JSON-Datei herunterladen (strukturierter Export)"
-          >
-            {'{ }'} JSON
-          </button>
-          <button
-            className="btn btn--ghost btn--sm"
-            onClick={() => window.print()}
-            title="Als PDF speichern / Drucken"
-          >
-            🖨
-          </button>
-        </div>
       </div>
 
       {!hasAnything && (

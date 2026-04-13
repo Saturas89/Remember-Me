@@ -19,7 +19,7 @@ Das fertige Lebensarchiv soll exportiert und mit Angehörigen geteilt werden kö
 
 ### 2.1 PDF / Druckexport
 
-- [ ] **FR-4.1:** "Exportieren"-Button in der Archiv-Ansicht
+- [ ] **FR-4.1:** "Exportieren"-Buttons im Settings/Profil-Ansicht
 - [ ] **FR-4.2:** Export öffnet eine druckoptimierte Ansicht (alle Antworten)
 - [ ] **FR-4.3:** Druckansicht ist strukturiert nach Kategorien mit Überschriften
 - [ ] **FR-4.4:** Browser-Druckdialog wird geöffnet (PDF-Speichern via Browser)
