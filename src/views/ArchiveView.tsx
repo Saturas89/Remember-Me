@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { CATEGORIES } from '../data/categories'
 import { FRIEND_QUESTIONS } from '../data/friendQuestions'
 import { exportAsMarkdown, exportAsEnrichedJSON, downloadFile } from '../utils/export'
@@ -45,6 +45,10 @@ export function ArchiveView({
   const fileInputRef = useRef<HTMLInputElement>(null)
   // remember which entry the "Add photo" picker was opened for
   const pendingTarget = useRef<{ questionId: string; categoryId: string } | null>(null)
+
+  const friendQuestionsMap = useMemo(() => {
+    return Object.fromEntries(FRIEND_QUESTIONS.map(q => [q.id, q]))
+  }, [])
 
   // Pre-load all images referenced by any answer
   useEffect(() => {
@@ -448,7 +452,7 @@ export function ArchiveView({
                   </span>
                 </div>
                 {thisAnswers.map(a => {
-                  const q = FRIEND_QUESTIONS.find(fq => fq.id === a.questionId)
+                  const q = friendQuestionsMap[a.questionId]
                   const questionText =
                     a.questionText ??
                     q?.text.replace(/\{name\}/g, profileName || 'dir') ??
