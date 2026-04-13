@@ -9,7 +9,7 @@ const GRADIENTS: Record<string, [string, string]> = {
 }
 const DEFAULT_GRAD: [string, string] = ['#f72585', '#7b2d8b']
 
-function AppLogo({ size }: { size: number }) {
+function AppLogo({ size, color }: { size: number, color?: string }) {
   // We use CSS masking with the generated logo mask to apply the theme gradient
   // The gradient is controlled via CSS variables from the theme
   return (
@@ -18,7 +18,7 @@ function AppLogo({ size }: { size: number }) {
       style={{
         width: size,
         height: size,
-        background: `linear-gradient(to bottom, var(--logo-start), var(--logo-end))`,
+        background: color ? color : `linear-gradient(to bottom, var(--logo-start), var(--logo-end))`,
         WebkitMaskImage: `url('/logo-mask.png')`,
         maskImage: `url('/logo-mask.png')`,
         WebkitMaskSize: 'contain',
@@ -40,7 +40,7 @@ export function HeroLogo() {
       <div className="hero-logo__heart-wrap" style={{
         width: 160, height: 160, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem'
       }}>
-        <AppLogo size={140} />
+        <AppLogo size={140} color="#ffffff" />
       </div>
       <p className="hero-logo__tagline">Erzähl deine Geschichte</p>
       <p className="hero-logo__name">
