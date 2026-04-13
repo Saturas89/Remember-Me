@@ -1,6 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
   <defs>
-    <!-- nacht: hot-pink → violet (default / most recognisable variant) -->
     <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0%" stop-color="#1e1b3a"/>
       <stop offset="100%" stop-color="#110e26"/>
@@ -11,11 +10,17 @@
     </linearGradient>
   </defs>
 
-  <!-- Rounded-square app background -->
+  <!-- Full-bleed background (iOS applies its own rounding) -->
   <rect width="48" height="48" rx="11" fill="url(#bg)"/>
 
-  <!-- Heart + figure, scaled to fit the rounded-square (88%, centred) -->
-  <g transform="translate(2.88, 2.4) scale(0.88)">
+  <!--
+    Heart content spans x≈2–46 (w=44), y≈2–41 (h=39) in the 48×44 coordinate space.
+    Scale 0.84 → content 36.96 × 32.76
+    Center in 48×48:
+      tx = (48 − 36.96)/2 − 2×0.84 = 5.52 − 1.68 = 3.84
+      ty = (48 − 32.76)/2 − 2×0.84 = 7.62 − 1.68 = 5.94
+  -->
+  <g transform="translate(3.84, 5.94) scale(0.84)">
 
     <!-- Heart -->
     <path
