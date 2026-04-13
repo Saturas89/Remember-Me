@@ -45,7 +45,7 @@ export function HomeView({
         >
           ?
         </button>
-        <HeroLogo color="#ffffff" />
+        <HeroLogo />
         {profileName && (
           <p className="home-greeting">Hallo, {profileName}</p>
         )}
