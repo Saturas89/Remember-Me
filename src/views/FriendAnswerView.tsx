@@ -46,13 +46,15 @@ export function FriendAnswerView({ invite }: Props) {
   }
 
   function finish() {
+    const questionMap = new Map(questions.map(q => [q.id, q]))
+
     const data: AnswerExport = {
       friendId: invite.friendId,
       friendName: friendName.trim() || 'Anonym',
       answers: Object.entries(localAnswers)
         .filter(([, v]) => v.trim())
         .map(([questionId, value]) => {
-          const q = questions.find(q => q.id === questionId)
+          const q = questionMap.get(questionId)
           return { questionId, value, questionText: q?.text }
         }),
     }
