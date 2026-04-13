@@ -34,13 +34,13 @@ function AppLogo({ size, color }: { size: number, color?: string }) {
 }
 
 // ── HeroLogo – large centred version for HomeView / Onboarding ──
-export function HeroLogo() {
+export function HeroLogo({ color }: { color?: string }) {
   return (
     <div className="hero-logo" aria-label="Remember Me">
       <div className="hero-logo__heart-wrap" style={{
         width: 160, height: 160, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem'
       }}>
-        <AppLogo size={140} color="#ffffff" />
+        <AppLogo size={140} color={color} />
       </div>
       <p className="hero-logo__tagline">Erzähl deine Geschichte</p>
       <p className="hero-logo__name">
