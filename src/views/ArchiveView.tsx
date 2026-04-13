@@ -47,8 +47,23 @@ export function ArchiveView({
   const pendingTarget = useRef<{ questionId: string; categoryId: string } | null>(null)
 
   const friendQuestionsMap = useMemo(() => {
-    return Object.fromEntries(FRIEND_QUESTIONS.map(q => [q.id, q]))
-  }, [])
+    return Object.fromEntries(
+      FRIEND_QUESTIONS.map(q => [q.id, q.text.replace(/\{name\}/g, profileName || 'dir')])
+    )
+  }, [profileName])
+
+  const friendAnswersByFriendId = useMemo(() => {
+    const map: Record<string, FriendAnswer[]> = {}
+    for (const a of friendAnswers) {
+      if (a.value.trim()) {
+        if (!map[a.friendId]) {
+          map[a.friendId] = []
+        }
+        map[a.friendId].push(a)
+      }
+    }
+    return map
+  }, [friendAnswers])
 
   // Pre-load all images referenced by any answer
   useEffect(() => {
@@ -163,9 +178,10 @@ export function ArchiveView({
     cat.questions.some(q => hasContent(q.id)),
   )
   const customWithAnswers = customQuestions.filter(q => hasContent(q.id))
-  const friendsWithAnswers = friends.filter(f =>
-    friendAnswers.some(a => a.friendId === f.id && a.value.trim()),
-  )
+  const friendsWithAnswers = friends.filter(f => {
+    const answers = friendAnswersByFriendId[f.id]
+    return answers && answers.length > 0
+  })
   const hasAnything =
     categoriesWithAnswers.length > 0 ||
     customWithAnswers.length > 0 ||
@@ -440,9 +456,7 @@ export function ArchiveView({
             👥 Was Freunde über mich sagen
           </h3>
           {friendsWithAnswers.map(friend => {
-            const thisAnswers = friendAnswers.filter(
-              a => a.friendId === friend.id && a.value.trim(),
-            )
+            const thisAnswers = friendAnswersByFriendId[friend.id] || []
             return (
               <div key={friend.id} className="friend-contribution">
                 <div className="friend-contribution__header">
@@ -452,10 +466,9 @@ export function ArchiveView({
                   </span>
                 </div>
                 {thisAnswers.map(a => {
-                  const q = friendQuestionsMap[a.questionId]
                   const questionText =
                     a.questionText ??
-                    q?.text.replace(/\{name\}/g, profileName || 'dir') ??
+                    friendQuestionsMap[a.questionId] ??
                     'Frage nicht mehr verfügbar'
                   return (
                     <div key={a.id} className="archive-entry archive-entry--friend">
