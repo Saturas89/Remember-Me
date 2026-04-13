@@ -144,12 +144,15 @@ export function FriendAnswerView({ invite }: Props) {
         initialValue={localAnswers[question.id] ?? ''}
         imageIds={[]}
         imageCache={{}}
+        videoIds={[]}
         index={index}
         total={questions.length}
         onSave={handleSave}
         onLoadImages={() => {}}
         onAddImage={() => {}}
         onRemoveImage={() => {}}
+        onAddVideo={() => {}}
+        onRemoveVideo={() => {}}
         onSaveAudio={async () => {}}
         onRemoveAudio={() => {}}
         onNext={handleNext}
