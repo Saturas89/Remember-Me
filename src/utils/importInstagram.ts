@@ -112,7 +112,7 @@ export async function parseInstagramZip(
         loaded++
         onProgress?.(loaded, loaded) // we don't know total upfront
 
-        const id = `ig-${timestamp}-${Math.random().toString(36).slice(2, 7)}`
+        const id = `ig-${timestamp}-${crypto.randomUUID()}`
         candidates.push({
           id,
           platform: 'instagram',
