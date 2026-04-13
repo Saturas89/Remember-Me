@@ -87,7 +87,7 @@ export default function App() {
   if (!profile) {
     return (
       <>
-        <OnboardingView onComplete={saveProfile} />
+        <OnboardingView onComplete={saveProfile} onImportBackup={restoreBackup} />
         {installVisible && <InstallBanner state={installState} onInstall={triggerInstall} onDismiss={dismissInstall} />}
         {needRefresh && <UpdateBanner onUpdate={applyUpdate} onDismiss={dismissUpdate} />}
       </>
