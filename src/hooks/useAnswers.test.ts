@@ -390,9 +390,10 @@ describe('useAnswers', () => {
 
     it('returns { ok: false } for malformed JSON', () => {
       const { result } = renderHook(() => useAnswers())
-      let res: { ok: boolean } = { ok: true }
+      let res: { ok: boolean; error?: string } = { ok: true }
       act(() => { res = result.current.restoreBackup('{ invalid json }}}') })
       expect(res.ok).toBe(false)
+      expect(res.error).toBe('Die Datei konnte nicht gelesen werden. Ist es eine gültige Backup-Datei?')
     })
 
     it('does not modify state when backup is invalid', () => {
