@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { ImageAttachment } from './ImageAttachment'
+import { VideoAttachment } from './VideoAttachment'
 import { AudioRecorder } from './AudioRecorder'
 import type { Question } from '../types'
 
@@ -8,6 +9,7 @@ interface Props {
   initialValue: string
   imageIds: string[]
   imageCache: Record<string, string>
+  videoIds: string[]
   audioId?: string
   index: number
   total: number
@@ -15,6 +17,8 @@ interface Props {
   onLoadImages: (ids: string[]) => void
   onAddImage: (file: File) => void
   onRemoveImage: (id: string) => void
+  onAddVideo: (file: File) => void
+  onRemoveVideo: (id: string) => void
   onSaveAudio: (transcript: string, blob: Blob) => Promise<void>
   onRemoveAudio: () => void
   onNext: () => void
@@ -23,8 +27,9 @@ interface Props {
 }
 
 export function QuestionCard({
-  question, initialValue, imageIds, imageCache, audioId,
+  question, initialValue, imageIds, imageCache, videoIds, audioId,
   index, total, onSave, onLoadImages, onAddImage, onRemoveImage,
+  onAddVideo, onRemoveVideo,
   onSaveAudio, onRemoveAudio,
   onNext, onPrev, canGoBack,
 }: Props) {
@@ -41,7 +46,7 @@ export function QuestionCard({
 
   const hasAnswer =
     question.type === 'text'
-      ? value.trim() !== '' || imageIds.length > 0 || !!audioId
+      ? value.trim() !== '' || imageIds.length > 0 || videoIds.length > 0 || !!audioId
       : value !== ''
 
   return (
@@ -72,6 +77,11 @@ export function QuestionCard({
               onLoad={onLoadImages}
               onAdd={onAddImage}
               onRemove={onRemoveImage}
+            />
+            <VideoAttachment
+              videoIds={videoIds}
+              onAdd={onAddVideo}
+              onRemove={onRemoveVideo}
             />
             <AudioRecorder
               existingAudioId={audioId}

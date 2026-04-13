@@ -103,7 +103,11 @@ export function exportAsMarkdown(data: ExportData): string {
     for (const q of catAnswers) {
       lines.push(`**${q.text}**`)
       lines.push(answers[q.id].value.trim())
-      if (answers[q.id].audioId) lines.push('_🎙 Originalton vorhanden_')
+      const mediaTags: string[] = []
+      if ((answers[q.id].imageIds?.length ?? 0) > 0) mediaTags.push(`🖼 ${answers[q.id].imageIds!.length} Foto${answers[q.id].imageIds!.length !== 1 ? 's' : ''}`)
+      if ((answers[q.id].videoIds?.length ?? 0) > 0) mediaTags.push(`🎬 ${answers[q.id].videoIds!.length} Video${answers[q.id].videoIds!.length !== 1 ? 's' : ''}`)
+      if (answers[q.id].audioId) mediaTags.push('🎙 Originalton')
+      if (mediaTags.length > 0) lines.push(`_${mediaTags.join(' · ')} im Archiv_`)
       lines.push('')
     }
 
@@ -120,7 +124,11 @@ export function exportAsMarkdown(data: ExportData): string {
     for (const q of customAnswered) {
       lines.push(`**${q.text}**`)
       lines.push(answers[q.id].value.trim())
-      if (answers[q.id].audioId) lines.push('_🎙 Originalton vorhanden_')
+      const mediaTags2: string[] = []
+      if ((answers[q.id].imageIds?.length ?? 0) > 0) mediaTags2.push(`🖼 ${answers[q.id].imageIds!.length} Foto${answers[q.id].imageIds!.length !== 1 ? 's' : ''}`)
+      if ((answers[q.id].videoIds?.length ?? 0) > 0) mediaTags2.push(`🎬 ${answers[q.id].videoIds!.length} Video${answers[q.id].videoIds!.length !== 1 ? 's' : ''}`)
+      if (answers[q.id].audioId) mediaTags2.push('🎙 Originalton')
+      if (mediaTags2.length > 0) lines.push(`_${mediaTags2.join(' · ')} im Archiv_`)
       lines.push('')
     }
 

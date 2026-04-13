@@ -81,6 +81,31 @@ export function useAnswers() {
     })
   }, [])
 
+  const setAnswerVideos = useCallback((questionId: string, categoryId: string, videoIds: string[]) => {
+    setState(prev => {
+      const existing = prev.answers[questionId]
+      const now = new Date().toISOString()
+      const next: AppState = {
+        ...prev,
+        answers: {
+          ...prev.answers,
+          [questionId]: {
+            ...existing,
+            id: questionId,
+            questionId,
+            categoryId,
+            value: existing?.value ?? '',
+            videoIds,
+            createdAt: existing?.createdAt ?? now,
+            updatedAt: now,
+          },
+        },
+      }
+      saveState(next)
+      return next
+    })
+  }, [])
+
   const setAnswerAudio = useCallback((
     questionId: string,
     categoryId: string,
@@ -320,6 +345,11 @@ export function useAnswers() {
     [state.answers],
   )
 
+  const getAnswerVideoIds = useCallback(
+    (questionId: string): string[] => state.answers[questionId]?.videoIds ?? [],
+    [state.answers],
+  )
+
   const getAnswerAudioId = useCallback(
     (questionId: string): string | undefined => state.answers[questionId]?.audioId,
     [state.answers],
@@ -330,7 +360,7 @@ export function useAnswers() {
       const answered = Object.values(state.answers).filter(
         a =>
           a.categoryId === categoryId &&
-          (a.value.trim() !== '' || (a.imageIds?.length ?? 0) > 0),
+          (a.value.trim() !== '' || (a.imageIds?.length ?? 0) > 0 || (a.videoIds?.length ?? 0) > 0),
       ).length
       return totalQuestions > 0 ? Math.round((answered / totalQuestions) * 100) : 0
     },
@@ -351,6 +381,7 @@ export function useAnswers() {
     customQuestions: state.customQuestions,
     saveAnswer,
     setAnswerImages,
+    setAnswerVideos,
     setAnswerAudio,
     deleteAnswer,
     saveProfile,
@@ -365,6 +396,7 @@ export function useAnswers() {
     restoreBackup,
     getAnswer,
     getAnswerImageIds,
+    getAnswerVideoIds,
     getAnswerAudioId,
     getCategoryProgress,
     getFriendAnswers,

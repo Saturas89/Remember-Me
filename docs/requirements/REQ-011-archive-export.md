@@ -26,7 +26,9 @@ remember-me-{name}-archiv-{datum}.zip
 ├── audio/
 │   ├── aud-{id}.webm      ← Sprachaufnahmen (WebM oder MP4 je nach Browser)
 │   └── ...
-└── videos/                ← Platzhalter, reserviert für zukünftige Videounterstützung
+└── videos/
+    ├── vid-{id}.mp4       ← Video-Anhänge (MP4, WebM oder MOV je nach Browser)
+    └── ...
 ```
 
 ---
@@ -39,6 +41,7 @@ remember-me-{name}-archiv-{datum}.zip
 - **FR-11.2:** Die `memories.json` entspricht dem bestehenden Backup-Format (`$type: "remember-me-backup"`) und ist wiederherstellbar.
 - **FR-11.3:** Alle Fotos aus IndexedDB werden als JPEG in `/photos` gespeichert.
 - **FR-11.4:** Alle Sprachaufnahmen aus IndexedDB werden in `/audio` gespeichert (Dateiendung nach MIME-Type: `.webm` oder `.mp4`).
+- **FR-11.4b:** Alle Video-Anhänge aus IndexedDB werden in `/videos` gespeichert (Dateiendung: `.mp4`, `.webm` oder `.mov`). Siehe REQ-012.
 - **FR-11.5:** Während der Erstellung wird ein Fortschrittsbalken mit wechselndem Step-Text angezeigt.
 
 ### 3.2 Speichern & Teilen

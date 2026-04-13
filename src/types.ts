@@ -25,6 +25,8 @@ export interface Answer {
   categoryId: string
   value: string
   imageIds?: string[]
+  /** IDs of video recordings stored in IndexedDB ('rm-videos') */
+  videoIds?: string[]
   /** ID of the audio recording stored in IndexedDB ('rm-audio') */
   audioId?: string
   /** ISO 8601 timestamp of when the audio was transcribed */

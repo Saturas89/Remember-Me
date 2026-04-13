@@ -3,6 +3,7 @@ import { CATEGORIES } from '../data/categories'
 import { FRIEND_QUESTIONS } from '../data/friendQuestions'
 import { exportAsMarkdown, exportAsEnrichedJSON, downloadFile } from '../utils/export'
 import { ImageAttachment } from '../components/ImageAttachment'
+import { VideoAttachment } from '../components/VideoAttachment'
 import { AudioPlayer } from '../components/AudioPlayer'
 import { AudioRecorder } from '../components/AudioRecorder'
 import { useImageStore } from '../hooks/useImageStore'
@@ -300,6 +301,10 @@ export function ArchiveView({
                           onRemove={imgId => handleRemoveImage(q.id, cat.id, imgId)}
                         />
                       )}
+                      <VideoAttachment
+                        videoIds={answers[q.id].videoIds ?? []}
+                        readOnly
+                      />
                       {answers[q.id].audioId && (
                         <AudioPlayer audioId={answers[q.id].audioId!} />
                       )}
@@ -375,6 +380,10 @@ export function ArchiveView({
                           onRemove={imgId => handleRemoveImage(q.id, 'custom', imgId)}
                         />
                       )}
+                      <VideoAttachment
+                        videoIds={answer.videoIds ?? []}
+                        readOnly
+                      />
                       {answer.audioId && (
                         <AudioPlayer audioId={answer.audioId} />
                       )}

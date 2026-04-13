@@ -1,12 +1,14 @@
 import JSZip from 'jszip'
 import { exportAsBackup } from './export'
 import { getAudioBlob } from '../hooks/useAudioStore'
+import { getVideoBlob } from '../hooks/useVideoStore'
 import { getImageDataUrl } from '../hooks/useImageStore'
 import type { ExportData } from './export'
 
 export interface ArchiveStats {
   photoCount:  number
   audioCount:  number
+  videoCount:  number
   totalBytes:  number
 }
 
@@ -25,19 +27,21 @@ export async function buildMemoryArchive({ data, onProgress }: BuildOptions): Pr
   // ── Collect media IDs ──────────────────────────────────
   const imageIds = Object.values(data.answers).flatMap(a => a.imageIds ?? [])
   const audioIds = Object.values(data.answers).map(a => a.audioId).filter(Boolean) as string[]
+  const videoIds = Object.values(data.answers).flatMap(a => a.videoIds ?? [])
 
   const photos = zip.folder('photos')!
   const audio  = zip.folder('audio')!
-  zip.folder('videos') // reserved for future video support
+  const videos = zip.folder('videos')!
 
   let photoCount = 0
   let audioCount = 0
+  let videoCount = 0
 
-  // ── Photos ─────────────────────────────────────────────
+  // ── Photos (0–40 %) ────────────────────────────────────
   for (let i = 0; i < imageIds.length; i++) {
     onProgress?.(
       imageIds.length === 1 ? 'Foto wird gesichert…' : `Foto ${i + 1} von ${imageIds.length} wird gesichert…`,
-      10 + Math.round((i / Math.max(imageIds.length, 1)) * 45),
+      10 + Math.round((i / Math.max(imageIds.length, 1)) * 30),
     )
     const dataUrl = await getImageDataUrl(imageIds[i])
     if (dataUrl) {
@@ -47,17 +51,35 @@ export async function buildMemoryArchive({ data, onProgress }: BuildOptions): Pr
     }
   }
 
-  // ── Audio ──────────────────────────────────────────────
+  // ── Audio (40–65 %) ────────────────────────────────────
   for (let i = 0; i < audioIds.length; i++) {
     onProgress?.(
       audioIds.length === 1 ? 'Sprachaufnahme wird gesichert…' : `Sprachaufnahme ${i + 1} von ${audioIds.length} wird gesichert…`,
-      55 + Math.round((i / Math.max(audioIds.length, 1)) * 35),
+      40 + Math.round((i / Math.max(audioIds.length, 1)) * 25),
     )
     const blob = await getAudioBlob(audioIds[i])
     if (blob) {
       const ext = blob.type.includes('mp4') ? 'mp4' : 'webm'
       audio.file(`${audioIds[i]}.${ext}`, blob)
       audioCount++
+    }
+  }
+
+  // ── Videos (65–90 %) ───────────────────────────────────
+  for (let i = 0; i < videoIds.length; i++) {
+    onProgress?.(
+      videoIds.length === 1 ? 'Video wird gesichert…' : `Video ${i + 1} von ${videoIds.length} wird gesichert…`,
+      65 + Math.round((i / Math.max(videoIds.length, 1)) * 25),
+    )
+    const blob = await getVideoBlob(videoIds[i])
+    if (blob) {
+      // Prefer mp4 for broadest compatibility; fall back to webm
+      const ext = blob.type.includes('mp4') ? 'mp4'
+                : blob.type.includes('webm') ? 'webm'
+                : blob.type.includes('quicktime') ? 'mov'
+                : 'mp4'
+      videos.file(`${videoIds[i]}.${ext}`, blob)
+      videoCount++
     }
   }
 
@@ -68,7 +90,7 @@ export async function buildMemoryArchive({ data, onProgress }: BuildOptions): Pr
     compressionOptions: { level: 6 },
   })
 
-  return { blob: zipBlob, stats: { photoCount, audioCount, totalBytes: zipBlob.size } }
+  return { blob: zipBlob, stats: { photoCount, audioCount, videoCount, totalBytes: zipBlob.size } }
 }
 
 export function fmtBytes(bytes: number): string {

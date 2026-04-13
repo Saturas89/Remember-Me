@@ -45,6 +45,7 @@ export default function App() {
     customQuestions,
     saveAnswer,
     setAnswerImages,
+    setAnswerVideos,
     saveProfile,
     addFriend,
     removeFriend,
@@ -58,6 +59,7 @@ export default function App() {
     restoreBackup,
     getAnswer,
     getAnswerImageIds,
+    getAnswerVideoIds,
     getAnswerAudioId,
     getCategoryProgress,
   } = useAnswers()
@@ -128,9 +130,11 @@ export default function App() {
           category={category}
           getAnswer={getAnswer}
           getAnswerImageIds={getAnswerImageIds}
+          getAnswerVideoIds={getAnswerVideoIds}
           getAnswerAudioId={getAnswerAudioId}
           onSave={saveAnswer}
           onSetImages={setAnswerImages}
+          onSetVideos={setAnswerVideos}
           onSetAudio={setAnswerAudio}
           onBack={() =>
             view.categoryId === 'custom'

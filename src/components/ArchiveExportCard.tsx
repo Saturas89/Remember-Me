@@ -26,6 +26,7 @@ export function ArchiveExportCard({ data, safeName, onBackupRecorded }: Props) {
   // ── Stats for idle display ──────────────────────────────
   const answerCount = Object.values(data.answers).filter(a => a.value.trim()).length
   const photoCount  = Object.values(data.answers).flatMap(a => a.imageIds ?? []).length
+  const videoCount  = Object.values(data.answers).flatMap(a => a.videoIds ?? []).length
   const audioCount  = Object.values(data.answers).filter(a => a.audioId).length
 
   // ── Build ───────────────────────────────────────────────
@@ -100,10 +101,11 @@ export function ArchiveExportCard({ data, safeName, onBackupRecorded }: Props) {
             Alles was du festgehalten hast – Texte, Fotos und Sprachaufnahmen –
             sicher in einem Paket. Etwas das bleibt.
           </p>
-          {(answerCount + photoCount + audioCount) > 0 && (
+          {(answerCount + photoCount + videoCount + audioCount) > 0 && (
             <div className="arc-chips">
               {answerCount > 0 && <span className="arc-chip">📝 {answerCount} Antworten</span>}
               {photoCount  > 0 && <span className="arc-chip">🖼 {photoCount} Fotos</span>}
+              {videoCount  > 0 && <span className="arc-chip">🎬 {videoCount} Videos</span>}
               {audioCount  > 0 && <span className="arc-chip">🎙 {audioCount} Aufnahmen</span>}
             </div>
           )}
@@ -135,6 +137,7 @@ export function ArchiveExportCard({ data, safeName, onBackupRecorded }: Props) {
   if (phase === 'ready' && stats && zipBlob) {
     const mediaLine = [
       stats.photoCount > 0 ? `${stats.photoCount} Foto${stats.photoCount !== 1 ? 's' : ''}` : '',
+      stats.videoCount > 0 ? `${stats.videoCount} Video${stats.videoCount !== 1 ? 's' : ''}` : '',
       stats.audioCount > 0 ? `${stats.audioCount} Aufnahme${stats.audioCount !== 1 ? 'n' : ''}` : '',
     ].filter(Boolean).join(' · ')
 
