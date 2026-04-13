@@ -98,7 +98,7 @@ export function useImageStore() {
 
   const addImage = useCallback(async (file: File): Promise<string> => {
     const dataUrl = await compressImage(file)
-    const id = `img-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`
+    const id = `img-${crypto.randomUUID()}`
     const db = await getDB()
     await idbPut(db, id, dataUrl)
     pushToCache({ [id]: dataUrl })
