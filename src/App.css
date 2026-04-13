@@ -2259,6 +2259,34 @@
   margin: 0.3rem 0;
 }
 
+/* ── Backup Status Row ───────────────────────────────── */
+.backup-status {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-top: 0.9rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.backup-status__icon { font-size: 0.85rem; flex-shrink: 0; }
+
+.backup-status--fresh {
+  background: var(--success-bg);
+  color: var(--success-text);
+}
+.backup-status--stale {
+  background: color-mix(in srgb, var(--warn) 12%, transparent);
+  color: var(--warn);
+}
+.backup-status--old,
+.backup-status--none {
+  background: color-mix(in srgb, #ef4444 10%, transparent);
+  color: #ef4444;
+}
+
 /* ── Archive Export Card ─────────────────────────────── */
 
 /* Gradient-border wrapper */

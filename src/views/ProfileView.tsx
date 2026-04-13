@@ -2,6 +2,7 @@ import { useState, useRef } from 'react'
 import { CATEGORIES } from '../data/categories'
 import { THEMES, useTheme } from '../hooks/useTheme'
 import { ArchiveExportCard } from '../components/ArchiveExportCard'
+import { getLastBackupDate, backupAgeLabel, backupAgeStatus } from '../utils/backupStatus'
 import type { Profile, Answer } from '../types'
 import type { ExportData } from '../utils/export'
 
@@ -18,6 +19,31 @@ interface Props {
   onImportBackup: (json: string) => { ok: boolean; error?: string }
   onOpenImport: () => void
   onOpenFaq: () => void
+}
+
+function BackupStatusRow() {
+  const last   = getLastBackupDate()
+  const status = backupAgeStatus(last)
+
+  const icon: Record<typeof status, string> = {
+    fresh: '✓',
+    stale: '⚠',
+    old:   '⚠',
+    none:  '⚠',
+  }
+  const label: Record<typeof status, string> = {
+    fresh: `Gesichert – ${backupAgeLabel(last!)}`,
+    stale: `Letztes Archiv ${backupAgeLabel(last!)} – bald sichern`,
+    old:   `Kein aktuelles Archiv (${backupAgeLabel(last!)})`,
+    none:  'Noch kein Archiv erstellt',
+  }
+
+  return (
+    <div className={`backup-status backup-status--${status}`}>
+      <span className="backup-status__icon" aria-hidden="true">{icon[status]}</span>
+      <span className="backup-status__label">{label[status]}</span>
+    </div>
+  )
 }
 
 export function ProfileView({
@@ -133,6 +159,7 @@ export function ProfileView({
             </div>
           )}
         </div>
+        <BackupStatusRow />
       </section>
 
       {/* Profil bearbeiten */}

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { buildMemoryArchive, fmtBytes, type ArchiveStats } from '../utils/archiveExport'
+import { recordBackup } from '../utils/backupStatus'
 import { LogoIcon } from './Logo'
 import type { ExportData } from '../utils/export'
 
@@ -49,6 +50,7 @@ export function ArchiveExportCard({ data, safeName }: Props) {
   // ── Save locally ────────────────────────────────────────
   function handleSave() {
     if (!zipBlob) return
+    recordBackup()
     const url = URL.createObjectURL(zipBlob)
     const a   = document.createElement('a')
     a.href     = url
@@ -70,12 +72,13 @@ export function ArchiveExportCard({ data, safeName }: Props) {
           title: 'Mein Erinnerungs-Archiv',
           text:  'Meine persönliche Lebensgeschichte – erstellt mit Remember Me.',
         })
+        recordBackup()
         return
       }
     } catch (e) {
       if ((e as Error).name === 'AbortError') return  // user cancelled – no fallback
     }
-    handleSave()  // fallback for browsers without file share
+    handleSave()  // fallback (also calls recordBackup)
   }
 
   const canShare = typeof navigator !== 'undefined' && 'share' in navigator
