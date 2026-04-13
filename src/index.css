@@ -26,6 +26,10 @@
   --warn:           #f0a500;
   --warn-bg:        #1a1400;
   --error-bg:       #2a0a12;
+
+  /* Logo gradient: hot-pink → violet */
+  --logo-start: #f72585;
+  --logo-end:   #7b2d8b;
 }
 
 [data-theme="hell"] {
@@ -48,6 +52,10 @@
   --warn:           #d35400;
   --warn-bg:        #fef5e7;
   --error-bg:       #fdecea;
+
+  /* Logo gradient: orange → coral-red */
+  --logo-start: #ff8c00;
+  --logo-end:   #e8365f;
 }
 
 [data-theme="sepia"] {
@@ -70,6 +78,10 @@
   --warn:           #a0522d;
   --warn-bg:        #fef3e8;
   --error-bg:       #fdecea;
+
+  /* Logo gradient: amber → warm orange */
+  --logo-start: #f9a825;
+  --logo-end:   #e64a19;
 }
 
 [data-theme="ozean"] {
@@ -92,6 +104,10 @@
   --warn:           #ffa726;
   --warn-bg:        #2a1a0a;
   --error-bg:       #2a0a0a;
+
+  /* Logo gradient: sky-blue → deep-blue */
+  --logo-start: #56b4f5;
+  --logo-end:   #2e6fd8;
 }
 
 /* ── Base ────────────────────────────────────────────── */

@@ -245,13 +245,10 @@
   user-select: none;
 }
 
-.hero-logo__heart {
-  width: clamp(3.2rem, 10vw, 5rem);
-  height: clamp(3rem, 9.5vw, 4.6rem);
+.hero-logo__heart-wrap {
   margin-bottom: 0.6rem;
-  overflow: visible;
-  filter: drop-shadow(0 4px 14px color-mix(in srgb, var(--accent) 45%, transparent));
   animation: heartbeat 3.5s ease-in-out infinite;
+  filter: drop-shadow(0 6px 18px color-mix(in srgb, var(--logo-start) 40%, transparent));
 }
 
 @keyframes heartbeat {
@@ -262,21 +259,29 @@
   56%       { transform: scale(1); }
 }
 
-.hero-logo__remember {
-  font-size: clamp(0.7rem, 2.5vw, 0.9rem);
-  font-weight: 300;
-  letter-spacing: 0.28em;
-  text-transform: uppercase;
+.hero-logo__tagline {
+  font-size: clamp(0.75rem, 2.5vw, 0.92rem);
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: 0.02em;
   color: var(--text-muted);
+  margin-bottom: 0.2rem;
 }
 
-.hero-logo__me {
+.hero-logo__name {
   font-size: clamp(2.4rem, 7vw, 3.4rem);
   font-weight: 900;
   letter-spacing: -0.04em;
-  color: var(--accent);
   line-height: 1;
-  margin-top: -0.1em;
+  background: linear-gradient(135deg, var(--logo-start), var(--logo-end));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero-logo__name-remember,
+.hero-logo__name-me {
+  /* inherit gradient from parent */
 }
 
 /* ── Compact Logo (headers) ──────────────────────────── */
@@ -286,33 +291,26 @@
   gap: 0.5rem;
 }
 
-.logo__heart {
-  color: var(--accent);
-  flex-shrink: 0;
-}
-.logo--sm .logo__heart { width: 1.1rem; height: 1.1rem; }
-.logo--md .logo__heart { width: 1.6rem; height: 1.5rem; }
-.logo--lg .logo__heart { width: 2.2rem; height: 2rem; }
-
 .logo__wordmark {
   display: flex;
   flex-direction: column;
   line-height: 1.05;
 }
 
-.logo__remember {
-  font-size: 0.6em;
-  font-weight: 300;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
+.logo__tagline {
+  font-size: 0.55em;
+  font-style: italic;
   color: var(--text-muted);
 }
 
-.logo__me {
+.logo__name {
   font-size: 1.2em;
   font-weight: 900;
   letter-spacing: -0.03em;
-  color: var(--accent);
+  background: linear-gradient(135deg, var(--logo-start), var(--logo-end));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 /* ── Theme switcher ──────────────────────────────────── */
