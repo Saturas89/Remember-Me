@@ -1,17 +1,15 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { CATEGORIES } from '../data/categories'
 import { FRIEND_QUESTIONS } from '../data/friendQuestions'
-import { exportAsMarkdown, exportAsEnrichedJSON, downloadFile } from '../utils/export'
 import { ImageAttachment } from '../components/ImageAttachment'
 import { VideoAttachment } from '../components/VideoAttachment'
 import { AudioPlayer } from '../components/AudioPlayer'
 import { AudioRecorder } from '../components/AudioRecorder'
 import { useImageStore } from '../hooks/useImageStore'
 import { addAudio, removeAudio } from '../hooks/useAudioStore'
-import type { Answer, FriendAnswer, Friend, CustomQuestion, Profile } from '../types'
+import type { Answer, FriendAnswer, Friend, CustomQuestion } from '../types'
 
 interface Props {
-  profile: Profile | null
   answers: Record<string, Answer>
   friendAnswers: FriendAnswer[]
   friends: Friend[]
@@ -26,7 +24,6 @@ interface Props {
 }
 
 export function ArchiveView({
-  profile,
   answers,
   friendAnswers,
   friends,
@@ -47,8 +44,24 @@ export function ArchiveView({
   const pendingTarget = useRef<{ questionId: string; categoryId: string } | null>(null)
 
   const friendQuestionsMap = useMemo(() => {
-    return Object.fromEntries(FRIEND_QUESTIONS.map(q => [q.id, q]))
-  }, [])
+    return Object.fromEntries(FRIEND_QUESTIONS.map(q => [
+      q.id,
+      q.text.replace(/\{name\}/g, profileName || 'dir')
+    ]))
+  }, [profileName])
+
+  const friendAnswersByFriendId = useMemo(() => {
+    const map: Record<string, FriendAnswer[]> = {}
+    for (const a of friendAnswers) {
+      if (a.value.trim()) {
+        if (!map[a.friendId]) {
+          map[a.friendId] = []
+        }
+        map[a.friendId].push(a)
+      }
+    }
+    return map
+  }, [friendAnswers])
 
   // Pre-load all images referenced by any answer
   useEffect(() => {
@@ -127,18 +140,6 @@ export function ArchiveView({
     onDeleteEntry(questionId)
   }
 
-  // ── Export ───────────────────────────────────────────────
-
-  const exportData = { profile, answers, friends, friendAnswers, customQuestions }
-  const safeName = (profile?.name ?? 'lebensarchiv').replace(/\s+/g, '-').toLowerCase()
-
-  function handleMarkdownExport() {
-    downloadFile(exportAsMarkdown(exportData), `${safeName}.md`, 'text/markdown')
-  }
-  function handleJsonExport() {
-    downloadFile(exportAsEnrichedJSON(exportData), `${safeName}.json`, 'application/json')
-  }
-
   // ── Helpers ──────────────────────────────────────────────
 
   function hasContent(questionId: string) {
@@ -163,9 +164,10 @@ export function ArchiveView({
     cat.questions.some(q => hasContent(q.id)),
   )
   const customWithAnswers = customQuestions.filter(q => hasContent(q.id))
-  const friendsWithAnswers = friends.filter(f =>
-    friendAnswers.some(a => a.friendId === f.id && a.value.trim()),
-  )
+  const friendsWithAnswers = friends.filter(f => {
+    const answers = friendAnswersByFriendId[f.id]
+    return answers && answers.length > 0
+  })
   const hasAnything =
     categoriesWithAnswers.length > 0 ||
     customWithAnswers.length > 0 ||
@@ -247,29 +249,6 @@ export function ArchiveView({
           ← Zurück
         </button>
         <h2 className="archive-title">📖 Mein Lebensarchiv</h2>
-        <div className="archive-export-group no-print">
-          <button
-            className="btn btn--ghost btn--sm"
-            onClick={handleMarkdownExport}
-            title="Als Markdown-Datei herunterladen (ideal für KI-Tools)"
-          >
-            📄 .md
-          </button>
-          <button
-            className="btn btn--ghost btn--sm"
-            onClick={handleJsonExport}
-            title="Als JSON-Datei herunterladen (strukturierter Export)"
-          >
-            {'{ }'} JSON
-          </button>
-          <button
-            className="btn btn--ghost btn--sm"
-            onClick={() => window.print()}
-            title="Als PDF speichern / Drucken"
-          >
-            🖨
-          </button>
-        </div>
       </div>
 
       {!hasAnything && (
@@ -440,9 +419,7 @@ export function ArchiveView({
             👥 Was Freunde über mich sagen
           </h3>
           {friendsWithAnswers.map(friend => {
-            const thisAnswers = friendAnswers.filter(
-              a => a.friendId === friend.id && a.value.trim(),
-            )
+            const thisAnswers = friendAnswersByFriendId[friend.id] || []
             return (
               <div key={friend.id} className="friend-contribution">
                 <div className="friend-contribution__header">
@@ -452,10 +429,10 @@ export function ArchiveView({
                   </span>
                 </div>
                 {thisAnswers.map(a => {
-                  const q = friendQuestionsMap[a.questionId]
+                  const resolvedText = friendQuestionsMap[a.questionId]
                   const questionText =
                     a.questionText ??
-                    q?.text.replace(/\{name\}/g, profileName || 'dir') ??
+                    resolvedText ??
                     'Frage nicht mehr verfügbar'
                   return (
                     <div key={a.id} className="archive-entry archive-entry--friend">

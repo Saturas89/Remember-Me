@@ -74,7 +74,7 @@ export function HomeView({
           className="category-card category-card--custom"
           onClick={() => onSelectCategory('custom')}
         >
-          <span className="category-card__emoji">✏️</span>
+          <img src="/categories/custom-preview.svg" className="category-card__image" alt="" />
           <div className="category-card__body">
             <h3 className="category-card__title">Eigene Fragen</h3>
             <p className="category-card__desc">

@@ -509,7 +509,13 @@
 .category-card--done   { border-color: var(--success); }
 .category-card--custom { border-style: dashed; }
 
-.category-card__emoji { font-size: 1.9rem; flex-shrink: 0; }
+.category-card__image {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
 
 .category-card__body  { flex: 1; min-width: 0; }
 
@@ -572,6 +578,15 @@
 }
 
 /* ── Quiz view ───────────────────────────────────────── */
+.quiz-banner {
+  width: calc(100% + 2rem);
+  margin: 0 -1rem;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 0 0 20px 20px;
+  display: block;
+}
+
 .quiz-topbar {
   display: flex;
   align-items: center;

@@ -1,5 +1,6 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import {
+  downloadFile,
   exportAsBackup,
   exportAsMarkdown,
   exportAsEnrichedJSON,
@@ -285,5 +286,48 @@ describe('exportAsEnrichedJSON', () => {
   it('omits friendPerspectives key when none exist', () => {
     const { friendPerspectives } = JSON.parse(exportAsEnrichedJSON(EMPTY))
     expect(friendPerspectives).toBeUndefined()
+  })
+})
+
+describe('downloadFile', () => {
+  it('creates an object URL, appends an anchor, clicks it, and cleans up', () => {
+    // Mock URL functions
+    const createObjectURL = vi.fn((_blob: Blob) => 'blob:test-url')
+    const revokeObjectURL = vi.fn()
+    vi.stubGlobal('URL', { createObjectURL, revokeObjectURL })
+
+    // Spy on DOM methods
+    const appendSpy = vi.spyOn(document.body, 'appendChild')
+    const removeSpy = vi.spyOn(document.body, 'removeChild')
+    const clickSpy = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
+
+    downloadFile('test content', 'test-file.txt', 'text/plain')
+
+    // Verify Blob creation and URL generation
+    expect(createObjectURL).toHaveBeenCalledTimes(1)
+    const blobArg = createObjectURL.mock.calls[0][0]
+    expect(blobArg).toBeInstanceOf(Blob)
+    expect(blobArg.type).toBe('text/plain')
+
+    // Verify DOM manipulation and click
+    expect(appendSpy).toHaveBeenCalledTimes(1)
+    expect(clickSpy).toHaveBeenCalledTimes(1)
+    expect(removeSpy).toHaveBeenCalledTimes(1)
+
+    const appendedNode = appendSpy.mock.calls[0][0] as HTMLAnchorElement
+    expect(appendedNode.tagName).toBe('A')
+    expect(appendedNode.href).toMatch(/blob:.*test-url/)
+    expect(appendedNode.download).toBe('test-file.txt')
+
+    const removedNode = removeSpy.mock.calls[0][0]
+    expect(removedNode).toBe(appendedNode)
+
+    // Verify cleanup
+    expect(revokeObjectURL).toHaveBeenCalledTimes(1)
+    expect(revokeObjectURL).toHaveBeenCalledWith('blob:test-url')
+
+    // Restore all mocks and stubs
+    vi.restoreAllMocks()
+    vi.unstubAllGlobals()
   })
 })
