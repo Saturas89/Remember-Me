@@ -52,18 +52,22 @@ export async function buildMemoryArchive({ data, onProgress }: BuildOptions): Pr
   }
 
   // ── Audio (40–65 %) ────────────────────────────────────
-  for (let i = 0; i < audioIds.length; i++) {
-    onProgress?.(
-      audioIds.length === 1 ? 'Sprachaufnahme wird gesichert…' : `Sprachaufnahme ${i + 1} von ${audioIds.length} wird gesichert…`,
-      40 + Math.round((i / Math.max(audioIds.length, 1)) * 25),
-    )
-    const blob = await getAudioBlob(audioIds[i])
-    if (blob) {
-      const ext = blob.type.includes('mp4') ? 'mp4' : 'webm'
-      audio.file(`${audioIds[i]}.${ext}`, blob)
-      audioCount++
-    }
-  }
+  let audioProcessed = 0
+  await Promise.all(
+    audioIds.map(async (audioId) => {
+      const blob = await getAudioBlob(audioId)
+      audioProcessed++
+      onProgress?.(
+        audioIds.length === 1 ? 'Sprachaufnahme wird gesichert…' : `Sprachaufnahme ${audioProcessed} von ${audioIds.length} wird gesichert…`,
+        40 + Math.round(((audioProcessed - 1) / Math.max(audioIds.length, 1)) * 25),
+      )
+      if (blob) {
+        const ext = blob.type.includes('mp4') ? 'mp4' : 'webm'
+        audio.file(`${audioId}.${ext}`, blob)
+        audioCount++
+      }
+    })
+  )
 
   // ── Videos (65–90 %) ───────────────────────────────────
   for (let i = 0; i < videoIds.length; i++) {
