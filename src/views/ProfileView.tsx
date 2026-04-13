@@ -1,17 +1,20 @@
 import { useState, useRef } from 'react'
 import { CATEGORIES } from '../data/categories'
 import { THEMES, useTheme } from '../hooks/useTheme'
+import { ArchiveExportCard } from '../components/ArchiveExportCard'
 import type { Profile, Answer } from '../types'
+import type { ExportData } from '../utils/export'
 
 interface Props {
   profile: Profile | null
   answers: Record<string, Answer>
   friendCount: number
+  exportData: ExportData
+  safeName: string
   onSave: (profile: Profile) => void
   onBack: () => void
   onExportMarkdown: () => void
   onExportJson: () => void
-  onExportBackup: () => void
   onImportBackup: (json: string) => { ok: boolean; error?: string }
   onOpenImport: () => void
   onOpenFaq: () => void
@@ -19,8 +22,9 @@ interface Props {
 
 export function ProfileView({
   profile, answers, friendCount,
+  exportData, safeName,
   onSave, onBack,
-  onExportMarkdown, onExportJson, onExportBackup, onImportBackup,
+  onExportMarkdown, onExportJson, onImportBackup,
   onOpenImport, onOpenFaq,
 }: Props) {
   const { theme, setTheme } = useTheme()
@@ -209,14 +213,18 @@ export function ProfileView({
         </button>
       </section>
 
-      {/* Exportieren & Sichern */}
+      {/* Erinnerungs-Archiv – hero export action */}
       <section className="profile-card">
-        <h2 className="profile-card__heading">Exportieren & Sichern</h2>
+        <h2 className="profile-card__heading">Sichern & Teilen</h2>
+        <ArchiveExportCard data={exportData} safeName={safeName} />
+      </section>
 
+      {/* Weitere Exportformate */}
+      <section className="profile-card">
+        <h2 className="profile-card__heading">Weitere Formate</h2>
         <p className="backup-desc">
-          Exportiere deine Lebensgeschichte als lesbare Datei oder erstelle ein vollständiges Backup zum Wiederherstellen.
+          Exportiere deine Geschichte als Text oder strukturierten Datensatz – ideal für KI-Assistenten oder Texteditoren.
         </p>
-
         <div className="backup-export-row">
           <button className="btn btn--ghost backup-btn" onClick={onExportMarkdown}>
             <span className="backup-btn__icon">📄</span>
@@ -228,18 +236,13 @@ export function ProfileView({
             <span className="backup-btn__label">JSON</span>
             <span className="backup-btn__hint">strukturierter Export</span>
           </button>
-          <button className="btn btn--ghost backup-btn" onClick={onExportBackup}>
-            <span className="backup-btn__icon">💾</span>
-            <span className="backup-btn__label">Backup</span>
-            <span className="backup-btn__hint">vollständig wiederherstellbar</span>
-          </button>
         </div>
 
         <div className="backup-restore">
           <p className="backup-restore__label">Backup wiederherstellen</p>
           <p className="backup-restore__hint">
-            Lade eine Backup-Datei (.json) um alle Daten auf diesem Gerät wiederherzustellen.
-            Fotos sind nicht im Backup enthalten.
+            Lade eine Backup-Datei (.json) um alle Textdaten auf diesem Gerät wiederherzustellen.
+            Fotos und Aufnahmen sind im vollständigen Archiv enthalten.
           </p>
           <button
             type="button"

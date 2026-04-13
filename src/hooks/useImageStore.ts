@@ -114,3 +114,16 @@ export function useImageStore() {
 
   return { cache, loadImages, addImage, removeImage }
 }
+
+// ── Module-level accessor for archive export (outside React) ──
+let _exportDb: IDBDatabase | null = null
+async function getExportDB(): Promise<IDBDatabase> {
+  if (_exportDb) return _exportDb
+  _exportDb = await openDB()
+  return _exportDb
+}
+
+export async function getImageDataUrl(id: string): Promise<string | undefined> {
+  const db = await getExportDB()
+  return idbGet(db, id)
+}

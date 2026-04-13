@@ -17,7 +17,7 @@ import { InstallBanner } from './components/InstallBanner'
 import { UpdateBanner } from './components/UpdateBanner'
 import { BottomNav } from './components/BottomNav'
 import { useServiceWorker } from './hooks/useServiceWorker'
-import { exportAsMarkdown, exportAsEnrichedJSON, exportAsBackup, downloadFile } from './utils/export'
+import { exportAsMarkdown, exportAsEnrichedJSON, downloadFile } from './utils/export'
 import type { Category } from './types'
 import './App.css'
 
@@ -70,9 +70,6 @@ export default function App() {
   }
   function handleExportJson() {
     downloadFile(exportAsEnrichedJSON(exportData), `${safeName}.json`, 'application/json')
-  }
-  function handleExportBackup() {
-    downloadFile(exportAsBackup(exportData), `remember-me-${safeName}-backup.json`, 'application/json')
   }
 
   const [view, setView] = useState<View>({ name: 'home' })
@@ -183,11 +180,12 @@ export default function App() {
           profile={profile}
           answers={answers}
           friendCount={friends.length}
+          exportData={exportData}
+          safeName={safeName}
           onSave={saveProfile}
           onBack={() => setView({ name: 'home' })}
           onExportMarkdown={handleExportMarkdown}
           onExportJson={handleExportJson}
-          onExportBackup={handleExportBackup}
           onImportBackup={restoreBackup}
           onOpenImport={() => setView({ name: 'import' })}
           onOpenFaq={() => setView({ name: 'faq', from: 'profile' })}

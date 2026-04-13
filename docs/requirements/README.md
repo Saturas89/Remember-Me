@@ -18,6 +18,7 @@ Alle funktionalen und nicht-funktionalen Anforderungen des Projekts.
 | REQ-008 | E2EE-Sync (opt-in) | Core | Low | 🟢 DRAFT |
 | REQ-009 | Audio-Aufnahme & Transkription | Data | Medium | ✔️ COMPLETED |
 | REQ-010 | Hilfe & FAQ | UX | Low | ✔️ COMPLETED |
+| [REQ-011](./REQ-011-archive-export.md) | Erinnerungs-Archiv (ZIP + Share Sheet) | Export | Medium | ✔️ COMPLETED |
 
 ---
 
@@ -43,6 +44,7 @@ Alle funktionalen und nicht-funktionalen Anforderungen des Projekts.
 - [ ] Fotos zu Antworten hinzufügen → REQ-007, v1.5.0
 - [x] Audio-Aufnahme & Transkription → REQ-009, v1.6.0
 - [x] Hilfe & FAQ (Datenschutz, Import, Export) → REQ-010, v1.6.0
+- [x] Erinnerungs-Archiv ZIP + Share Sheet (inkl. Fotos & Audio) → REQ-011, v1.7.0
 - [ ] Push Notifications als Erinnerung
 - [ ] Mehrsprachigkeit (DE / EN)
 - [ ] Optionaler E2EE-Sync → REQ-008
