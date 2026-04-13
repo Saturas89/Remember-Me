@@ -44,8 +44,11 @@ export function ArchiveView({
   const pendingTarget = useRef<{ questionId: string; categoryId: string } | null>(null)
 
   const friendQuestionsMap = useMemo(() => {
-    return Object.fromEntries(FRIEND_QUESTIONS.map(q => [q.id, q]))
-  }, [])
+    return Object.fromEntries(FRIEND_QUESTIONS.map(q => [
+      q.id,
+      q.text.replace(/\{name\}/g, profileName || 'dir')
+    ]))
+  }, [profileName])
 
   const friendAnswersByFriendId = useMemo(() => {
     const map: Record<string, FriendAnswer[]> = {}
@@ -426,10 +429,10 @@ export function ArchiveView({
                   </span>
                 </div>
                 {thisAnswers.map(a => {
-                  const q = friendQuestionsMap[a.questionId]
+                  const resolvedText = friendQuestionsMap[a.questionId]
                   const questionText =
                     a.questionText ??
-                    q?.text.replace(/\{name\}/g, profileName || 'dir') ??
+                    resolvedText ??
                     'Frage nicht mehr verfügbar'
                   return (
                     <div key={a.id} className="archive-entry archive-entry--friend">
