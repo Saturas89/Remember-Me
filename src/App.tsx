@@ -152,7 +152,7 @@ export default function App() {
     <>
       {view.name === 'archive' && (
         <ArchiveView
-          profile={profile}
+
           answers={answers}
           friendAnswers={friendAnswers}
           friends={friends}
@@ -180,8 +180,8 @@ export default function App() {
       )}
 
       {view.name === 'profile' && (
-        <ProfileView
-          profile={profile}
+        <ProfileView profile={profile}
+
           answers={answers}
           friendCount={friends.length}
           exportData={exportData}

@@ -38,12 +38,13 @@ export async function buildMemoryArchive({ data, onProgress }: BuildOptions): Pr
   let videoCount = 0
 
   // ── Photos (0–40 %) ────────────────────────────────────
+  const imagePromises = imageIds.map(id => getImageDataUrl(id))
   for (let i = 0; i < imageIds.length; i++) {
     onProgress?.(
       imageIds.length === 1 ? 'Foto wird gesichert…' : `Foto ${i + 1} von ${imageIds.length} wird gesichert…`,
       10 + Math.round((i / Math.max(imageIds.length, 1)) * 30),
     )
-    const dataUrl = await getImageDataUrl(imageIds[i])
+    const dataUrl = await imagePromises[i]
     if (dataUrl) {
       const base64 = dataUrl.split(',')[1]
       photos.file(`${imageIds[i]}.jpg`, base64, { base64: true })
@@ -69,13 +70,15 @@ export async function buildMemoryArchive({ data, onProgress }: BuildOptions): Pr
     })
   )
 
+
   // ── Videos (65–90 %) ───────────────────────────────────
+  const videoPromises = videoIds.map(id => getVideoBlob(id))
   for (let i = 0; i < videoIds.length; i++) {
     onProgress?.(
       videoIds.length === 1 ? 'Video wird gesichert…' : `Video ${i + 1} von ${videoIds.length} wird gesichert…`,
       65 + Math.round((i / Math.max(videoIds.length, 1)) * 25),
     )
-    const blob = await getVideoBlob(videoIds[i])
+    const blob = await videoPromises[i]
     if (blob) {
       // Prefer mp4 for broadest compatibility; fall back to webm
       const ext = blob.type.includes('mp4') ? 'mp4'
