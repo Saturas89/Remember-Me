@@ -62,11 +62,23 @@ export function ImportView({ onImport, onBack, onDone }: Props) {
   }
 
   function toggleOne(id: string) {
-    setCandidates(prev => prev.map(c => c.id === id ? { ...c, selected: !c.selected } : c))
+    setCandidates(prev => {
+      const idx = prev.findIndex(c => c.id === id)
+      if (idx === -1) return prev
+      const next = [...prev]
+      next[idx] = { ...next[idx], selected: !next[idx].selected }
+      return next
+    })
   }
 
   function updateDescription(id: string, value: string) {
-    setCandidates(prev => prev.map(c => c.id === id ? { ...c, description: value } : c))
+    setCandidates(prev => {
+      const idx = prev.findIndex(c => c.id === id)
+      if (idx === -1) return prev
+      const next = [...prev]
+      next[idx] = { ...next[idx], description: value }
+      return next
+    })
   }
 
   // ── Parse ZIP ────────────────────────────────────────────
