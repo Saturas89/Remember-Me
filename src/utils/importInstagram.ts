@@ -72,13 +72,25 @@ export async function parseInstagramZip(
     )
   }
 
+  // Fetch all post texts concurrently
+  const postTexts = await Promise.all(
+    postFiles.map(async (postFile) => {
+      try {
+        return await postFile.async('text')
+      } catch {
+        return null
+      }
+    })
+  )
+
   const candidates: ImportCandidate[] = []
   let loaded = 0
 
-  for (const postFile of postFiles) {
+  for (const text of postTexts) {
+    if (!text) continue
+
     let posts: RawPost[]
     try {
-      const text = await postFile.async('text')
       posts = JSON.parse(text) as RawPost[]
     } catch {
       continue
