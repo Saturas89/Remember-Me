@@ -17,7 +17,7 @@ export interface BuildOptions {
 
 export async function buildMemoryArchive({ data, onProgress }: BuildOptions): Promise<{ blob: Blob; stats: ArchiveStats }> {
   const zip = new JSZip()
-  onProgress?.('Deine Geschichte wird vorbereitet…', 5)
+  onProgress?.('Deine Erinnerungen werden zusammengestellt…', 5)
 
   // ── memories.json ──────────────────────────────────────
   zip.file('memories.json', exportAsBackup(data))
@@ -36,7 +36,7 @@ export async function buildMemoryArchive({ data, onProgress }: BuildOptions): Pr
   // ── Photos ─────────────────────────────────────────────
   for (let i = 0; i < imageIds.length; i++) {
     onProgress?.(
-      `Foto ${i + 1} von ${imageIds.length} wird gesichert…`,
+      imageIds.length === 1 ? 'Foto wird gesichert…' : `Foto ${i + 1} von ${imageIds.length} wird gesichert…`,
       10 + Math.round((i / Math.max(imageIds.length, 1)) * 45),
     )
     const dataUrl = await getImageDataUrl(imageIds[i])
@@ -50,7 +50,7 @@ export async function buildMemoryArchive({ data, onProgress }: BuildOptions): Pr
   // ── Audio ──────────────────────────────────────────────
   for (let i = 0; i < audioIds.length; i++) {
     onProgress?.(
-      `Sprachaufnahme ${i + 1} von ${audioIds.length} wird gesichert…`,
+      audioIds.length === 1 ? 'Sprachaufnahme wird gesichert…' : `Sprachaufnahme ${i + 1} von ${audioIds.length} wird gesichert…`,
       55 + Math.round((i / Math.max(audioIds.length, 1)) * 35),
     )
     const blob = await getAudioBlob(audioIds[i])
@@ -61,7 +61,7 @@ export async function buildMemoryArchive({ data, onProgress }: BuildOptions): Pr
     }
   }
 
-  onProgress?.('Archiv wird versiegelt…', 93)
+  onProgress?.('Fast fertig – alles wird sicher verpackt…', 93)
   const zipBlob = await zip.generateAsync({
     type: 'blob',
     compression: 'DEFLATE',

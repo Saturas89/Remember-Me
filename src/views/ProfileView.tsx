@@ -32,10 +32,10 @@ function BackupStatusRow() {
     none:  '⚠',
   }
   const label: Record<typeof status, string> = {
-    fresh: `Gesichert – ${backupAgeLabel(last!)}`,
-    stale: `Letztes Archiv ${backupAgeLabel(last!)} – bald sichern`,
-    old:   `Kein aktuelles Archiv (${backupAgeLabel(last!)})`,
-    none:  'Noch kein Archiv erstellt',
+    fresh: `Erinnerungen gesichert – ${backupAgeLabel(last!)}`,
+    stale: `Erinnerungen sichern – zuletzt ${backupAgeLabel(last!)}`,
+    old:   `Erinnerungen sichern – zuletzt ${backupAgeLabel(last!)}`,
+    none:  'Erinnerungen noch nicht gesichert',
   }
 
   return (
@@ -250,7 +250,7 @@ export function ProfileView({
       <section className="profile-card">
         <h2 className="profile-card__heading">Weitere Formate</h2>
         <p className="backup-desc">
-          Exportiere deine Geschichte als Text oder strukturierten Datensatz – ideal für KI-Assistenten oder Texteditoren.
+          Deine Geschichte als lesbarer Text oder für KI-Assistenten und Texteditoren.
         </p>
         <div className="backup-export-row">
           <button className="btn btn--ghost backup-btn" onClick={onExportMarkdown}>
@@ -266,17 +266,17 @@ export function ProfileView({
         </div>
 
         <div className="backup-restore">
-          <p className="backup-restore__label">Backup wiederherstellen</p>
+          <p className="backup-restore__label">Erinnerungen wiederherstellen</p>
           <p className="backup-restore__hint">
-            Lade eine Backup-Datei (.json) um alle Textdaten auf diesem Gerät wiederherzustellen.
-            Fotos und Aufnahmen sind im vollständigen Archiv enthalten.
+            Lade eine gesicherte Datei (.json), um deine Erinnerungen auf diesem Gerät wiederherzustellen.
+            Fotos und Aufnahmen sind in der vollständigen Sicherung enthalten.
           </p>
           <button
             type="button"
             className="btn btn--outline backup-restore-btn"
             onClick={() => fileInputRef.current?.click()}
           >
-            📂 Backup-Datei laden…
+            📂 Sicherung laden…
           </button>
           <input
             ref={fileInputRef}

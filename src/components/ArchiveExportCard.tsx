@@ -42,7 +42,7 @@ export function ArchiveExportCard({ data, safeName }: Props) {
       setPct(100)
       setPhase('ready')
     } catch {
-      setErrMsg('Das Archiv konnte leider nicht erstellt werden.')
+      setErrMsg('Etwas ist schiefgelaufen. Bitte versuche es noch einmal.')
       setPhase('error')
     }
   }
@@ -92,10 +92,10 @@ export function ArchiveExportCard({ data, safeName }: Props) {
           <div className="arc-icon">
             <LogoIcon size={56} />
           </div>
-          <h3 className="arc-title">Erinnerungs-Archiv</h3>
+          <h3 className="arc-title">Deine Erinnerungen</h3>
           <p className="arc-desc">
-            Sichere deine Lebensgeschichte als vollständiges Paket –
-            mit allen Texten, Fotos und Sprachaufnahmen. Etwas das bleibt.
+            Alles was du festgehalten hast – Texte, Fotos und Sprachaufnahmen –
+            sicher in einem Paket. Etwas das bleibt.
           </p>
           {(answerCount + photoCount + audioCount) > 0 && (
             <div className="arc-chips">
@@ -105,7 +105,7 @@ export function ArchiveExportCard({ data, safeName }: Props) {
             </div>
           )}
           <button className="btn btn--primary arc-cta" onClick={handleCreate}>
-            ✦ Archiv erstellen
+            ✦ Jetzt sichern
           </button>
         </div>
       </div>
@@ -139,14 +139,14 @@ export function ArchiveExportCard({ data, safeName }: Props) {
       <div className="arc-outer">
         <div className="arc-card arc-card--ready">
           <div className="arc-done-icon" aria-hidden="true">✓</div>
-          <h3 className="arc-title">Alles gesichert!</h3>
+          <h3 className="arc-title">Erinnerungen gesichert!</h3>
           <p className="arc-desc arc-desc--subtle">
             {mediaLine && <span>{mediaLine} · </span>}
             {fmtBytes(stats.totalBytes)}
           </p>
           <div className="arc-actions">
             <button className="btn btn--primary arc-action-btn" onClick={handleSave}>
-              💾 Auf Gerät speichern
+              💾 Auf Gerät sichern
             </button>
             {canShare && (
               <button className="btn btn--outline arc-action-btn" onClick={handleShare}>
@@ -158,7 +158,7 @@ export function ArchiveExportCard({ data, safeName }: Props) {
             className="arc-reset"
             onClick={() => { setPhase('idle'); setZipBlob(null); setStats(null) }}
           >
-            Neu erstellen
+            Erneut sichern
           </button>
         </div>
       </div>
