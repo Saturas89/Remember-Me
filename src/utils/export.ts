@@ -18,14 +18,27 @@ function formatDate(iso: string): string {
   })
 }
 
+let questionDictionary: Record<string, string> | null = null
+
+function getQuestionDictionary(): Record<string, string> {
+  if (!questionDictionary) {
+    questionDictionary = {}
+    for (const cat of CATEGORIES) {
+      for (const q of cat.questions) {
+        questionDictionary[q.id] = q.text
+      }
+    }
+    for (const q of FRIEND_QUESTIONS) {
+      questionDictionary[q.id] = q.text
+    }
+  }
+  return questionDictionary
+}
+
 function resolveQuestion(questionId: string, storedText?: string): string {
   if (storedText) return storedText
-  for (const cat of CATEGORIES) {
-    const q = cat.questions.find(q => q.id === questionId)
-    if (q) return q.text
-  }
-  const fq = FRIEND_QUESTIONS.find(q => q.id === questionId)
-  if (fq) return fq.text
+  const dict = getQuestionDictionary()
+  if (dict[questionId]) return dict[questionId]
   return 'Frage nicht mehr verfügbar'
 }
 
