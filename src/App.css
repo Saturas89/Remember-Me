@@ -243,6 +243,7 @@
   align-items: center;
   gap: 0;
   user-select: none;
+  width: 100%;
 }
 
 .hero-logo__heart-wrap {
