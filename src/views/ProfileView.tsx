@@ -3,6 +3,7 @@ import { CATEGORIES } from '../data/categories'
 import { THEMES, useTheme } from '../hooks/useTheme'
 import { ArchiveExportCard } from '../components/ArchiveExportCard'
 import { getLastBackupDate, backupAgeLabel, backupAgeStatus } from '../utils/backupStatus'
+import { importFile } from '../utils/archiveImport'
 import type { Profile, Answer } from '../types'
 import type { ExportData } from '../utils/export'
 
@@ -54,6 +55,7 @@ export function ProfileView({
   )
   const [saved, setSaved] = useState(false)
   const [importStatus, setImportStatus] = useState<{ ok: boolean; message: string } | null>(null)
+  const [importProgress, setImportProgress] = useState<{ step: string; pct: number } | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const totalQuestions = CATEGORIES.reduce((s, c) => s + c.questions.length, 0)
@@ -91,24 +93,49 @@ export function ProfileView({
     const file = e.target.files?.[0]
     if (!file) return
 
-    const ok = window.confirm(
-      'Dies überschreibt alle aktuellen Daten mit dem Backup. Fortfahren?'
+    const isZip = file.name.toLowerCase().endsWith('.zip')
+    const confirmed = window.confirm(
+      isZip
+        ? 'Dies stellt alle Erinnerungen – Texte, Fotos, Videos und Aufnahmen – aus dem Archiv wieder her und überschreibt alle aktuellen Daten. Fortfahren?'
+        : 'Dies überschreibt alle aktuellen Daten mit dem Backup. Fortfahren?'
     )
-    if (!ok) {
+    if (!confirmed) {
       e.target.value = ''
       return
     }
 
-    const text = await file.text()
-    const result = onImportBackup(text)
-    setImportStatus({
-      ok: result.ok,
-      message: result.ok
-        ? '✓ Backup erfolgreich wiederhergestellt.'
-        : (result.error ?? 'Import fehlgeschlagen.'),
+    setImportProgress({ step: 'Vorbereitung…', pct: 0 })
+    setImportStatus(null)
+
+    const result = await importFile(file, (step, pct) => {
+      setImportProgress({ step, pct })
     })
+
+    setImportProgress(null)
     e.target.value = ''
-    if (result.ok) setTimeout(() => setImportStatus(null), 4000)
+
+    if (!result.ok) {
+      setImportStatus({ ok: false, message: result.error ?? 'Import fehlgeschlagen.' })
+      return
+    }
+
+    const restore = onImportBackup(result.jsonText!)
+    const stats = result.stats
+    const mediaHint = stats && (stats.photos + stats.audio + stats.videos) > 0
+      ? ` (${[
+          stats.photos  > 0 ? `${stats.photos} Foto${stats.photos !== 1 ? 's' : ''}` : '',
+          stats.videos  > 0 ? `${stats.videos} Video${stats.videos !== 1 ? 's' : ''}` : '',
+          stats.audio   > 0 ? `${stats.audio} Aufnahme${stats.audio !== 1 ? 'n' : ''}` : '',
+        ].filter(Boolean).join(', ')} wiederhergestellt)`
+      : ''
+
+    setImportStatus({
+      ok: restore.ok,
+      message: restore.ok
+        ? `✓ Erinnerungen wiederhergestellt${mediaHint}.`
+        : (restore.error ?? 'Import fehlgeschlagen.'),
+    })
+    if (restore.ok) setTimeout(() => setImportStatus(null), 5000)
   }
 
   return (
@@ -266,23 +293,35 @@ export function ProfileView({
         <div className="backup-restore">
           <p className="backup-restore__label">Erinnerungen wiederherstellen</p>
           <p className="backup-restore__hint">
-            Lade eine gesicherte Datei (.json), um deine Erinnerungen auf diesem Gerät wiederherzustellen.
-            Fotos und Aufnahmen sind in der vollständigen Sicherung enthalten.
+            Lade ein Erinnerungs-Archiv (.zip) oder eine Backup-Datei (.json).
+            Das vollständige Archiv stellt auch Fotos, Videos und Aufnahmen wieder her.
           </p>
           <button
             type="button"
             className="btn btn--outline backup-restore-btn"
             onClick={() => fileInputRef.current?.click()}
+            disabled={!!importProgress}
           >
-            📂 Sicherung laden…
+            📂 Archiv oder Backup laden…
           </button>
           <input
             ref={fileInputRef}
             type="file"
-            accept=".json,application/json"
+            accept=".zip,.json,application/zip,application/json"
             style={{ display: 'none' }}
             onChange={handleImportFile}
           />
+          {importProgress && (
+            <div className="import-progress">
+              <p className="import-progress__step">{importProgress.step}</p>
+              <div className="import-progress__bar">
+                <div
+                  className="import-progress__fill"
+                  style={{ width: `${importProgress.pct}%` }}
+                />
+              </div>
+            </div>
+          )}
           {importStatus && (
             <p className={`import-msg import-msg--${importStatus.ok ? 'success' : 'error'}`}>
               {importStatus.message}

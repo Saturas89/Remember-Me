@@ -44,3 +44,13 @@ export async function removeVideo(id: string): Promise<void> {
     req.onerror   = () => reject(req.error)
   })
 }
+
+/** Restore a video blob with its original ID (used during archive import). */
+export async function putVideoById(id: string, blob: Blob): Promise<void> {
+  const db = await getDB()
+  await new Promise<void>((resolve, reject) => {
+    const req = db.transaction(STORE, 'readwrite').objectStore(STORE).put(blob, id)
+    req.onsuccess = () => resolve()
+    req.onerror   = () => reject(req.error)
+  })
+}

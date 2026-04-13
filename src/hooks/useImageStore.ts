@@ -127,3 +127,9 @@ export async function getImageDataUrl(id: string): Promise<string | undefined> {
   const db = await getExportDB()
   return idbGet(db, id)
 }
+
+/** Restore an image with its original ID (used during archive import). */
+export async function putImageById(id: string, dataUrl: string): Promise<void> {
+  const db = await getExportDB()
+  await idbPut(db, id, dataUrl)
+}

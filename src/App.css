@@ -1939,6 +1939,31 @@
 
 .backup-restore-btn { align-self: flex-start; }
 
+/* ── Import progress ─────────────────────────────────── */
+.import-progress {
+  margin-top: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.import-progress__step {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+.import-progress__bar {
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.import-progress__fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
 /* ── Custom questions view ───────────────────────────── */
 .custom-q-view {
   min-height: 100dvh;
