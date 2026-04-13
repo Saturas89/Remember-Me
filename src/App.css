@@ -131,6 +131,19 @@
   font-size: 1rem;
 }
 
+.onboarding__import {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: fade-slide-up 0.5s ease 0.4s both;
+}
+
+.onboarding__import-btn {
+  width: 100%;
+  max-width: 360px;
+}
+
 .onboarding__footer {
   margin-top: 2rem;
   font-size: 0.75rem;
