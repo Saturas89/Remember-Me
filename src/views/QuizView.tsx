@@ -76,6 +76,7 @@ export function QuizView({
 
   return (
     <div className="quiz-view">
+      <img src={`/categories/${category.id}-banner.svg`} className="quiz-banner" alt="" />
       <div className="quiz-topbar">
         <button className="btn btn--ghost btn--sm" onClick={onBack}>
           ← Kategorien
