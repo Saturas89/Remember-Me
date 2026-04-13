@@ -25,23 +25,18 @@ function BackupStatusRow() {
   const last   = getLastBackupDate()
   const status = backupAgeStatus(last)
 
-  const icon: Record<typeof status, string> = {
-    fresh: '✓',
-    stale: '⚠',
-    old:   '⚠',
-    none:  '⚠',
-  }
-  const label: Record<typeof status, string> = {
-    fresh: `Erinnerungen gesichert – ${backupAgeLabel(last!)}`,
-    stale: `Erinnerungen sichern – zuletzt ${backupAgeLabel(last!)}`,
-    old:   `Erinnerungen sichern – zuletzt ${backupAgeLabel(last!)}`,
-    none:  'Erinnerungen noch nicht gesichert',
-  }
+  const icon  = status === 'fresh' ? '✓' : '⚠'
+  const age   = last ? backupAgeLabel(last) : ''
+  const label =
+    status === 'fresh' ? `Erinnerungen gesichert – ${age}` :
+    status === 'stale' ? `Erinnerungen sichern – zuletzt ${age}` :
+    status === 'old'   ? `Erinnerungen sichern – zuletzt ${age}` :
+                         'Erinnerungen noch nicht gesichert'
 
   return (
     <div className={`backup-status backup-status--${status}`}>
-      <span className="backup-status__icon" aria-hidden="true">{icon[status]}</span>
-      <span className="backup-status__label">{label[status]}</span>
+      <span className="backup-status__icon" aria-hidden="true">{icon}</span>
+      <span className="backup-status__label">{label}</span>
     </div>
   )
 }
