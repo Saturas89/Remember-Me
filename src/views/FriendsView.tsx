@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { FriendCard } from '../components/FriendCard'
-import { generateSecureInviteUrl, shareOrCopy } from '../utils/secureLink'
+import { generateSecureInviteUrl } from '../utils/secureLink'
 import { decodeAnswerExport } from '../utils/sharing'
 import { FRIEND_TOPICS } from '../data/friendQuestions'
 import type { Friend, FriendAnswer, AnswerExport } from '../types'
@@ -45,67 +45,162 @@ export function FriendsView({
   const [importError, setImportError] = useState<string | null>(null)
   const [importSuccess, setImportSuccess] = useState(false)
 
-  // Regenerate URL whenever name or topic changes (debounced 350 ms)
+  // Regenerate URL whenever name or topic changes – no debounce so the link
+  // is visible and shareable as soon as a name is entered.
   useEffect(() => {
     if (!newName.trim()) {
       setLiveUrl(null)
       setGenerateError(null)
+      setIsGenerating(false)
       return
     }
+    let cancelled = false
     setIsGenerating(true)
     setGenerateError(null)
-    const timer = setTimeout(() => {
-      generateSecureInviteUrl({
+    generateSecureInviteUrl({
+      profileName: profileName || 'mir',
+      friendId: pendingId.current,
+      topicId: selectedTopicId,
+    })
+      .then(url => {
+        if (cancelled) return
+        setLiveUrl(url)
+        setIsGenerating(false)
+      })
+      .catch(err => {
+        if (cancelled) return
+        console.error('[FriendsView] generateSecureInviteUrl failed:', err)
+        setGenerateError('Einladungslink konnte nicht erstellt werden.')
+        setIsGenerating(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [newName, selectedTopicId, profileName])
+
+  async function ensureLiveUrl(): Promise<string | null> {
+    if (liveUrl) return liveUrl
+    try {
+      setIsGenerating(true)
+      setGenerateError(null)
+      const url = await generateSecureInviteUrl({
         profileName: profileName || 'mir',
         friendId: pendingId.current,
         topicId: selectedTopicId,
       })
-        .then(url => { setLiveUrl(url); setIsGenerating(false) })
-        .catch(err => {
-          console.error('[FriendsView] generateSecureInviteUrl failed:', err)
-          setGenerateError('Einladungslink konnte nicht erstellt werden.')
-          setIsGenerating(false)
-        })
-    }, 350)
-    return () => clearTimeout(timer)
-  }, [newName, selectedTopicId, profileName])
-
-  async function handleShare() {
-    if (!liveUrl || isSharing) return
-    onAddFriend(newName.trim(), pendingId.current)
-
-    const topic = FRIEND_TOPICS.find(t => t.id === selectedTopicId) ?? FRIEND_TOPICS[0]
-    setIsSharing(true)
-    try {
-      await shareOrCopy({
-      title: 'Erinnerung einsammeln',
-      text: `${profileName || 'Jemand'} möchte deine Erinnerungen festhalten – ${topic.emoji} ${topic.title}`,
-      url: liveUrl,
-    })
+      setLiveUrl(url)
+      return url
+    } catch (err) {
+      console.error('[FriendsView] generateSecureInviteUrl failed:', err)
+      setGenerateError('Einladungslink konnte nicht erstellt werden.')
+      return null
     } finally {
-      setIsSharing(false)
+      setIsGenerating(false)
     }
+  }
 
-    // Reset for next friend
+  function resetDraft() {
     setNewName('')
     setLiveUrl(null)
     setGenerateError(null)
     pendingId.current = newFriendId()
   }
 
-  // Called from FriendCard "Einladen" – generates fresh URL for existing friend
-  async function handleReinvite(friendId: string) {
+  function buildShareData(url: string) {
     const topic = FRIEND_TOPICS.find(t => t.id === selectedTopicId) ?? FRIEND_TOPICS[0]
+    return {
+      title: 'Erinnerung einsammeln',
+      text: `${profileName || 'Jemand'} möchte deine Erinnerungen festhalten – ${topic.emoji} ${topic.title}`,
+      url,
+    }
+  }
+
+  // IMPORTANT: this must be a synchronous function. Safari requires that
+  // navigator.share() is invoked directly within the user gesture (click)
+  // handler – any `await` before the call breaks the gesture and Safari
+  // rejects with NotAllowedError, after which the clipboard fallback also
+  // fails silently. So when we already have `liveUrl`, we call share()
+  // synchronously and handle the promise resolution afterwards.
+  function handleShare() {
+    if (isSharing || !newName.trim()) return
+
+    if (liveUrl) {
+      const url = liveUrl
+      const name = newName.trim()
+      const shareData = buildShareData(url)
+
+      onAddFriend(name, pendingId.current)
+      setIsSharing(true)
+
+      if (typeof navigator.share === 'function') {
+        // SYNCHRONOUS call – preserves Safari user gesture.
+        navigator
+          .share(shareData)
+          .then(() => {
+            setIsSharing(false)
+            resetDraft()
+          })
+          .catch(err => {
+            setIsSharing(false)
+            if ((err as Error).name === 'AbortError') {
+              // User dismissed the share sheet – keep the draft so they can retry.
+              return
+            }
+            // Non-abort error (e.g. share permission denied) – copy to clipboard
+            // as a fallback and still reset the draft.
+            navigator.clipboard?.writeText(url).catch(() => {})
+            resetDraft()
+          })
+      } else {
+        // No Web Share API – copy to clipboard. Call synchronously so the
+        // user gesture is preserved for Safari's clipboard permission too.
+        navigator.clipboard
+          .writeText(url)
+          .catch(() => {})
+          .finally(() => {
+            setIsSharing(false)
+            resetDraft()
+          })
+      }
+      return
+    }
+
+    // URL not ready yet – generate it, then fall back to clipboard copy.
+    // (navigator.share would fail here in Safari because of the await.)
+    void shareAfterGenerate()
+  }
+
+  async function shareAfterGenerate() {
+    const url = await ensureLiveUrl()
+    if (!url) return
+    const name = newName.trim()
+    if (!name) return
+    onAddFriend(name, pendingId.current)
+    setIsSharing(true)
+    try {
+      await navigator.clipboard.writeText(url)
+    } catch (err) {
+      console.error('[FriendsView] clipboard.writeText failed:', err)
+    } finally {
+      setIsSharing(false)
+      resetDraft()
+    }
+  }
+
+  // Called from FriendCard "Einladen" – generates a fresh URL for an existing
+  // friend. Because the URL must be generated first (async), Safari's Web
+  // Share API will reject NotAllowedError here; we copy to clipboard instead.
+  async function handleReinvite(friendId: string) {
     const url = await generateSecureInviteUrl({
       profileName: profileName || 'mir',
       friendId,
       topicId: selectedTopicId,
     })
-    await shareOrCopy({
-      title: 'Erinnerung einsammeln',
-      text: `${profileName || 'Jemand'} möchte deine Erinnerungen festhalten – ${topic.emoji} ${topic.title}`,
-      url,
-    })
+    try {
+      await navigator.clipboard.writeText(url)
+    } catch (err) {
+      console.error('[FriendsView] clipboard.writeText failed:', err)
+    }
   }
 
   function handleImport() {
@@ -177,23 +272,24 @@ export function FriendsView({
             <div className="invite-preview__chip">
               {topic.emoji} {topic.title} · 5 Fragen
             </div>
-            {generateError ? (
+
+            {generateError && (
               <p className="import-msg import-msg--error">{generateError}</p>
-            ) : (
-              <button
-                className="btn btn--primary share-btn"
-                onClick={handleShare}
-                disabled={isGenerating || isSharing || !liveUrl}
-              >
-                {isGenerating ? (
-                  <span className="share-btn__spinner">Einladung wird erstellt…</span>
-                ) : isSharing ? (
-                  <span className="share-btn__spinner">Wird geöffnet…</span>
-                ) : (
-                  'Erinnerung teilen'
-                )}
-              </button>
             )}
+
+            <button
+              className="btn btn--primary share-btn"
+              onClick={handleShare}
+              disabled={isSharing}
+            >
+              {isSharing ? (
+                <span className="share-btn__spinner">Wird geöffnet…</span>
+              ) : isGenerating && !liveUrl ? (
+                <span className="share-btn__spinner">Einladung wird erstellt…</span>
+              ) : (
+                'Erinnerung teilen'
+              )}
+            </button>
           </div>
         )}
       </section>
