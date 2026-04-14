@@ -6,7 +6,7 @@
 
 /* ── Theme variables ─────────────────────────────────── */
 
-:root, [data-theme="nacht"] {
+[data-theme="nacht"] {
   --bg:             #1a1a2e;
   --surface:        #16213e;
   --surface-raised: #0f3460;
@@ -58,7 +58,7 @@
   --logo-end:   #e8365f;
 }
 
-[data-theme="sepia"] {
+:root, [data-theme="sepia"] {
   --bg:             #f2ebe0;
   --surface:        #fdf7ef;
   --surface-raised: #e8d5bc;

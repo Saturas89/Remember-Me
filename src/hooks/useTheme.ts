@@ -10,7 +10,7 @@ export const THEMES: { id: ThemeId; label: string; emoji: string; color: string 
 ]
 
 const STORAGE_KEY = 'rm-theme'
-const DEFAULT: ThemeId = 'nacht'
+const DEFAULT: ThemeId = 'sepia'
 
 export function useTheme() {
   const [theme, setThemeState] = useState<ThemeId>(() => {
