@@ -46,8 +46,20 @@ export function FriendsView({
     setCopied(false)
   }
 
-  function handleCopy(url: string) {
-    navigator.clipboard.writeText(url).then(() => setCopied(true))
+  async function handleShare(url: string) {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'Beantworte Fragen über mich!',
+          text: 'Hey! Beantworte bitte ein paar Fragen über mich in der Remember Me App.',
+          url,
+        })
+      } catch {
+        // Nutzer hat abgebrochen oder Fehler – ignorieren
+      }
+    } else {
+      navigator.clipboard.writeText(url).then(() => setCopied(true))
+    }
   }
 
   function handleImport() {
@@ -126,16 +138,15 @@ export function FriendsView({
       {inviteUrl && (
         <div className="invite-box">
           <p className="invite-box__label">
-            Sende diesen Link an deinen Freund – er öffnet die App direkt im Antwortmodus:
+            Teile den Einladungslink mit deinem Freund – er öffnet die App direkt im Antwortmodus:
           </p>
           <div className="invite-box__topic-chip">{inviteTopicLabel} · 5 Fragen</div>
-          <div className="invite-box__url">{inviteUrl}</div>
           <div className="invite-box__actions">
             <button
               className={`btn btn--primary btn--sm ${copied ? 'btn--success' : ''}`}
-              onClick={() => handleCopy(inviteUrl)}
+              onClick={() => handleShare(inviteUrl)}
             >
-              {copied ? '✓ Kopiert!' : '📋 Link kopieren'}
+              {copied ? '✓ Kopiert!' : '🔗 Teilen'}
             </button>
             <button className="btn btn--ghost btn--sm" onClick={() => setInviteUrl(null)}>
               Schließen
