@@ -33,6 +33,48 @@ function AppLogo({ size }: { size: number }) {
   )
 }
 
+// ── AppIconLogo – for matching the actual App icon style ──
+function AppIconLogo({ size }: { size: number }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 512 512"
+      width={size}
+      height={size}
+      aria-hidden="true"
+    >
+      <defs>
+        <linearGradient id="appIconBg" x1="0" y1="0" x2="0.4" y2="1">
+          <stop offset="0%" stopColor="#1e2647" />
+          <stop offset="100%" stopColor="#0c1120" />
+        </linearGradient>
+
+        <radialGradient id="appIconGlow" cx="50%" cy="48%" r="42%">
+          <stop offset="0%" stopColor="#ffffff" stopOpacity="0.1" />
+          <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
+        </radialGradient>
+      </defs>
+
+      <rect width="512" height="512" rx="112" fill="url(#appIconBg)" />
+      <ellipse cx="256" cy="238" rx="210" ry="168" fill="url(#appIconGlow)" />
+
+      <g transform="translate(76, 87) scale(7.5)" opacity="0.15">
+        <path
+          d="M24 41C24 41 2 27 2 13.5A11.5 11.5 0 0 1 24 6.1 11.5 11.5 0 0 1 46 13.5C46 27 24 41 24 41Z"
+          fill="#000000"
+        />
+      </g>
+
+      <g transform="translate(76, 75) scale(7.5)">
+        <path
+          d="M24 41C24 41 2 27 2 13.5A11.5 11.5 0 0 1 24 6.1 11.5 11.5 0 0 1 46 13.5C46 27 24 41 24 41Z"
+          fill="#ffffff"
+        />
+      </g>
+    </svg>
+  )
+}
+
 // ── HeroLogo – large centred version for HomeView / Onboarding ──
 export function HeroLogo() {
   return (
@@ -40,7 +82,7 @@ export function HeroLogo() {
       <div className="hero-logo__heart-wrap" style={{
         width: 160, height: 160, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem'
       }}>
-        <AppLogo size={140} />
+        <AppIconLogo size={140} />
       </div>
       <p className="hero-logo__tagline">Erzähl deine Geschichte</p>
       <p className="hero-logo__name">
