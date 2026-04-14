@@ -7,6 +7,7 @@ import {
   isAnswerHash,
   parseSecureInviteFromHash,
   parseAnswerFromHash,
+  generateSecureInviteUrl,
 } from './utils/secureLink'
 import { HomeView } from './views/HomeView'
 import { QuizView } from './views/QuizView'
@@ -97,6 +98,39 @@ export default function App() {
     window.history.replaceState(null, '', window.location.pathname)
     setView({ name: 'friends' })
   }, [pendingAnswerImport, isLoaded]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Pre-warm the permanent invite URL as soon as the profile is known, so
+  // by the time the user opens the Freunde tab the encrypted link is already
+  // cached in localStorage. If the name changes (or the URL doesn't match),
+  // a new one is generated and stored.
+  useEffect(() => {
+    if (!isLoaded) return
+    const name = profile?.name ?? 'mir'
+    const STORAGE_KEY = 'remember-me-invite-url'
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY)
+      if (raw) {
+        const parsed = JSON.parse(raw) as { profileName?: string; url?: string }
+        if (parsed.profileName === name && typeof parsed.url === 'string') return
+      }
+    } catch {
+      // fall through and regenerate
+    }
+    generateSecureInviteUrl({ profileName: name })
+      .then(url => {
+        try {
+          localStorage.setItem(
+            STORAGE_KEY,
+            JSON.stringify({ profileName: name, url }),
+          )
+        } catch {
+          // ignore quota errors
+        }
+      })
+      .catch(err => {
+        console.error('[App] pre-warm invite URL failed:', err)
+      })
+  }, [isLoaded, profile?.name])
 
   const exportData = { profile, answers, friends, friendAnswers, customQuestions }
   const safeName = (profile?.name ?? 'lebensarchiv').replace(/\s+/g, '-').toLowerCase()

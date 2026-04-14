@@ -120,6 +120,19 @@ function appBase(): string {
 // ── Public API ────────────────────────────────────────────────────────────────
 
 /**
+ * Synchronously generate a plain (unencrypted) invite URL.
+ *
+ * The payload is just `btoa(encodeURIComponent(JSON))` – no crypto, no
+ * compression, no await. Useful as a never-blocking fallback for UI that
+ * needs a URL immediately (e.g. a share button that must be ready on first
+ * paint). Functionally equivalent to the plain path of
+ * `generateSecureInviteUrl`.
+ */
+export function generatePlainInviteUrl(data: InviteData): string {
+  return `${appBase()}#invite/${encodeInvitePlain(data)}`
+}
+
+/**
  * Generate an invite URL.
  *
  * Tries AES-256-GCM + deflate-raw first (#mi/ format).
@@ -136,7 +149,7 @@ export async function generateSecureInviteUrl(data: InviteData): Promise<string>
       // Fall through to plain encoding
     }
   }
-  return `${appBase()}#invite/${encodeInvitePlain(data)}`
+  return generatePlainInviteUrl(data)
 }
 
 /**
