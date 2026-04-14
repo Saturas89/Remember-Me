@@ -9,6 +9,7 @@ import {
   parseSecureInviteFromHash,
   parseAnswerFromHash,
   parseMemoryShareFromHash,
+  generatePlainInviteUrl,
   generateSecureInviteUrl,
 } from './utils/secureLink'
 import { HomeView } from './views/HomeView'
@@ -47,12 +48,30 @@ type MainTab = 'home' | 'archive' | 'custom-questions' | 'friends' | 'profile'
 // Detect URL type synchronously to show a loading state before async parse
 const needsAsyncParse = isSecureInviteHash() || isAnswerHash() || isMemoryShareHash()
 
+const INVITE_URL_STORAGE_KEY = 'remember-me-invite-url'
+
+function loadCachedInviteUrl(): string {
+  try {
+    const raw = localStorage.getItem(INVITE_URL_STORAGE_KEY)
+    if (raw) {
+      const parsed = JSON.parse(raw) as { url?: string }
+      if (typeof parsed.url === 'string') return parsed.url
+    }
+  } catch {}
+  return ''
+}
+
 export default function App() {
   // State for async URL parsing (#mi/ secure invite, #ma/ answer import, #ms/ memory share)
   const [asyncInvite, setAsyncInvite] = useState<InviteData | null>(null)
   const [pendingAnswerImport, setPendingAnswerImport] = useState<AnswerExport | null>(null)
   const [sharedMemory, setSharedMemory] = useState<MemorySharePayload | null>(null)
   const [urlParsing, setUrlParsing] = useState(needsAsyncParse)
+
+  // Permanent invite URL – generated once at app open, same link for all friends.
+  // Initialized synchronously from localStorage (fast path for returning users),
+  // then upgraded to the encrypted URL as soon as the profile name is known.
+  const [inviteUrl, setInviteUrl] = useState<string>(loadCachedInviteUrl)
   const {
     isLoaded,
     profile,
@@ -107,36 +126,39 @@ export default function App() {
     setView({ name: 'friends' })
   }, [pendingAnswerImport, isLoaded]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Pre-warm the permanent invite URL as soon as the profile is known, so
-  // by the time the user opens the Freunde tab the encrypted link is already
-  // cached in localStorage. If the name changes (or the URL doesn't match),
-  // a new one is generated and stored.
+  // Generate the permanent invite URL as soon as the profile is known.
+  // Sets a plain URL immediately (synchronous), then upgrades to the
+  // encrypted URL in the background. Result is cached in localStorage so
+  // subsequent visits are instant and the button is ready on first render.
   useEffect(() => {
     if (!isLoaded) return
     const name = profile?.name ?? 'mir'
-    const STORAGE_KEY = 'remember-me-invite-url'
+
+    // Use cached URL if it already matches the current profile name
     try {
-      const raw = localStorage.getItem(STORAGE_KEY)
+      const raw = localStorage.getItem(INVITE_URL_STORAGE_KEY)
       if (raw) {
         const parsed = JSON.parse(raw) as { profileName?: string; url?: string }
-        if (parsed.profileName === name && typeof parsed.url === 'string') return
+        if (parsed.profileName === name && typeof parsed.url === 'string') {
+          setInviteUrl(parsed.url)
+          return
+        }
       }
-    } catch {
-      // fall through and regenerate
-    }
+    } catch {}
+
+    // Instant fallback: plain Base64 URL, no crypto needed
+    setInviteUrl(generatePlainInviteUrl({ profileName: name }))
+
+    // Background upgrade to encrypted URL
     generateSecureInviteUrl({ profileName: name })
       .then(url => {
+        setInviteUrl(url)
         try {
-          localStorage.setItem(
-            STORAGE_KEY,
-            JSON.stringify({ profileName: name, url }),
-          )
-        } catch {
-          // ignore quota errors
-        }
+          localStorage.setItem(INVITE_URL_STORAGE_KEY, JSON.stringify({ profileName: name, url }))
+        } catch {}
       })
       .catch(err => {
-        console.error('[App] pre-warm invite URL failed:', err)
+        console.error('[App] invite URL generation failed:', err)
       })
   }, [isLoaded, profile?.name])
 
@@ -254,6 +276,7 @@ export default function App() {
       {view.name === 'friends' && (
         <FriendsView
           profileName={profile?.name ?? ''}
+          inviteUrl={inviteUrl}
           friends={friends}
           friendAnswers={friendAnswers}
           onRemoveFriend={removeFriend}
