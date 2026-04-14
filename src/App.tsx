@@ -280,7 +280,13 @@ export default function App() {
           customQuestions={customQuestions}
           profileName={profile?.name ?? ''}
           getAnswer={getAnswer}
+          getAnswerImageIds={getAnswerImageIds}
+          getAnswerVideoIds={getAnswerVideoIds}
+          getAnswerAudioId={getAnswerAudioId}
           onSave={saveAnswer}
+          onSetImages={setAnswerImages}
+          onSetVideos={setAnswerVideos}
+          onSetAudio={setAnswerAudio}
           onAdd={addCustomQuestion}
           onRemove={removeCustomQuestion}
           onImport={importCustomQuestions}

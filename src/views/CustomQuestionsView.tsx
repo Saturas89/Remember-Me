@@ -1,12 +1,22 @@
 import { useState } from 'react'
 import { encodeQuestionPack, decodeQuestionPack } from '../utils/sharing'
+import { useImageStore } from '../hooks/useImageStore'
+import { addAudio, removeAudio } from '../hooks/useAudioStore'
+import { addVideo, removeVideo } from '../hooks/useVideoStore'
+import { MediaCapture } from '../components/MediaCapture'
 import type { CustomQuestion, QuestionPack } from '../types'
 
 interface Props {
   customQuestions: CustomQuestion[]
   profileName: string
   getAnswer: (questionId: string) => string
+  getAnswerImageIds: (questionId: string) => string[]
+  getAnswerVideoIds: (questionId: string) => string[]
+  getAnswerAudioId: (questionId: string) => string | undefined
   onSave: (questionId: string, categoryId: string, value: string) => void
+  onSetImages: (questionId: string, categoryId: string, imageIds: string[]) => void
+  onSetVideos: (questionId: string, categoryId: string, videoIds: string[]) => void
+  onSetAudio: (questionId: string, categoryId: string, audioId: string | undefined, audioTranscribedAt: string | undefined) => void
   onAdd: (
     text: string,
     type: CustomQuestion['type'],
@@ -22,12 +32,19 @@ export function CustomQuestionsView({
   customQuestions,
   profileName,
   getAnswer,
+  getAnswerImageIds,
+  getAnswerVideoIds,
+  getAnswerAudioId,
   onSave,
+  onSetImages,
+  onSetVideos,
+  onSetAudio,
   onAdd,
   onRemove,
   onImport,
   onBack,
 }: Props) {
+  const { cache, loadImages, addImage, removeImage } = useImageStore()
   const [newText, setNewText] = useState('')
   const [answeringId, setAnsweringId] = useState<string | null>(null)
   const [draftAnswer, setDraftAnswer] = useState('')
@@ -125,7 +142,38 @@ export function CustomQuestionsView({
           <div className="custom-q-list">
             {customQuestions.map(q => {
               const answer = getAnswer(q.id)
+              const imageIds = getAnswerImageIds(q.id)
+              const videoIds = getAnswerVideoIds(q.id)
+              const audioId  = getAnswerAudioId(q.id)
+              const hasMedia = imageIds.length > 0 || videoIds.length > 0 || !!audioId
               const isAnswering = answeringId === q.id
+
+              async function handleAddImage(file: File) {
+                const id = await addImage(file)
+                onSetImages(q.id, 'custom', [...imageIds, id])
+              }
+              async function handleRemoveImage(id: string) {
+                await removeImage(id)
+                onSetImages(q.id, 'custom', imageIds.filter(i => i !== id))
+              }
+              async function handleAddVideo(file: File) {
+                const id = await addVideo(file)
+                onSetVideos(q.id, 'custom', [...videoIds, id])
+              }
+              async function handleRemoveVideo(id: string) {
+                await removeVideo(id)
+                onSetVideos(q.id, 'custom', videoIds.filter(v => v !== id))
+              }
+              async function handleSaveAudio(_transcript: string, blob: Blob) {
+                if (audioId) await removeAudio(audioId)
+                const id = await addAudio(blob)
+                onSetAudio(q.id, 'custom', id, new Date().toISOString())
+              }
+              async function handleRemoveAudio() {
+                if (audioId) await removeAudio(audioId)
+                onSetAudio(q.id, 'custom', undefined, undefined)
+              }
+
               return (
                 <div key={q.id} className="custom-q-item">
                   <div className="custom-q-item__header">
@@ -143,14 +191,32 @@ export function CustomQuestionsView({
                     <div className="custom-q-item__answer-form">
                       <textarea
                         className="input-textarea"
-                        rows={3}
+                        rows={5}
                         value={draftAnswer}
                         onChange={e => setDraftAnswer(e.target.value)}
                         autoFocus
                         placeholder="Deine Erinnerung..."
                         style={{ marginBottom: '0.6rem' }}
                       />
-                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <MediaCapture
+                        imageIds={imageIds}
+                        imageCache={cache}
+                        videoIds={videoIds}
+                        audioId={audioId}
+                        onLoadImages={loadImages}
+                        onAddImage={handleAddImage}
+                        onRemoveImage={handleRemoveImage}
+                        onAddVideo={handleAddVideo}
+                        onRemoveVideo={handleRemoveVideo}
+                        onSaveAudio={async (transcript, blob) => {
+                          await handleSaveAudio(transcript, blob)
+                          if (transcript.trim() && !draftAnswer.trim()) {
+                            setDraftAnswer(transcript)
+                          }
+                        }}
+                        onRemoveAudio={handleRemoveAudio}
+                      />
+                      <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem' }}>
                         <button
                           className="btn btn--primary btn--sm"
                           onClick={() => saveAnswer(q)}
@@ -169,14 +235,21 @@ export function CustomQuestionsView({
                     <div className="custom-q-item__answer-row">
                       {answer.trim() ? (
                         <p className="custom-q-item__answer">{answer}</p>
-                      ) : (
+                      ) : !hasMedia ? (
                         <span className="custom-q-item__unanswered">Noch nichts eingetragen</span>
+                      ) : null}
+                      {hasMedia && !isAnswering && (
+                        <span className="custom-q-item__media-badges">
+                          {imageIds.length > 0 && <span>📷 {imageIds.length}</span>}
+                          {videoIds.length > 0 && <span>🎬 {videoIds.length}</span>}
+                          {audioId && <span>🎙 1</span>}
+                        </span>
                       )}
                       <button
                         className="btn btn--ghost btn--sm"
                         onClick={() => startAnswering(q)}
                       >
-                        {answer.trim() ? '✎ Bearbeiten' : '+ Eintragen'}
+                        {answer.trim() || hasMedia ? '✎ Bearbeiten' : '+ Eintragen'}
                       </button>
                     </div>
                   )}
