@@ -36,8 +36,8 @@ export function FriendCard({ friend, answers, onInvite, onRemove }: Props) {
         )}
       </div>
       <div className="friend-card__actions">
-        <button className="btn btn--outline btn--sm" onClick={onInvite} title="Einladungslink">
-          🔗 Link
+        <button className="btn btn--outline btn--sm" onClick={onInvite} title="Erneut einladen">
+          📤 Einladen
         </button>
         <button className="btn btn--ghost btn--sm" onClick={onRemove} title="Entfernen">
           ✕

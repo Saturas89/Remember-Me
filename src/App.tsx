@@ -1,8 +1,13 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAnswers } from './hooks/useAnswers'
 import { useInstallPrompt } from './hooks/useInstallPrompt'
 import { CATEGORIES } from './data/categories'
-import { parseInviteFromHash } from './utils/sharing'
+import {
+  isSecureInviteHash,
+  isAnswerHash,
+  parseSecureInviteFromHash,
+  parseAnswerFromHash,
+} from './utils/secureLink'
 import { HomeView } from './views/HomeView'
 import { QuizView } from './views/QuizView'
 import { ArchiveView } from './views/ArchiveView'
@@ -20,7 +25,7 @@ import { BottomNav } from './components/BottomNav'
 import { useServiceWorker } from './hooks/useServiceWorker'
 import { useReminder } from './hooks/useReminder'
 import { exportAsMarkdown, exportAsEnrichedJSON, downloadFile } from './utils/export'
-import type { Category } from './types'
+import type { Category, InviteData, AnswerExport } from './types'
 import './App.css'
 
 type View =
@@ -35,10 +40,14 @@ type View =
 
 type MainTab = 'home' | 'archive' | 'custom-questions' | 'friends' | 'profile'
 
-// Check on load whether this session was opened via an invite link
-const inviteFromUrl = parseInviteFromHash()
+// Detect URL type synchronously to show a loading state before async parse
+const needsAsyncParse = isSecureInviteHash() || isAnswerHash()
 
 export default function App() {
+  // State for async URL parsing (#mi/ secure invite, #ma/ answer import)
+  const [asyncInvite, setAsyncInvite] = useState<InviteData | null>(null)
+  const [pendingAnswerImport, setPendingAnswerImport] = useState<AnswerExport | null>(null)
+  const [urlParsing, setUrlParsing] = useState(needsAsyncParse)
   const {
     isLoaded,
     profile,
@@ -67,6 +76,29 @@ export default function App() {
     getCategoryProgress,
   } = useAnswers()
 
+  // Resolve secure invite / answer-import URL asynchronously on first mount
+  useEffect(() => {
+    if (!needsAsyncParse) return
+    if (isSecureInviteHash()) {
+      parseSecureInviteFromHash()
+        .then(invite => { setAsyncInvite(invite) })
+        .finally(() => setUrlParsing(false))
+    } else if (isAnswerHash()) {
+      parseAnswerFromHash()
+        .then(answers => { if (answers) setPendingAnswerImport(answers) })
+        .finally(() => setUrlParsing(false))
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Auto-import answers when an #ma/ URL was opened and state is ready
+  useEffect(() => {
+    if (!pendingAnswerImport || !isLoaded) return
+    importFriendAnswers(pendingAnswerImport)
+    setPendingAnswerImport(null)
+    window.history.replaceState(null, '', window.location.pathname)
+    setView({ name: 'friends' })
+  }, [pendingAnswerImport, isLoaded]) // eslint-disable-line react-hooks/exhaustive-deps
+
   const exportData = { profile, answers, friends, friendAnswers, customQuestions }
   const safeName = (profile?.name ?? 'lebensarchiv').replace(/\s+/g, '-').toLowerCase()
 
@@ -82,13 +114,12 @@ export default function App() {
   const { needRefresh, applyUpdate, dismiss: dismissUpdate } = useServiceWorker()
   const { showPrompt: showReminderPrompt, requestPermission: enableReminder, dismissPrompt: dismissReminder } = useReminder()
 
-  if (!isLoaded) {
-    return null // or a loading spinner if preferred, but null avoids flicker
+  if (!isLoaded || urlParsing) {
+    return null // avoid flicker while loading or parsing URL
   }
 
-  // If opened via invite link, show the friend answering flow instead of the regular app
-  if (inviteFromUrl) {
-    return <FriendAnswerView invite={inviteFromUrl} />
+  if (asyncInvite) {
+    return <FriendAnswerView invite={asyncInvite} />
   }
 
   // First-time open: show onboarding before anything else

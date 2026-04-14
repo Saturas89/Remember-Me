@@ -1012,6 +1012,76 @@
 .import-msg--error   { color: var(--accent);       background: var(--error-bg); }
 .import-msg--success { color: var(--success-text);  background: var(--success-bg); }
 
+/* ── Inline invite preview ────────────────────────────── */
+.invite-preview {
+  margin-top: 1.25rem;
+  background: var(--surface-raised);
+  border: 1px solid var(--border-focus);
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.invite-preview__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: var(--accent-tinted);
+  color: var(--accent);
+  border-radius: 999px;
+  padding: 0.2rem 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  align-self: flex-start;
+}
+
+/* ── Share button ─────────────────────────────────────── */
+.share-btn { min-width: 11rem; }
+
+.share-btn__spinner {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.share-btn__spinner::before {
+  content: '';
+  display: inline-block;
+  width: 0.85em;
+  height: 0.85em;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Done-screen fallback details ──────────────────────── */
+.export-fallback {
+  width: 100%;
+  max-width: 480px;
+  margin-top: 1.25rem;
+  text-align: left;
+}
+
+.export-fallback summary {
+  cursor: pointer;
+  font-size: 0.83rem;
+  color: var(--text-muted);
+  user-select: none;
+  margin-bottom: 0.6rem;
+}
+
+.export-fallback summary:hover {
+  color: var(--text);
+}
+
 /* ── Friend card ─────────────────────────────────────── */
 .friend-card {
   display: flex;

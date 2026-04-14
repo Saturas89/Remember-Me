@@ -1,44 +1,11 @@
 import { describe, it, expect } from 'vitest'
 import {
-  encodeInvite,
-  decodeInvite,
   encodeAnswerExport,
   decodeAnswerExport,
   encodeQuestionPack,
   decodeQuestionPack,
 } from './sharing'
-import type { InviteData, AnswerExport, QuestionPack } from '../types'
-
-// ── encodeInvite / decodeInvite ───────────────────────────────────────────────
-
-describe('encodeInvite / decodeInvite', () => {
-  it('round-trips a full InviteData including topicId', () => {
-    const data: InviteData = { profileName: 'Anna', friendId: 'f-123', topicId: 'childhood' }
-    expect(decodeInvite(encodeInvite(data))).toEqual(data)
-  })
-
-  it('round-trips without optional topicId', () => {
-    const data: InviteData = { profileName: 'Max', friendId: 'f-456' }
-    expect(decodeInvite(encodeInvite(data))).toEqual(data)
-  })
-
-  it('handles special characters and umlauts in profile name', () => {
-    const data: InviteData = { profileName: 'Ünä-Müller', friendId: 'f-789' }
-    expect(decodeInvite(encodeInvite(data))).toEqual(data)
-  })
-
-  it('returns null for garbage input', () => {
-    expect(decodeInvite('!!!not-valid-base64')).toBeNull()
-  })
-
-  it('returns null for empty string', () => {
-    expect(decodeInvite('')).toBeNull()
-  })
-
-  it('returns null for valid base64 that is not JSON', () => {
-    expect(decodeInvite(btoa(encodeURIComponent('not-json{{{'))) ).toBeNull()
-  })
-})
+import type { AnswerExport, QuestionPack } from '../types'
 
 // ── encodeAnswerExport / decodeAnswerExport ───────────────────────────────────
 
@@ -56,7 +23,7 @@ describe('encodeAnswerExport / decodeAnswerExport', () => {
     expect(decodeAnswerExport(encodeAnswerExport(data))).toEqual(data)
   })
 
-  it('preserves questionText field on answers', () => {
+  it('preserves optional questionText on answers', () => {
     const result = decodeAnswerExport(encodeAnswerExport(data))
     expect(result?.answers[0].questionText).toBe('Frage 1')
     expect(result?.answers[1].questionText).toBeUndefined()
@@ -71,9 +38,14 @@ describe('encodeAnswerExport / decodeAnswerExport', () => {
     expect(decodeAnswerExport('garbage-code')).toBeNull()
   })
 
-  it('round-trips empty answers list', () => {
+  it('round-trips an empty answers list', () => {
     const empty: AnswerExport = { friendId: 'f-1', friendName: 'Test', answers: [] }
     expect(decodeAnswerExport(encodeAnswerExport(empty))).toEqual(empty)
+  })
+
+  it('handles umlauts in friendName', () => {
+    const umlaut: AnswerExport = { friendId: 'f-2', friendName: 'Ünä-Müller', answers: [] }
+    expect(decodeAnswerExport(encodeAnswerExport(umlaut))).toEqual(umlaut)
   })
 })
 
