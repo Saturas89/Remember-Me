@@ -43,12 +43,33 @@ function canUseSecureCrypto(): boolean {
 
 // ── Compression ───────────────────────────────────────────────────────────────
 
+/** Read all chunks from a ReadableStream into a single Uint8Array. */
+async function readAllChunks(readable: ReadableStream<Uint8Array>): Promise<Uint8Array> {
+  const reader = readable.getReader()
+  const chunks: Uint8Array[] = []
+  let total = 0
+  try {
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+      chunks.push(value)
+      total += value.length
+    }
+  } finally {
+    reader.releaseLock()
+  }
+  const out = new Uint8Array(total)
+  let offset = 0
+  for (const chunk of chunks) { out.set(chunk, offset); offset += chunk.length }
+  return out
+}
+
 async function compress(text: string): Promise<Uint8Array> {
   const stream = new CompressionStream('deflate-raw')
   const writer = stream.writable.getWriter()
   await writer.write(new TextEncoder().encode(text))
   await writer.close()
-  return new Uint8Array(await new Response(stream.readable).arrayBuffer())
+  return readAllChunks(stream.readable)
 }
 
 async function decompress(data: Uint8Array): Promise<string> {
@@ -56,7 +77,7 @@ async function decompress(data: Uint8Array): Promise<string> {
   const writer = stream.writable.getWriter()
   await writer.write(data)
   await writer.close()
-  return new TextDecoder().decode(await new Response(stream.readable).arrayBuffer())
+  return new TextDecoder().decode(await readAllChunks(stream.readable))
 }
 
 // ── AES-GCM 256 ───────────────────────────────────────────────────────────────
