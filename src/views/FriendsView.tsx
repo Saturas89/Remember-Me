@@ -38,6 +38,7 @@ export function FriendsView({
   const [liveUrl, setLiveUrl] = useState<string | null>(null)
   const [isGenerating, setIsGenerating] = useState(false)
   const [isSharing, setIsSharing] = useState(false)
+  const [generateError, setGenerateError] = useState<string | null>(null)
 
   // Import fallback
   const [importCode, setImportCode] = useState('')
@@ -48,9 +49,11 @@ export function FriendsView({
   useEffect(() => {
     if (!newName.trim()) {
       setLiveUrl(null)
+      setGenerateError(null)
       return
     }
     setIsGenerating(true)
+    setGenerateError(null)
     const timer = setTimeout(() => {
       generateSecureInviteUrl({
         profileName: profileName || 'mir',
@@ -58,7 +61,11 @@ export function FriendsView({
         topicId: selectedTopicId,
       })
         .then(url => { setLiveUrl(url); setIsGenerating(false) })
-        .catch(() => setIsGenerating(false))
+        .catch(err => {
+          console.error('[FriendsView] generateSecureInviteUrl failed:', err)
+          setGenerateError('Einladungslink konnte nicht erstellt werden.')
+          setIsGenerating(false)
+        })
     }, 350)
     return () => clearTimeout(timer)
   }, [newName, selectedTopicId, profileName])
@@ -82,6 +89,7 @@ export function FriendsView({
     // Reset for next friend
     setNewName('')
     setLiveUrl(null)
+    setGenerateError(null)
     pendingId.current = newFriendId()
   }
 
@@ -169,19 +177,23 @@ export function FriendsView({
             <div className="invite-preview__chip">
               {topic.emoji} {topic.title} · 5 Fragen
             </div>
-            <button
-              className="btn btn--primary share-btn"
-              onClick={handleShare}
-              disabled={isGenerating || isSharing || !liveUrl}
-            >
-              {isGenerating ? (
-                <span className="share-btn__spinner">Einladung wird erstellt…</span>
-              ) : isSharing ? (
-                <span className="share-btn__spinner">Wird geöffnet…</span>
-              ) : (
-                'Erinnerung teilen'
-              )}
-            </button>
+            {generateError ? (
+              <p className="import-msg import-msg--error">{generateError}</p>
+            ) : (
+              <button
+                className="btn btn--primary share-btn"
+                onClick={handleShare}
+                disabled={isGenerating || isSharing || !liveUrl}
+              >
+                {isGenerating ? (
+                  <span className="share-btn__spinner">Einladung wird erstellt…</span>
+                ) : isSharing ? (
+                  <span className="share-btn__spinner">Wird geöffnet…</span>
+                ) : (
+                  'Erinnerung teilen'
+                )}
+              </button>
+            )}
           </div>
         )}
       </section>

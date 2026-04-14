@@ -32,9 +32,9 @@ describe('isSecureInviteHash', () => {
     expect(isSecureInviteHash()).toBe(true)
   })
 
-  it('returns false for the old legacy #invite/ format', () => {
-    setHash('#invite/someb64')
-    expect(isSecureInviteHash()).toBe(false)
+  it('returns true for the plain #invite/ fallback format', () => {
+    setHash('#invite/someb64data')
+    expect(isSecureInviteHash()).toBe(true)
   })
 
   it('returns false for an answer hash', () => {
@@ -113,6 +113,13 @@ describe('generateSecureInviteUrl / parseSecureInviteFromHash', () => {
   it('returns null when hash is empty', async () => {
     setHash('')
     expect(await parseSecureInviteFromHash()).toBeNull()
+  })
+
+  it('parses an #invite/ plain-Base64 fallback URL', async () => {
+    // Simulate what generateSecureInviteUrl produces when crypto is unavailable
+    const encoded = btoa(encodeURIComponent(JSON.stringify(invite)))
+    setHash(`#invite/${encoded}`)
+    expect(await parseSecureInviteFromHash()).toEqual(invite)
   })
 
   it('returns null when ciphertext is tampered with', async () => {

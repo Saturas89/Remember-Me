@@ -17,21 +17,45 @@ function fromB64u(str: string): Uint8Array {
   return out
 }
 
+// ── Plain Base64 fallback (no crypto required) ────────────────────────────────
+
+function encodeInvitePlain(data: InviteData): string {
+  return btoa(encodeURIComponent(JSON.stringify(data)))
+}
+
+function decodeInvitePlain(str: string): InviteData | null {
+  try {
+    return JSON.parse(decodeURIComponent(atob(str))) as InviteData
+  } catch {
+    return null
+  }
+}
+
+// ── Feature detection ─────────────────────────────────────────────────────────
+
+function canUseSecureCrypto(): boolean {
+  return (
+    typeof CompressionStream !== 'undefined' &&
+    typeof crypto !== 'undefined' &&
+    !!crypto.subtle
+  )
+}
+
 // ── Compression ───────────────────────────────────────────────────────────────
 
 async function compress(text: string): Promise<Uint8Array> {
   const stream = new CompressionStream('deflate-raw')
   const writer = stream.writable.getWriter()
-  writer.write(new TextEncoder().encode(text))
-  writer.close()
+  await writer.write(new TextEncoder().encode(text))
+  await writer.close()
   return new Uint8Array(await new Response(stream.readable).arrayBuffer())
 }
 
 async function decompress(data: Uint8Array): Promise<string> {
   const stream = new DecompressionStream('deflate-raw')
   const writer = stream.writable.getWriter()
-  writer.write(data)
-  writer.close()
+  await writer.write(data)
+  await writer.close()
   return new TextDecoder().decode(await new Response(stream.readable).arrayBuffer())
 }
 
@@ -54,7 +78,6 @@ async function encryptBytes(data: Uint8Array, key: CryptoKey): Promise<Uint8Arra
   const ciphertext = new Uint8Array(
     await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, data),
   )
-  // Prepend 12-byte IV
   const out = new Uint8Array(12 + ciphertext.length)
   out.set(iv, 0)
   out.set(ciphertext, 12)
@@ -76,69 +99,110 @@ function appBase(): string {
 // ── Public API ────────────────────────────────────────────────────────────────
 
 /**
- * Generate a secure invite URL: payload is JSON-compressed and AES-256-GCM
- * encrypted. The key travels in the URL fragment and is never sent to a server.
+ * Generate an invite URL.
  *
- * Format: {origin}#mi/{base64url(iv+ciphertext)}:{base64url(key)}
+ * Tries AES-256-GCM + deflate-raw first (#mi/ format).
+ * Automatically falls back to plain Base64 (#invite/ format) when
+ * crypto.subtle or CompressionStream are unavailable (e.g. plain HTTP).
  */
 export async function generateSecureInviteUrl(data: InviteData): Promise<string> {
-  const key = await newKey()
-  const encrypted = await encryptBytes(await compress(JSON.stringify(data)), key)
-  return `${appBase()}#mi/${toB64u(encrypted)}:${await keyToStr(key)}`
+  if (canUseSecureCrypto()) {
+    try {
+      const key = await newKey()
+      const encrypted = await encryptBytes(await compress(JSON.stringify(data)), key)
+      return `${appBase()}#mi/${toB64u(encrypted)}:${await keyToStr(key)}`
+    } catch {
+      // Fall through to plain encoding
+    }
+  }
+  return `${appBase()}#invite/${encodeInvitePlain(data)}`
 }
 
 /**
- * Detect synchronously (no crypto) whether the current URL looks like a secure invite.
- * Used for early routing before the async parse resolves.
+ * Detect synchronously whether the current URL is any kind of invite.
+ * Covers both the encrypted #mi/ format and the plain #invite/ fallback.
  */
 export function isSecureInviteHash(): boolean {
-  return /^#mi\/[A-Za-z0-9_-]+:[A-Za-z0-9_-]+$/.test(window.location.hash)
+  const h = window.location.hash
+  return /^#mi\/[A-Za-z0-9_-]+:[A-Za-z0-9_-]+$/.test(h) || /^#invite\/.+$/.test(h)
 }
 
 /**
- * Parse and decrypt a secure invite from the current URL hash.
- * Returns null if the hash doesn't match or crypto/parse fails.
+ * Parse an invite from the current URL hash.
+ * Handles both the encrypted #mi/ format and the plain #invite/ fallback.
  */
 export async function parseSecureInviteFromHash(): Promise<InviteData | null> {
-  const m = window.location.hash.match(/^#mi\/([A-Za-z0-9_-]+):([A-Za-z0-9_-]+)$/)
-  if (!m) return null
-  try {
-    const key = await strToKey(m[2])
-    const plain = await decompress(await decryptBytes(fromB64u(m[1]), key))
-    return JSON.parse(plain) as InviteData
-  } catch {
-    return null
+  const h = window.location.hash
+
+  // Encrypted path
+  const m = h.match(/^#mi\/([A-Za-z0-9_-]+):([A-Za-z0-9_-]+)$/)
+  if (m) {
+    try {
+      const key = await strToKey(m[2])
+      const plain = await decompress(await decryptBytes(fromB64u(m[1]), key))
+      return JSON.parse(plain) as InviteData
+    } catch {
+      return null
+    }
   }
+
+  // Plain Base64 fallback
+  const mPlain = h.match(/^#invite\/(.+)$/)
+  if (mPlain) return decodeInvitePlain(mPlain[1])
+
+  return null
 }
 
 /**
  * Generate a compressed answer URL to share back with the inviter.
- * No encryption needed – the invite URL already scoped who participates.
+ * Falls back to plain Base64 when CompressionStream is unavailable.
  *
  * Format: {origin}#ma/{base64url(compressed-json)}
+ *      or {origin}#ma-plain/{base64}
  */
 export async function generateAnswerUrl(data: AnswerExport): Promise<string> {
-  const compressed = await compress(JSON.stringify(data))
-  return `${appBase()}#ma/${toB64u(compressed)}`
+  if (typeof CompressionStream !== 'undefined') {
+    try {
+      const compressed = await compress(JSON.stringify(data))
+      return `${appBase()}#ma/${toB64u(compressed)}`
+    } catch {
+      // fall through
+    }
+  }
+  return `${appBase()}#ma-plain/${btoa(encodeURIComponent(JSON.stringify(data)))}`
 }
 
 /** Detect synchronously whether the current URL is an answer-import URL. */
 export function isAnswerHash(): boolean {
-  return /^#ma\/[A-Za-z0-9_-]+$/.test(window.location.hash)
+  const h = window.location.hash
+  return /^#ma\/[A-Za-z0-9_-]+$/.test(h) || /^#ma-plain\/.+$/.test(h)
 }
 
 /**
  * Parse an answer export from the current URL hash.
- * Returns null if the hash doesn't match or decompression fails.
  */
 export async function parseAnswerFromHash(): Promise<AnswerExport | null> {
-  const m = window.location.hash.match(/^#ma\/([A-Za-z0-9_-]+)$/)
-  if (!m) return null
-  try {
-    return JSON.parse(await decompress(fromB64u(m[1]))) as AnswerExport
-  } catch {
-    return null
+  const h = window.location.hash
+
+  const m = h.match(/^#ma\/([A-Za-z0-9_-]+)$/)
+  if (m) {
+    try {
+      return JSON.parse(await decompress(fromB64u(m[1]))) as AnswerExport
+    } catch {
+      return null
+    }
   }
+
+  const mPlain = h.match(/^#ma-plain\/(.+)$/)
+  if (mPlain) {
+    try {
+      return JSON.parse(decodeURIComponent(atob(mPlain[1]))) as AnswerExport
+    } catch {
+      return null
+    }
+  }
+
+  return null
 }
 
 /**
@@ -155,7 +219,7 @@ export async function shareOrCopy(opts: {
       await navigator.share(opts)
       return true
     } catch (e) {
-      if ((e as Error).name === 'AbortError') return false // user dismissed
+      if ((e as Error).name === 'AbortError') return false
       // Other error → fall through to clipboard
     }
   }
