@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import { useAnswers } from './hooks/useAnswers'
 import { useInstallPrompt } from './hooks/useInstallPrompt'
 import { CATEGORIES } from './data/categories'
-import { parseInviteFromHash } from './utils/sharing'
 import {
   isSecureInviteHash,
   isAnswerHash,
@@ -41,11 +40,8 @@ type View =
 
 type MainTab = 'home' | 'archive' | 'custom-questions' | 'friends' | 'profile'
 
-// Legacy sync invite (#invite/…) – resolved immediately
-const legacyInvite = parseInviteFromHash()
-
-// Detect new URL types synchronously so we can show a loading state right away
-const needsAsyncParse = !legacyInvite && (isSecureInviteHash() || isAnswerHash())
+// Detect URL type synchronously to show a loading state before async parse
+const needsAsyncParse = isSecureInviteHash() || isAnswerHash()
 
 export default function App() {
   // State for async URL parsing (#mi/ secure invite, #ma/ answer import)
@@ -122,10 +118,8 @@ export default function App() {
     return null // avoid flicker while loading or parsing URL
   }
 
-  // Show friend-answering flow when opened via any invite link (legacy or secure)
-  const inviteFromUrl = legacyInvite ?? asyncInvite
-  if (inviteFromUrl) {
-    return <FriendAnswerView invite={inviteFromUrl} />
+  if (asyncInvite) {
+    return <FriendAnswerView invite={asyncInvite} />
   }
 
   // First-time open: show onboarding before anything else
