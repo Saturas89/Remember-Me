@@ -1,7 +1,5 @@
 import { useState, useEffect } from 'react'
-import { ImageAttachment } from './ImageAttachment'
-import { VideoAttachment } from './VideoAttachment'
-import { AudioRecorder } from './AudioRecorder'
+import { MediaCapture } from './MediaCapture'
 import type { Question } from '../types'
 
 interface Props {
@@ -71,28 +69,23 @@ export function QuestionCard({
               placeholder="Deine Antwort…"
               rows={5}
             />
-            <ImageAttachment
+            <MediaCapture
               imageIds={imageIds}
-              cache={imageCache}
-              onLoad={onLoadImages}
-              onAdd={onAddImage}
-              onRemove={onRemoveImage}
-            />
-            <VideoAttachment
+              imageCache={imageCache}
               videoIds={videoIds}
-              onAdd={onAddVideo}
-              onRemove={onRemoveVideo}
-            />
-            <AudioRecorder
-              existingAudioId={audioId}
-              onSave={async (transcript, blob) => {
+              audioId={audioId}
+              onLoadImages={onLoadImages}
+              onAddImage={onAddImage}
+              onRemoveImage={onRemoveImage}
+              onAddVideo={onAddVideo}
+              onRemoveVideo={onRemoveVideo}
+              onSaveAudio={async (transcript, blob) => {
                 await onSaveAudio(transcript, blob)
-                // Fill textarea with transcript if it's currently empty
                 if (transcript.trim() && !value.trim()) {
                   handleChange(transcript)
                 }
               }}
-              onRemove={onRemoveAudio}
+              onRemoveAudio={onRemoveAudio}
             />
           </>
         )}

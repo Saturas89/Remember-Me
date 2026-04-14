@@ -101,10 +101,21 @@ interface Props {
   readOnly?: boolean
   onAdd?: (file: File) => void
   onRemove?: (id: string) => void
+  /** Expose the hidden file input to a parent-controlled ref */
+  triggerRef?: React.RefObject<HTMLInputElement | null>
+  /** Suppress the built-in add button (parent toolbar handles triggering) */
+  noAddButton?: boolean
 }
 
-export function VideoAttachment({ videoIds, readOnly = false, onAdd, onRemove }: Props) {
+export function VideoAttachment({ videoIds, readOnly = false, onAdd, onRemove, triggerRef, noAddButton }: Props) {
   const inputRef = useRef<HTMLInputElement>(null)
+
+  // Expose internal file input to parent toolbar
+  useEffect(() => {
+    if (triggerRef) {
+      (triggerRef as React.MutableRefObject<HTMLInputElement | null>).current = inputRef.current
+    }
+  })
   const [playingId, setPlayingId] = useState<string | null>(null)
 
   function handleFiles(files: FileList | null) {
@@ -135,13 +146,15 @@ export function VideoAttachment({ videoIds, readOnly = false, onAdd, onRemove }:
 
       {!readOnly && videoIds.length < MAX_VIDEOS && (
         <>
-          <button
-            type="button"
-            className="video-attachment__add"
-            onClick={() => inputRef.current?.click()}
-          >
-            🎬 Video hinzufügen
-          </button>
+          {!noAddButton && (
+            <button
+              type="button"
+              className="video-attachment__add"
+              onClick={() => inputRef.current?.click()}
+            >
+              🎬 Video hinzufügen
+            </button>
+          )}
           <input
             ref={inputRef}
             type="file"
