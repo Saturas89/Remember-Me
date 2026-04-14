@@ -518,8 +518,9 @@
 }
 
 .category-card__image--round {
-  border-radius: 50%;
+  border-radius: 0;
   object-fit: contain;
+  background: transparent;
 }
 
 .category-card__body  { flex: 1; min-width: 0; }
