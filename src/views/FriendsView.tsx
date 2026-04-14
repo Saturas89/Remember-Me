@@ -154,12 +154,6 @@ export function FriendsView({
     }
   }
 
-  function handleCopy() {
-    navigator.clipboard
-      .writeText(inviteUrl)
-      .then(() => setShareStatus('copied'))
-      .catch(() => setShareStatus('error'))
-  }
 
   function handleImport() {
     setImportError(null)
@@ -203,13 +197,6 @@ export function FriendsView({
         </p>
 
         <div className="invite-box">
-          <div className="invite-box__label">
-            Dieser Link kann dauerhaft verwendet werden:
-          </div>
-          <div className="invite-box__url" aria-label="Einladungslink">
-            {inviteUrl}
-          </div>
-
           <div className="invite-box__actions">
             <button
               className="btn btn--primary share-btn"
@@ -219,15 +206,8 @@ export function FriendsView({
               {isSharing ? (
                 <span className="share-btn__spinner">Wird geöffnet…</span>
               ) : (
-                'Link teilen'
+                '🔗 Link teilen'
               )}
-            </button>
-            <button className="btn btn--outline" onClick={handleCopy}>
-              {shareStatus === 'copied'
-                ? '✓ Kopiert!'
-                : shareStatus === 'error'
-                  ? 'Fehler beim Kopieren'
-                  : '📋 Kopieren'}
             </button>
           </div>
         </div>
