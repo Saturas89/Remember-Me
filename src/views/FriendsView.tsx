@@ -37,7 +37,6 @@ export function FriendsView({
   // Live invite link state
   const [liveUrl, setLiveUrl] = useState<string | null>(null)
   const [isGenerating, setIsGenerating] = useState(false)
-  const [copied, setCopied] = useState(false)
   const [isSharing, setIsSharing] = useState(false)
 
   // Import fallback
@@ -47,7 +46,6 @@ export function FriendsView({
 
   // Regenerate URL whenever name or topic changes (debounced 350 ms)
   useEffect(() => {
-    setCopied(false)
     if (!newName.trim()) {
       setLiveUrl(null)
       return
@@ -72,12 +70,11 @@ export function FriendsView({
     const topic = FRIEND_TOPICS.find(t => t.id === selectedTopicId) ?? FRIEND_TOPICS[0]
     setIsSharing(true)
     try {
-      const didShare = await shareOrCopy({
-        title: 'Erinnerung einsammeln',
-        text: `${profileName || 'Jemand'} möchte deine Erinnerungen festhalten – ${topic.emoji} ${topic.title}`,
-        url: liveUrl,
-      })
-      if (!didShare) setCopied(true) // clipboard fallback – highlight the visible URL
+      await shareOrCopy({
+      title: 'Erinnerung einsammeln',
+      text: `${profileName || 'Jemand'} möchte deine Erinnerungen festhalten – ${topic.emoji} ${topic.title}`,
+      url: liveUrl,
+    })
     } finally {
       setIsSharing(false)
     }
@@ -86,11 +83,6 @@ export function FriendsView({
     setNewName('')
     setLiveUrl(null)
     pendingId.current = newFriendId()
-  }
-
-  function handleCopy() {
-    if (!liveUrl) return
-    navigator.clipboard.writeText(liveUrl).then(() => setCopied(true))
   }
 
   // Called from FriendCard "Einladen" – generates fresh URL for existing friend
@@ -171,40 +163,25 @@ export function FriendsView({
           ))}
         </div>
 
-        {/* Live invite preview – appears as soon as a name is entered */}
+        {/* Share button – appears as soon as a name is entered */}
         {newName.trim() && (
           <div className="invite-preview">
             <div className="invite-preview__chip">
               {topic.emoji} {topic.title} · 5 Fragen
             </div>
-            {isGenerating ? (
-              <div className="invite-preview__url invite-preview__url--loading">
-                <span className="share-btn__spinner">Link wird generiert…</span>
-              </div>
-            ) : liveUrl ? (
-              <>
-                <div className="invite-preview__url">{liveUrl}</div>
-                <div className="invite-preview__actions">
-                  <button
-                    className="btn btn--primary share-btn"
-                    onClick={handleShare}
-                    disabled={isSharing}
-                  >
-                    {isSharing ? (
-                      <span className="share-btn__spinner">Wird geöffnet…</span>
-                    ) : (
-                      'Erinnerung teilen'
-                    )}
-                  </button>
-                  <button
-                    className={`btn btn--outline btn--sm ${copied ? 'btn--success' : ''}`}
-                    onClick={handleCopy}
-                  >
-                    {copied ? '✓ Kopiert' : '📋 Kopieren'}
-                  </button>
-                </div>
-              </>
-            ) : null}
+            <button
+              className="btn btn--primary share-btn"
+              onClick={handleShare}
+              disabled={isGenerating || isSharing || !liveUrl}
+            >
+              {isGenerating ? (
+                <span className="share-btn__spinner">Einladung wird erstellt…</span>
+              ) : isSharing ? (
+                <span className="share-btn__spinner">Wird geöffnet…</span>
+              ) : (
+                'Erinnerung teilen'
+              )}
+            </button>
           </div>
         )}
       </section>
