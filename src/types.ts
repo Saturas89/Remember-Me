@@ -91,10 +91,14 @@ export interface QuestionPack {
   createdBy?: string
 }
 
-/** Encoded inside the invite URL shared with a friend */
+/** Encoded inside the invite URL shared with a friend.
+ *
+ *  `friendId` and `topicId` are optional so the same permanent link can be
+ *  reused for many friends: each friend picks their own name and topic in
+ *  FriendAnswerView, and a fresh friendId is generated on submit. */
 export interface InviteData {
   profileName: string
-  friendId: string
+  friendId?: string
   topicId?: string
 }
 

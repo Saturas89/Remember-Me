@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { QuestionCard } from '../components/QuestionCard'
 import { ProgressBar } from '../components/ProgressBar'
 import { FRIEND_TOPICS } from '../data/friendQuestions'
@@ -15,9 +15,26 @@ function resolve(text: string, name: string): string {
   return text.replace(/\{name\}/g, name)
 }
 
+function newFriendId(): string {
+  return `friend-${Date.now()}-${crypto.randomUUID()}`
+}
+
 export function FriendAnswerView({ invite }: Props) {
+  // Use the friendId from the invite if it was a legacy per-friend link,
+  // otherwise generate a fresh one for this visitor.
+  const [friendId] = useState<string>(() => invite.friendId ?? newFriendId())
+
   const [friendName, setFriendName] = useState('')
-  const [started, setStarted] = useState(false)
+
+  // The inviter may have pre-selected a topic (legacy per-friend invite).
+  // For general invites the friend picks their own topic.
+  const [selectedTopicId, setSelectedTopicId] = useState<string | null>(
+    invite.topicId ?? null,
+  )
+
+  type Step = 'welcome' | 'topic' | 'quiz' | 'done'
+  const [step, setStep] = useState<Step>('welcome')
+
   const [index, setIndex] = useState(0)
   const [localAnswers, setLocalAnswers] = useState<Record<string, string>>({})
   const [exportCode, setExportCode] = useState<string | null>(null)
@@ -25,15 +42,35 @@ export function FriendAnswerView({ invite }: Props) {
   const [copied, setCopied] = useState(false)
   const [isSharing, setIsSharing] = useState(false)
 
-  const topic =
-    FRIEND_TOPICS.find(t => t.id === invite.topicId) ?? FRIEND_TOPICS[0]
+  const topic = useMemo(
+    () =>
+      FRIEND_TOPICS.find(t => t.id === selectedTopicId) ?? FRIEND_TOPICS[0],
+    [selectedTopicId],
+  )
 
-  const questions = topic.questions.map(q => ({
-    ...q,
-    text: resolve(q.text, invite.profileName),
-    helpText: q.helpText ? resolve(q.helpText, invite.profileName) : undefined,
-    options: q.options?.map(o => resolve(o, invite.profileName)),
-  }))
+  const questions = useMemo(
+    () =>
+      topic.questions.map(q => ({
+        ...q,
+        text: resolve(q.text, invite.profileName),
+        helpText: q.helpText ? resolve(q.helpText, invite.profileName) : undefined,
+        options: q.options?.map(o => resolve(o, invite.profileName)),
+      })),
+    [topic, invite.profileName],
+  )
+
+  function handleStartFromWelcome() {
+    if (!friendName.trim()) return
+    // If no topic was pre-selected, show the picker; else go straight to quiz.
+    setStep(selectedTopicId ? 'quiz' : 'topic')
+  }
+
+  function handleChooseTopic(topicId: string) {
+    setSelectedTopicId(topicId)
+    setIndex(0)
+    setLocalAnswers({})
+    setStep('quiz')
+  }
 
   function handleSave(value: string) {
     const q = questions[index]
@@ -51,7 +88,7 @@ export function FriendAnswerView({ invite }: Props) {
   function buildExportData(): AnswerExport {
     const questionMap = new Map(questions.map(q => [q.id, q]))
     return {
-      friendId: invite.friendId,
+      friendId,
       friendName: friendName.trim() || 'Anonym',
       answers: Object.entries(localAnswers)
         .filter(([, v]) => v.trim())
@@ -67,6 +104,7 @@ export function FriendAnswerView({ invite }: Props) {
     setExportCode(encodeAnswerExport(data))
     // Pre-generate the answer URL in the background
     generateAnswerUrl(data).then(url => setAnswerUrl(url)).catch(() => {})
+    setStep('done')
   }
 
   async function handleShare() {
@@ -92,7 +130,7 @@ export function FriendAnswerView({ invite }: Props) {
   }
 
   // ── Done screen ──────────────────────────────────────────
-  if (exportCode) {
+  if (step === 'done' && exportCode) {
     return (
       <div className="friend-answer-view">
         <div className="export-done">
@@ -139,7 +177,7 @@ export function FriendAnswerView({ invite }: Props) {
   }
 
   // ── Welcome screen ───────────────────────────────────────
-  if (!started) {
+  if (step === 'welcome') {
     return (
       <div className="friend-answer-view">
         <div className="friend-welcome">
@@ -156,21 +194,64 @@ export function FriendAnswerView({ invite }: Props) {
               className="input-text"
               value={friendName}
               onChange={e => setFriendName(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && friendName.trim() && setStarted(true)}
+              onKeyDown={e =>
+                e.key === 'Enter' && friendName.trim() && handleStartFromWelcome()
+              }
               placeholder="Dein Name..."
               autoFocus
             />
           </div>
           <button
             className="btn btn--primary"
-            onClick={() => setStarted(true)}
+            onClick={handleStartFromWelcome}
             disabled={!friendName.trim()}
           >
-            Los geht's →
+            Weiter →
           </button>
-          <p className="friend-welcome__note">
-            {topic.emoji} {topic.title} · {questions.length} Fragen · ca. 5 Minuten
+          {selectedTopicId && (
+            <p className="friend-welcome__note">
+              {topic.emoji} {topic.title} · {questions.length} Fragen · ca. 5 Minuten
+            </p>
+          )}
+        </div>
+      </div>
+    )
+  }
+
+  // ── Topic selection screen ───────────────────────────────
+  if (step === 'topic') {
+    return (
+      <div className="friend-answer-view">
+        <div className="friend-topic-picker">
+          <h2 className="friend-topic-picker__title">
+            Worüber möchtest du erzählen, {friendName}?
+          </h2>
+          <p className="friend-topic-picker__intro">
+            Wähle eine Kategorie – pro Kategorie gibt es ein paar Fragen über{' '}
+            <strong>{invite.profileName}</strong>.
           </p>
+          <div className="friends-topic-grid">
+            {FRIEND_TOPICS.map(t => (
+              <button
+                key={t.id}
+                type="button"
+                className="friend-topic-card"
+                onClick={() => handleChooseTopic(t.id)}
+              >
+                <span className="friend-topic-card__emoji">{t.emoji}</span>
+                <span className="friend-topic-card__title">{t.title}</span>
+                <span className="friend-topic-card__desc">
+                  {resolve(t.description, invite.profileName)}
+                </span>
+              </button>
+            ))}
+          </div>
+          <button
+            className="btn btn--ghost btn--sm"
+            onClick={() => setStep('welcome')}
+          >
+            ← Zurück
+          </button>
         </div>
       </div>
     )
@@ -184,7 +265,7 @@ export function FriendAnswerView({ invite }: Props) {
     <div className="friend-answer-view">
       <div className="quiz-topbar">
         <span className="quiz-category-title">
-          Fragen über {invite.profileName} – beantwortet von {friendName}
+          {topic.emoji} {topic.title} – über {invite.profileName}
         </span>
       </div>
       <ProgressBar value={progress} />

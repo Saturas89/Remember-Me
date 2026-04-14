@@ -213,7 +213,34 @@ export function useAnswers() {
         }))
       // Replace any previous answers from this friend
       const filtered = prev.friendAnswers.filter(a => a.friendId !== data.friendId)
-      const next: AppState = { ...prev, friendAnswers: [...filtered, ...newAnswers] }
+
+      // Auto-create a Friend entry when we don't know this friend yet.
+      // This is the common path now that the invite link is generic: the
+      // inviter doesn't enter the friend's name up-front – it arrives with
+      // the answer bundle.
+      let friends = prev.friends
+      const existing = friends.find(f => f.id === data.friendId)
+      if (!existing) {
+        friends = [
+          ...friends,
+          {
+            id: data.friendId,
+            name: data.friendName || 'Anonym',
+            addedAt: now,
+          },
+        ]
+      } else if (data.friendName && existing.name !== data.friendName) {
+        // Update the stored name if the friend resubmitted under a different name.
+        friends = friends.map(f =>
+          f.id === data.friendId ? { ...f, name: data.friendName } : f,
+        )
+      }
+
+      const next: AppState = {
+        ...prev,
+        friends,
+        friendAnswers: [...filtered, ...newAnswers],
+      }
       saveState(next)
       return next
     })
