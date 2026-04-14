@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react'
 import { FriendCard } from '../components/FriendCard'
-import { generateSecureInviteUrl } from '../utils/secureLink'
+import {
+  generatePlainInviteUrl,
+  generateSecureInviteUrl,
+} from '../utils/secureLink'
 import { decodeAnswerExport } from '../utils/sharing'
 import type { Friend, FriendAnswer, AnswerExport } from '../types'
 
@@ -53,30 +56,41 @@ export function FriendsView({
   const effectiveName = profileName || 'mir'
 
   // Permanent, reusable invite link – one for all friends.
-  const [inviteUrl, setInviteUrl] = useState<string | null>(null)
-  const [isGenerating, setIsGenerating] = useState(false)
+  //
+  // Initialized synchronously on first render so the Share- and Copy-buttons
+  // are clickable immediately. Order of preference:
+  //   1. Cached URL from localStorage matching the current profile name.
+  //   2. Plain-base64 URL computed synchronously – guaranteed to work in any
+  //      browser, any context.
+  // The secure (AES-GCM + deflate) URL, if the browser supports it, is
+  // upgraded asynchronously in the background and replaces the plain one.
+  const [inviteUrl, setInviteUrl] = useState<string>(() => {
+    const stored = loadStoredInvite()
+    if (stored && stored.profileName === effectiveName) return stored.url
+    return generatePlainInviteUrl({ profileName: effectiveName })
+  })
+
   const [isSharing, setIsSharing] = useState(false)
   const [shareStatus, setShareStatus] = useState<'idle' | 'copied' | 'error'>('idle')
-  const [generateError, setGenerateError] = useState<string | null>(null)
 
   // Import fallback
   const [importCode, setImportCode] = useState('')
   const [importError, setImportError] = useState<string | null>(null)
   const [importSuccess, setImportSuccess] = useState(false)
 
-  // Load or (re-)create the permanent invite URL on mount and whenever the
-  // profile name changes. Cached in localStorage so the same link stays valid
-  // across sessions – it already carries no per-friend info.
+  // Upgrade to the secure (encrypted + compressed) URL in the background and
+  // cache it so subsequent visits are instant. If encryption isn't available
+  // in this browser, `generateSecureInviteUrl` itself returns the plain URL –
+  // still worth caching so both paths end up persisted.
   useEffect(() => {
     const stored = loadStoredInvite()
     if (stored && stored.profileName === effectiveName) {
+      // Already cached – make sure state reflects it (e.g. when name changed).
       setInviteUrl(stored.url)
       return
     }
 
     let cancelled = false
-    setIsGenerating(true)
-    setGenerateError(null)
     generateSecureInviteUrl({ profileName: effectiveName })
       .then(url => {
         if (cancelled) return
@@ -84,12 +98,8 @@ export function FriendsView({
         storeInvite({ profileName: effectiveName, url })
       })
       .catch(err => {
-        if (cancelled) return
+        // Plain fallback is already displayed – log and move on.
         console.error('[FriendsView] generateSecureInviteUrl failed:', err)
-        setGenerateError('Einladungslink konnte nicht erstellt werden.')
-      })
-      .finally(() => {
-        if (!cancelled) setIsGenerating(false)
       })
     return () => {
       cancelled = true
@@ -114,7 +124,7 @@ export function FriendsView({
   // Synchronous share handler: Safari requires navigator.share() to be called
   // directly inside the click gesture (no awaits before the call).
   function handleShare() {
-    if (!inviteUrl || isSharing) return
+    if (isSharing) return
 
     const url = inviteUrl
     const shareData = buildShareData(url)
@@ -145,7 +155,6 @@ export function FriendsView({
   }
 
   function handleCopy() {
-    if (!inviteUrl) return
     navigator.clipboard
       .writeText(inviteUrl)
       .then(() => setShareStatus('copied'))
@@ -195,24 +204,17 @@ export function FriendsView({
 
         <div className="invite-box">
           <div className="invite-box__label">
-            {isGenerating && !inviteUrl
-              ? 'Link wird erstellt…'
-              : 'Dieser Link kann dauerhaft verwendet werden:'}
+            Dieser Link kann dauerhaft verwendet werden:
           </div>
-          {inviteUrl && (
-            <div className="invite-box__url" aria-label="Einladungslink">
-              {inviteUrl}
-            </div>
-          )}
-          {generateError && (
-            <p className="import-msg import-msg--error">{generateError}</p>
-          )}
+          <div className="invite-box__url" aria-label="Einladungslink">
+            {inviteUrl}
+          </div>
 
           <div className="invite-box__actions">
             <button
               className="btn btn--primary share-btn"
               onClick={handleShare}
-              disabled={!inviteUrl || isSharing}
+              disabled={isSharing}
             >
               {isSharing ? (
                 <span className="share-btn__spinner">Wird geöffnet…</span>
@@ -220,11 +222,7 @@ export function FriendsView({
                 'Link teilen'
               )}
             </button>
-            <button
-              className="btn btn--outline"
-              onClick={handleCopy}
-              disabled={!inviteUrl}
-            >
+            <button className="btn btn--outline" onClick={handleCopy}>
               {shareStatus === 'copied'
                 ? '✓ Kopiert!'
                 : shareStatus === 'error'
