@@ -77,7 +77,7 @@ export function CustomQuestionsView({
     }
     onImport(pack.questions)
     setImportCode('')
-    setImportMsg({ type: 'success', text: `${pack.questions.length} Frage(n) importiert.` })
+    setImportMsg({ type: 'success', text: `${pack.questions.length} Erinnerung(en) importiert.` })
     setTimeout(() => setImportMsg(null), 3000)
   }
 
@@ -90,26 +90,26 @@ export function CustomQuestionsView({
         <button className="btn btn--ghost btn--sm" onClick={onBack}>
           ← Zurück
         </button>
-        <h2 className="archive-title">✏️ Eigene Fragen</h2>
+        <h2 className="archive-title">✏️ Eigene Erinnerungen</h2>
       </div>
 
       <p className="friends-intro">
-        Erstelle deine eigenen Fragen, beantworte sie und teile sie mit anderen.
+        Halte hier deine eigenen Erinnerungen fest – gib ihnen einen Titel und schreibe auf, was du bewahren möchtest.
         {customQuestions.length > 0 && (
-          <> {answeredCount}/{customQuestions.length} beantwortet.</>
+          <> {answeredCount}/{customQuestions.length} eingetragen.</>
         )}
       </p>
 
       {/* Add question */}
       <section className="friends-section">
-        <h3 className="friends-section-title">Frage hinzufügen</h3>
+        <h3 className="friends-section-title">Erinnerung hinzufügen</h3>
         <div className="friends-add-row">
           <input
             className="input-text"
             value={newText}
             onChange={e => setNewText(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleAdd()}
-            placeholder="Deine Frage..."
+            placeholder="Titel der Erinnerung..."
             style={{ flex: 1 }}
           />
           <button className="btn btn--primary" onClick={handleAdd} disabled={!newText.trim()}>
@@ -121,7 +121,7 @@ export function CustomQuestionsView({
       {/* Question list */}
       {customQuestions.length > 0 && (
         <section className="friends-section">
-          <h3 className="friends-section-title">Meine Fragen</h3>
+          <h3 className="friends-section-title">Meine Erinnerungen</h3>
           <div className="custom-q-list">
             {customQuestions.map(q => {
               const answer = getAnswer(q.id)
@@ -133,7 +133,7 @@ export function CustomQuestionsView({
                     <button
                       className="btn btn--ghost btn--sm custom-q-delete"
                       onClick={() => onRemove(q.id)}
-                      aria-label="Frage löschen"
+                      aria-label="Erinnerung löschen"
                     >
                       ✕
                     </button>
@@ -147,7 +147,7 @@ export function CustomQuestionsView({
                         value={draftAnswer}
                         onChange={e => setDraftAnswer(e.target.value)}
                         autoFocus
-                        placeholder="Deine Antwort..."
+                        placeholder="Deine Erinnerung..."
                         style={{ marginBottom: '0.6rem' }}
                       />
                       <div style={{ display: 'flex', gap: '0.5rem' }}>
@@ -170,13 +170,13 @@ export function CustomQuestionsView({
                       {answer.trim() ? (
                         <p className="custom-q-item__answer">{answer}</p>
                       ) : (
-                        <span className="custom-q-item__unanswered">Noch nicht beantwortet</span>
+                        <span className="custom-q-item__unanswered">Noch nichts eingetragen</span>
                       )}
                       <button
                         className="btn btn--ghost btn--sm"
                         onClick={() => startAnswering(q)}
                       >
-                        {answer.trim() ? '✎ Bearbeiten' : '+ Antworten'}
+                        {answer.trim() ? '✎ Bearbeiten' : '+ Eintragen'}
                       </button>
                     </div>
                   )}
@@ -190,9 +190,9 @@ export function CustomQuestionsView({
       {/* Share */}
       {customQuestions.length > 0 && (
         <section className="friends-section">
-          <h3 className="friends-section-title">Fragen teilen</h3>
+          <h3 className="friends-section-title">Erinnerungen teilen</h3>
           <p className="friends-hint">
-            Generiere einen Code, den andere importieren können, um dieselben Fragen zu beantworten.
+            Generiere einen Code, den andere importieren können, um dieselben Erinnerungstitel zu übernehmen.
           </p>
           {!shareCode ? (
             <button className="btn btn--outline" onClick={handleShare}>
@@ -200,7 +200,7 @@ export function CustomQuestionsView({
             </button>
           ) : (
             <div className="invite-box">
-              <p className="invite-box__label">Dein Fragen-Code:</p>
+              <p className="invite-box__label">Dein Erinnerungs-Code:</p>
               <div className="export-code">{shareCode}</div>
               <div className="invite-box__actions" style={{ marginTop: '0.75rem' }}>
                 <button className="btn btn--primary btn--sm" onClick={handleCopy}>
@@ -220,9 +220,9 @@ export function CustomQuestionsView({
 
       {/* Import */}
       <section className="friends-section">
-        <h3 className="friends-section-title">Fragen importieren</h3>
+        <h3 className="friends-section-title">Erinnerungen importieren</h3>
         <p className="friends-hint">
-          Hast du einen Fragen-Code erhalten? Füge ihn hier ein.
+          Hast du einen Erinnerungs-Code erhalten? Füge ihn hier ein.
         </p>
         <textarea
           className="input-textarea"

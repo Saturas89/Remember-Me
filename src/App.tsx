@@ -180,8 +180,8 @@ export default function App() {
     if (view.categoryId === 'custom') {
       category = {
         id: 'custom',
-        title: 'Eigene Fragen',
-        description: 'Von dir erstellte Fragen',
+        title: 'Eigene Erinnerungen',
+        description: 'Von dir festgehaltene Erinnerungen',
         emoji: '✏️',
         questions: customQuestions.map(q => ({
           id: q.id,
