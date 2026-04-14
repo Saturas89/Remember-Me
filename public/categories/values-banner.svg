@@ -1,10 +1,111 @@
 <svg width="800" height="240" viewBox="0 0 800 240" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
-    <defs>
-      <linearGradient id="grad-values" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" style="stop-color:#a18cd1;stop-opacity:1" />
-        <stop offset="100%" style="stop-color:#fbc2eb;stop-opacity:1" />
-      </linearGradient>
-    </defs>
-    <rect width="100%" height="100%" fill="url(#grad-values)" />
-    <polygon points="400,20 440,100 520,100 460,150 480,230 400,180 320,230 340,150 280,100 360,100" fill="rgba(255,255,255,0.2)"/>
-  </svg>
+  <defs>
+    <linearGradient id="sky" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#0F172A"/>
+      <stop offset="50%" stop-color="#1E1B4B"/>
+      <stop offset="100%" stop-color="#1E3A5F"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="65%" r="35%">
+      <stop offset="0%" stop-color="#FDE68A" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#FDE68A" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="star-glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FDE68A" stop-opacity="0.9"/>
+      <stop offset="60%" stop-color="#F59E0B" stop-opacity="0.7"/>
+      <stop offset="100%" stop-color="#D97706" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <!-- Night sky background -->
+  <rect width="800" height="240" fill="url(#sky)"/>
+  <!-- Ground horizon with soft glow -->
+  <rect x="0" y="195" width="800" height="45" fill="#0F3460" opacity="0.8"/>
+  <rect x="0" y="190" width="800" height="15" fill="#1E3A5F" opacity="0.6"/>
+  <!-- Stars scattered -->
+  <circle cx="30" cy="20" r="1.5" fill="white" opacity="0.9"/>
+  <circle cx="78" cy="45" r="1" fill="white" opacity="0.7"/>
+  <circle cx="125" cy="15" r="2" fill="white" opacity="0.8"/>
+  <circle cx="175" cy="38" r="1" fill="white" opacity="0.6"/>
+  <circle cx="218" cy="12" r="1.5" fill="white" opacity="0.8"/>
+  <circle cx="260" cy="48" r="1" fill="white" opacity="0.5"/>
+  <circle cx="305" cy="22" r="1.5" fill="white" opacity="0.7"/>
+  <circle cx="350" cy="8" r="2" fill="white" opacity="0.9"/>
+  <circle cx="398" cy="30" r="1" fill="white" opacity="0.6"/>
+  <circle cx="445" cy="18" r="1.5" fill="white" opacity="0.8"/>
+  <circle cx="490" cy="42" r="1" fill="white" opacity="0.5"/>
+  <circle cx="538" cy="10" r="2" fill="white" opacity="0.9"/>
+  <circle cx="580" cy="35" r="1" fill="white" opacity="0.7"/>
+  <circle cx="625" cy="18" r="1.5" fill="white" opacity="0.8"/>
+  <circle cx="668" cy="48" r="1" fill="white" opacity="0.6"/>
+  <circle cx="712" cy="22" r="2" fill="white" opacity="0.9"/>
+  <circle cx="758" cy="14" r="1.5" fill="white" opacity="0.8"/>
+  <circle cx="48" cy="75" r="1" fill="white" opacity="0.5"/>
+  <circle cx="95" cy="90" r="1.5" fill="white" opacity="0.6"/>
+  <circle cx="145" cy="68" r="1" fill="white" opacity="0.7"/>
+  <circle cx="195" cy="85" r="2" fill="white" opacity="0.5"/>
+  <circle cx="242" cy="72" r="1" fill="white" opacity="0.8"/>
+  <circle cx="290" cy="95" r="1.5" fill="white" opacity="0.6"/>
+  <circle cx="338" cy="65" r="1" fill="white" opacity="0.7"/>
+  <circle cx="598" cy="75" r="1" fill="white" opacity="0.6"/>
+  <circle cx="645" cy="62" r="1.5" fill="white" opacity="0.7"/>
+  <circle cx="692" cy="88" r="1" fill="white" opacity="0.5"/>
+  <circle cx="740" cy="70" r="2" fill="white" opacity="0.8"/>
+  <circle cx="768" cy="95" r="1" fill="white" opacity="0.6"/>
+  <!-- Constellation pattern (Orion-like) -->
+  <!-- Stars in constellation -->
+  <circle cx="160" cy="60" r="3.5" fill="#FDE68A" opacity="0.9"/>
+  <circle cx="200" cy="48" r="3" fill="#FDE68A" opacity="0.85"/>
+  <circle cx="240" cy="65" r="3.5" fill="#FDE68A" opacity="0.9"/>
+  <circle cx="175" cy="100" r="2.5" fill="#BAE6FD" opacity="0.8"/>
+  <circle cx="225" cy="105" r="2.5" fill="#BAE6FD" opacity="0.8"/>
+  <circle cx="155" cy="135" r="3" fill="#FDE68A" opacity="0.85"/>
+  <circle cx="245" cy="138" r="3" fill="#FDE68A" opacity="0.85"/>
+  <!-- Constellation lines -->
+  <line x1="160" y1="60" x2="200" y2="48" stroke="#FDE68A" stroke-width="1.2" opacity="0.5"/>
+  <line x1="200" y1="48" x2="240" y2="65" stroke="#FDE68A" stroke-width="1.2" opacity="0.5"/>
+  <line x1="160" y1="60" x2="175" y2="100" stroke="#FDE68A" stroke-width="1.2" opacity="0.4"/>
+  <line x1="240" y1="65" x2="225" y2="105" stroke="#FDE68A" stroke-width="1.2" opacity="0.4"/>
+  <line x1="175" y1="100" x2="225" y2="105" stroke="#FDE68A" stroke-width="1.2" opacity="0.4"/>
+  <line x1="175" y1="100" x2="155" y2="135" stroke="#FDE68A" stroke-width="1.2" opacity="0.4"/>
+  <line x1="225" y1="105" x2="245" y2="138" stroke="#FDE68A" stroke-width="1.2" opacity="0.4"/>
+  <!-- Second constellation right -->
+  <circle cx="560" cy="45" r="3" fill="#BAE6FD" opacity="0.85"/>
+  <circle cx="600" cy="30" r="2.5" fill="#BAE6FD" opacity="0.8"/>
+  <circle cx="640" cy="50" r="3" fill="#BAE6FD" opacity="0.85"/>
+  <circle cx="580" cy="80" r="2" fill="#FDE68A" opacity="0.7"/>
+  <circle cx="618" cy="75" r="2.5" fill="#FDE68A" opacity="0.75"/>
+  <line x1="560" y1="45" x2="600" y2="30" stroke="#BAE6FD" stroke-width="1" opacity="0.4"/>
+  <line x1="600" y1="30" x2="640" y2="50" stroke="#BAE6FD" stroke-width="1" opacity="0.4"/>
+  <line x1="560" y1="45" x2="580" y2="80" stroke="#BAE6FD" stroke-width="1" opacity="0.35"/>
+  <line x1="640" y1="50" x2="618" y2="75" stroke="#BAE6FD" stroke-width="1" opacity="0.35"/>
+  <line x1="580" y1="80" x2="618" y2="75" stroke="#BAE6FD" stroke-width="1" opacity="0.35"/>
+  <!-- Glow behind hand area -->
+  <circle cx="440" cy="155" r="80" fill="url(#glow)"/>
+  <!-- Hand reaching up from bottom -->
+  <!-- Arm -->
+  <path d="M 370 240 Q 400 220 420 195 Q 435 175 440 155" stroke="#D97706" stroke-width="28" fill="none" stroke-linecap="round"/>
+  <!-- Palm -->
+  <ellipse cx="445" cy="148" rx="28" ry="22" fill="#D97706" transform="rotate(-15 445 148)"/>
+  <!-- Thumb -->
+  <ellipse cx="418" cy="140" rx="10" ry="18" fill="#D97706" transform="rotate(-40 418 140)"/>
+  <!-- Fingers -->
+  <ellipse cx="433" cy="122" rx="8" ry="16" fill="#D97706" transform="rotate(-15 433 122)"/>
+  <ellipse cx="448" cy="118" rx="8" ry="17" fill="#D97706" transform="rotate(-5 448 118)"/>
+  <ellipse cx="462" cy="122" rx="8" ry="16" fill="#D97706" transform="rotate(8 462 122)"/>
+  <ellipse cx="474" cy="130" rx="7" ry="14" fill="#D97706" transform="rotate(20 474 130)"/>
+  <!-- Nail highlights -->
+  <ellipse cx="432" cy="115" rx="4" ry="5" fill="#FBBF24" opacity="0.4" transform="rotate(-15 432 115)"/>
+  <ellipse cx="447" cy="111" rx="4" ry="5" fill="#FBBF24" opacity="0.4" transform="rotate(-5 447 111)"/>
+  <!-- Large glowing star in hand -->
+  <circle cx="445" cy="105" r="32" fill="url(#star-glow)"/>
+  <polygon points="445,68 455,95 484,95 461,112 470,139 445,122 420,139 429,112 406,95 435,95"
+    fill="#FDE68A" stroke="#F59E0B" stroke-width="1.5"/>
+  <!-- Star inner bright -->
+  <polygon points="445,78 451,93 467,93 455,102 460,117 445,108 430,117 435,102 423,93 439,93"
+    fill="white" opacity="0.5"/>
+  <!-- Shooting stars -->
+  <line x1="700" y1="55" x2="730" y2="42" stroke="white" stroke-width="1.5" opacity="0.7" stroke-linecap="round"/>
+  <line x1="720" y1="85" x2="758" y2="68" stroke="white" stroke-width="1" opacity="0.5" stroke-linecap="round"/>
+  <!-- Hearts / hope symbols floating -->
+  <path d="M 325 80 C 325 77 321 74 317 77 C 313 80 313 84 317 88 L 325 96 L 333 88 C 337 84 337 80 333 77 C 329 74 325 77 325 80 Z" fill="#EC4899" opacity="0.6"/>
+  <path d="M 510 115 C 510 113 507 110 504 113 C 501 115 501 119 504 122 L 510 128 L 516 122 C 519 119 519 115 516 113 C 513 110 510 113 510 115 Z" fill="#EC4899" opacity="0.5"/>
+</svg>

@@ -1,12 +1,38 @@
-<svg width="400" height="300" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
-    <defs>
-      <linearGradient id="grad-values" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" style="stop-color:#a18cd1;stop-opacity:1" />
-        <stop offset="100%" style="stop-color:#fbc2eb;stop-opacity:1" />
-      </linearGradient>
-    </defs>
-    <rect width="100%" height="100%" fill="url(#grad-values)" />
-    <g transform="scale(0.5) translate(200, 50)">
-      <polygon points="400,20 440,100 520,100 460,150 480,230 400,180 320,230 340,150 280,100 360,100" fill="rgba(255,255,255,0.2)"/>
-    </g>
-  </svg>
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1E1B4B"/>
+      <stop offset="100%" stop-color="#312E81"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FDE68A" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#FDE68A" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <circle cx="100" cy="100" r="100" fill="url(#bg)"/>
+  <!-- Background stars -->
+  <circle cx="28" cy="35" r="1.5" fill="white" opacity="0.6"/>
+  <circle cx="55" cy="22" r="1" fill="white" opacity="0.5"/>
+  <circle cx="170" cy="30" r="2" fill="white" opacity="0.7"/>
+  <circle cx="155" cy="55" r="1" fill="white" opacity="0.4"/>
+  <circle cx="35" cy="75" r="1.5" fill="white" opacity="0.5"/>
+  <circle cx="178" cy="80" r="1" fill="white" opacity="0.6"/>
+  <circle cx="22" cy="140" r="1" fill="white" opacity="0.4"/>
+  <circle cx="175" cy="150" r="1.5" fill="white" opacity="0.5"/>
+  <circle cx="48" cy="165" r="1" fill="white" opacity="0.3"/>
+  <circle cx="160" cy="170" r="2" fill="white" opacity="0.4"/>
+  <!-- Glow behind star -->
+  <circle cx="100" cy="98" r="52" fill="url(#glow)"/>
+  <!-- Large central star -->
+  <polygon points="100,42 113,82 155,82 121,106 134,146 100,122 66,146 79,106 45,82 87,82"
+    fill="#FDE68A" stroke="#F59E0B" stroke-width="2"/>
+  <!-- Star inner shine -->
+  <polygon points="100,58 108,78 130,78 113,91 120,111 100,98 80,111 87,91 70,78 92,78"
+    fill="#FEF3C7" opacity="0.6"/>
+  <!-- Sparkle dots around star -->
+  <circle cx="100" cy="34" r="3" fill="#FDE68A" opacity="0.8"/>
+  <circle cx="158" cy="74" r="2" fill="#FDE68A" opacity="0.7"/>
+  <circle cx="140" cy="150" r="2.5" fill="#FDE68A" opacity="0.6"/>
+  <circle cx="60" cy="150" r="2" fill="#FDE68A" opacity="0.6"/>
+  <circle cx="42" cy="74" r="2" fill="#FDE68A" opacity="0.7"/>
+</svg>

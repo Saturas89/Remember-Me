@@ -1,10 +1,132 @@
 <svg width="800" height="240" viewBox="0 0 800 240" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
-    <defs>
-      <linearGradient id="grad-childhood" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" style="stop-color:#f6d365;stop-opacity:1" />
-        <stop offset="100%" style="stop-color:#fda085;stop-opacity:1" />
-      </linearGradient>
-    </defs>
-    <rect width="100%" height="100%" fill="url(#grad-childhood)" />
-    <circle cx="20%" cy="30%" r="60" fill="rgba(255,255,255,0.2)"/><circle cx="85%" cy="80%" r="120" fill="rgba(255,255,255,0.15)"/><path d="M400,200 Q450,150 500,200 T600,200" stroke="rgba(255,255,255,0.3)" stroke-width="8" fill="none"/>
-  </svg>
+  <defs>
+    <linearGradient id="sky" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#BAE6FD"/>
+      <stop offset="100%" stop-color="#E0F2FE"/>
+    </linearGradient>
+    <linearGradient id="grass" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#86EFAC"/>
+      <stop offset="100%" stop-color="#4ADE80"/>
+    </linearGradient>
+  </defs>
+  <!-- Sky -->
+  <rect width="800" height="240" fill="url(#sky)"/>
+  <!-- Sun -->
+  <circle cx="680" cy="48" r="36" fill="#FDE68A"/>
+  <circle cx="680" cy="48" r="28" fill="#FCD34D"/>
+  <!-- Sun rays -->
+  <line x1="680" y1="5" x2="680" y2="14" stroke="#FCD34D" stroke-width="3" stroke-linecap="round"/>
+  <line x1="715" y1="14" x2="708" y2="21" stroke="#FCD34D" stroke-width="3" stroke-linecap="round"/>
+  <line x1="723" y1="48" x2="714" y2="48" stroke="#FCD34D" stroke-width="3" stroke-linecap="round"/>
+  <line x1="715" y1="82" x2="708" y2="75" stroke="#FCD34D" stroke-width="3" stroke-linecap="round"/>
+  <line x1="645" y1="14" x2="652" y2="21" stroke="#FCD34D" stroke-width="3" stroke-linecap="round"/>
+  <line x1="637" y1="48" x2="646" y2="48" stroke="#FCD34D" stroke-width="3" stroke-linecap="round"/>
+  <line x1="645" y1="82" x2="652" y2="75" stroke="#FCD34D" stroke-width="3" stroke-linecap="round"/>
+  <!-- Clouds -->
+  <ellipse cx="120" cy="45" rx="55" ry="24" fill="white" opacity="0.9"/>
+  <ellipse cx="90" cy="52" rx="35" ry="20" fill="white" opacity="0.9"/>
+  <ellipse cx="155" cy="50" rx="38" ry="20" fill="white" opacity="0.9"/>
+  <ellipse cx="450" cy="38" rx="48" ry="20" fill="white" opacity="0.85"/>
+  <ellipse cx="420" cy="45" rx="32" ry="18" fill="white" opacity="0.85"/>
+  <ellipse cx="480" cy="44" rx="34" ry="18" fill="white" opacity="0.85"/>
+  <!-- Ground -->
+  <rect x="0" y="175" width="800" height="65" fill="url(#grass)"/>
+  <!-- Ground detail -->
+  <ellipse cx="400" cy="175" rx="400" ry="12" fill="#4ADE80" opacity="0.5"/>
+  <!-- Tree left -->
+  <rect x="55" y="130" width="14" height="55" rx="5" fill="#92400E"/>
+  <ellipse cx="62" cy="118" rx="38" ry="42" fill="#16A34A"/>
+  <ellipse cx="48" cy="128" rx="26" ry="30" fill="#22C55E"/>
+  <ellipse cx="78" cy="122" rx="24" ry="28" fill="#22C55E"/>
+  <!-- Tree right -->
+  <rect x="715" y="140" width="12" height="45" rx="5" fill="#92400E"/>
+  <ellipse cx="721" cy="128" rx="34" ry="38" fill="#16A34A"/>
+  <ellipse cx="705" cy="138" rx="24" ry="28" fill="#22C55E"/>
+  <ellipse cx="738" cy="132" rx="22" ry="26" fill="#22C55E"/>
+  <!-- Kite string -->
+  <path d="M 240 165 Q 270 130 310 70 Q 330 50 345 30" stroke="#9CA3AF" stroke-width="1.5" fill="none"/>
+  <!-- Kite -->
+  <polygon points="345,15 360,32 345,49 330,32" fill="#EF4444" stroke="#DC2626" stroke-width="1.5"/>
+  <polygon points="345,15 352,32 345,49" fill="#F87171"/>
+  <line x1="330" y1="32" x2="360" y2="32" stroke="#DC2626" stroke-width="1.5"/>
+  <line x1="345" y1="15" x2="345" y2="49" stroke="#DC2626" stroke-width="1.5"/>
+  <!-- Kite tail -->
+  <path d="M 345 49 Q 338 58 344 66 Q 350 74 343 82" stroke="#F59E0B" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <!-- Child 1 - holding kite string (left, diverse skin) -->
+  <!-- Body -->
+  <rect x="222" y="155" width="26" height="32" rx="7" fill="#3B82F6"/>
+  <!-- Head -->
+  <circle cx="235" cy="144" r="17" fill="#92400E"/>
+  <!-- Hair (afro) -->
+  <circle cx="235" cy="130" r="18" fill="#1C1917"/>
+  <!-- Eyes -->
+  <circle cx="228" cy="143" r="2.5" fill="white"/>
+  <circle cx="242" cy="143" r="2.5" fill="white"/>
+  <circle cx="229" cy="144" r="1.5" fill="#1C1917"/>
+  <circle cx="243" cy="144" r="1.5" fill="#1C1917"/>
+  <!-- Arm up with string -->
+  <line x1="222" y1="163" x2="205" y2="148" stroke="#92400E" stroke-width="8" stroke-linecap="round"/>
+  <!-- Arm down -->
+  <line x1="248" y1="165" x2="258" y2="178" stroke="#92400E" stroke-width="8" stroke-linecap="round"/>
+  <!-- Legs -->
+  <rect x="222" y="183" width="10" height="24" rx="5" fill="#1E3A8A"/>
+  <rect x="236" y="183" width="10" height="24" rx="5" fill="#1E3A8A"/>
+  <!-- Child 2 - jumping (center, light skin) -->
+  <rect x="365" y="150" width="26" height="30" rx="7" fill="#EC4899"/>
+  <circle cx="378" cy="138" r="17" fill="#FBBF24"/>
+  <!-- Pigtails -->
+  <circle cx="362" cy="130" r="9" fill="#F59E0B"/>
+  <circle cx="394" cy="130" r="9" fill="#F59E0B"/>
+  <ellipse cx="378" cy="126" rx="17" ry="10" fill="#F59E0B"/>
+  <circle cx="364" cy="142" r="2" fill="white"/>
+  <circle cx="392" cy="142" r="2" fill="white"/>
+  <circle cx="365" cy="143" r="1.2" fill="#1C1917"/>
+  <circle cx="393" cy="143" r="1.2" fill="#1C1917"/>
+  <!-- Arms spread (jumping) -->
+  <line x1="365" y1="158" x2="342" y2="148" stroke="#FBBF24" stroke-width="8" stroke-linecap="round"/>
+  <line x1="391" y1="158" x2="414" y2="148" stroke="#FBBF24" stroke-width="8" stroke-linecap="round"/>
+  <!-- Legs bent (jumping) -->
+  <line x1="370" y1="178" x2="358" y2="196" stroke="#EC4899" stroke-width="9" stroke-linecap="round"/>
+  <line x1="382" y1="178" x2="394" y2="196" stroke="#EC4899" stroke-width="9" stroke-linecap="round"/>
+  <!-- Child 3 - blowing bubbles (right, medium skin) -->
+  <rect x="528" y="156" width="24" height="30" rx="7" fill="#8B5CF6"/>
+  <circle cx="540" cy="145" r="16" fill="#D97706"/>
+  <!-- Short hair -->
+  <ellipse cx="540" cy="132" rx="16" ry="9" fill="#78350F"/>
+  <!-- Cheeks puffed for blowing -->
+  <ellipse cx="527" cy="148" rx="7" ry="5" fill="#FBBF24" opacity="0.5"/>
+  <ellipse cx="553" cy="148" rx="7" ry="5" fill="#FBBF24" opacity="0.5"/>
+  <!-- Arm up blowing -->
+  <line x1="528" y1="163" x2="510" y2="155" stroke="#D97706" stroke-width="8" stroke-linecap="round"/>
+  <line x1="552" y1="163" x2="565" y2="155" stroke="#D97706" stroke-width="8" stroke-linecap="round"/>
+  <!-- Legs -->
+  <rect x="528" y="182" width="9" height="22" rx="4" fill="#4B5563"/>
+  <rect x="541" y="182" width="9" height="22" rx="4" fill="#4B5563"/>
+  <!-- Bubbles -->
+  <circle cx="500" cy="142" r="12" fill="none" stroke="rgba(147,197,253,0.7)" stroke-width="2"/>
+  <circle cx="480" cy="120" r="9" fill="none" stroke="rgba(147,197,253,0.6)" stroke-width="2"/>
+  <circle cx="510" cy="105" r="15" fill="none" stroke="rgba(147,197,253,0.5)" stroke-width="2"/>
+  <circle cx="468" cy="95" r="7" fill="none" stroke="rgba(147,197,253,0.5)" stroke-width="1.5"/>
+  <ellipse cx="494" cy="136" rx="5" ry="4" fill="rgba(255,255,255,0.3)"/>
+  <ellipse cx="476" cy="115" rx="4" ry="3" fill="rgba(255,255,255,0.25)"/>
+  <ellipse cx="506" cy="100" rx="6" ry="5" fill="rgba(255,255,255,0.25)"/>
+  <!-- Child 4 - running (far right, darker skin) -->
+  <rect x="620" y="158" width="24" height="28" rx="7" fill="#F97316"/>
+  <circle cx="632" cy="147" r="16" fill="#7C2D12"/>
+  <ellipse cx="632" cy="135" rx="16" ry="8" fill="#1C1917"/>
+  <!-- Running pose arms -->
+  <line x1="620" y1="164" x2="604" y2="156" stroke="#7C2D12" stroke-width="7" stroke-linecap="round"/>
+  <line x1="644" y1="164" x2="660" y2="172" stroke="#7C2D12" stroke-width="7" stroke-linecap="round"/>
+  <!-- Running legs (one forward, one back) -->
+  <line x1="624" y1="184" x2="612" y2="206" stroke="#374151" stroke-width="8" stroke-linecap="round"/>
+  <line x1="638" y1="184" x2="652" y2="200" stroke="#374151" stroke-width="8" stroke-linecap="round"/>
+  <!-- Flowers in grass -->
+  <circle cx="160" cy="182" r="5" fill="#FDE68A"/>
+  <circle cx="160" cy="182" r="3" fill="#F59E0B"/>
+  <circle cx="320" cy="186" r="5" fill="#F9A8D4"/>
+  <circle cx="320" cy="186" r="3" fill="#EC4899"/>
+  <circle cx="480" cy="188" r="5" fill="white"/>
+  <circle cx="480" cy="188" r="3" fill="#FDE68A"/>
+  <circle cx="680" cy="184" r="5" fill="#86EFAC"/>
+  <circle cx="680" cy="184" r="3" fill="#4ADE80"/>
+</svg>
