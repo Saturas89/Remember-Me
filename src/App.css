@@ -2458,15 +2458,16 @@
 .media-toolbar {
   display: flex;
   gap: 0.4rem;
-  flex-wrap: wrap;
 }
 
 /* Each option is a self-contained pill – matches the app's choice-btn language */
 .media-toolbar__btn {
+  flex: 1;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.3rem;
-  padding: 0.3rem 0.7rem 0.3rem 0.55rem;
+  padding: 0.3rem 0.5rem;
   border-radius: 99px;
   background: var(--surface-raised);
   border: 1px solid var(--border);
@@ -2477,7 +2478,6 @@
   cursor: pointer;
   transition: background 0.18s, color 0.18s, border-color 0.18s;
   white-space: nowrap;
-  flex-shrink: 0;
 }
 
 .media-toolbar__btn:hover:not(:disabled) {
