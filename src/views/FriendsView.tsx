@@ -1,43 +1,62 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { FriendCard } from '../components/FriendCard'
 import { generateSecureInviteUrl } from '../utils/secureLink'
 import { decodeAnswerExport } from '../utils/sharing'
-import { FRIEND_TOPICS } from '../data/friendQuestions'
 import type { Friend, FriendAnswer, AnswerExport } from '../types'
 
 interface Props {
   profileName: string
   friends: Friend[]
   friendAnswers: FriendAnswer[]
-  onAddFriend: (name: string, id?: string) => Friend
   onRemoveFriend: (id: string) => void
   onImportAnswers: (data: AnswerExport) => void
   onBack: () => void
 }
 
-function newFriendId(): string {
-  return `friend-${Date.now()}-${crypto.randomUUID()}`
+const INVITE_URL_STORAGE_KEY = 'remember-me-invite-url'
+
+interface StoredInvite {
+  profileName: string
+  url: string
+}
+
+function loadStoredInvite(): StoredInvite | null {
+  try {
+    const raw = localStorage.getItem(INVITE_URL_STORAGE_KEY)
+    if (!raw) return null
+    const parsed = JSON.parse(raw) as Partial<StoredInvite>
+    if (typeof parsed.profileName === 'string' && typeof parsed.url === 'string') {
+      return { profileName: parsed.profileName, url: parsed.url }
+    }
+  } catch {
+    // ignore corrupt data
+  }
+  return null
+}
+
+function storeInvite(data: StoredInvite): void {
+  try {
+    localStorage.setItem(INVITE_URL_STORAGE_KEY, JSON.stringify(data))
+  } catch {
+    // ignore quota errors – the link will simply regenerate next time
+  }
 }
 
 export function FriendsView({
   profileName,
   friends,
   friendAnswers,
-  onAddFriend,
   onRemoveFriend,
   onImportAnswers,
   onBack,
 }: Props) {
-  const [newName, setNewName] = useState('')
-  const [selectedTopicId, setSelectedTopicId] = useState(FRIEND_TOPICS[0].id)
+  const effectiveName = profileName || 'mir'
 
-  // Stable friend ID for the current draft – resets after each invite is sent
-  const pendingId = useRef(newFriendId())
-
-  // Live invite link state
-  const [liveUrl, setLiveUrl] = useState<string | null>(null)
+  // Permanent, reusable invite link – one for all friends.
+  const [inviteUrl, setInviteUrl] = useState<string | null>(null)
   const [isGenerating, setIsGenerating] = useState(false)
   const [isSharing, setIsSharing] = useState(false)
+  const [shareStatus, setShareStatus] = useState<'idle' | 'copied' | 'error'>('idle')
   const [generateError, setGenerateError] = useState<string | null>(null)
 
   // Import fallback
@@ -45,162 +64,92 @@ export function FriendsView({
   const [importError, setImportError] = useState<string | null>(null)
   const [importSuccess, setImportSuccess] = useState(false)
 
-  // Regenerate URL whenever name or topic changes – no debounce so the link
-  // is visible and shareable as soon as a name is entered.
+  // Load or (re-)create the permanent invite URL on mount and whenever the
+  // profile name changes. Cached in localStorage so the same link stays valid
+  // across sessions – it already carries no per-friend info.
   useEffect(() => {
-    if (!newName.trim()) {
-      setLiveUrl(null)
-      setGenerateError(null)
-      setIsGenerating(false)
+    const stored = loadStoredInvite()
+    if (stored && stored.profileName === effectiveName) {
+      setInviteUrl(stored.url)
       return
     }
+
     let cancelled = false
     setIsGenerating(true)
     setGenerateError(null)
-    generateSecureInviteUrl({
-      profileName: profileName || 'mir',
-      friendId: pendingId.current,
-      topicId: selectedTopicId,
-    })
+    generateSecureInviteUrl({ profileName: effectiveName })
       .then(url => {
         if (cancelled) return
-        setLiveUrl(url)
-        setIsGenerating(false)
+        setInviteUrl(url)
+        storeInvite({ profileName: effectiveName, url })
       })
       .catch(err => {
         if (cancelled) return
         console.error('[FriendsView] generateSecureInviteUrl failed:', err)
         setGenerateError('Einladungslink konnte nicht erstellt werden.')
-        setIsGenerating(false)
+      })
+      .finally(() => {
+        if (!cancelled) setIsGenerating(false)
       })
     return () => {
       cancelled = true
     }
-  }, [newName, selectedTopicId, profileName])
+  }, [effectiveName])
 
-  async function ensureLiveUrl(): Promise<string | null> {
-    if (liveUrl) return liveUrl
-    try {
-      setIsGenerating(true)
-      setGenerateError(null)
-      const url = await generateSecureInviteUrl({
-        profileName: profileName || 'mir',
-        friendId: pendingId.current,
-        topicId: selectedTopicId,
-      })
-      setLiveUrl(url)
-      return url
-    } catch (err) {
-      console.error('[FriendsView] generateSecureInviteUrl failed:', err)
-      setGenerateError('Einladungslink konnte nicht erstellt werden.')
-      return null
-    } finally {
-      setIsGenerating(false)
-    }
-  }
-
-  function resetDraft() {
-    setNewName('')
-    setLiveUrl(null)
-    setGenerateError(null)
-    pendingId.current = newFriendId()
-  }
+  // Auto-clear the "Kopiert!" / "Fehler" status after a moment.
+  useEffect(() => {
+    if (shareStatus === 'idle') return
+    const t = setTimeout(() => setShareStatus('idle'), 2500)
+    return () => clearTimeout(t)
+  }, [shareStatus])
 
   function buildShareData(url: string) {
-    const topic = FRIEND_TOPICS.find(t => t.id === selectedTopicId) ?? FRIEND_TOPICS[0]
     return {
       title: 'Erinnerung einsammeln',
-      text: `${profileName || 'Jemand'} möchte deine Erinnerungen festhalten – ${topic.emoji} ${topic.title}`,
+      text: `${profileName || 'Jemand'} möchte deine Erinnerungen festhalten – teile deine Geschichte.`,
       url,
     }
   }
 
-  // IMPORTANT: this must be a synchronous function. Safari requires that
-  // navigator.share() is invoked directly within the user gesture (click)
-  // handler – any `await` before the call breaks the gesture and Safari
-  // rejects with NotAllowedError, after which the clipboard fallback also
-  // fails silently. So when we already have `liveUrl`, we call share()
-  // synchronously and handle the promise resolution afterwards.
+  // Synchronous share handler: Safari requires navigator.share() to be called
+  // directly inside the click gesture (no awaits before the call).
   function handleShare() {
-    if (isSharing || !newName.trim()) return
+    if (!inviteUrl || isSharing) return
 
-    if (liveUrl) {
-      const url = liveUrl
-      const name = newName.trim()
-      const shareData = buildShareData(url)
-
-      onAddFriend(name, pendingId.current)
-      setIsSharing(true)
-
-      if (typeof navigator.share === 'function') {
-        // SYNCHRONOUS call – preserves Safari user gesture.
-        navigator
-          .share(shareData)
-          .then(() => {
-            setIsSharing(false)
-            resetDraft()
-          })
-          .catch(err => {
-            setIsSharing(false)
-            if ((err as Error).name === 'AbortError') {
-              // User dismissed the share sheet – keep the draft so they can retry.
-              return
-            }
-            // Non-abort error (e.g. share permission denied) – copy to clipboard
-            // as a fallback and still reset the draft.
-            navigator.clipboard?.writeText(url).catch(() => {})
-            resetDraft()
-          })
-      } else {
-        // No Web Share API – copy to clipboard. Call synchronously so the
-        // user gesture is preserved for Safari's clipboard permission too.
-        navigator.clipboard
-          .writeText(url)
-          .catch(() => {})
-          .finally(() => {
-            setIsSharing(false)
-            resetDraft()
-          })
-      }
-      return
-    }
-
-    // URL not ready yet – generate it, then fall back to clipboard copy.
-    // (navigator.share would fail here in Safari because of the await.)
-    void shareAfterGenerate()
-  }
-
-  async function shareAfterGenerate() {
-    const url = await ensureLiveUrl()
-    if (!url) return
-    const name = newName.trim()
-    if (!name) return
-    onAddFriend(name, pendingId.current)
+    const url = inviteUrl
+    const shareData = buildShareData(url)
     setIsSharing(true)
-    try {
-      await navigator.clipboard.writeText(url)
-    } catch (err) {
-      console.error('[FriendsView] clipboard.writeText failed:', err)
-    } finally {
-      setIsSharing(false)
-      resetDraft()
+
+    if (typeof navigator.share === 'function') {
+      navigator
+        .share(shareData)
+        .then(() => {
+          setIsSharing(false)
+        })
+        .catch(err => {
+          setIsSharing(false)
+          if ((err as Error).name === 'AbortError') return
+          // Non-abort error – fall back to clipboard copy.
+          navigator.clipboard
+            ?.writeText(url)
+            .then(() => setShareStatus('copied'))
+            .catch(() => setShareStatus('error'))
+        })
+    } else {
+      navigator.clipboard
+        .writeText(url)
+        .then(() => setShareStatus('copied'))
+        .catch(() => setShareStatus('error'))
+        .finally(() => setIsSharing(false))
     }
   }
 
-  // Called from FriendCard "Einladen" – generates a fresh URL for an existing
-  // friend. Because the URL must be generated first (async), Safari's Web
-  // Share API will reject NotAllowedError here; we copy to clipboard instead.
-  async function handleReinvite(friendId: string) {
-    const url = await generateSecureInviteUrl({
-      profileName: profileName || 'mir',
-      friendId,
-      topicId: selectedTopicId,
-    })
-    try {
-      await navigator.clipboard.writeText(url)
-    } catch (err) {
-      console.error('[FriendsView] clipboard.writeText failed:', err)
-    }
+  function handleCopy() {
+    if (!inviteUrl) return
+    navigator.clipboard
+      .writeText(inviteUrl)
+      .then(() => setShareStatus('copied'))
+      .catch(() => setShareStatus('error'))
   }
 
   function handleImport() {
@@ -216,8 +165,6 @@ export function FriendsView({
     setImportCode('')
   }
 
-  const topic = FRIEND_TOPICS.find(t => t.id === selectedTopicId) ?? FRIEND_TOPICS[0]
-
   return (
     <div className="friends-view">
       <div className="quiz-topbar">
@@ -232,79 +179,74 @@ export function FriendsView({
         Ihre Antworten werden Teil deines persönlichen Lebensarchivs.
       </p>
 
-      {/* Add friend + topic */}
+      {/* Permanent share link */}
       <section className="friends-section">
-        <h3 className="friends-section-title">Erinnerung anfragen bei</h3>
+        <h3 className="friends-section-title">Dein Einladungslink</h3>
         {!profileName && (
           <p className="friends-hint friends-hint--warn">
             Tipp: Gib deinen Namen auf der Startseite ein, damit die Einladung personalisiert ist.
           </p>
         )}
-        <div className="friends-add-row">
-          <input
-            className="input-text"
-            value={newName}
-            onChange={e => setNewName(e.target.value)}
-            placeholder="Name der Person…"
-            onKeyDown={e => e.key === 'Enter' && handleShare()}
-          />
-        </div>
+        <p className="friends-hint">
+          Ein Link für alle. Teile ihn beliebig oft – jede Person gibt selbst ihren
+          Namen ein und wählt eine Kategorie. Die Antworten schickt sie dir per
+          Share-Button zurück.
+        </p>
 
-        <p className="friends-topic-label">Welche Erinnerungen soll sie oder er teilen?</p>
-        <div className="friends-topic-grid">
-          {FRIEND_TOPICS.map(t => (
-            <button
-              key={t.id}
-              type="button"
-              className={`friend-topic-card ${selectedTopicId === t.id ? 'friend-topic-card--active' : ''}`}
-              onClick={() => setSelectedTopicId(t.id)}
-            >
-              <span className="friend-topic-card__emoji">{t.emoji}</span>
-              <span className="friend-topic-card__title">{t.title}</span>
-              <span className="friend-topic-card__desc">{t.description}</span>
-            </button>
-          ))}
-        </div>
-
-        {/* Share button – appears as soon as a name is entered */}
-        {newName.trim() && (
-          <div className="invite-preview">
-            <div className="invite-preview__chip">
-              {topic.emoji} {topic.title} · 5 Fragen
+        <div className="invite-box">
+          <div className="invite-box__label">
+            {isGenerating && !inviteUrl
+              ? 'Link wird erstellt…'
+              : 'Dieser Link kann dauerhaft verwendet werden:'}
+          </div>
+          {inviteUrl && (
+            <div className="invite-box__url" aria-label="Einladungslink">
+              {inviteUrl}
             </div>
+          )}
+          {generateError && (
+            <p className="import-msg import-msg--error">{generateError}</p>
+          )}
 
-            {generateError && (
-              <p className="import-msg import-msg--error">{generateError}</p>
-            )}
-
+          <div className="invite-box__actions">
             <button
               className="btn btn--primary share-btn"
               onClick={handleShare}
-              disabled={isSharing}
+              disabled={!inviteUrl || isSharing}
             >
               {isSharing ? (
                 <span className="share-btn__spinner">Wird geöffnet…</span>
-              ) : isGenerating && !liveUrl ? (
-                <span className="share-btn__spinner">Einladung wird erstellt…</span>
               ) : (
-                'Erinnerung teilen'
+                'Link teilen'
               )}
             </button>
+            <button
+              className="btn btn--outline"
+              onClick={handleCopy}
+              disabled={!inviteUrl}
+            >
+              {shareStatus === 'copied'
+                ? '✓ Kopiert!'
+                : shareStatus === 'error'
+                  ? 'Fehler beim Kopieren'
+                  : '📋 Kopieren'}
+            </button>
           </div>
-        )}
+        </div>
       </section>
 
-      {/* Friends list */}
+      {/* Friends list – entries are auto-created when answers come in */}
       {friends.length > 0 && (
         <section className="friends-section">
-          <h3 className="friends-section-title">Eingeladene Personen ({friends.length})</h3>
+          <h3 className="friends-section-title">
+            Erinnerungen von ({friends.length})
+          </h3>
           <div className="friends-list">
             {friends.map(f => (
               <FriendCard
                 key={f.id}
                 friend={f}
                 answers={friendAnswers.filter(a => a.friendId === f.id)}
-                onInvite={() => handleReinvite(f.id)}
                 onRemove={() => onRemoveFriend(f.id)}
               />
             ))}

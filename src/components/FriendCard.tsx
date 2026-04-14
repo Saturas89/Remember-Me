@@ -9,11 +9,10 @@ function avatarColor(name: string): string {
 interface Props {
   friend: Friend
   answers: FriendAnswer[]
-  onInvite: () => void
   onRemove: () => void
 }
 
-export function FriendCard({ friend, answers, onInvite, onRemove }: Props) {
+export function FriendCard({ friend, answers, onRemove }: Props) {
   const answered = answers.filter(a => a.value.trim()).length
   const progress = Math.round((answered / FRIEND_QUESTIONS.length) * 100)
 
@@ -36,9 +35,6 @@ export function FriendCard({ friend, answers, onInvite, onRemove }: Props) {
         )}
       </div>
       <div className="friend-card__actions">
-        <button className="btn btn--outline btn--sm" onClick={onInvite} title="Erneut einladen">
-          📤 Einladen
-        </button>
         <button className="btn btn--ghost btn--sm" onClick={onRemove} title="Entfernen">
           ✕
         </button>

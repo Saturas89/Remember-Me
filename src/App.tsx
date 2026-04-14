@@ -59,7 +59,6 @@ export default function App() {
     setAnswerImages,
     setAnswerVideos,
     saveProfile,
-    addFriend,
     removeFriend,
     importFriendAnswers,
     addCustomQuestion,
@@ -211,7 +210,6 @@ export default function App() {
           profileName={profile?.name ?? ''}
           friends={friends}
           friendAnswers={friendAnswers}
-          onAddFriend={addFriend}
           onRemoveFriend={removeFriend}
           onImportAnswers={importFriendAnswers}
           onBack={() => setView({ name: 'home' })}

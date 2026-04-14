@@ -1000,7 +1000,33 @@
   margin-bottom: 0.5rem;
 }
 
-.invite-box__actions    { display: flex; gap: 0.5rem; }
+.invite-box__actions    { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+
+/* ── Friend answer view: topic picker ────────────────── */
+.friend-topic-picker {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 1rem;
+  padding: 2rem 0 1rem;
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+.friend-topic-picker__title {
+  font-size: clamp(1.3rem, 4vw, 1.7rem);
+  font-weight: 800;
+  color: var(--text);
+  text-align: center;
+  margin: 0;
+}
+
+.friend-topic-picker__intro {
+  color: var(--text-muted);
+  line-height: 1.6;
+  text-align: center;
+  margin: 0 0 0.5rem;
+}
 
 .import-msg {
   font-size: 0.85rem;
