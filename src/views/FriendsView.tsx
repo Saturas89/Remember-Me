@@ -197,16 +197,22 @@ export function FriendsView({
         </p>
 
         <div className="invite-box">
+          <p className="invite-box__label">Dein persönlicher Einladungslink</p>
+          <div className="invite-box__url">{inviteUrl}</div>
           <div className="invite-box__actions">
             <button
-              className="btn btn--primary share-btn"
+              className={`btn share-btn ${shareStatus === 'copied' ? 'btn--success share-btn--copied' : 'btn--primary'}`}
               onClick={handleShare}
               disabled={isSharing}
             >
               {isSharing ? (
                 <span className="share-btn__spinner">Wird geöffnet…</span>
+              ) : shareStatus === 'copied' ? (
+                '✓ Link kopiert!'
+              ) : shareStatus === 'error' ? (
+                '⚠ Nochmal versuchen'
               ) : (
-                '🔗 Link teilen'
+                '📤 Link teilen'
               )}
             </button>
           </div>

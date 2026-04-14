@@ -985,6 +985,10 @@
   font-family: monospace;
   margin-bottom: 0.75rem;
   line-height: 1.5;
+  max-height: 5.5rem;
+  overflow-y: auto;
+  user-select: all;
+  cursor: text;
 }
 
 .invite-box__topic-chip {
@@ -1064,7 +1068,41 @@
 }
 
 /* ── Share button ─────────────────────────────────────── */
-.share-btn { min-width: 11rem; }
+.share-btn {
+  min-width: 12rem;
+  padding: 0.85rem 1.75rem;
+  font-size: 1rem;
+  border-radius: 12px;
+  letter-spacing: 0.01em;
+}
+
+.btn--primary.share-btn {
+  box-shadow:
+    0 4px 18px color-mix(in srgb, var(--accent) 45%, transparent),
+    0 1px 3px color-mix(in srgb, var(--accent) 20%, transparent);
+}
+
+.btn--primary.share-btn:not(:disabled):hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 8px 26px color-mix(in srgb, var(--accent) 55%, transparent),
+    0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+.btn--primary.share-btn:not(:disabled):active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--accent) 30%, transparent);
+}
+
+.share-btn--copied {
+  animation: share-pop 0.25s ease;
+}
+
+@keyframes share-pop {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.06); }
+  100% { transform: scale(1); }
+}
 
 .share-btn__spinner {
   display: inline-flex;
