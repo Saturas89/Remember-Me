@@ -74,7 +74,7 @@ export function HomeView({
           className="category-card category-card--custom"
           onClick={() => onSelectCategory('custom')}
         >
-          <img src="/categories/custom-preview.webp" className="category-card__image" alt="" />
+          <img src="/categories/custom-icon.webp" className="category-card__image category-card__image--round" alt="" />
           <div className="category-card__body">
             <h3 className="category-card__title">Eigene Erinnerung</h3>
             <p className="category-card__desc">
