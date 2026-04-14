@@ -1,4 +1,4 @@
-import type { InviteData, AnswerExport } from '../types'
+import type { InviteData, AnswerExport, MemorySharePayload } from '../types'
 
 // ── Base64-URL helpers ────────────────────────────────────────────────────────
 
@@ -231,6 +231,56 @@ export async function parseAnswerFromHash(): Promise<AnswerExport | null> {
   if (mPlain) {
     try {
       return JSON.parse(decodeURIComponent(atob(mPlain[1]))) as AnswerExport
+    } catch {
+      return null
+    }
+  }
+
+  return null
+}
+
+// ── Memory share URLs (#ms/) ──────────────────────────────────────────────────
+
+/**
+ * Generate a URL containing a compressed memory-share payload.
+ * Format: {origin}#ms/{base64url(compressed-json)}
+ *      or {origin}#ms-plain/{base64} as fallback.
+ */
+export async function generateMemoryShareUrl(payload: MemorySharePayload): Promise<string> {
+  if (typeof CompressionStream !== 'undefined') {
+    try {
+      const compressed = await compress(JSON.stringify(payload))
+      return `${appBase()}#ms/${toB64u(compressed)}`
+    } catch {
+      // fall through
+    }
+  }
+  return `${appBase()}#ms-plain/${btoa(encodeURIComponent(JSON.stringify(payload)))}`
+}
+
+/** Synchronously detect whether the current URL is a memory-share link. */
+export function isMemoryShareHash(): boolean {
+  const h = window.location.hash
+  return /^#ms\/[A-Za-z0-9_-]+$/.test(h) || /^#ms-plain\/.+$/.test(h)
+}
+
+/** Parse a memory-share payload from the current URL hash. */
+export async function parseMemoryShareFromHash(): Promise<MemorySharePayload | null> {
+  const h = window.location.hash
+
+  const m = h.match(/^#ms\/([A-Za-z0-9_-]+)$/)
+  if (m) {
+    try {
+      return JSON.parse(await decompress(fromB64u(m[1]))) as MemorySharePayload
+    } catch {
+      return null
+    }
+  }
+
+  const mPlain = h.match(/^#ms-plain\/(.+)$/)
+  if (mPlain) {
+    try {
+      return JSON.parse(decodeURIComponent(atob(mPlain[1]))) as MemorySharePayload
     } catch {
       return null
     }

@@ -76,11 +76,11 @@ export function HomeView({
         >
           <img src="/categories/custom-preview.webp" className="category-card__image" alt="" />
           <div className="category-card__body">
-            <h3 className="category-card__title">Eigene Fragen</h3>
+            <h3 className="category-card__title">Eigene Erinnerung</h3>
             <p className="category-card__desc">
               {customQuestions.length > 0
-                ? `${customQuestions.length} eigene Fragen`
-                : 'Erstelle deine eigenen Fragen'}
+                ? `${customQuestions.length} eigene Erinnerungen`
+                : 'Erstelle deine eigenen Erinnerungen'}
             </p>
           </div>
         </button>

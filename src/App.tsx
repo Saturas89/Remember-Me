@@ -5,8 +5,10 @@ import { CATEGORIES } from './data/categories'
 import {
   isSecureInviteHash,
   isAnswerHash,
+  isMemoryShareHash,
   parseSecureInviteFromHash,
   parseAnswerFromHash,
+  parseMemoryShareFromHash,
   generateSecureInviteUrl,
 } from './utils/secureLink'
 import { HomeView } from './views/HomeView'
@@ -19,6 +21,7 @@ import { CustomQuestionsView } from './views/CustomQuestionsView'
 import { ImportView } from './views/ImportView'
 import { FaqView } from './views/FaqView'
 import { OnboardingView } from './views/OnboardingView'
+import { SharedMemoryView } from './views/SharedMemoryView'
 import { InstallBanner } from './components/InstallBanner'
 import { UpdateBanner } from './components/UpdateBanner'
 import { ReminderBanner } from './components/ReminderBanner'
@@ -26,7 +29,7 @@ import { BottomNav } from './components/BottomNav'
 import { useServiceWorker } from './hooks/useServiceWorker'
 import { useReminder } from './hooks/useReminder'
 import { exportAsMarkdown, exportAsEnrichedJSON, downloadFile } from './utils/export'
-import type { Category, InviteData, AnswerExport } from './types'
+import type { Category, InviteData, AnswerExport, MemorySharePayload } from './types'
 import './App.css'
 
 type View =
@@ -42,12 +45,13 @@ type View =
 type MainTab = 'home' | 'archive' | 'custom-questions' | 'friends' | 'profile'
 
 // Detect URL type synchronously to show a loading state before async parse
-const needsAsyncParse = isSecureInviteHash() || isAnswerHash()
+const needsAsyncParse = isSecureInviteHash() || isAnswerHash() || isMemoryShareHash()
 
 export default function App() {
-  // State for async URL parsing (#mi/ secure invite, #ma/ answer import)
+  // State for async URL parsing (#mi/ secure invite, #ma/ answer import, #ms/ memory share)
   const [asyncInvite, setAsyncInvite] = useState<InviteData | null>(null)
   const [pendingAnswerImport, setPendingAnswerImport] = useState<AnswerExport | null>(null)
+  const [sharedMemory, setSharedMemory] = useState<MemorySharePayload | null>(null)
   const [urlParsing, setUrlParsing] = useState(needsAsyncParse)
   const {
     isLoaded,
@@ -76,7 +80,7 @@ export default function App() {
     getCategoryProgress,
   } = useAnswers()
 
-  // Resolve secure invite / answer-import URL asynchronously on first mount
+  // Resolve secure invite / answer-import / memory-share URL asynchronously on first mount
   useEffect(() => {
     if (!needsAsyncParse) return
     if (isSecureInviteHash()) {
@@ -86,6 +90,10 @@ export default function App() {
     } else if (isAnswerHash()) {
       parseAnswerFromHash()
         .then(answers => { if (answers) setPendingAnswerImport(answers) })
+        .finally(() => setUrlParsing(false))
+    } else if (isMemoryShareHash()) {
+      parseMemoryShareFromHash()
+        .then(payload => { if (payload) setSharedMemory(payload) })
         .finally(() => setUrlParsing(false))
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
@@ -155,6 +163,10 @@ export default function App() {
     return <FriendAnswerView invite={asyncInvite} />
   }
 
+  if (sharedMemory) {
+    return <SharedMemoryView payload={sharedMemory} />
+  }
+
   // First-time open: show onboarding before anything else
   if (!profile) {
     return (
@@ -180,8 +192,8 @@ export default function App() {
     if (view.categoryId === 'custom') {
       category = {
         id: 'custom',
-        title: 'Eigene Fragen',
-        description: 'Von dir erstellte Fragen',
+        title: 'Eigene Erinnerungen',
+        description: 'Von dir festgehaltene Erinnerungen',
         emoji: '✏️',
         questions: customQuestions.map(q => ({
           id: q.id,
@@ -280,7 +292,13 @@ export default function App() {
           customQuestions={customQuestions}
           profileName={profile?.name ?? ''}
           getAnswer={getAnswer}
+          getAnswerImageIds={getAnswerImageIds}
+          getAnswerVideoIds={getAnswerVideoIds}
+          getAnswerAudioId={getAnswerAudioId}
           onSave={saveAnswer}
+          onSetImages={setAnswerImages}
+          onSetVideos={setAnswerVideos}
+          onSetAudio={setAnswerAudio}
           onAdd={addCustomQuestion}
           onRemove={removeCustomQuestion}
           onImport={importCustomQuestions}
@@ -299,7 +317,11 @@ export default function App() {
           friendAnswers={friendAnswers}
           customQuestions={customQuestions}
           getCategoryProgress={getCategoryProgress}
-          onSelectCategory={id => setView({ name: 'quiz', categoryId: id })}
+          onSelectCategory={id =>
+            id === 'custom'
+              ? setView({ name: 'custom-questions' })
+              : setView({ name: 'quiz', categoryId: id })
+          }
           onOpenFaq={() => setView({ name: 'faq', from: 'home' })}
         />
       )}
