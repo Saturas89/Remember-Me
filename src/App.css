@@ -3316,3 +3316,9 @@ details[open] .faq-item__chevron {
   .friend-contribution__name  { color: #111; }
   .friend-contribution__count { color: #666; }
 }
+
+/* ── Reminder Banner ────────────────────────────────── */
+.reminder-banner {
+  /* Reuses .update-banner styles but can be specialized if needed */
+  z-index: 1000;
+}

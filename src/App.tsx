@@ -15,8 +15,10 @@ import { FaqView } from './views/FaqView'
 import { OnboardingView } from './views/OnboardingView'
 import { InstallBanner } from './components/InstallBanner'
 import { UpdateBanner } from './components/UpdateBanner'
+import { ReminderBanner } from './components/ReminderBanner'
 import { BottomNav } from './components/BottomNav'
 import { useServiceWorker } from './hooks/useServiceWorker'
+import { useReminder } from './hooks/useReminder'
 import { exportAsMarkdown, exportAsEnrichedJSON, downloadFile } from './utils/export'
 import type { Category } from './types'
 import './App.css'
@@ -78,6 +80,7 @@ export default function App() {
   const [view, setView] = useState<View>({ name: 'home' })
   const { state: installState, visible: installVisible, triggerInstall, dismiss: dismissInstall } = useInstallPrompt()
   const { needRefresh, applyUpdate, dismiss: dismissUpdate } = useServiceWorker()
+  const { showPrompt: showReminderPrompt, requestPermission: enableReminder, dismissPrompt: dismissReminder } = useReminder()
 
   if (!isLoaded) {
     return null // or a loading spinner if preferred, but null avoids flicker
@@ -248,6 +251,13 @@ export default function App() {
 
       {installVisible && <InstallBanner state={installState} onInstall={triggerInstall} onDismiss={dismissInstall} />}
       {needRefresh && <UpdateBanner onUpdate={applyUpdate} onDismiss={dismissUpdate} />}
+      {!installVisible && !needRefresh && showReminderPrompt && (
+        <ReminderBanner
+          visible={showReminderPrompt}
+          onEnable={enableReminder}
+          onDismiss={dismissReminder}
+        />
+      )}
     </>
   )
 }
