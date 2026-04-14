@@ -51,16 +51,13 @@ export function ArchiveView({
   }, [profileName])
 
   const friendAnswersByFriendId = useMemo(() => {
-    const map: Record<string, FriendAnswer[]> = {}
-    for (const a of friendAnswers) {
+    return friendAnswers.reduce((acc, a) => {
       if (a.value.trim()) {
-        if (!map[a.friendId]) {
-          map[a.friendId] = []
-        }
-        map[a.friendId].push(a)
+        acc[a.friendId] = acc[a.friendId] || []
+        acc[a.friendId].push(a)
       }
-    }
-    return map
+      return acc
+    }, {} as Record<string, FriendAnswer[]>)
   }, [friendAnswers])
 
   // Pre-load all images referenced by any answer

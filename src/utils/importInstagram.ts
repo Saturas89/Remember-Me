@@ -83,8 +83,9 @@ export async function parseInstagramZip(
     })
   )
 
-  const candidates: ImportCandidate[] = []
   let loaded = 0
+
+  const mediaProcessingPromises: Promise<ImportCandidate>[] = []
 
   for (const text of postTexts) {
     if (!text) continue
@@ -106,38 +107,44 @@ export async function parseInstagramZip(
         const dateStr = formatDate(timestamp)
         const fallbackTitle = dateStr ? `Instagram · ${dateStr}` : 'Instagram-Erinnerung'
 
-        let imageBlob: Blob | undefined
-        let previewUrl: string | undefined
+        const p = (async () => {
+          let imageBlob: Blob | undefined
+          let previewUrl: string | undefined
 
-        if (media.uri) {
-          const imageFile = zip.file(media.uri)
-          if (imageFile) {
-            try {
-              imageBlob = await imageFile.async('blob')
-              previewUrl = URL.createObjectURL(imageBlob)
-            } catch {
-              // Image unreadable – entry still importable as text-only
+          if (media.uri) {
+            const imageFile = zip.file(media.uri)
+            if (imageFile) {
+              try {
+                imageBlob = await imageFile.async('blob')
+                previewUrl = URL.createObjectURL(imageBlob)
+              } catch {
+                // Image unreadable – entry still importable as text-only
+              }
             }
           }
-        }
 
-        loaded++
-        onProgress?.(loaded, loaded) // we don't know total upfront
+          loaded++
+          onProgress?.(loaded, loaded) // we don't know total upfront
 
-        const id = `ig-${crypto.randomUUID()}`
-        candidates.push({
-          id,
-          platform: 'instagram',
-          originalCaption: caption,
-          timestamp,
-          imageBlob,
-          previewUrl,
-          selected: true,
-          description: caption || fallbackTitle,
-        })
+          const id = `ig-${timestamp}-${crypto.randomUUID()}`
+          return {
+            id,
+            platform: 'instagram' as const,
+            originalCaption: caption,
+            timestamp,
+            imageBlob,
+            previewUrl,
+            selected: true,
+            description: caption || fallbackTitle,
+          }
+        })()
+
+        mediaProcessingPromises.push(p)
       }
     }
   }
+
+  const candidates = await Promise.all(mediaProcessingPromises)
 
   if (candidates.length === 0) {
     throw new Error(
