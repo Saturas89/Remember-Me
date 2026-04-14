@@ -17,7 +17,7 @@ function getDB(): Promise<IDBDatabase> {
 }
 
 export async function addAudio(blob: Blob): Promise<string> {
-  const id = `aud-${crypto.randomUUID()}`
+  const id = `aud-${Date.now()}-${crypto.randomUUID()}`
   const db = await getDB()
   await new Promise<void>((resolve, reject) => {
     const req = db.transaction(STORE, 'readwrite').objectStore(STORE).put(blob, id)

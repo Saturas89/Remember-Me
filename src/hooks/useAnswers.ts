@@ -1,27 +1,33 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { BACKUP_TYPE } from '../utils/export'
 import type { Profile, AppState, Answer, Friend, FriendAnswer, AnswerExport, CustomQuestion } from '../types'
 
 const STORAGE_KEY = 'remember-me-state'
 
-function loadState(): AppState {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (raw) {
-      const parsed = JSON.parse(raw) as Partial<AppState>
-      // Forward-compatible: fill in new fields if missing
-      return {
-        profile: parsed.profile ?? null,
-        answers: parsed.answers ?? {},
-        friends: parsed.friends ?? [],
-        friendAnswers: parsed.friendAnswers ?? [],
-        customQuestions: parsed.customQuestions ?? [],
+async function loadStateAsync(): Promise<AppState> {
+  // Wrap in Promise to ensure we don't block the main thread for large parses
+  return new Promise((resolve) => {
+    // Avoid setTimeout to prevent artificial delay, use Promise.resolve().then to defer
+    Promise.resolve().then(() => {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY)
+        if (raw) {
+          const parsed = JSON.parse(raw) as Partial<AppState>
+          resolve({
+            profile: parsed.profile ?? null,
+            answers: parsed.answers ?? {},
+            friends: parsed.friends ?? [],
+            friendAnswers: parsed.friendAnswers ?? [],
+            customQuestions: parsed.customQuestions ?? [],
+          })
+          return
+        }
+      } catch {
+        // ignore corrupt data
       }
-    }
-  } catch {
-    // ignore corrupt data
-  }
-  return { profile: null, answers: {}, friends: [], friendAnswers: [], customQuestions: [] }
+      resolve({ profile: null, answers: {}, friends: [], friendAnswers: [], customQuestions: [] })
+    })
+  })
 }
 
 function saveState(state: AppState): void {
@@ -29,7 +35,15 @@ function saveState(state: AppState): void {
 }
 
 export function useAnswers() {
-  const [state, setState] = useState<AppState>(loadState)
+  const [isLoaded, setIsLoaded] = useState(false)
+  const [state, setState] = useState<AppState>({ profile: null, answers: {}, friends: [], friendAnswers: [], customQuestions: [] })
+
+  useEffect(() => {
+    loadStateAsync().then((loaded) => {
+      setState(loaded)
+      setIsLoaded(true)
+    })
+  }, [])
 
   // ── Own answers ──────────────────────────────────────────
 
@@ -158,7 +172,7 @@ export function useAnswers() {
 
   const addFriend = useCallback((name: string): Friend => {
     const friend: Friend = {
-      id: `friend-${Date.now()}`,
+      id: `friend-${Date.now()}-${crypto.randomUUID()}`,
       name: name.trim(),
       addedAt: new Date().toISOString(),
     }
@@ -214,7 +228,7 @@ export function useAnswers() {
     options?: string[],
   ): CustomQuestion => {
     const q: CustomQuestion = {
-      id: `cq-${crypto.randomUUID()}`,
+      id: `cq-${Date.now()}-${crypto.randomUUID()}`,
       text: text.trim(),
       type,
       helpText,
@@ -269,7 +283,7 @@ export function useAnswers() {
       let next = prev
       const now = new Date().toISOString()
       for (const entry of entries) {
-        const qid = `imp-${crypto.randomUUID()}`
+        const qid = `imp-${Date.now()}-${crypto.randomUUID()}`
         const q: CustomQuestion = {
           id: qid,
           text: entry.questionText || 'Importierte Erinnerung',
@@ -374,6 +388,7 @@ export function useAnswers() {
   )
 
   return {
+    isLoaded,
     profile: state.profile,
     answers: state.answers,
     friends: state.friends,

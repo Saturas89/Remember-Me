@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { renderHook, act } from '@testing-library/react'
+import { renderHook, act, waitFor } from '@testing-library/react'
 import { useAnswers } from './useAnswers'
 import { exportAsBackup } from '../utils/export'
 import type { ExportData } from '../utils/export'
@@ -30,8 +30,9 @@ describe('useAnswers', () => {
   // ── Initial state ───────────────────────────────────────────────────────────
 
   describe('initial state', () => {
-    it('starts with null profile and empty collections', () => {
+    it('starts with null profile and empty collections', async () => {
       const { result } = renderHook(() => useAnswers())
+      await waitFor(() => expect(result.current.isLoaded).toBe(true))
       expect(result.current.profile).toBeNull()
       expect(result.current.answers).toEqual({})
       expect(result.current.friends).toEqual([])
@@ -39,7 +40,7 @@ describe('useAnswers', () => {
       expect(result.current.customQuestions).toEqual([])
     })
 
-    it('loads existing profile from localStorage', () => {
+    it('loads existing profile from localStorage', async () => {
       localStorage.setItem(STORAGE_KEY, JSON.stringify({
         profile: { name: 'Anna', createdAt: '2024-01-01T00:00:00.000Z' },
         answers: {},
@@ -48,17 +49,19 @@ describe('useAnswers', () => {
         customQuestions: [],
       }))
       const { result } = renderHook(() => useAnswers())
+      await waitFor(() => expect(result.current.isLoaded).toBe(true))
       expect(result.current.profile?.name).toBe('Anna')
     })
 
-    it('handles corrupt localStorage data without throwing', () => {
+    it('handles corrupt localStorage data without throwing', async () => {
       localStorage.setItem(STORAGE_KEY, '{ not: valid JSON }}}')
       expect(() => renderHook(() => useAnswers())).not.toThrow()
       const { result } = renderHook(() => useAnswers())
+      await waitFor(() => expect(result.current.isLoaded).toBe(true))
       expect(result.current.profile).toBeNull()
     })
 
-    it('fills in missing fields for forward-compatibility', () => {
+    it('fills in missing fields for forward-compatibility', async () => {
       // Older data format missing some fields
       localStorage.setItem(STORAGE_KEY, JSON.stringify({
         profile: { name: 'Max', createdAt: '2024-01-01T00:00:00.000Z' },
@@ -66,6 +69,7 @@ describe('useAnswers', () => {
         // friends, friendAnswers, customQuestions absent
       }))
       const { result } = renderHook(() => useAnswers())
+      await waitFor(() => expect(result.current.isLoaded).toBe(true))
       expect(result.current.friends).toEqual([])
       expect(result.current.friendAnswers).toEqual([])
       expect(result.current.customQuestions).toEqual([])
@@ -75,8 +79,9 @@ describe('useAnswers', () => {
   // ── saveAnswer ──────────────────────────────────────────────────────────────
 
   describe('saveAnswer', () => {
-    it('creates an answer with correct fields', () => {
+    it('creates an answer with correct fields', async () => {
       const { result } = renderHook(() => useAnswers())
+      await waitFor(() => expect(result.current.isLoaded).toBe(true))
       act(() => { result.current.saveAnswer('q-1', 'childhood', 'Berlin') })
       const ans = result.current.answers['q-1']
       expect(ans.value).toBe('Berlin')
@@ -86,8 +91,9 @@ describe('useAnswers', () => {
       expect(ans.updatedAt).toBeTruthy()
     })
 
-    it('preserves createdAt when updating an existing answer', () => {
+    it('preserves createdAt when updating an existing answer', async () => {
       const { result } = renderHook(() => useAnswers())
+      await waitFor(() => expect(result.current.isLoaded).toBe(true))
       act(() => { result.current.saveAnswer('q-1', 'childhood', 'Erstantwort') })
       const original = result.current.answers['q-1'].createdAt
       act(() => { result.current.saveAnswer('q-1', 'childhood', 'Geändert') })
@@ -95,19 +101,22 @@ describe('useAnswers', () => {
       expect(result.current.answers['q-1'].value).toBe('Geändert')
     })
 
-    it('persists the answer to localStorage immediately (REQ-003 FR-3.1)', () => {
+    it('persists the answer to localStorage immediately (REQ-003 FR-3.1)', async () => {
       const { result } = renderHook(() => useAnswers())
+      await waitFor(() => expect(result.current.isLoaded).toBe(true))
       act(() => { result.current.saveAnswer('q-1', 'childhood', 'Gespeichert') })
       const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '{}')
       expect(stored.answers['q-1'].value).toBe('Gespeichert')
     })
 
-    it('survives a fresh hook mount (persisted in localStorage)', () => {
+    it('survives a fresh hook mount (persisted in localStorage)', async () => {
       const { result: r1 } = renderHook(() => useAnswers())
+      await waitFor(() => expect(r1.current.isLoaded).toBe(true))
       act(() => { r1.current.saveAnswer('q-1', 'childhood', 'Ich bleibe') })
 
       // Simulate reload — new hook instance reads from localStorage
       const { result: r2 } = renderHook(() => useAnswers())
+      await waitFor(() => expect(r2.current.isLoaded).toBe(true))
       expect(r2.current.answers['q-1'].value).toBe('Ich bleibe')
     })
   })
@@ -115,8 +124,9 @@ describe('useAnswers', () => {
   // ── saveProfile ─────────────────────────────────────────────────────────────
 
   describe('saveProfile', () => {
-    it('saves profile and makes it available', () => {
+    it('saves profile and makes it available', async () => {
       const { result } = renderHook(() => useAnswers())
+      await waitFor(() => expect(result.current.isLoaded).toBe(true))
       act(() => {
         result.current.saveProfile({ name: 'Lena', birthYear: 1985, createdAt: '2024-01-01T00:00:00.000Z' })
       })
@@ -124,8 +134,9 @@ describe('useAnswers', () => {
       expect(result.current.profile?.birthYear).toBe(1985)
     })
 
-    it('persists profile to localStorage', () => {
+    it('persists profile to localStorage', async () => {
       const { result } = renderHook(() => useAnswers())
+      await waitFor(() => expect(result.current.isLoaded).toBe(true))
       act(() => {
         result.current.saveProfile({ name: 'Klaus', createdAt: '2024-01-01T00:00:00.000Z' })
       })
@@ -137,13 +148,15 @@ describe('useAnswers', () => {
   // ── getCategoryProgress ─────────────────────────────────────────────────────
 
   describe('getCategoryProgress', () => {
-    it('returns 0 for a category with no answers', () => {
+    it('returns 0 for a category with no answers', async () => {
       const { result } = renderHook(() => useAnswers())
+      await waitFor(() => expect(result.current.isLoaded).toBe(true))
       expect(result.current.getCategoryProgress('childhood', 10)).toBe(0)
     })
 
-    it('returns 100 when all questions are answered', () => {
+    it('returns 100 when all questions are answered', async () => {
       const { result } = renderHook(() => useAnswers())
+      await waitFor(() => expect(result.current.isLoaded).toBe(true))
       act(() => {
         result.current.saveAnswer('q-1', 'childhood', 'A')
         result.current.saveAnswer('q-2', 'childhood', 'B')
@@ -151,26 +164,30 @@ describe('useAnswers', () => {
       expect(result.current.getCategoryProgress('childhood', 2)).toBe(100)
     })
 
-    it('returns correct percentage for partial completion', () => {
+    it('returns correct percentage for partial completion', async () => {
       const { result } = renderHook(() => useAnswers())
+      await waitFor(() => expect(result.current.isLoaded).toBe(true))
       act(() => { result.current.saveAnswer('q-1', 'childhood', 'A') })
       expect(result.current.getCategoryProgress('childhood', 4)).toBe(25)
     })
 
-    it('ignores answers from other categories', () => {
+    it('ignores answers from other categories', async () => {
       const { result } = renderHook(() => useAnswers())
+      await waitFor(() => expect(result.current.isLoaded).toBe(true))
       act(() => { result.current.saveAnswer('q-1', 'family', 'A') })
       expect(result.current.getCategoryProgress('childhood', 10)).toBe(0)
     })
 
-    it('counts image-only answers (no text value) as answered', () => {
+    it('counts image-only answers (no text value) as answered', async () => {
       const { result } = renderHook(() => useAnswers())
+      await waitFor(() => expect(result.current.isLoaded).toBe(true))
       act(() => { result.current.setAnswerImages('q-1', 'childhood', ['img-1']) })
       expect(result.current.getCategoryProgress('childhood', 10)).toBe(10)
     })
 
-    it('does not count whitespace-only answers', () => {
+    it('does not count whitespace-only answers', async () => {
       const { result } = renderHook(() => useAnswers())
+      await waitFor(() => expect(result.current.isLoaded).toBe(true))
       act(() => { result.current.saveAnswer('q-1', 'childhood', '   ') })
       expect(result.current.getCategoryProgress('childhood', 10)).toBe(0)
     })
@@ -179,8 +196,9 @@ describe('useAnswers', () => {
   // ── friends ─────────────────────────────────────────────────────────────────
 
   describe('addFriend', () => {
-    it('creates a friend with correct fields', () => {
+    it('creates a friend with correct fields', async () => {
       const { result } = renderHook(() => useAnswers())
+      await waitFor(() => expect(result.current.isLoaded).toBe(true))
       act(() => { result.current.addFriend('Klaus') })
       expect(result.current.friends).toHaveLength(1)
       expect(result.current.friends[0].name).toBe('Klaus')
@@ -188,24 +206,27 @@ describe('useAnswers', () => {
       expect(result.current.friends[0].addedAt).toBeTruthy()
     })
 
-    it('trims whitespace from name', () => {
+    it('trims whitespace from name', async () => {
       const { result } = renderHook(() => useAnswers())
+      await waitFor(() => expect(result.current.isLoaded).toBe(true))
       act(() => { result.current.addFriend('  Petra  ') })
       expect(result.current.friends[0].name).toBe('Petra')
     })
   })
 
   describe('removeFriend', () => {
-    it('removes the friend from the list', () => {
+    it('removes the friend from the list', async () => {
       const { result } = renderHook(() => useAnswers())
+      await waitFor(() => expect(result.current.isLoaded).toBe(true))
       let friend!: Friend
       act(() => { friend = result.current.addFriend('Klaus') })
       act(() => { result.current.removeFriend(friend.id) })
       expect(result.current.friends).toHaveLength(0)
     })
 
-    it('removes all answers belonging to that friend (REQ-003)', () => {
+    it('removes all answers belonging to that friend (REQ-003)', async () => {
       const { result } = renderHook(() => useAnswers())
+      await waitFor(() => expect(result.current.isLoaded).toBe(true))
       let friend!: Friend
       act(() => { friend = result.current.addFriend('Klaus') })
       act(() => {
@@ -220,9 +241,10 @@ describe('useAnswers', () => {
       expect(result.current.friendAnswers).toHaveLength(0)
     })
 
-    it('preserves answers from other friends', () => {
+    it('preserves answers from other friends', async () => {
       // Use static IDs to avoid Date.now() collisions when IDs are generated synchronously
       const { result } = renderHook(() => useAnswers())
+      await waitFor(() => expect(result.current.isLoaded).toBe(true))
       act(() => {
         result.current.importFriendAnswers({ friendId: 'f-static-a', friendName: 'Klaus', answers: [{ questionId: 'q-1', value: 'A' }] })
       })
@@ -239,8 +261,9 @@ describe('useAnswers', () => {
   // ── importFriendAnswers ─────────────────────────────────────────────────────
 
   describe('importFriendAnswers', () => {
-    it('stores only non-empty answer values', () => {
+    it('stores only non-empty answer values', async () => {
       const { result } = renderHook(() => useAnswers())
+      await waitFor(() => expect(result.current.isLoaded).toBe(true))
       act(() => {
         result.current.importFriendAnswers({
           friendId: 'f-1',
@@ -256,8 +279,9 @@ describe('useAnswers', () => {
       expect(result.current.friendAnswers[0].questionId).toBe('q-1')
     })
 
-    it('replaces all previous answers from the same friend', () => {
+    it('replaces all previous answers from the same friend', async () => {
       const { result } = renderHook(() => useAnswers())
+      await waitFor(() => expect(result.current.isLoaded).toBe(true))
       act(() => {
         result.current.importFriendAnswers({
           friendId: 'f-1', friendName: 'Klaus',
@@ -274,8 +298,9 @@ describe('useAnswers', () => {
       expect(result.current.friendAnswers[0].questionId).toBe('q-2')
     })
 
-    it('preserves answers from different friends', () => {
+    it('preserves answers from different friends', async () => {
       const { result } = renderHook(() => useAnswers())
+      await waitFor(() => expect(result.current.isLoaded).toBe(true))
       act(() => {
         result.current.importFriendAnswers({ friendId: 'f-1', friendName: 'Klaus', answers: [{ questionId: 'q-1', value: 'A' }] })
         result.current.importFriendAnswers({ friendId: 'f-2', friendName: 'Petra', answers: [{ questionId: 'q-2', value: 'B' }] })
@@ -287,8 +312,9 @@ describe('useAnswers', () => {
       expect(result.current.friendAnswers.find(a => a.friendId === 'f-2')).toBeTruthy()
     })
 
-    it('stores questionText from the export for resilient archive display', () => {
+    it('stores questionText from the export for resilient archive display', async () => {
       const { result } = renderHook(() => useAnswers())
+      await waitFor(() => expect(result.current.isLoaded).toBe(true))
       act(() => {
         result.current.importFriendAnswers({
           friendId: 'f-1',
@@ -303,8 +329,9 @@ describe('useAnswers', () => {
   // ── importCustomQuestions ───────────────────────────────────────────────────
 
   describe('importCustomQuestions', () => {
-    it('adds new questions to the list', () => {
+    it('adds new questions to the list', async () => {
       const { result } = renderHook(() => useAnswers())
+      await waitFor(() => expect(result.current.isLoaded).toBe(true))
       act(() => {
         result.current.importCustomQuestions([{
           id: 'cq-ext-1',
@@ -316,8 +343,9 @@ describe('useAnswers', () => {
       expect(result.current.customQuestions).toHaveLength(1)
     })
 
-    it('deduplicates by text (case-insensitive)', () => {
+    it('deduplicates by text (case-insensitive)', async () => {
       const { result } = renderHook(() => useAnswers())
+      await waitFor(() => expect(result.current.isLoaded).toBe(true))
       act(() => { result.current.addCustomQuestion('Lieblingsgericht?') })
       act(() => {
         result.current.importCustomQuestions([{
@@ -330,8 +358,9 @@ describe('useAnswers', () => {
       expect(result.current.customQuestions).toHaveLength(1)
     })
 
-    it('adds questions not already present', () => {
+    it('adds questions not already present', async () => {
       const { result } = renderHook(() => useAnswers())
+      await waitFor(() => expect(result.current.isLoaded).toBe(true))
       act(() => { result.current.addCustomQuestion('Frage A') })
       act(() => {
         result.current.importCustomQuestions([
@@ -345,8 +374,9 @@ describe('useAnswers', () => {
   // ── restoreBackup ───────────────────────────────────────────────────────────
 
   describe('restoreBackup (REQ-004 FR-4.6)', () => {
-    it('restores profile from a valid backup', () => {
+    it('restores profile from a valid backup', async () => {
       const { result } = renderHook(() => useAnswers())
+      await waitFor(() => expect(result.current.isLoaded).toBe(true))
       act(() => {
         result.current.restoreBackup(makeBackup({
           profile: { name: 'Restored', createdAt: '2024-01-01T00:00:00.000Z' },
@@ -355,7 +385,7 @@ describe('useAnswers', () => {
       expect(result.current.profile?.name).toBe('Restored')
     })
 
-    it('restores answers from a valid backup', () => {
+    it('restores answers from a valid backup', async () => {
       const backup = makeBackup({
         answers: {
           'q-1': {
@@ -367,19 +397,22 @@ describe('useAnswers', () => {
         },
       })
       const { result } = renderHook(() => useAnswers())
+      await waitFor(() => expect(result.current.isLoaded).toBe(true))
       act(() => { result.current.restoreBackup(backup) })
       expect(result.current.answers['q-1'].value).toBe('Backup-Wert')
     })
 
-    it('returns { ok: true } on success', () => {
+    it('returns { ok: true } on success', async () => {
       const { result } = renderHook(() => useAnswers())
+      await waitFor(() => expect(result.current.isLoaded).toBe(true))
       let res: { ok: boolean } = { ok: false }
       act(() => { res = result.current.restoreBackup(makeBackup()) })
       expect(res.ok).toBe(true)
     })
 
-    it('returns { ok: false } for wrong $type', () => {
+    it('returns { ok: false } for wrong $type', async () => {
       const { result } = renderHook(() => useAnswers())
+      await waitFor(() => expect(result.current.isLoaded).toBe(true))
       let res: { ok: boolean; error?: string } = { ok: true }
       act(() => {
         res = result.current.restoreBackup(JSON.stringify({ $type: 'not-a-backup' }))
@@ -388,16 +421,18 @@ describe('useAnswers', () => {
       expect(res.error).toBeTruthy()
     })
 
-    it('returns { ok: false } for malformed JSON', () => {
+    it('returns { ok: false } for malformed JSON', async () => {
       const { result } = renderHook(() => useAnswers())
+      await waitFor(() => expect(result.current.isLoaded).toBe(true))
       let res: { ok: boolean; error?: string } = { ok: true }
       act(() => { res = result.current.restoreBackup('{ invalid json }}}') })
       expect(res.ok).toBe(false)
       expect(res.error).toBe('Die Datei konnte nicht gelesen werden. Ist es eine gültige Backup-Datei?')
     })
 
-    it('does not modify state when backup is invalid', () => {
+    it('does not modify state when backup is invalid', async () => {
       const { result } = renderHook(() => useAnswers())
+      await waitFor(() => expect(result.current.isLoaded).toBe(true))
       act(() => {
         result.current.saveProfile({ name: 'Existing', createdAt: '2024-01-01T00:00:00.000Z' })
       })
@@ -411,16 +446,18 @@ describe('useAnswers', () => {
   // ── setAnswerAudio / getAnswerAudioId (REQ-009) ─────────────────────────────
 
   describe('setAnswerAudio (REQ-009)', () => {
-    it('stores audioId on a new answer', () => {
+    it('stores audioId on a new answer', async () => {
       const { result } = renderHook(() => useAnswers())
+      await waitFor(() => expect(result.current.isLoaded).toBe(true))
       act(() => {
         result.current.setAnswerAudio('q-a', 'childhood', 'aud-001', '2024-06-01T10:00:00.000Z')
       })
       expect(result.current.getAnswerAudioId('q-a')).toBe('aud-001')
     })
 
-    it('preserves existing value and imageIds when setting audio', () => {
+    it('preserves existing value and imageIds when setting audio', async () => {
       const { result } = renderHook(() => useAnswers())
+      await waitFor(() => expect(result.current.isLoaded).toBe(true))
       act(() => { result.current.saveAnswer('q-a', 'childhood', 'Meine Antwort') })
       act(() => {
         result.current.setAnswerAudio('q-a', 'childhood', 'aud-002', '2024-06-01T10:00:00.000Z')
@@ -429,8 +466,9 @@ describe('useAnswers', () => {
       expect(result.current.answers['q-a'].audioId).toBe('aud-002')
     })
 
-    it('clears audioId when set to undefined', () => {
+    it('clears audioId when set to undefined', async () => {
       const { result } = renderHook(() => useAnswers())
+      await waitFor(() => expect(result.current.isLoaded).toBe(true))
       act(() => {
         result.current.setAnswerAudio('q-a', 'childhood', 'aud-003', '2024-06-01T10:00:00.000Z')
       })
@@ -440,13 +478,15 @@ describe('useAnswers', () => {
       expect(result.current.getAnswerAudioId('q-a')).toBeUndefined()
     })
 
-    it('returns undefined for a question with no audio', () => {
+    it('returns undefined for a question with no audio', async () => {
       const { result } = renderHook(() => useAnswers())
+      await waitFor(() => expect(result.current.isLoaded).toBe(true))
       expect(result.current.getAnswerAudioId('non-existent')).toBeUndefined()
     })
 
-    it('persists audioId to localStorage', () => {
+    it('persists audioId to localStorage', async () => {
       const { result } = renderHook(() => useAnswers())
+      await waitFor(() => expect(result.current.isLoaded).toBe(true))
       act(() => {
         result.current.setAnswerAudio('q-a', 'childhood', 'aud-persist', '2024-06-01T10:00:00.000Z')
       })

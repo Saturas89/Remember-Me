@@ -38,6 +38,7 @@ const inviteFromUrl = parseInviteFromHash()
 
 export default function App() {
   const {
+    isLoaded,
     profile,
     answers,
     friends,
@@ -77,6 +78,10 @@ export default function App() {
   const [view, setView] = useState<View>({ name: 'home' })
   const { state: installState, visible: installVisible, triggerInstall, dismiss: dismissInstall } = useInstallPrompt()
   const { needRefresh, applyUpdate, dismiss: dismissUpdate } = useServiceWorker()
+
+  if (!isLoaded) {
+    return null // or a loading spinner if preferred, but null avoids flicker
+  }
 
   // If opened via invite link, show the friend answering flow instead of the regular app
   if (inviteFromUrl) {

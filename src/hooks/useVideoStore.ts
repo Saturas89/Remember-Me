@@ -17,7 +17,7 @@ function getDB(): Promise<IDBDatabase> {
 }
 
 export async function addVideo(blob: Blob): Promise<string> {
-  const id = `vid-${crypto.randomUUID()}`
+  const id = `vid-${Date.now()}-${crypto.randomUUID()}`
   const db = await getDB()
   await new Promise<void>((resolve, reject) => {
     const req = db.transaction(STORE, 'readwrite').objectStore(STORE).put(blob, id)
