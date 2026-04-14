@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { FriendCard } from '../components/FriendCard'
-import { generateInviteUrl, decodeAnswerExport } from '../utils/sharing'
+import { generateSecureInviteUrl, shareOrCopy } from '../utils/secureLink'
+import { decodeAnswerExport } from '../utils/sharing'
 import { FRIEND_TOPICS } from '../data/friendQuestions'
 import type { Friend, FriendAnswer, AnswerExport } from '../types'
 
@@ -25,25 +26,45 @@ export function FriendsView({
 }: Props) {
   const [newName, setNewName] = useState('')
   const [selectedTopicId, setSelectedTopicId] = useState(FRIEND_TOPICS[0].id)
-  const [inviteUrl, setInviteUrl] = useState<string | null>(null)
-  const [inviteTopicLabel, setInviteTopicLabel] = useState('')
+
+  // Invite state
+  const [isGenerating, setIsGenerating] = useState(false)
+  const [fallbackUrl, setFallbackUrl] = useState<string | null>(null)
+  const [fallbackTopicLabel, setFallbackTopicLabel] = useState('')
   const [copied, setCopied] = useState(false)
+
+  // Import fallback
   const [importCode, setImportCode] = useState('')
   const [importError, setImportError] = useState<string | null>(null)
   const [importSuccess, setImportSuccess] = useState(false)
 
-  function handleAdd() {
-    if (!newName.trim()) return
-    const friend = onAddFriend(newName)
-    showInvite(profileName || 'mir', friend.id, selectedTopicId)
+  async function handleAdd() {
+    if (!newName.trim() || isGenerating) return
+    const friend = onAddFriend(newName.trim())
     setNewName('')
+    await triggerShare(profileName || 'mir', friend.id, selectedTopicId)
   }
 
-  function showInvite(name: string, friendId: string, topicId: string) {
+  async function triggerShare(name: string, friendId: string, topicId: string) {
     const topic = FRIEND_TOPICS.find(t => t.id === topicId) ?? FRIEND_TOPICS[0]
-    setInviteUrl(generateInviteUrl(name, friendId, topicId))
-    setInviteTopicLabel(`${topic.emoji} ${topic.title}`)
-    setCopied(false)
+    setIsGenerating(true)
+    setFallbackUrl(null)
+    try {
+      const url = await generateSecureInviteUrl({ profileName: name, friendId, topicId })
+      const didShare = await shareOrCopy({
+        title: 'Erinnerung einsammeln',
+        text: `${name} möchte deine Erinnerungen an sie oder ihn festhalten – ${topic.emoji} ${topic.title}`,
+        url,
+      })
+      if (!didShare) {
+        // Web Share not available or was cancelled → show copy fallback
+        setFallbackUrl(url)
+        setFallbackTopicLabel(`${topic.emoji} ${topic.title}`)
+        setCopied(false)
+      }
+    } finally {
+      setIsGenerating(false)
+    }
   }
 
   function handleCopy(url: string) {
@@ -69,20 +90,20 @@ export function FriendsView({
         <button className="btn btn--ghost btn--sm" onClick={onBack}>
           ← Zurück
         </button>
-        <h2 className="archive-title">👥 Freunde einladen</h2>
+        <h2 className="archive-title">Erinnerung einsammeln</h2>
       </div>
 
       <p className="friends-intro">
-        Lade Freunde und Familie ein, Fragen über dich zu beantworten.
-        Ihre Antworten erscheinen in deinem Lebensarchiv.
+        Lade Freunde und Familie ein, ihre Erinnerungen an dich festzuhalten.
+        Ihre Antworten werden Teil deines persönlichen Lebensarchivs.
       </p>
 
-      {/* Add friend */}
+      {/* Add friend + topic */}
       <section className="friends-section">
-        <h3 className="friends-section-title">Neuen Freund hinzufügen</h3>
+        <h3 className="friends-section-title">Erinnerung anfragen bei</h3>
         {!profileName && (
           <p className="friends-hint friends-hint--warn">
-            Tipp: Gib deinen Namen auf der Startseite ein, damit der Einladungslink personalisiert ist.
+            Tipp: Gib deinen Namen auf der Startseite ein, damit die Einladung personalisiert ist.
           </p>
         )}
         <div className="friends-add-row">
@@ -90,13 +111,12 @@ export function FriendsView({
             className="input-text"
             value={newName}
             onChange={e => setNewName(e.target.value)}
-            placeholder="Name des Freundes / der Freundin..."
+            placeholder="Name der Person..."
             onKeyDown={e => e.key === 'Enter' && handleAdd()}
           />
         </div>
 
-        {/* Topic selector */}
-        <p className="friends-topic-label">Thema der Fragen:</p>
+        <p className="friends-topic-label">Welche Erinnerungen soll sie oder er teilen?</p>
         <div className="friends-topic-grid">
           {FRIEND_TOPICS.map(topic => (
             <button
@@ -113,31 +133,35 @@ export function FriendsView({
         </div>
 
         <button
-          className="btn btn--primary"
+          className="btn btn--primary share-btn"
           onClick={handleAdd}
-          disabled={!newName.trim()}
+          disabled={!newName.trim() || isGenerating}
           style={{ marginTop: '1rem' }}
         >
-          Hinzufügen &amp; Einladung erstellen
+          {isGenerating ? (
+            <span className="share-btn__spinner">Einladung wird erstellt…</span>
+          ) : (
+            'Erinnerung teilen'
+          )}
         </button>
       </section>
 
-      {/* Invite URL */}
-      {inviteUrl && (
+      {/* Copy fallback – shown when Web Share API is unavailable */}
+      {fallbackUrl && (
         <div className="invite-box">
           <p className="invite-box__label">
-            Sende diesen Link an deinen Freund – er öffnet die App direkt im Antwortmodus:
+            Kopiere diesen Link und schicke ihn per WhatsApp, iMessage oder E-Mail:
           </p>
-          <div className="invite-box__topic-chip">{inviteTopicLabel} · 5 Fragen</div>
-          <div className="invite-box__url">{inviteUrl}</div>
+          <div className="invite-box__topic-chip">{fallbackTopicLabel} · 5 Fragen</div>
+          <div className="invite-box__url">{fallbackUrl}</div>
           <div className="invite-box__actions">
             <button
               className={`btn btn--primary btn--sm ${copied ? 'btn--success' : ''}`}
-              onClick={() => handleCopy(inviteUrl)}
+              onClick={() => handleCopy(fallbackUrl)}
             >
               {copied ? '✓ Kopiert!' : '📋 Link kopieren'}
             </button>
-            <button className="btn btn--ghost btn--sm" onClick={() => setInviteUrl(null)}>
+            <button className="btn btn--ghost btn--sm" onClick={() => setFallbackUrl(null)}>
               Schließen
             </button>
           </div>
@@ -147,14 +171,14 @@ export function FriendsView({
       {/* Friends list */}
       {friends.length > 0 && (
         <section className="friends-section">
-          <h3 className="friends-section-title">Eingeladene Freunde ({friends.length})</h3>
+          <h3 className="friends-section-title">Eingeladene Personen ({friends.length})</h3>
           <div className="friends-list">
             {friends.map(f => (
               <FriendCard
                 key={f.id}
                 friend={f}
                 answers={friendAnswers.filter(a => a.friendId === f.id)}
-                onInvite={() => showInvite(profileName || 'mir', f.id, selectedTopicId)}
+                onInvite={() => triggerShare(profileName || 'mir', f.id, selectedTopicId)}
                 onRemove={() => onRemoveFriend(f.id)}
               />
             ))}
@@ -162,11 +186,11 @@ export function FriendsView({
         </section>
       )}
 
-      {/* Import answers */}
+      {/* Manual import fallback – for users who received a code instead of a link */}
       <section className="friends-section">
-        <h3 className="friends-section-title">Antworten importieren</h3>
+        <h3 className="friends-section-title">Antwort-Code eingeben</h3>
         <p className="friends-hint">
-          Dein Freund hat die Fragen beantwortet und dir einen Code geschickt? Füge ihn hier ein:
+          Hat jemand dir einen Antwortcode geschickt? Füge ihn hier ein:
         </p>
         <textarea
           className="input-textarea"
@@ -180,7 +204,9 @@ export function FriendsView({
           rows={3}
         />
         {importError && <p className="import-msg import-msg--error">{importError}</p>}
-        {importSuccess && <p className="import-msg import-msg--success">Antworten erfolgreich importiert!</p>}
+        {importSuccess && (
+          <p className="import-msg import-msg--success">Erinnerungen erfolgreich hinzugefügt!</p>
+        )}
         <button
           className="btn btn--primary"
           onClick={handleImport}

@@ -3,6 +3,7 @@ import { QuestionCard } from '../components/QuestionCard'
 import { ProgressBar } from '../components/ProgressBar'
 import { FRIEND_TOPICS } from '../data/friendQuestions'
 import { encodeAnswerExport } from '../utils/sharing'
+import { generateAnswerUrl, shareOrCopy } from '../utils/secureLink'
 import type { InviteData, AnswerExport } from '../types'
 
 interface Props {
@@ -20,7 +21,9 @@ export function FriendAnswerView({ invite }: Props) {
   const [index, setIndex] = useState(0)
   const [localAnswers, setLocalAnswers] = useState<Record<string, string>>({})
   const [exportCode, setExportCode] = useState<string | null>(null)
+  const [answerUrl, setAnswerUrl] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
+  const [isSharing, setIsSharing] = useState(false)
 
   const topic =
     FRIEND_TOPICS.find(t => t.id === invite.topicId) ?? FRIEND_TOPICS[0]
@@ -45,10 +48,9 @@ export function FriendAnswerView({ invite }: Props) {
     }
   }
 
-  function finish() {
+  function buildExportData(): AnswerExport {
     const questionMap = new Map(questions.map(q => [q.id, q]))
-
-    const data: AnswerExport = {
+    return {
       friendId: invite.friendId,
       friendName: friendName.trim() || 'Anonym',
       answers: Object.entries(localAnswers)
@@ -58,11 +60,35 @@ export function FriendAnswerView({ invite }: Props) {
           return { questionId, value, questionText: q?.text }
         }),
     }
-    setExportCode(encodeAnswerExport(data))
   }
 
-  function handleCopy(code: string) {
-    navigator.clipboard.writeText(code).then(() => setCopied(true))
+  function finish() {
+    const data = buildExportData()
+    setExportCode(encodeAnswerExport(data))
+    // Pre-generate the answer URL in the background
+    generateAnswerUrl(data).then(url => setAnswerUrl(url)).catch(() => {})
+  }
+
+  async function handleShare() {
+    if (!answerUrl || isSharing) return
+    setIsSharing(true)
+    try {
+      const didShare = await shareOrCopy({
+        title: 'Meine Erinnerungen',
+        text: `Hier sind meine Erinnerungen für ${invite.profileName}:`,
+        url: answerUrl,
+      })
+      if (!didShare) {
+        // Fallback: copy the raw code
+        navigator.clipboard.writeText(exportCode ?? '').then(() => setCopied(true))
+      }
+    } finally {
+      setIsSharing(false)
+    }
+  }
+
+  function handleCopyCode() {
+    navigator.clipboard.writeText(exportCode ?? '').then(() => setCopied(true))
   }
 
   // ── Done screen ──────────────────────────────────────────
@@ -71,21 +97,42 @@ export function FriendAnswerView({ invite }: Props) {
       <div className="friend-answer-view">
         <div className="export-done">
           <div className="export-done__icon">🎉</div>
-          <h2>Vielen Dank!</h2>
+          <h2>Danke für deine Erinnerungen!</h2>
           <p>
-            Deine Antworten sind gespeichert. Schicke diesen Code an{' '}
-            <strong>{invite.profileName}</strong>, damit sie in deren Archiv landen:
+            Schick deine Antworten jetzt an <strong>{invite.profileName}</strong> – sie werden
+            direkt in deren Lebensarchiv gespeichert.
           </p>
-          <div className="export-code">{exportCode}</div>
+
+          {/* Primary: share via Web Share / WhatsApp / iMessage */}
           <button
-            className={`btn btn--primary ${copied ? 'btn--success' : ''}`}
-            onClick={() => handleCopy(exportCode)}
+            className="btn btn--primary share-btn"
+            onClick={handleShare}
+            disabled={!answerUrl || isSharing}
           >
-            {copied ? '✓ Kopiert!' : '📋 Code kopieren'}
+            {isSharing
+              ? 'Wird geöffnet…'
+              : copied
+                ? '✓ Kopiert!'
+                : 'Erinnerungen verschicken'}
           </button>
-          <p className="export-hint">
-            {invite.profileName} fügt den Code unter „Freunde → Antworten importieren" ein.
-          </p>
+
+          {/* Secondary: manual code copy */}
+          {exportCode && (
+            <details className="export-fallback">
+              <summary>Code manuell kopieren</summary>
+              <div className="export-code">{exportCode}</div>
+              <button
+                className={`btn btn--outline btn--sm ${copied ? 'btn--success' : ''}`}
+                onClick={handleCopyCode}
+              >
+                {copied ? '✓ Kopiert!' : '📋 Code kopieren'}
+              </button>
+              <p className="export-hint">
+                {invite.profileName} fügt den Code unter „Erinnerung einsammeln → Antwort-Code
+                eingeben" ein.
+              </p>
+            </details>
+          )}
         </div>
       </div>
     )
