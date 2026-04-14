@@ -1,5 +1,7 @@
 # Remember Me
 
+*digitale Erinnerung + persönliche Biografie + kontrolliertes Vermächtnis*
+
 **Remember Me** ist eine Progressive Web App (PWA), mit der Menschen ihre Lebensgeschichte, Erinnerungen, Werte und persönliche Informationen spielerisch für die Nachwelt und ihre Angehörigen festhalten können.
 
 ## Idee
