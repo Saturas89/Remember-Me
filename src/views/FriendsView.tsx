@@ -120,21 +120,23 @@ export function FriendsView({
           Share-Button zurück.
         </p>
 
-        <button
-          className={`btn share-btn ${shareStatus === 'copied' ? 'btn--success share-btn--copied' : 'btn--primary'}`}
-          onClick={handleShare}
-          disabled={isSharing}
-        >
-          {isSharing ? (
-            <span className="share-btn__spinner">Wird geöffnet…</span>
-          ) : shareStatus === 'copied' ? (
-            '✓ Link kopiert!'
-          ) : shareStatus === 'error' ? (
-            '⚠ Nochmal versuchen'
-          ) : (
-            '📤 Link teilen'
-          )}
-        </button>
+        <div className="friends-share">
+          <button
+            className={`share-cta-btn${shareStatus === 'copied' ? ' share-cta-btn--success' : shareStatus === 'error' ? ' share-cta-btn--error' : ''}`}
+            onClick={handleShare}
+            disabled={isSharing}
+          >
+            {isSharing ? (
+              <><span className="share-cta-btn__spinner" aria-hidden="true" />Wird geöffnet…</>
+            ) : shareStatus === 'copied' ? (
+              '✓ Link kopiert!'
+            ) : shareStatus === 'error' ? (
+              '⚠ Nochmal versuchen'
+            ) : (
+              '📤 Link teilen'
+            )}
+          </button>
+        </div>
       </section>
 
       {/* Friends list – entries are auto-created when answers come in */}

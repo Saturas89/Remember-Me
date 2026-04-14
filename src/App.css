@@ -1067,42 +1067,8 @@
   align-self: flex-start;
 }
 
-/* ── Share button ─────────────────────────────────────── */
-.share-btn {
-  min-width: 12rem;
-  padding: 0.85rem 1.75rem;
-  font-size: 1rem;
-  border-radius: 12px;
-  letter-spacing: 0.01em;
-}
-
-.btn--primary.share-btn {
-  box-shadow:
-    0 4px 18px color-mix(in srgb, var(--accent) 45%, transparent),
-    0 1px 3px color-mix(in srgb, var(--accent) 20%, transparent);
-}
-
-.btn--primary.share-btn:not(:disabled):hover {
-  transform: translateY(-2px);
-  box-shadow:
-    0 8px 26px color-mix(in srgb, var(--accent) 55%, transparent),
-    0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
-}
-
-.btn--primary.share-btn:not(:disabled):active {
-  transform: translateY(0);
-  box-shadow: 0 2px 8px color-mix(in srgb, var(--accent) 30%, transparent);
-}
-
-.share-btn--copied {
-  animation: share-pop 0.25s ease;
-}
-
-@keyframes share-pop {
-  0%   { transform: scale(1); }
-  50%  { transform: scale(1.06); }
-  100% { transform: scale(1); }
-}
+/* ── Share button (FriendAnswerView – keep for compatibility) */
+.share-btn { min-width: 11rem; }
 
 .share-btn__spinner {
   display: inline-flex;
@@ -1312,6 +1278,79 @@
 .btn--success { background: var(--success); color: #fff; }
 
 .btn--sm { padding: 0.45rem 0.9rem; font-size: 0.85rem; }
+
+/* ── Share CTA (Freunde-Tab invite button) ───────────── */
+/* Self-contained: never relies on .btn cascade so it always renders */
+.friends-share {
+  display: flex;
+  justify-content: center;
+  padding: 0.5rem 0 0.75rem;
+}
+
+.share-cta-btn {
+  -webkit-appearance: none;
+  appearance: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  width: 100%;
+  max-width: 22rem;
+  padding: 1rem 2rem;
+  background-color: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 14px;
+  font-family: inherit;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  box-shadow:
+    0 4px 20px color-mix(in srgb, var(--accent) 45%, transparent),
+    0 1px 4px rgba(0,0,0,.25);
+  transition: transform 0.15s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+  user-select: none;
+}
+
+.share-cta-btn:not(:disabled):hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 8px 28px color-mix(in srgb, var(--accent) 55%, transparent),
+    0 2px 6px rgba(0,0,0,.3);
+}
+
+.share-cta-btn:not(:disabled):active {
+  transform: translateY(0);
+  box-shadow: 0 2px 10px color-mix(in srgb, var(--accent) 30%, transparent);
+}
+
+.share-cta-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.share-cta-btn--success {
+  background-color: var(--success);
+  box-shadow: 0 4px 20px color-mix(in srgb, var(--success) 40%, transparent);
+}
+
+.share-cta-btn--error {
+  background-color: var(--warn);
+  box-shadow: 0 4px 20px color-mix(in srgb, var(--warn) 40%, transparent);
+}
+
+.share-cta-btn__spinner {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  border: 2.5px solid rgba(255,255,255,0.4);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
 
 /* ── Install modal ───────────────────────────────────── */
 .install-overlay {
