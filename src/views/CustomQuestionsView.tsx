@@ -1,10 +1,11 @@
 import { useState } from 'react'
-import { encodeQuestionPack, decodeQuestionPack } from '../utils/sharing'
+import { decodeQuestionPack } from '../utils/sharing'
+import { generateMemoryShareUrl, shareOrCopy } from '../utils/secureLink'
 import { useImageStore } from '../hooks/useImageStore'
 import { addAudio, removeAudio } from '../hooks/useAudioStore'
 import { addVideo, removeVideo } from '../hooks/useVideoStore'
 import { MediaCapture } from '../components/MediaCapture'
-import type { CustomQuestion, QuestionPack } from '../types'
+import type { CustomQuestion } from '../types'
 
 interface Props {
   customQuestions: CustomQuestion[]
@@ -48,10 +49,9 @@ export function CustomQuestionsView({
   const [newText, setNewText] = useState('')
   const [answeringId, setAnsweringId] = useState<string | null>(null)
   const [draftAnswer, setDraftAnswer] = useState('')
-  const [shareCode, setShareCode] = useState<string | null>(null)
   const [importCode, setImportCode] = useState('')
   const [importMsg, setImportMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
-  const [copied, setCopied] = useState(false)
+  const [isSharing, setIsSharing] = useState(false)
 
   function handleAdd() {
     if (!newText.trim()) return
@@ -69,21 +69,28 @@ export function CustomQuestionsView({
     setAnsweringId(null)
   }
 
-  function handleShare() {
-    if (customQuestions.length === 0) return
-    const pack: QuestionPack = {
-      questions: customQuestions,
-      createdBy: profileName || undefined,
+  async function handleShare() {
+    if (customQuestions.length === 0 || isSharing) return
+    setIsSharing(true)
+    try {
+      const memories = customQuestions.map(q => ({
+        title: q.text,
+        content: getAnswer(q.id).trim() || undefined,
+      }))
+      const url = await generateMemoryShareUrl({
+        memories,
+        sharedBy: profileName || undefined,
+      })
+      await shareOrCopy({
+        title: 'Meine Erinnerungen',
+        text: profileName
+          ? `${profileName} hat Erinnerungen mit dir geteilt.`
+          : 'Geteilte Erinnerungen',
+        url,
+      })
+    } finally {
+      setIsSharing(false)
     }
-    setShareCode(encodeQuestionPack(pack))
-  }
-
-  function handleCopy() {
-    if (!shareCode) return
-    navigator.clipboard.writeText(shareCode).then(() => {
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    })
   }
 
   function handleImport() {
@@ -265,29 +272,15 @@ export function CustomQuestionsView({
         <section className="friends-section">
           <h3 className="friends-section-title">Erinnerungen teilen</h3>
           <p className="friends-hint">
-            Generiere einen Code, den andere importieren können, um dieselben Erinnerungstitel zu übernehmen.
+            Teile die Erinnerung, sodass andere ihre Gedanken und Erinnerungen daran hinzufügen können.
           </p>
-          {!shareCode ? (
-            <button className="btn btn--outline" onClick={handleShare}>
-              Code generieren
-            </button>
-          ) : (
-            <div className="invite-box">
-              <p className="invite-box__label">Dein Erinnerungs-Code:</p>
-              <div className="export-code">{shareCode}</div>
-              <div className="invite-box__actions" style={{ marginTop: '0.75rem' }}>
-                <button className="btn btn--primary btn--sm" onClick={handleCopy}>
-                  {copied ? '✓ Kopiert' : 'Kopieren'}
-                </button>
-                <button
-                  className="btn btn--ghost btn--sm"
-                  onClick={() => setShareCode(null)}
-                >
-                  Schließen
-                </button>
-              </div>
-            </div>
-          )}
+          <button
+            className="btn btn--outline"
+            onClick={handleShare}
+            disabled={isSharing}
+          >
+            {isSharing ? 'Wird geöffnet…' : '🔗 Erinnerungen teilen'}
+          </button>
         </section>
       )}
 

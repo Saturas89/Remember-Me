@@ -91,6 +91,12 @@ export interface QuestionPack {
   createdBy?: string
 }
 
+/** Payload embedded in a #ms/ memory-share URL */
+export interface MemorySharePayload {
+  memories: Array<{ title: string; content?: string }>
+  sharedBy?: string
+}
+
 /** Encoded inside the invite URL shared with a friend.
  *
  *  `friendId` and `topicId` are optional so the same permanent link can be
