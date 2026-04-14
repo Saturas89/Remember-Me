@@ -2457,89 +2457,81 @@
 /* ── Media toolbar ───────────────────────────────────── */
 .media-toolbar {
   display: flex;
-  align-items: stretch;
-  background: var(--surface-raised);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  overflow: hidden;
+  gap: 0.4rem;
+  flex-wrap: wrap;
 }
 
+/* Each option is a self-contained pill – matches the app's choice-btn language */
 .media-toolbar__btn {
-  flex: 1;
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  gap: 0.35rem;
-  padding: 0.6rem 0.5rem;
-  background: none;
-  border: none;
+  gap: 0.3rem;
+  padding: 0.3rem 0.7rem 0.3rem 0.55rem;
+  border-radius: 99px;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
   color: var(--text-muted);
   font-size: 0.8rem;
+  font-weight: 500;
   font-family: inherit;
   cursor: pointer;
-  transition: background 0.18s, color 0.18s;
-  position: relative;
-  min-width: 0;
+  transition: background 0.18s, color 0.18s, border-color 0.18s;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .media-toolbar__btn:hover:not(:disabled) {
-  background: var(--accent-tinted);
+  border-color: var(--accent);
   color: var(--accent);
+  background: var(--accent-tinted);
 }
 
 .media-toolbar__btn:disabled {
-  opacity: 0.45;
+  opacity: 0.4;
   cursor: default;
 }
 
+/* Active – media already attached */
 .media-toolbar__btn--has {
   color: var(--accent);
   background: var(--accent-tinted);
+  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
 }
 
+/* Recording in progress */
 .media-toolbar__btn--recording {
   color: #ef4444;
-  background: color-mix(in srgb, #ef4444 10%, transparent);
+  background: color-mix(in srgb, #ef4444 10%, var(--surface-raised));
+  border-color: color-mix(in srgb, #ef4444 40%, transparent);
   animation: rec-toolbar-pulse 1.2s ease-in-out infinite;
 }
 
 @keyframes rec-toolbar-pulse {
-  0%, 100% { background: color-mix(in srgb, #ef4444 10%, transparent); }
-  50%       { background: color-mix(in srgb, #ef4444 20%, transparent); }
+  0%, 100% { background: color-mix(in srgb, #ef4444 10%, var(--surface-raised)); }
+  50%       { background: color-mix(in srgb, #ef4444 18%, var(--surface-raised)); }
 }
 
 .media-toolbar__icon {
-  font-size: 1.1rem;
+  font-size: 0.95rem;
   line-height: 1;
   flex-shrink: 0;
 }
 
 .media-toolbar__label {
-  font-weight: 600;
-  letter-spacing: 0.01em;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  font-weight: 500;
 }
 
 .media-toolbar__badge {
-  font-size: 0.65rem;
+  font-size: 0.62rem;
   font-weight: 700;
   background: var(--accent);
   color: #fff;
   border-radius: 99px;
-  min-width: 1.2em;
-  height: 1.2em;
-  line-height: 1.2em;
+  min-width: 1.1em;
+  height: 1.1em;
+  line-height: 1.1em;
   text-align: center;
-  padding: 0 0.25em;
-  flex-shrink: 0;
-}
-
-.media-toolbar__divider {
-  width: 1px;
-  background: var(--border);
-  align-self: stretch;
+  padding: 0 0.2em;
   flex-shrink: 0;
 }
 

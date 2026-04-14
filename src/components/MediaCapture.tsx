@@ -191,8 +191,6 @@ export function MediaCapture({
           )}
         </button>
 
-        <span className="media-toolbar__divider" aria-hidden="true" />
-
         {/* Video */}
         <button
           type="button"
@@ -208,8 +206,6 @@ export function MediaCapture({
             <span className="media-toolbar__badge" aria-hidden="true">{videoIds.length}</span>
           )}
         </button>
-
-        <span className="media-toolbar__divider" aria-hidden="true" />
 
         {/* Audio */}
         <button
