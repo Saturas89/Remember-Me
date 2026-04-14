@@ -1012,6 +1012,54 @@
 .import-msg--error   { color: var(--accent);       background: var(--error-bg); }
 .import-msg--success { color: var(--success-text);  background: var(--success-bg); }
 
+/* ── Inline invite preview ────────────────────────────── */
+.invite-preview {
+  margin-top: 1.25rem;
+  background: var(--surface-raised);
+  border: 1px solid var(--border-focus);
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.invite-preview__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: var(--accent-tinted);
+  color: var(--accent);
+  border-radius: 999px;
+  padding: 0.2rem 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  align-self: flex-start;
+}
+
+.invite-preview__url {
+  background: var(--bg);
+  border-radius: 8px;
+  padding: 0.6rem 0.75rem;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  word-break: break-all;
+  font-family: monospace;
+  line-height: 1.5;
+}
+
+.invite-preview__url--loading {
+  color: var(--text-faint);
+  font-family: inherit;
+  font-size: 0.85rem;
+}
+
+.invite-preview__actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
 /* ── Share button ─────────────────────────────────────── */
 .share-btn { min-width: 11rem; }
 

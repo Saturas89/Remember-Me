@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { FriendCard } from '../components/FriendCard'
 import { generateSecureInviteUrl, shareOrCopy } from '../utils/secureLink'
 import { decodeAnswerExport } from '../utils/sharing'
@@ -9,10 +9,14 @@ interface Props {
   profileName: string
   friends: Friend[]
   friendAnswers: FriendAnswer[]
-  onAddFriend: (name: string) => Friend
+  onAddFriend: (name: string, id?: string) => Friend
   onRemoveFriend: (id: string) => void
   onImportAnswers: (data: AnswerExport) => void
   onBack: () => void
+}
+
+function newFriendId(): string {
+  return `friend-${Date.now()}-${crypto.randomUUID()}`
 }
 
 export function FriendsView({
@@ -27,48 +31,81 @@ export function FriendsView({
   const [newName, setNewName] = useState('')
   const [selectedTopicId, setSelectedTopicId] = useState(FRIEND_TOPICS[0].id)
 
-  // Invite state
+  // Stable friend ID for the current draft – resets after each invite is sent
+  const pendingId = useRef(newFriendId())
+
+  // Live invite link state
+  const [liveUrl, setLiveUrl] = useState<string | null>(null)
   const [isGenerating, setIsGenerating] = useState(false)
-  const [fallbackUrl, setFallbackUrl] = useState<string | null>(null)
-  const [fallbackTopicLabel, setFallbackTopicLabel] = useState('')
   const [copied, setCopied] = useState(false)
+  const [isSharing, setIsSharing] = useState(false)
 
   // Import fallback
   const [importCode, setImportCode] = useState('')
   const [importError, setImportError] = useState<string | null>(null)
   const [importSuccess, setImportSuccess] = useState(false)
 
-  async function handleAdd() {
-    if (!newName.trim() || isGenerating) return
-    const friend = onAddFriend(newName.trim())
-    setNewName('')
-    await triggerShare(profileName || 'mir', friend.id, selectedTopicId)
-  }
-
-  async function triggerShare(name: string, friendId: string, topicId: string) {
-    const topic = FRIEND_TOPICS.find(t => t.id === topicId) ?? FRIEND_TOPICS[0]
+  // Regenerate URL whenever name or topic changes (debounced 350 ms)
+  useEffect(() => {
+    setCopied(false)
+    if (!newName.trim()) {
+      setLiveUrl(null)
+      return
+    }
     setIsGenerating(true)
-    setFallbackUrl(null)
+    const timer = setTimeout(() => {
+      generateSecureInviteUrl({
+        profileName: profileName || 'mir',
+        friendId: pendingId.current,
+        topicId: selectedTopicId,
+      })
+        .then(url => { setLiveUrl(url); setIsGenerating(false) })
+        .catch(() => setIsGenerating(false))
+    }, 350)
+    return () => clearTimeout(timer)
+  }, [newName, selectedTopicId, profileName])
+
+  async function handleShare() {
+    if (!liveUrl || isSharing) return
+    onAddFriend(newName.trim(), pendingId.current)
+
+    const topic = FRIEND_TOPICS.find(t => t.id === selectedTopicId) ?? FRIEND_TOPICS[0]
+    setIsSharing(true)
     try {
-      const url = await generateSecureInviteUrl({ profileName: name, friendId, topicId })
       const didShare = await shareOrCopy({
         title: 'Erinnerung einsammeln',
-        text: `${name} möchte deine Erinnerungen an sie oder ihn festhalten – ${topic.emoji} ${topic.title}`,
-        url,
+        text: `${profileName || 'Jemand'} möchte deine Erinnerungen festhalten – ${topic.emoji} ${topic.title}`,
+        url: liveUrl,
       })
-      if (!didShare) {
-        // Web Share not available or was cancelled → show copy fallback
-        setFallbackUrl(url)
-        setFallbackTopicLabel(`${topic.emoji} ${topic.title}`)
-        setCopied(false)
-      }
+      if (!didShare) setCopied(true) // clipboard fallback – highlight the visible URL
     } finally {
-      setIsGenerating(false)
+      setIsSharing(false)
     }
+
+    // Reset for next friend
+    setNewName('')
+    setLiveUrl(null)
+    pendingId.current = newFriendId()
   }
 
-  function handleCopy(url: string) {
-    navigator.clipboard.writeText(url).then(() => setCopied(true))
+  function handleCopy() {
+    if (!liveUrl) return
+    navigator.clipboard.writeText(liveUrl).then(() => setCopied(true))
+  }
+
+  // Called from FriendCard "Einladen" – generates fresh URL for existing friend
+  async function handleReinvite(friendId: string) {
+    const topic = FRIEND_TOPICS.find(t => t.id === selectedTopicId) ?? FRIEND_TOPICS[0]
+    const url = await generateSecureInviteUrl({
+      profileName: profileName || 'mir',
+      friendId,
+      topicId: selectedTopicId,
+    })
+    await shareOrCopy({
+      title: 'Erinnerung einsammeln',
+      text: `${profileName || 'Jemand'} möchte deine Erinnerungen festhalten – ${topic.emoji} ${topic.title}`,
+      url,
+    })
   }
 
   function handleImport() {
@@ -83,6 +120,8 @@ export function FriendsView({
     setImportSuccess(true)
     setImportCode('')
   }
+
+  const topic = FRIEND_TOPICS.find(t => t.id === selectedTopicId) ?? FRIEND_TOPICS[0]
 
   return (
     <div className="friends-view">
@@ -111,62 +150,64 @@ export function FriendsView({
             className="input-text"
             value={newName}
             onChange={e => setNewName(e.target.value)}
-            placeholder="Name der Person..."
-            onKeyDown={e => e.key === 'Enter' && handleAdd()}
+            placeholder="Name der Person…"
+            onKeyDown={e => e.key === 'Enter' && handleShare()}
           />
         </div>
 
         <p className="friends-topic-label">Welche Erinnerungen soll sie oder er teilen?</p>
         <div className="friends-topic-grid">
-          {FRIEND_TOPICS.map(topic => (
+          {FRIEND_TOPICS.map(t => (
             <button
-              key={topic.id}
+              key={t.id}
               type="button"
-              className={`friend-topic-card ${selectedTopicId === topic.id ? 'friend-topic-card--active' : ''}`}
-              onClick={() => setSelectedTopicId(topic.id)}
+              className={`friend-topic-card ${selectedTopicId === t.id ? 'friend-topic-card--active' : ''}`}
+              onClick={() => setSelectedTopicId(t.id)}
             >
-              <span className="friend-topic-card__emoji">{topic.emoji}</span>
-              <span className="friend-topic-card__title">{topic.title}</span>
-              <span className="friend-topic-card__desc">{topic.description}</span>
+              <span className="friend-topic-card__emoji">{t.emoji}</span>
+              <span className="friend-topic-card__title">{t.title}</span>
+              <span className="friend-topic-card__desc">{t.description}</span>
             </button>
           ))}
         </div>
 
-        <button
-          className="btn btn--primary share-btn"
-          onClick={handleAdd}
-          disabled={!newName.trim() || isGenerating}
-          style={{ marginTop: '1rem' }}
-        >
-          {isGenerating ? (
-            <span className="share-btn__spinner">Einladung wird erstellt…</span>
-          ) : (
-            'Erinnerung teilen'
-          )}
-        </button>
-      </section>
-
-      {/* Copy fallback – shown when Web Share API is unavailable */}
-      {fallbackUrl && (
-        <div className="invite-box">
-          <p className="invite-box__label">
-            Kopiere diesen Link und schicke ihn per WhatsApp, iMessage oder E-Mail:
-          </p>
-          <div className="invite-box__topic-chip">{fallbackTopicLabel} · 5 Fragen</div>
-          <div className="invite-box__url">{fallbackUrl}</div>
-          <div className="invite-box__actions">
-            <button
-              className={`btn btn--primary btn--sm ${copied ? 'btn--success' : ''}`}
-              onClick={() => handleCopy(fallbackUrl)}
-            >
-              {copied ? '✓ Kopiert!' : '📋 Link kopieren'}
-            </button>
-            <button className="btn btn--ghost btn--sm" onClick={() => setFallbackUrl(null)}>
-              Schließen
-            </button>
+        {/* Live invite preview – appears as soon as a name is entered */}
+        {newName.trim() && (
+          <div className="invite-preview">
+            <div className="invite-preview__chip">
+              {topic.emoji} {topic.title} · 5 Fragen
+            </div>
+            {isGenerating ? (
+              <div className="invite-preview__url invite-preview__url--loading">
+                <span className="share-btn__spinner">Link wird generiert…</span>
+              </div>
+            ) : liveUrl ? (
+              <>
+                <div className="invite-preview__url">{liveUrl}</div>
+                <div className="invite-preview__actions">
+                  <button
+                    className="btn btn--primary share-btn"
+                    onClick={handleShare}
+                    disabled={isSharing}
+                  >
+                    {isSharing ? (
+                      <span className="share-btn__spinner">Wird geöffnet…</span>
+                    ) : (
+                      'Erinnerung teilen'
+                    )}
+                  </button>
+                  <button
+                    className={`btn btn--outline btn--sm ${copied ? 'btn--success' : ''}`}
+                    onClick={handleCopy}
+                  >
+                    {copied ? '✓ Kopiert' : '📋 Kopieren'}
+                  </button>
+                </div>
+              </>
+            ) : null}
           </div>
-        </div>
-      )}
+        )}
+      </section>
 
       {/* Friends list */}
       {friends.length > 0 && (
@@ -178,7 +219,7 @@ export function FriendsView({
                 key={f.id}
                 friend={f}
                 answers={friendAnswers.filter(a => a.friendId === f.id)}
-                onInvite={() => triggerShare(profileName || 'mir', f.id, selectedTopicId)}
+                onInvite={() => handleReinvite(f.id)}
                 onRemove={() => onRemoveFriend(f.id)}
               />
             ))}
@@ -186,7 +227,7 @@ export function FriendsView({
         </section>
       )}
 
-      {/* Manual import fallback – for users who received a code instead of a link */}
+      {/* Manual import fallback */}
       <section className="friends-section">
         <h3 className="friends-section-title">Antwort-Code eingeben</h3>
         <p className="friends-hint">
@@ -200,7 +241,7 @@ export function FriendsView({
             setImportError(null)
             setImportSuccess(false)
           }}
-          placeholder="Antwortcode hier einfügen..."
+          placeholder="Antwortcode hier einfügen…"
           rows={3}
         />
         {importError && <p className="import-msg import-msg--error">{importError}</p>}

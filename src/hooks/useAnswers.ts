@@ -170,9 +170,9 @@ export function useAnswers() {
 
   // ── Friends ──────────────────────────────────────────────
 
-  const addFriend = useCallback((name: string): Friend => {
+  const addFriend = useCallback((name: string, id?: string): Friend => {
     const friend: Friend = {
-      id: `friend-${Date.now()}-${crypto.randomUUID()}`,
+      id: id ?? `friend-${Date.now()}-${crypto.randomUUID()}`,
       name: name.trim(),
       addedAt: new Date().toISOString(),
     }
