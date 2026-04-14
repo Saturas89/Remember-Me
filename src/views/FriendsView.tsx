@@ -1,14 +1,11 @@
 import { useState, useEffect } from 'react'
 import { FriendCard } from '../components/FriendCard'
-import {
-  generatePlainInviteUrl,
-  generateSecureInviteUrl,
-} from '../utils/secureLink'
 import { decodeAnswerExport } from '../utils/sharing'
 import type { Friend, FriendAnswer, AnswerExport } from '../types'
 
 interface Props {
   profileName: string
+  inviteUrl: string
   friends: Friend[]
   friendAnswers: FriendAnswer[]
   onRemoveFriend: (id: string) => void
@@ -16,60 +13,15 @@ interface Props {
   onBack: () => void
 }
 
-const INVITE_URL_STORAGE_KEY = 'remember-me-invite-url'
-
-interface StoredInvite {
-  profileName: string
-  url: string
-}
-
-function loadStoredInvite(): StoredInvite | null {
-  try {
-    const raw = localStorage.getItem(INVITE_URL_STORAGE_KEY)
-    if (!raw) return null
-    const parsed = JSON.parse(raw) as Partial<StoredInvite>
-    if (typeof parsed.profileName === 'string' && typeof parsed.url === 'string') {
-      return { profileName: parsed.profileName, url: parsed.url }
-    }
-  } catch {
-    // ignore corrupt data
-  }
-  return null
-}
-
-function storeInvite(data: StoredInvite): void {
-  try {
-    localStorage.setItem(INVITE_URL_STORAGE_KEY, JSON.stringify(data))
-  } catch {
-    // ignore quota errors – the link will simply regenerate next time
-  }
-}
-
 export function FriendsView({
   profileName,
+  inviteUrl,
   friends,
   friendAnswers,
   onRemoveFriend,
   onImportAnswers,
   onBack,
 }: Props) {
-  const effectiveName = profileName || 'mir'
-
-  // Permanent, reusable invite link – one for all friends.
-  //
-  // Initialized synchronously on first render so the Share- and Copy-buttons
-  // are clickable immediately. Order of preference:
-  //   1. Cached URL from localStorage matching the current profile name.
-  //   2. Plain-base64 URL computed synchronously – guaranteed to work in any
-  //      browser, any context.
-  // The secure (AES-GCM + deflate) URL, if the browser supports it, is
-  // upgraded asynchronously in the background and replaces the plain one.
-  const [inviteUrl, setInviteUrl] = useState<string>(() => {
-    const stored = loadStoredInvite()
-    if (stored && stored.profileName === effectiveName) return stored.url
-    return generatePlainInviteUrl({ profileName: effectiveName })
-  })
-
   const [isSharing, setIsSharing] = useState(false)
   const [shareStatus, setShareStatus] = useState<'idle' | 'copied' | 'error'>('idle')
 
@@ -77,34 +29,6 @@ export function FriendsView({
   const [importCode, setImportCode] = useState('')
   const [importError, setImportError] = useState<string | null>(null)
   const [importSuccess, setImportSuccess] = useState(false)
-
-  // Upgrade to the secure (encrypted + compressed) URL in the background and
-  // cache it so subsequent visits are instant. If encryption isn't available
-  // in this browser, `generateSecureInviteUrl` itself returns the plain URL –
-  // still worth caching so both paths end up persisted.
-  useEffect(() => {
-    const stored = loadStoredInvite()
-    if (stored && stored.profileName === effectiveName) {
-      // Already cached – make sure state reflects it (e.g. when name changed).
-      setInviteUrl(stored.url)
-      return
-    }
-
-    let cancelled = false
-    generateSecureInviteUrl({ profileName: effectiveName })
-      .then(url => {
-        if (cancelled) return
-        setInviteUrl(url)
-        storeInvite({ profileName: effectiveName, url })
-      })
-      .catch(err => {
-        // Plain fallback is already displayed – log and move on.
-        console.error('[FriendsView] generateSecureInviteUrl failed:', err)
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [effectiveName])
 
   // Auto-clear the "Kopiert!" / "Fehler" status after a moment.
   useEffect(() => {
