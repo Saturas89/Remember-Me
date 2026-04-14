@@ -8,9 +8,13 @@ interface Props {
   onLoad: (ids: string[]) => void
   onAdd?: (file: File) => void
   onRemove?: (id: string) => void
+  /** Expose the hidden file input to a parent-controlled ref */
+  triggerRef?: React.RefObject<HTMLInputElement | null>
+  /** Suppress the built-in add button (parent toolbar handles triggering) */
+  noAddButton?: boolean
 }
 
-export function ImageAttachment({ imageIds, cache, onLoad, onAdd, onRemove }: Props) {
+export function ImageAttachment({ imageIds, cache, onLoad, onAdd, onRemove, triggerRef, noAddButton }: Props) {
   const [lightbox, setLightbox] = useState<string | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
   // stable join string to avoid re-running effect on every render
@@ -20,6 +24,13 @@ export function ImageAttachment({ imageIds, cache, onLoad, onAdd, onRemove }: Pr
     if (imageIds.length > 0) onLoad(imageIds)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [idsKey])
+
+  // Expose internal file input to parent toolbar
+  useEffect(() => {
+    if (triggerRef) {
+      (triggerRef as React.MutableRefObject<HTMLInputElement | null>).current = fileRef.current
+    }
+  })
 
   if (imageIds.length === 0 && !onAdd) return null
 
@@ -54,7 +65,7 @@ export function ImageAttachment({ imageIds, cache, onLoad, onAdd, onRemove }: Pr
           </div>
         ))}
 
-        {onAdd && imageIds.length < MAX_IMAGES && (
+        {onAdd && imageIds.length < MAX_IMAGES && !noAddButton && (
           <button
             type="button"
             className="img-add-btn"

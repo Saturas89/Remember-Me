@@ -2357,6 +2357,184 @@
 .audio-rec-delete { color: #ef4444 !important; }
 .audio-rec-delete:hover { background: color-mix(in srgb, #ef4444 10%, transparent) !important; }
 
+/* ── MediaCapture – unified capture section ─────────── */
+.media-capture {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-top: 0.75rem;
+}
+
+/* Soft invitation text before any media is added */
+.media-capture__hint {
+  font-size: 0.8rem;
+  color: var(--text-faint);
+  line-height: 1.55;
+  font-style: italic;
+  padding: 0 0.1rem;
+}
+
+/* Combined thumbnail strip (photos + videos together) */
+.media-capture__strip {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+/* Make photo/video thumbnails the same size inside the strip */
+.media-capture__strip .img-strip {
+  display: contents; /* flatten into parent flex */
+  margin-top: 0;
+}
+.media-capture__strip .img-thumb {
+  width: 76px;
+  height: 76px;
+}
+.media-capture__strip .video-attachment {
+  display: contents;
+}
+.media-capture__strip .video-attachment__strip {
+  display: contents;
+}
+.media-capture__strip .video-thumb {
+  width: 76px;
+  height: 76px;
+}
+
+/* ── Audio panel (recording / preview / existing) ───── */
+.audio-panel {
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.audio-panel--requesting {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--text-muted);
+  font-size: 0.88rem;
+}
+
+.audio-panel__spinner {
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.75s linear infinite;
+  flex-shrink: 0;
+  display: block;
+}
+
+.audio-panel--recording {
+  border-color: color-mix(in srgb, #ef4444 40%, var(--border));
+  background: color-mix(in srgb, #ef4444 5%, var(--surface-raised));
+}
+
+.audio-panel__row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.audio-panel__actions {
+  display: flex;
+  gap: 0.4rem;
+  margin-left: auto;
+}
+
+.audio-panel--existing .audio-rec-existing-actions {
+  margin-top: 0;
+}
+
+/* ── Media toolbar ───────────────────────────────────── */
+.media-toolbar {
+  display: flex;
+  gap: 0.4rem;
+}
+
+/* Each option is a self-contained pill – matches the app's choice-btn language */
+.media-toolbar__btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  padding: 0.3rem 0.5rem;
+  border-radius: 99px;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s, border-color 0.18s;
+  white-space: nowrap;
+}
+
+.media-toolbar__btn:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-tinted);
+}
+
+.media-toolbar__btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* Active – media already attached */
+.media-toolbar__btn--has {
+  color: var(--accent);
+  background: var(--accent-tinted);
+  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+}
+
+/* Recording in progress */
+.media-toolbar__btn--recording {
+  color: #ef4444;
+  background: color-mix(in srgb, #ef4444 10%, var(--surface-raised));
+  border-color: color-mix(in srgb, #ef4444 40%, transparent);
+  animation: rec-toolbar-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes rec-toolbar-pulse {
+  0%, 100% { background: color-mix(in srgb, #ef4444 10%, var(--surface-raised)); }
+  50%       { background: color-mix(in srgb, #ef4444 18%, var(--surface-raised)); }
+}
+
+.media-toolbar__icon {
+  font-size: 0.95rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.media-toolbar__label {
+  font-weight: 500;
+}
+
+.media-toolbar__badge {
+  font-size: 0.62rem;
+  font-weight: 700;
+  background: var(--accent);
+  color: #fff;
+  border-radius: 99px;
+  min-width: 1.1em;
+  height: 1.1em;
+  line-height: 1.1em;
+  text-align: center;
+  padding: 0 0.2em;
+  flex-shrink: 0;
+}
+
 /* ── Audio Player ────────────────────────────────────── */
 .audio-player {
   display: flex;
