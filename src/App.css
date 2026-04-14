@@ -518,7 +518,7 @@
 }
 
 .category-card__image--round {
-  border-radius: 0;
+  border-radius: 50%;
   object-fit: contain;
   background: transparent;
 }
