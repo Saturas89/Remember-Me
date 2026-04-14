@@ -51,9 +51,17 @@ export function MediaCapture({
 
   const isAudioActive = rec.state !== 'idle'
   const hasAudio = !!audioId || isAudioActive
+  const hasAnyMedia = imageIds.length > 0 || videoIds.length > 0 || hasAudio
 
   return (
     <div className="media-capture">
+      {/* Hint – visible only before any media is attached */}
+      {!hasAnyMedia && (
+        <p className="media-capture__hint">
+          Damit dieser Moment nie verblasst – ergänze ihn mit Fotos, einem Video oder erzähl ihn mit deiner eigenen Stimme.
+        </p>
+      )}
+
       {/* Thumbnail strip – only when content exists */}
       {(imageIds.length > 0 || videoIds.length > 0) && (
         <div className="media-capture__strip">

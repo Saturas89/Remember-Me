@@ -2365,6 +2365,15 @@
   margin-top: 0.75rem;
 }
 
+/* Soft invitation text before any media is added */
+.media-capture__hint {
+  font-size: 0.8rem;
+  color: var(--text-faint);
+  line-height: 1.55;
+  font-style: italic;
+  padding: 0 0.1rem;
+}
+
 /* Combined thumbnail strip (photos + videos together) */
 .media-capture__strip {
   display: flex;
