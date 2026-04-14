@@ -45,43 +45,74 @@ export function FriendsView({
   const [importError, setImportError] = useState<string | null>(null)
   const [importSuccess, setImportSuccess] = useState(false)
 
-  // Regenerate URL whenever name or topic changes (debounced 350 ms)
+  // Regenerate URL whenever name or topic changes – no debounce so the link
+  // is visible and shareable as soon as a name is entered.
   useEffect(() => {
     if (!newName.trim()) {
       setLiveUrl(null)
       setGenerateError(null)
+      setIsGenerating(false)
       return
     }
+    let cancelled = false
     setIsGenerating(true)
     setGenerateError(null)
-    const timer = setTimeout(() => {
-      generateSecureInviteUrl({
+    generateSecureInviteUrl({
+      profileName: profileName || 'mir',
+      friendId: pendingId.current,
+      topicId: selectedTopicId,
+    })
+      .then(url => {
+        if (cancelled) return
+        setLiveUrl(url)
+        setIsGenerating(false)
+      })
+      .catch(err => {
+        if (cancelled) return
+        console.error('[FriendsView] generateSecureInviteUrl failed:', err)
+        setGenerateError('Einladungslink konnte nicht erstellt werden.')
+        setIsGenerating(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [newName, selectedTopicId, profileName])
+
+  async function ensureLiveUrl(): Promise<string | null> {
+    if (liveUrl) return liveUrl
+    try {
+      setIsGenerating(true)
+      setGenerateError(null)
+      const url = await generateSecureInviteUrl({
         profileName: profileName || 'mir',
         friendId: pendingId.current,
         topicId: selectedTopicId,
       })
-        .then(url => { setLiveUrl(url); setIsGenerating(false) })
-        .catch(err => {
-          console.error('[FriendsView] generateSecureInviteUrl failed:', err)
-          setGenerateError('Einladungslink konnte nicht erstellt werden.')
-          setIsGenerating(false)
-        })
-    }, 350)
-    return () => clearTimeout(timer)
-  }, [newName, selectedTopicId, profileName])
+      setLiveUrl(url)
+      return url
+    } catch (err) {
+      console.error('[FriendsView] generateSecureInviteUrl failed:', err)
+      setGenerateError('Einladungslink konnte nicht erstellt werden.')
+      return null
+    } finally {
+      setIsGenerating(false)
+    }
+  }
 
   async function handleShare() {
-    if (!liveUrl || isSharing) return
+    if (isSharing || !newName.trim()) return
+    const url = await ensureLiveUrl()
+    if (!url) return
     onAddFriend(newName.trim(), pendingId.current)
 
     const topic = FRIEND_TOPICS.find(t => t.id === selectedTopicId) ?? FRIEND_TOPICS[0]
     setIsSharing(true)
     try {
       await shareOrCopy({
-      title: 'Erinnerung einsammeln',
-      text: `${profileName || 'Jemand'} möchte deine Erinnerungen festhalten – ${topic.emoji} ${topic.title}`,
-      url: liveUrl,
-    })
+        title: 'Erinnerung einsammeln',
+        text: `${profileName || 'Jemand'} möchte deine Erinnerungen festhalten – ${topic.emoji} ${topic.title}`,
+        url,
+      })
     } finally {
       setIsSharing(false)
     }
@@ -177,23 +208,24 @@ export function FriendsView({
             <div className="invite-preview__chip">
               {topic.emoji} {topic.title} · 5 Fragen
             </div>
-            {generateError ? (
+
+            {generateError && (
               <p className="import-msg import-msg--error">{generateError}</p>
-            ) : (
-              <button
-                className="btn btn--primary share-btn"
-                onClick={handleShare}
-                disabled={isGenerating || isSharing || !liveUrl}
-              >
-                {isGenerating ? (
-                  <span className="share-btn__spinner">Einladung wird erstellt…</span>
-                ) : isSharing ? (
-                  <span className="share-btn__spinner">Wird geöffnet…</span>
-                ) : (
-                  'Erinnerung teilen'
-                )}
-              </button>
             )}
+
+            <button
+              className="btn btn--primary share-btn"
+              onClick={handleShare}
+              disabled={isSharing}
+            >
+              {isSharing ? (
+                <span className="share-btn__spinner">Wird geöffnet…</span>
+              ) : isGenerating && !liveUrl ? (
+                <span className="share-btn__spinner">Einladung wird erstellt…</span>
+              ) : (
+                'Erinnerung teilen'
+              )}
+            </button>
           </div>
         )}
       </section>
