@@ -6,7 +6,33 @@
 
 /* ── Theme variables ─────────────────────────────────── */
 
-:root, [data-theme="nacht"] {
+:root, [data-theme="sepia"] {
+  --bg:             #f2ebe0;
+  --surface:        #fdf7ef;
+  --surface-raised: #e8d5bc;
+  --border:         #d4b896;
+  --border-focus:   #b89060;
+
+  --text:           #3d2b1f;
+  --text-muted:     #8b7355;
+  --text-faint:     #c0a882;
+
+  --accent:         #7b3f00;
+  --accent-tinted:  rgba(123, 63, 0, 0.1);
+
+  --success:        #4a7a2a;
+  --success-bg:     #eef4e8;
+  --success-text:   #3a5a20;
+  --warn:           #a0522d;
+  --warn-bg:        #fef3e8;
+  --error-bg:       #fdecea;
+
+  /* Logo gradient: amber → warm orange */
+  --logo-start: #f9a825;
+  --logo-end:   #e64a19;
+}
+
+[data-theme="nacht"] {
   --bg:             #1a1a2e;
   --surface:        #16213e;
   --surface-raised: #0f3460;
@@ -56,32 +82,6 @@
   /* Logo gradient: orange → coral-red */
   --logo-start: #ff8c00;
   --logo-end:   #e8365f;
-}
-
-[data-theme="sepia"] {
-  --bg:             #f2ebe0;
-  --surface:        #fdf7ef;
-  --surface-raised: #e8d5bc;
-  --border:         #d4b896;
-  --border-focus:   #b89060;
-
-  --text:           #3d2b1f;
-  --text-muted:     #8b7355;
-  --text-faint:     #c0a882;
-
-  --accent:         #7b3f00;
-  --accent-tinted:  rgba(123, 63, 0, 0.1);
-
-  --success:        #4a7a2a;
-  --success-bg:     #eef4e8;
-  --success-text:   #3a5a20;
-  --warn:           #a0522d;
-  --warn-bg:        #fef3e8;
-  --error-bg:       #fdecea;
-
-  /* Logo gradient: amber → warm orange */
-  --logo-start: #f9a825;
-  --logo-end:   #e64a19;
 }
 
 [data-theme="ozean"] {

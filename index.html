@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 
     <!-- PWA / Home Screen -->
-    <meta name="theme-color" content="#1a1a2e" />
+    <meta name="theme-color" content="#f2ebe0" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 
@@ -21,7 +21,7 @@
     <title>Remember Me</title>
 
     <!-- Apply saved theme before first paint to prevent flash -->
-    <script>try{var t=localStorage.getItem('rm-theme');if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+    <script>try{var t=localStorage.getItem('rm-theme');document.documentElement.setAttribute('data-theme',t||'sepia')}catch(e){document.documentElement.setAttribute('data-theme','sepia')}</script>
   </head>
   <body>
     <div id="root"></div>
