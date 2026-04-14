@@ -299,7 +299,11 @@ export default function App() {
           friendAnswers={friendAnswers}
           customQuestions={customQuestions}
           getCategoryProgress={getCategoryProgress}
-          onSelectCategory={id => setView({ name: 'quiz', categoryId: id })}
+          onSelectCategory={id =>
+            id === 'custom'
+              ? setView({ name: 'custom-questions' })
+              : setView({ name: 'quiz', categoryId: id })
+          }
           onOpenFaq={() => setView({ name: 'faq', from: 'home' })}
         />
       )}
