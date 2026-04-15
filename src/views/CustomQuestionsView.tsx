@@ -86,17 +86,23 @@ export function CustomQuestionsView({
         content: getAnswer(q.id).trim() || undefined,
       }))
       const url = await generateMemoryShareUrl({ memories, sharedBy: profileName || undefined })
-      try {
-        await navigator.share?.({
-          title: 'Meine Erinnerungen',
-          text: profileName
-            ? `${profileName} hat Erinnerungen mit dir geteilt.`
-            : 'Geteilte Erinnerungen',
-          url,
-        })
-      } catch (e) {
-        if ((e as Error).name === 'AbortError') return
-        // navigator.share not available or failed – fall back to clipboard
+      const shareData = {
+        title: 'Meine Erinnerungen',
+        text: profileName
+          ? `${profileName} hat Erinnerungen mit dir geteilt.`
+          : 'Geteilte Erinnerungen',
+        url,
+      }
+      if (typeof navigator.share === 'function') {
+        try {
+          await navigator.share(shareData)
+        } catch (e) {
+          if ((e as Error).name === 'AbortError') return
+          // share failed – fall back to clipboard
+          await navigator.clipboard.writeText(url)
+          setShareStatus('copied')
+        }
+      } else {
         await navigator.clipboard.writeText(url)
         setShareStatus('copied')
       }
