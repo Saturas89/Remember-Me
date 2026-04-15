@@ -96,9 +96,6 @@ export function CustomQuestionsView({
     }
     const shareData = {
       title: 'Meine Erinnerungen',
-      text: profileName
-        ? `${profileName} hat Erinnerungen mit dir geteilt.`
-        : 'Geteilte Erinnerungen',
       url,
     }
 
