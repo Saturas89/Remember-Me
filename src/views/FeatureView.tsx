@@ -51,6 +51,22 @@ const FEATURES = [
   },
 ] as const
 
+// ── Vote tracking (one vote per feature, per device) ──
+
+function hasVoted(id: string): boolean {
+  try {
+    return localStorage.getItem('feature-voted-' + id) === '1'
+  } catch {
+    return false
+  }
+}
+
+function markVoted(id: string): void {
+  try {
+    localStorage.setItem('feature-voted-' + id, '1')
+  } catch {}
+}
+
 // ── Detail page ────────────────────────────────────────
 
 interface DetailProps {
@@ -108,9 +124,16 @@ function FeatureDetailPage({ feature, onBack }: DetailProps) {
 
 export function FeatureView() {
   const [active, setActive] = useState<typeof FEATURES[number] | null>(null)
+  const [voted, setVoted] = useState<ReadonlySet<string>>(
+    () => new Set(FEATURES.map(f => f.id).filter(hasVoted))
+  )
 
   function handleOpen(feature: typeof FEATURES[number]) {
-    track('feature_interest', { feature: feature.id, title: feature.title })
+    if (!voted.has(feature.id)) {
+      track('feature_interest', { feature: feature.id, title: feature.title })
+      markVoted(feature.id)
+      setVoted(prev => new Set([...prev, feature.id]))
+    }
     setActive(feature)
     window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior })
   }
@@ -145,16 +168,21 @@ export function FeatureView() {
         {FEATURES.map(feature => (
           <button
             key={feature.id}
-            className="feature-img-btn"
+            className={`feature-img-btn${voted.has(feature.id) ? ' feature-img-btn--voted' : ''}`}
             onClick={() => handleOpen(feature)}
             type="button"
-            aria-label={`${feature.title} – Interesse zeigen`}
+            aria-label={`${feature.title} – ${voted.has(feature.id) ? 'bereits abgestimmt' : 'Interesse zeigen'}`}
           >
             <img
               src={feature.img}
               alt={feature.title}
               className="feature-img-btn__img"
             />
+            {voted.has(feature.id) && (
+              <div className="feature-img-btn__voted-badge" aria-hidden="true">
+                ✓ Abgestimmt
+              </div>
+            )}
           </button>
         ))}
       </div>
