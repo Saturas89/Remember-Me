@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest'
 import { render, cleanup, fireEvent, act } from '@testing-library/react'
 import { CustomQuestionsView } from './CustomQuestionsView'
-import { generateMemoryShareUrl } from '../utils/secureLink'
+import { generateMemoryShareUrlSync } from '../utils/secureLink'
 import type { CustomQuestion } from '../types'
 
 // ── Module mocks ──────────────────────────────────────────────────────────────
@@ -11,7 +11,7 @@ import type { CustomQuestion } from '../types'
 const { SHARE_URL } = vi.hoisted(() => ({ SHARE_URL: 'https://example.com/#ms/test123' }))
 
 vi.mock('../utils/secureLink', () => ({
-  generateMemoryShareUrl: vi.fn().mockResolvedValue(SHARE_URL),
+  generateMemoryShareUrlSync: vi.fn().mockReturnValue(SHARE_URL),
 }))
 vi.mock('../hooks/useImageStore', () => ({
   useImageStore: () => ({ cache: {}, loadImages: vi.fn(), addImage: vi.fn(), removeImage: vi.fn() }),
@@ -189,7 +189,7 @@ describe('CustomQuestionsView – Erinnerungen teilen', () => {
       const getAnswer = vi.fn((id: string) => (id === 'q-1' ? 'Mein Lieblingsort' : ''))
       const { container } = render(<CustomQuestionsView {...makeProps({ getAnswer })} />)
       await act(async () => { fireEvent.click(getShareBtn(container)!) })
-      expect(vi.mocked(generateMemoryShareUrl)).toHaveBeenCalledWith({
+      expect(vi.mocked(generateMemoryShareUrlSync)).toHaveBeenCalledWith({
         memories: [{ title: 'Lieblingsort', content: 'Mein Lieblingsort' }],
         sharedBy: 'Anna',
       })
@@ -200,7 +200,7 @@ describe('CustomQuestionsView – Erinnerungen teilen', () => {
       // default getAnswer returns '' → content should be undefined
       const { container } = render(<CustomQuestionsView {...makeProps()} />)
       await act(async () => { fireEvent.click(getShareBtn(container)!) })
-      expect(vi.mocked(generateMemoryShareUrl)).toHaveBeenCalledWith({
+      expect(vi.mocked(generateMemoryShareUrlSync)).toHaveBeenCalledWith({
         memories: [{ title: 'Lieblingsort', content: undefined }],
         sharedBy: 'Anna',
       })
@@ -210,7 +210,7 @@ describe('CustomQuestionsView – Erinnerungen teilen', () => {
       stubClipboard()
       const { container } = render(<CustomQuestionsView {...makeProps({ profileName: '' })} />)
       await act(async () => { fireEvent.click(getShareBtn(container)!) })
-      expect(vi.mocked(generateMemoryShareUrl)).toHaveBeenCalledWith(
+      expect(vi.mocked(generateMemoryShareUrlSync)).toHaveBeenCalledWith(
         expect.objectContaining({ sharedBy: undefined }),
       )
     })
@@ -223,7 +223,7 @@ describe('CustomQuestionsView – Erinnerungen teilen', () => {
         <CustomQuestionsView {...makeProps({ customQuestions: [Q1, q2], getAnswer })} />,
       )
       await act(async () => { fireEvent.click(getShareBtn(container)!) })
-      expect(vi.mocked(generateMemoryShareUrl)).toHaveBeenCalledWith({
+      expect(vi.mocked(generateMemoryShareUrlSync)).toHaveBeenCalledWith({
         memories: [
           { title: 'Lieblingsort', content: 'Berge' },
           { title: 'Lieblingsessen', content: 'Pizza' },
@@ -236,8 +236,8 @@ describe('CustomQuestionsView – Erinnerungen teilen', () => {
   // ── Fehlerbehandlung ────────────────────────────────────────────────────────
 
   describe('Fehlerbehandlung', () => {
-    it('zeigt Fehler-Status wenn generateMemoryShareUrl fehlschlägt', async () => {
-      vi.mocked(generateMemoryShareUrl).mockRejectedValueOnce(new Error('URL generation failed'))
+    it('zeigt Fehler-Status wenn generateMemoryShareUrlSync wirft', async () => {
+      vi.mocked(generateMemoryShareUrlSync).mockImplementationOnce(() => { throw new Error('URL generation failed') })
       const { container } = render(<CustomQuestionsView {...makeProps()} />)
       await act(async () => { fireEvent.click(getShareBtn(container)!) })
       expect(getShareBtn(container)!.className).toContain('share-cta-btn--error')

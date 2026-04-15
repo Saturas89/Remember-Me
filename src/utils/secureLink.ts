@@ -258,6 +258,16 @@ export async function generateMemoryShareUrl(payload: MemorySharePayload): Promi
   return `${appBase()}#ms-plain/${btoa(encodeURIComponent(JSON.stringify(payload)))}`
 }
 
+/**
+ * Generate a memory-share URL synchronously (plain Base64, no compression).
+ * Use this when the URL must be ready inside a click handler that calls
+ * navigator.share() directly — any await before navigator.share() breaks the
+ * browser's user-gesture context and prevents the share sheet from opening.
+ */
+export function generateMemoryShareUrlSync(payload: MemorySharePayload): string {
+  return `${appBase()}#ms-plain/${btoa(encodeURIComponent(JSON.stringify(payload)))}`
+}
+
 /** Synchronously detect whether the current URL is a memory-share link. */
 export function isMemoryShareHash(): boolean {
   const h = window.location.hash
