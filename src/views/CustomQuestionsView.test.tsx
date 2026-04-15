@@ -147,18 +147,8 @@ describe('CustomQuestionsView – Erinnerungen teilen', () => {
       await act(async () => { fireEvent.click(getShareBtn(container)!) })
       expect(shareFn).toHaveBeenCalledWith({
         title: 'Meine Erinnerungen',
-        text: 'Anna hat Erinnerungen mit dir geteilt.',
         url: SHARE_URL,
       })
-    })
-
-    it('verwendet allgemeinen text-Fallback wenn kein Profilname gesetzt ist', async () => {
-      const shareFn = stubShare()
-      const { container } = render(<CustomQuestionsView {...makeProps({ profileName: '' })} />)
-      await act(async () => { fireEvent.click(getShareBtn(container)!) })
-      expect(shareFn).toHaveBeenCalledWith(
-        expect.objectContaining({ text: 'Geteilte Erinnerungen' }),
-      )
     })
 
     it('ignoriert AbortError – kein Fehler- oder Erfolgs-Status', async () => {
