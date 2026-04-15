@@ -23,7 +23,9 @@ interface Props {
 }
 
 function TreeProgressLogo({ pct, size = 80 }: { pct: number; size?: number }) {
-  const filledCount = Math.floor(pct / 10) // 0–10 filled segments
+  // Segment 1 erscheint bei 5 %, dann je 10 % – letztes Segment deckt 90–100 % ab
+  const THRESHOLDS = [5, 10, 20, 30, 40, 50, 60, 70, 80, 90]
+  const filledCount = THRESHOLDS.filter(t => pct >= t).length
 
   return (
     <div
