@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 // ── Feature definitions ────────────────────────────────
 
@@ -49,6 +49,11 @@ const FEATURES = [
     status: 'In Planung',
   },
 ] as const
+
+function featureFromPath(): typeof FEATURES[number] | null {
+  const id = window.location.pathname.split('/')[2]
+  return FEATURES.find(f => f.id === id) ?? null
+}
 
 // ── Detail page ────────────────────────────────────────
 
@@ -106,10 +111,24 @@ function FeatureDetailPage({ feature, onBack }: DetailProps) {
 // ── Main Feature view ──────────────────────────────────
 
 export function FeatureView() {
-  const [active, setActive] = useState<typeof FEATURES[number] | null>(null)
+  const [active, setActive] = useState<typeof FEATURES[number] | null>(featureFromPath)
+
+  // Sync with browser back/forward within the feature section
+  useEffect(() => {
+    const onPopstate = () => setActive(featureFromPath())
+    window.addEventListener('popstate', onPopstate)
+    return () => window.removeEventListener('popstate', onPopstate)
+  }, [])
 
   function handleOpen(feature: typeof FEATURES[number]) {
+    history.pushState({}, '', `/feature/${feature.id}`)
     setActive(feature)
+    window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior })
+  }
+
+  function handleBack() {
+    history.pushState({}, '', '/feature')
+    setActive(null)
     window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior })
   }
 
@@ -117,7 +136,7 @@ export function FeatureView() {
     return (
       <FeatureDetailPage
         feature={active}
-        onBack={() => setActive(null)}
+        onBack={handleBack}
       />
     )
   }
@@ -128,8 +147,12 @@ export function FeatureView() {
         <h1 className="feature-view__title">✨ Was kommt als Nächstes?</h1>
         <div className="feature-view__intro-box">
           <p className="feature-view__intro">
-            Hier siehst du die Features, die wir für Remember Me planen.{' '}
-            Tippe auf ein Feature, um mehr zu erfahren.
+            Hier siehst du, was wir als Nächstes für Remember Me entwickeln –
+            von der ersten Idee bis zur Umsetzung.
+          </p>
+          <p className="feature-view__intro feature-view__intro--note">
+            Tippe auf ein Feature, um mehr über den Entwicklungsstand und
+            die geplanten Funktionen zu erfahren.
           </p>
         </div>
       </div>

@@ -1,22 +1,20 @@
-import { describe, it, expect, vi, afterEach } from 'vitest'
+import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest'
 import { render, screen, fireEvent, cleanup } from '@testing-library/react'
 
-vi.mock('@vercel/analytics', () => ({ track: vi.fn() }))
-
-import { track } from '@vercel/analytics'
 import { FeatureView } from './FeatureView'
-
-const mockTrack = vi.mocked(track)
 
 afterEach(() => {
   cleanup()
-  localStorage.clear()
-  vi.clearAllMocks()
+  vi.restoreAllMocks()
 })
 
 // ── Banner-Liste ───────────────────────────────────────
 
 describe('FeatureView – Banner-Liste', () => {
+  beforeEach(() => {
+    window.history.pushState({}, '', '/feature')
+  })
+
   it('zeigt genau 5 Feature-Banner', () => {
     render(<FeatureView />)
     expect(screen.getAllByRole('button')).toHaveLength(5)
@@ -36,74 +34,36 @@ describe('FeatureView – Banner-Liste', () => {
   })
 })
 
-// ── Einmal-Abstimmung ──────────────────────────────────
+// ── URL-Routing ────────────────────────────────────────
 
-describe('FeatureView – Einmal-Abstimmung', () => {
-  it('löst track() beim ersten Antippen aus', () => {
+describe('FeatureView – URL-Routing', () => {
+  it('pusht die Feature-URL beim Öffnen eines Banners', () => {
+    window.history.pushState({}, '', '/feature')
+    const pushSpy = vi.spyOn(window.history, 'pushState')
     render(<FeatureView />)
     fireEvent.click(screen.getAllByRole('button')[0])
-    expect(mockTrack).toHaveBeenCalledTimes(1)
-    expect(mockTrack).toHaveBeenCalledWith(
-      'feature_interest',
-      expect.objectContaining({ feature: 'automatische-lebensgeschichte' })
-    )
+    expect(pushSpy).toHaveBeenCalledWith({}, '', '/feature/automatische-lebensgeschichte')
   })
 
-  it('löst track() beim zweiten Antippen desselben Banners nicht erneut aus', () => {
-    render(<FeatureView />)
-    fireEvent.click(screen.getAllByRole('button')[0])   // erstes Antippen → track feuert
-    fireEvent.click(screen.getByText('← Zurück'))       // zurück zur Liste
-    fireEvent.click(screen.getAllByRole('button')[0])   // zweites Antippen → kein track
-    expect(mockTrack).toHaveBeenCalledTimes(1)
-  })
-
-  it('setzt das localStorage-Flag nach dem ersten Antippen', () => {
+  it('pusht /feature beim Schließen der Detailseite', () => {
+    window.history.pushState({}, '', '/feature')
     render(<FeatureView />)
     fireEvent.click(screen.getAllByRole('button')[0])
-    expect(localStorage.getItem('feature-voted-automatische-lebensgeschichte')).toBe('1')
-  })
-
-  it('track() feuert unabhängig für verschiedene Features', () => {
-    render(<FeatureView />)
-    fireEvent.click(screen.getAllByRole('button')[0])   // Feature 1
+    const pushSpy = vi.spyOn(window.history, 'pushState')
     fireEvent.click(screen.getByText('← Zurück'))
-    fireEvent.click(screen.getAllByRole('button')[1])   // Feature 2
-    expect(mockTrack).toHaveBeenCalledTimes(2)
-  })
-})
-
-// ── Abgestimmt-Badge ───────────────────────────────────
-
-describe('FeatureView – Abgestimmt-Badge', () => {
-  it('zeigt kein Badge vor dem ersten Antippen', () => {
-    render(<FeatureView />)
-    expect(screen.queryByText('✓ Abgestimmt')).toBeNull()
+    expect(pushSpy).toHaveBeenCalledWith({}, '', '/feature')
   })
 
-  it('zeigt Badge nach dem ersten Antippen', () => {
+  it('zeigt die Detailseite direkt wenn URL einen Sub-Pfad hat', () => {
+    window.history.pushState({}, '', '/feature/lebenszeitlinie')
     render(<FeatureView />)
-    fireEvent.click(screen.getAllByRole('button')[0])
-    fireEvent.click(screen.getByText('← Zurück'))
-    expect(screen.getByText('✓ Abgestimmt')).toBeTruthy()
+    expect(screen.getByText('← Zurück')).toBeTruthy()
+    expect(screen.getByText('Lebenszeitlinie')).toBeTruthy()
   })
 
-  it('zeigt Badge beim Start wenn localStorage-Flag gesetzt ist', () => {
-    localStorage.setItem('feature-voted-automatische-lebensgeschichte', '1')
+  it('zeigt die Liste wenn die URL kein bekanntes Feature enthält', () => {
+    window.history.pushState({}, '', '/feature/unbekannt')
     render(<FeatureView />)
-    expect(screen.getByText('✓ Abgestimmt')).toBeTruthy()
-  })
-
-  it('zeigt Badge nur für Features mit gesetztem Flag', () => {
-    localStorage.setItem('feature-voted-automatische-lebensgeschichte', '1')
-    localStorage.setItem('feature-voted-privater-sync', '1')
-    render(<FeatureView />)
-    expect(screen.getAllByText('✓ Abgestimmt')).toHaveLength(2)
-  })
-
-  it('zeigt kein Badge für Features ohne Flag', () => {
-    localStorage.setItem('feature-voted-automatische-lebensgeschichte', '1')
-    render(<FeatureView />)
-    // Nur 1 von 5 Bannern hat ein Badge
-    expect(screen.getAllByText('✓ Abgestimmt')).toHaveLength(1)
+    expect(screen.getAllByRole('button')).toHaveLength(5)
   })
 })
