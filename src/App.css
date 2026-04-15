@@ -517,6 +517,12 @@
   flex-shrink: 0;
 }
 
+.category-card__image--round {
+  border-radius: 50%;
+  object-fit: contain;
+  background: transparent;
+}
+
 .category-card__body  { flex: 1; min-width: 0; }
 
 .category-card__title {
