@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { track } from '@vercel/analytics'
 
 // ── Feature definitions ────────────────────────────────
 
@@ -50,22 +49,6 @@ const FEATURES = [
     status: 'In Planung',
   },
 ] as const
-
-// ── Vote tracking (one vote per feature, per device) ──
-
-function hasVoted(id: string): boolean {
-  try {
-    return localStorage.getItem('feature-voted-' + id) === '1'
-  } catch {
-    return false
-  }
-}
-
-function markVoted(id: string): void {
-  try {
-    localStorage.setItem('feature-voted-' + id, '1')
-  } catch {}
-}
 
 // ── Detail page ────────────────────────────────────────
 
@@ -124,16 +107,8 @@ function FeatureDetailPage({ feature, onBack }: DetailProps) {
 
 export function FeatureView() {
   const [active, setActive] = useState<typeof FEATURES[number] | null>(null)
-  const [voted, setVoted] = useState<ReadonlySet<string>>(
-    () => new Set(FEATURES.map(f => f.id).filter(hasVoted))
-  )
 
   function handleOpen(feature: typeof FEATURES[number]) {
-    if (!voted.has(feature.id)) {
-      track('feature_interest', { feature: feature.id, title: feature.title })
-      markVoted(feature.id)
-      setVoted(prev => new Set([...prev, feature.id]))
-    }
     setActive(feature)
     window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior })
   }
@@ -154,12 +129,7 @@ export function FeatureView() {
         <div className="feature-view__intro-box">
           <p className="feature-view__intro">
             Hier siehst du die Features, die wir für Remember Me planen.{' '}
-            <strong>Tippe auf ein Feature, das dich begeistert</strong> – so erfahren
-            wir, was dir wichtig ist!
-          </p>
-          <p className="feature-view__intro feature-view__intro--note">
-            Da Remember Me vollständig offline funktioniert, ist dein Antippen
-            unsere einzige Möglichkeit, dein Interesse zu messen. Jeder Klick zählt!
+            Tippe auf ein Feature, um mehr zu erfahren.
           </p>
         </div>
       </div>
@@ -168,28 +138,19 @@ export function FeatureView() {
         {FEATURES.map(feature => (
           <button
             key={feature.id}
-            className={`feature-img-btn${voted.has(feature.id) ? ' feature-img-btn--voted' : ''}`}
+            className="feature-img-btn"
             onClick={() => handleOpen(feature)}
             type="button"
-            aria-label={`${feature.title} – ${voted.has(feature.id) ? 'bereits abgestimmt' : 'Interesse zeigen'}`}
+            aria-label={feature.title}
           >
             <img
               src={feature.img}
               alt={feature.title}
               className="feature-img-btn__img"
             />
-            {voted.has(feature.id) && (
-              <div className="feature-img-btn__voted-badge" aria-hidden="true">
-                ✓ Abgestimmt
-              </div>
-            )}
           </button>
         ))}
       </div>
-
-      <p className="feature-view__footer">
-        Deine Stimme zählt – auch offline! 🙏
-      </p>
     </div>
   )
 }
