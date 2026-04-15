@@ -22,6 +22,27 @@ interface Props {
   onOpenFaq: () => void
 }
 
+function TreeProgressLogo({ pct, size = 80 }: { pct: number; size?: number }) {
+  const filledCount = Math.floor(pct / 10) // 0–10 filled segments
+
+  return (
+    <div
+      className="tree-progress-logo"
+      style={{ width: size, height: size }}
+      aria-label={`${filledCount * 10}% Fortschritt`}
+    >
+      <div className="tree-progress-logo__bg" />
+      <div
+        className="tree-progress-logo__fill"
+        style={{ height: `${filledCount * 10}%` }}
+      />
+      {[10, 20, 30, 40, 50, 60, 70, 80, 90].map(pos => (
+        <div key={pos} className="tree-progress-logo__divider" style={{ bottom: `${pos}%` }} />
+      ))}
+    </div>
+  )
+}
+
 function BackupStatusRow({ last }: { last: Date | null }) {
   const status = backupAgeStatus(last)
   const icon   = status === 'fresh' ? '✓' : '⚠'
@@ -72,10 +93,6 @@ export function ProfileView({
   const daysSince = profile?.createdAt
     ? Math.floor((Date.now() - new Date(profile.createdAt).getTime()) / 86_400_000)
     : 0
-
-  const initials = name.trim()
-    ? name.trim().split(/\s+/).map(w => w[0]).slice(0, 2).join('').toUpperCase()
-    : '?'
 
   function handleSave() {
     if (!name.trim()) return
@@ -147,7 +164,7 @@ export function ProfileView({
 
       {/* Identity header */}
       <div className="profile-identity">
-        <div className="profile-avatar" aria-hidden="true">{initials}</div>
+        <TreeProgressLogo pct={overallPct} size={80} />
         <h1 className="profile-identity__name">{profile?.name}</h1>
         {memberSince && (
           <p className="profile-identity__meta">Dabei seit {memberSince}</p>
