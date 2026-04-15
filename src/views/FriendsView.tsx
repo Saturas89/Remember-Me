@@ -101,11 +101,6 @@ export function FriendsView({
         <h2 className="archive-title">Erinnerung einsammeln</h2>
       </div>
 
-      <p className="friends-intro">
-        Lade Freunde und Familie ein, ihre Erinnerungen an dich festzuhalten.
-        Ihre Antworten werden Teil deines persönlichen Lebensarchivs.
-      </p>
-
       {/* Permanent share link */}
       <section className="friends-section">
         <h3 className="friends-section-title">Dein Einladungslink</h3>
@@ -115,9 +110,9 @@ export function FriendsView({
           </p>
         )}
         <p className="friends-hint">
-          Ein Link für alle. Teile ihn beliebig oft – jede Person gibt selbst ihren
-          Namen ein und wählt eine Kategorie. Die Antworten schickt sie dir per
-          Share-Button zurück.
+          Lade Freunde und Familie ein, ihre Erinnerungen an dich festzuhalten.
+          Teile den Link beliebig oft – jede Person gibt ihren Namen ein, wählt eine Kategorie
+          und schickt dir die Antworten zurück. Sie werden Teil deines persönlichen Lebensarchivs.
         </p>
 
         <div className="friends-share">
