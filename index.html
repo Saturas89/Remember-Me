@@ -21,7 +21,7 @@
     <title>Remember Me</title>
 
     <!-- Apply saved theme before first paint to prevent flash -->
-    <script>try{var t=localStorage.getItem('rm-theme');if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+    <script>try{var t=localStorage.getItem('rm-theme');var tc={'nacht':'#1a1a2e','hell':'#f5f5f0','sepia':'#f2ebe0','ozean':'#0a1628'};if(t){document.documentElement.setAttribute('data-theme',t);var m=document.querySelector('meta[name="theme-color"]');if(m&&tc[t])m.content=tc[t]}}catch(e){}</script>
   </head>
   <body>
     <div id="root"></div>

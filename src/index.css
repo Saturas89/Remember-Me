@@ -123,7 +123,7 @@
   transition: background-color 0.25s ease, color 0.25s ease;
 }
 
-body { min-height: 100dvh; }
+body { min-height: 100dvh; background-color: var(--bg); }
 #root { min-height: 100dvh; }
 
 /* ── Typography scale ────────────────────────────────── */
