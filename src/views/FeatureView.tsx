@@ -8,8 +8,7 @@ const FEATURES = [
     id: 'ki-biografie',
     title: 'KI-Biografie',
     subtitle: 'Ein Buch für deine Kinder',
-    emoji: '📖',
-    bgClass: 'feature-card__img--biografie',
+    img: '/features/ki-biografie.jpg',
     description:
       'Stell dir vor: Deine Lebensgeschichte, liebevoll aufbereitet als echtes Buch. Eine KI liest deine Erinnerungen, ordnet sie nach Kapiteln und schreibt eine Biografie – gestaltet für deine Kinder und Enkelkinder, damit deine Stimme noch Generationen klingt.',
     status: 'Geplant',
@@ -18,8 +17,7 @@ const FEATURES = [
     id: 'lebenszeitlinie',
     title: 'Lebenszeitlinie',
     subtitle: 'Erlebe dein Leben visuell',
-    emoji: '🗺️',
-    bgClass: 'feature-card__img--zeitlinie',
+    img: '/features/lebenszeitlinie.jpg',
     description:
       'Sieh dein Leben auf einer interaktiven Zeitlinie. Von der Kindheit bis heute – alle Erinnerungen schön angeordnet, mit Fotos, Aufnahmen und Geschichten hinterlegt. Ein Blick genügt, um dein ganzes Leben zu überblicken.',
     status: 'In Planung',
@@ -28,8 +26,7 @@ const FEATURES = [
     id: 'privater-sync',
     title: 'Privater Sync',
     subtitle: 'Sicher & Verschlüsselt',
-    emoji: '🔐',
-    bgClass: 'feature-card__img--sync',
+    img: '/features/privater-sync.jpg',
     description:
       'Deine Erinnerungen auf all deinen Geräten – sicher Ende-zu-Ende verschlüsselt. Kein Server kann deine Daten lesen. Nur du hast den Schlüssel. Remember Me bleibt privat, egal auf welchem Gerät du bist.',
     status: 'In Entwicklung',
@@ -38,8 +35,7 @@ const FEATURES = [
     id: 'familienmodus',
     title: 'Familienmodus',
     subtitle: 'Erinnerungen gemeinsam sammeln',
-    emoji: '👨‍👩‍👧‍👦',
-    bgClass: 'feature-card__img--familie',
+    img: '/features/familienmodus.jpg',
     description:
       'Sammle Erinnerungen gemeinsam mit der ganzen Familie. Kinder, Eltern, Geschwister – alle können beitragen und kommentieren. Ein gemeinsames Gedächtnis, das die Familie verbindet und für immer erhält.',
     status: 'Geplant',
@@ -48,8 +44,7 @@ const FEATURES = [
     id: 'import-erinnerungen',
     title: 'Import bestehender Erinnerungen',
     subtitle: 'Alles an einem Ort',
-    emoji: '📲',
-    bgClass: 'feature-card__img--import',
+    img: '/features/import-erinnerungen.jpg',
     description:
       'Hol deine Erinnerungen aus allen Quellen: Facebook, WhatsApp, alte Fotos, digitale Tagebücher. Alles wird zusammengeführt – deine komplette Lebensgeschichte, endlich an einem einzigen Ort.',
     status: 'In Planung',
@@ -98,16 +93,23 @@ function FeatureDetailPage({ feature, count, onBack }: DetailProps) {
         <span className="feature-detail__topbar-label">Zukunfts-Feature</span>
       </div>
 
-      <div className={`feature-detail__hero ${feature.bgClass}`}>
-        <span className="feature-detail__hero-emoji" aria-hidden="true">
-          {feature.emoji}
-        </span>
-        <h1 className="feature-detail__title">{feature.title}</h1>
-        <p className="feature-detail__subtitle">{feature.subtitle}</p>
-        <span className="feature-detail__status-badge">{feature.status}</span>
+      <div className="feature-detail__hero">
+        <img
+          src={feature.img}
+          alt={feature.title}
+          className="feature-detail__hero-img"
+        />
+        <div className="feature-detail__hero-overlay">
+          <span className="feature-detail__status-badge">{feature.status}</span>
+        </div>
       </div>
 
       <div className="feature-detail__content">
+        <div>
+          <h1 className="feature-detail__title">{feature.title}</h1>
+          <p className="feature-detail__subtitle">{feature.subtitle}</p>
+        </div>
+
         <div className="feature-detail__coming-soon">
           <span className="feature-detail__coming-icon" aria-hidden="true">🚀</span>
           <div>
@@ -192,10 +194,12 @@ export function FeatureView() {
             type="button"
             aria-label={`${feature.title}: ${feature.subtitle} – Interesse zeigen`}
           >
-            <div className={`feature-card__img ${feature.bgClass}`}>
-              <span className="feature-card__emoji" aria-hidden="true">
-                {feature.emoji}
-              </span>
+            <div className="feature-card__img">
+              <img
+                src={feature.img}
+                alt={feature.title}
+                className="feature-card__img-el"
+              />
               <span className="feature-card__coming" aria-hidden="true">Bald verfügbar</span>
             </div>
             <div className="feature-card__body">
