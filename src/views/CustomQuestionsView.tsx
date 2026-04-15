@@ -65,7 +65,9 @@ export function CustomQuestionsView({
   // Pre-generate share URL whenever questions or answers change.
   // answersSnapshot captures all current answer values so the effect re-runs
   // whenever the user edits an answer (parent re-renders → new snapshot string).
-  const answersSnapshot = customQuestions.map(q => getAnswer(q.id)).join('\0')
+  // Include question IDs so adding/removing a question always changes the dep,
+  // even when all answers are still empty (bare answer-join would be "" in both cases).
+  const answersSnapshot = customQuestions.map(q => `${q.id}:${getAnswer(q.id)}`).join('\0')
   useEffect(() => {
     if (customQuestions.length === 0) { setShareUrl(''); return }
     const memories = customQuestions.map(q => ({
