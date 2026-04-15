@@ -2,6 +2,6 @@
   "buildCommand": "npm install && npm run build",
   "outputDirectory": "dist",
   "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+    { "source": "/((?!_vercel|api|assets|features|categories|.*\\.).*)", "destination": "/index.html" }
   ]
 }
