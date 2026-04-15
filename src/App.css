@@ -507,7 +507,7 @@
 }
 
 .category-card--done   { border-color: var(--success); }
-.category-card--custom { border-style: dashed; }
+.category-card--custom { border-style: solid; }
 
 .category-card__image {
   width: 80px;
