@@ -5,12 +5,12 @@ import { track } from '@vercel/analytics'
 
 const FEATURES = [
   {
-    id: 'ki-biografie',
-    title: 'KI-Biografie',
-    subtitle: 'Ein Buch für deine Kinder',
-    img: '/features/ki-biografie.jpg',
+    id: 'automatische-lebensgeschichte',
+    title: 'Automatische Lebensgeschichte',
+    subtitle: 'Ein Buch für deine Lieben',
+    img: '/features/automatische-lebensgeschichte.jpg',
     description:
-      'Stell dir vor: Deine Lebensgeschichte, liebevoll aufbereitet als echtes Buch. Eine KI liest deine Erinnerungen, ordnet sie nach Kapiteln und schreibt eine Biografie – gestaltet für deine Kinder und Enkelkinder, damit deine Stimme noch Generationen klingt.',
+      'Erstellen Sie mühelos ein fesselndes Buch über Ihr Leben. Unsere KI hilft Ihnen, Ihre kostbarsten Momente und Meilensteine in einer wunderschönen Erzählung festzuhalten, die Sie mit Ihren Lieben teilen können.',
     status: 'Geplant',
   },
   {
@@ -19,7 +19,7 @@ const FEATURES = [
     subtitle: 'Erlebe dein Leben visuell',
     img: '/features/lebenszeitlinie.jpg',
     description:
-      'Sieh dein Leben auf einer interaktiven Zeitlinie. Von der Kindheit bis heute – alle Erinnerungen schön angeordnet, mit Fotos, Aufnahmen und Geschichten hinterlegt. Ein Blick genügt, um dein ganzes Leben zu überblicken.',
+      'Entdecken Sie Ihre Vergangenheit neu auf einer visuellen Reise. Verknüpfen Sie Fotos, Tickets und Erinnerungen chronologisch und teilen Sie Ihre gemeinsame Geschichte.',
     status: 'In Planung',
   },
   {
@@ -28,7 +28,7 @@ const FEATURES = [
     subtitle: 'Sicher & Verschlüsselt',
     img: '/features/privater-sync.jpg',
     description:
-      'Deine Erinnerungen auf all deinen Geräten – sicher Ende-zu-Ende verschlüsselt. Kein Server kann deine Daten lesen. Nur du hast den Schlüssel. Remember Me bleibt privat, egal auf welchem Gerät du bist.',
+      'Ihre Daten sind sicher. Synchronisieren Sie Ihre Erinnerungen und Fotos nahtlos und privat zwischen all Ihren Geräten, geschützt durch starke Verschlüsselung.',
     status: 'In Entwicklung',
   },
   {
@@ -37,7 +37,7 @@ const FEATURES = [
     subtitle: 'Erinnerungen gemeinsam sammeln',
     img: '/features/familienmodus.jpg',
     description:
-      'Sammle Erinnerungen gemeinsam mit der ganzen Familie. Kinder, Eltern, Geschwister – alle können beitragen und kommentieren. Ein gemeinsames Gedächtnis, das die Familie verbindet und für immer erhält.',
+      'Erleben Sie gemeinsame Momente aus allen Blickwinkeln. Jedes Familienmitglied kann seine eigenen Geschichten und Fotos beitragen und so das Familienalbum bereichern.',
     status: 'Geplant',
   },
   {
@@ -46,7 +46,7 @@ const FEATURES = [
     subtitle: 'Alles an einem Ort',
     img: '/features/import-erinnerungen.jpg',
     description:
-      'Hol deine Erinnerungen aus allen Quellen: Facebook, WhatsApp, alte Fotos, digitale Tagebücher. Alles wird zusammengeführt – deine komplette Lebensgeschichte, endlich an einem einzigen Ort.',
+      'Führen Sie Ihre verstreuten Fotos zusammen. Importieren Sie mühelos Erinnerungen aus sozialen Netzwerken, E-Mails, Clouds und lokalen Ordnern in Ihre persönliche Lebensgeschichte.',
     status: 'In Planung',
   },
 ] as const

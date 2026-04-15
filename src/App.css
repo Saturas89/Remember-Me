@@ -3537,7 +3537,7 @@ details[open] .faq-item__chevron {
   height: auto;
   display: block;
   /* alle Bilder haben identisches Seitenverhältnis → einheitliche Höhe */
-  aspect-ratio: 326 / 128;
+  aspect-ratio: 1224 / 492;
   object-fit: cover;
 }
 
