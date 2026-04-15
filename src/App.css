@@ -262,7 +262,7 @@
 .hero-logo__heart-wrap {
   margin-bottom: 0.6rem;
   animation: heartbeat 3.5s ease-in-out infinite;
-  filter: drop-shadow(0 6px 18px color-mix(in srgb, var(--logo-start) 40%, transparent));
+  filter: drop-shadow(0 6px 18px rgba(0, 0, 0, 0.18));
 }
 
 @keyframes heartbeat {
@@ -1447,9 +1447,8 @@
 
 .install-modal__heart {
   width: 3.5rem;
-  height: 3.2rem;
-  overflow: visible;
-  filter: drop-shadow(0 4px 12px color-mix(in srgb, var(--accent) 50%, transparent));
+  height: 3.5rem;
+  /* border-radius, overflow, bg, blend-mode from .app-logo-wrap / .app-logo-img in Logo.css */
 }
 
 .install-modal__app-name {

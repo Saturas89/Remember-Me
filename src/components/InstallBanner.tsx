@@ -1,3 +1,4 @@
+import './Logo.css'
 import type { InstallState } from '../hooks/useInstallPrompt'
 
 interface Props {
@@ -7,18 +8,9 @@ interface Props {
 }
 
 const HeartIcon = () => (
-  <svg viewBox="-6 -6 60 56" fill="none" aria-hidden="true" className="install-modal__heart">
-    <path
-      d="M24 41C24 41 2 27 2 13.5A11.5 11.5 0 0 1 24 6.1 11.5 11.5 0 0 1 46 13.5C46 27 24 41 24 41Z"
-      fill="var(--accent)"
-    />
-    <path
-      d="M13 10c-3 0-5.5 2.5-5.5 5.5"
-      stroke="rgba(255,255,255,0.35)"
-      strokeWidth="2.5"
-      strokeLinecap="round"
-    />
-  </svg>
+  <div className="install-modal__heart app-logo-wrap" aria-hidden="true">
+    <img src="/logo.jpeg" className="app-logo-img" alt="" />
+  </div>
 )
 
 const ShareIcon = () => (

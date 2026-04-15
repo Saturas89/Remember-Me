@@ -10,26 +10,14 @@ const GRADIENTS: Record<string, [string, string]> = {
 const DEFAULT_GRAD: [string, string] = ['#f72585', '#7b2d8b']
 
 function AppLogo({ size }: { size: number }) {
-  // We use CSS masking with the generated logo mask to apply the theme gradient
-  // The gradient is controlled via CSS variables from the theme
   return (
     <div
-      className="app-logo-mask"
-      style={{
-        width: size,
-        height: size,
-        background: `linear-gradient(to bottom, var(--logo-start), var(--logo-end))`,
-        WebkitMaskImage: `url('/logo-mask.png')`,
-        maskImage: `url('/logo-mask.png')`,
-        WebkitMaskSize: 'contain',
-        maskSize: 'contain',
-        WebkitMaskRepeat: 'no-repeat',
-        maskRepeat: 'no-repeat',
-        WebkitMaskPosition: 'center',
-        maskPosition: 'center',
-      }}
+      className="app-logo-wrap"
+      style={{ width: size, height: size }}
       aria-hidden="true"
-    />
+    >
+      <img src="/logo.jpeg" className="app-logo-img" alt="" />
+    </div>
   )
 }
 
