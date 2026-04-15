@@ -51,39 +51,30 @@ const FEATURES = [
   },
 ] as const
 
-type FeatureId = typeof FEATURES[number]['id']
+// ── Vote tracking (one vote per feature, per device) ──
 
-// ── localStorage tracking ──────────────────────────────
-
-const STORAGE_PREFIX = 'feature-interest-'
-
-function getCount(id: FeatureId): number {
+function hasVoted(id: string): boolean {
   try {
-    return parseInt(localStorage.getItem(STORAGE_PREFIX + id) ?? '0', 10) || 0
+    return localStorage.getItem('feature-voted-' + id) === '1'
   } catch {
-    return 0
+    return false
   }
 }
 
-function incrementCount(id: FeatureId): number {
+function markVoted(id: string): void {
   try {
-    const next = getCount(id) + 1
-    localStorage.setItem(STORAGE_PREFIX + id, String(next))
-    return next
-  } catch {
-    return 1
-  }
+    localStorage.setItem('feature-voted-' + id, '1')
+  } catch {}
 }
 
 // ── Detail page ────────────────────────────────────────
 
 interface DetailProps {
   feature: typeof FEATURES[number]
-  count: number
   onBack: () => void
 }
 
-function FeatureDetailPage({ feature, count, onBack }: DetailProps) {
+function FeatureDetailPage({ feature, onBack }: DetailProps) {
   return (
     <div className="feature-detail">
       <div className="feature-detail__topbar">
@@ -120,21 +111,6 @@ function FeatureDetailPage({ feature, count, onBack }: DetailProps) {
 
         <p className="feature-detail__desc">{feature.description}</p>
 
-        <div className="feature-detail__interest-box">
-          <div className="feature-detail__interest-header">
-            <span className="feature-detail__interest-heart" aria-hidden="true">❤️</span>
-            <strong className="feature-detail__interest-count">
-              {count} {count === 1 ? 'Person' : 'Personen'} interessiert
-            </strong>
-          </div>
-          <p className="feature-detail__interest-text">
-            Dein Interesse wurde vermerkt – vielen Dank! Da Remember Me vollständig
-            offline arbeitet, ist das Antippen der Features unsere einzige Möglichkeit
-            zu erfahren, was euch besonders am Herzen liegt. Je mehr Interesse wir
-            sehen, desto schneller setzen wir es um.
-          </p>
-        </div>
-
         <p className="feature-detail__note">
           Hast du Ideen oder Wünsche zu diesem Feature? Schreib uns unter{' '}
           <strong>remember-me.app</strong> – wir freuen uns auf dein Feedback! 🙏
@@ -147,22 +123,25 @@ function FeatureDetailPage({ feature, count, onBack }: DetailProps) {
 // ── Main Feature view ──────────────────────────────────
 
 export function FeatureView() {
-  const [active, setActive] = useState<{ feature: typeof FEATURES[number]; count: number } | null>(null)
+  const [active, setActive] = useState<typeof FEATURES[number] | null>(null)
+  const [voted, setVoted] = useState<ReadonlySet<string>>(
+    () => new Set(FEATURES.map(f => f.id).filter(hasVoted))
+  )
 
   function handleOpen(feature: typeof FEATURES[number]) {
-    // Server-side tracking via Vercel Analytics – sichtbar im Vercel Dashboard
-    track('feature_interest', { feature: feature.id, title: feature.title })
-    // Lokaler Fallback-Zähler (für den Offline-Betrieb)
-    const count = incrementCount(feature.id)
-    setActive({ feature, count })
+    if (!voted.has(feature.id)) {
+      track('feature_interest', { feature: feature.id, title: feature.title })
+      markVoted(feature.id)
+      setVoted(prev => new Set([...prev, feature.id]))
+    }
+    setActive(feature)
     window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior })
   }
 
   if (active) {
     return (
       <FeatureDetailPage
-        feature={active.feature}
-        count={active.count}
+        feature={active}
         onBack={() => setActive(null)}
       />
     )
@@ -189,16 +168,21 @@ export function FeatureView() {
         {FEATURES.map(feature => (
           <button
             key={feature.id}
-            className="feature-img-btn"
+            className={`feature-img-btn${voted.has(feature.id) ? ' feature-img-btn--voted' : ''}`}
             onClick={() => handleOpen(feature)}
             type="button"
-            aria-label={`${feature.title} – Interesse zeigen`}
+            aria-label={`${feature.title} – ${voted.has(feature.id) ? 'bereits abgestimmt' : 'Interesse zeigen'}`}
           >
             <img
               src={feature.img}
               alt={feature.title}
               className="feature-img-btn__img"
             />
+            {voted.has(feature.id) && (
+              <div className="feature-img-btn__voted-badge" aria-hidden="true">
+                ✓ Abgestimmt
+              </div>
+            )}
           </button>
         ))}
       </div>

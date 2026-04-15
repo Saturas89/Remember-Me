@@ -3502,7 +3502,8 @@ details[open] .faq-item__chevron {
 .feature-view__list {
   display: flex;
   flex-direction: column;
-  gap: 0;
+  gap: 1rem;
+  padding: 0 1rem;
 }
 
 .feature-view__footer {
@@ -3516,20 +3517,43 @@ details[open] .faq-item__chevron {
 /* ── Feature image button ─────────────────────────────── */
 .feature-img-btn {
   display: block;
+  position: relative;
   width: 100%;
   padding: 0;
-  border: none;
-  border-radius: 0;
+  border: 1px solid var(--border);
+  border-radius: 14px;
   overflow: hidden;
   cursor: pointer;
   background: none;
   font-family: inherit;
   -webkit-tap-highlight-color: transparent;
-  transition: opacity 0.15s ease;
+  transition: opacity 0.15s ease, box-shadow 0.15s ease;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+}
+
+.feature-img-btn--voted {
+  opacity: 0.72;
+}
+
+.feature-img-btn__voted-badge {
+  position: absolute;
+  bottom: 0.6rem;
+  right: 0.65rem;
+  background: rgba(0, 0, 0, 0.52);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: 0.22rem 0.6rem;
+  border-radius: 99px;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  pointer-events: none;
 }
 
 .feature-img-btn:active {
   opacity: 0.82;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
 }
 
 .feature-img-btn__img {
