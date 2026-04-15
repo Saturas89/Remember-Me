@@ -12,6 +12,13 @@ export const THEMES: { id: ThemeId; label: string; emoji: string; color: string 
 const STORAGE_KEY = 'rm-theme'
 const DEFAULT: ThemeId = 'sepia'
 
+const THEME_BG: Record<ThemeId, string> = {
+  nacht: '#1a1a2e',
+  hell:  '#f5f5f0',
+  sepia: '#f2ebe0',
+  ozean: '#0a1628',
+}
+
 export function useTheme() {
   const [theme, setThemeState] = useState<ThemeId>(() => {
     try {
@@ -23,6 +30,8 @@ export function useTheme() {
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
+    const meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]')
+    if (meta) meta.content = THEME_BG[theme]
     try { localStorage.setItem(STORAGE_KEY, theme) } catch { /* noop */ }
   }, [theme])
 
