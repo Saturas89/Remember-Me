@@ -15,7 +15,7 @@ describe('BottomNav – Menüstruktur', () => {
     render(<BottomNav current="home" onNavigate={onNavigate} />)
     const tabs = screen.getAllByRole('button')
     const labels = tabs.map(t => t.querySelector('.bottom-nav__label')?.textContent)
-    expect(labels).toEqual(['Lebensweg', 'Freunde', 'Vermächtnis', 'Feature', 'Profil'])
+    expect(labels).toEqual(['Lebensweg', 'Freunde', 'Vermächtnis', 'Features', 'Profil'])
   })
 
   it('platziert Vermächtnis als mittleren (3.) Tab', () => {

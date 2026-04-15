@@ -7,10 +7,10 @@ interface Props {
 }
 
 const TABS: { id: MainTab; label: string; emoji: string }[] = [
-  { id: 'home',    label: 'Lebensweg',   emoji: '🏠' },
+  { id: 'home',    label: 'Lebensweg',   emoji: '🛤️' },
   { id: 'friends', label: 'Freunde',     emoji: '👥' },
   { id: 'archive', label: 'Vermächtnis', emoji: '📖' },
-  { id: 'feature', label: 'Feature',     emoji: '✨' },
+  { id: 'feature', label: 'Features',    emoji: '✨' },
   { id: 'profile', label: 'Profil',      emoji: '👤' },
 ]
 
