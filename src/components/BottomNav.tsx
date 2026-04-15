@@ -1,4 +1,4 @@
-type MainTab = 'home' | 'archive' | 'custom-questions' | 'friends' | 'profile'
+type MainTab = 'home' | 'friends' | 'archive' | 'feature' | 'profile'
 
 interface Props {
   current: string
@@ -7,11 +7,11 @@ interface Props {
 }
 
 const TABS: { id: MainTab; label: string; emoji: string }[] = [
-  { id: 'home',             label: 'Start',   emoji: '🏠' },
-  { id: 'archive',          label: 'Archiv',  emoji: '📖' },
-  { id: 'custom-questions', label: 'Fragen',  emoji: '✏️' },
-  { id: 'friends',          label: 'Freunde', emoji: '👥' },
-  { id: 'profile',          label: 'Profil',  emoji: '👤' },
+  { id: 'home',    label: 'Start',       emoji: '🏠' },
+  { id: 'friends', label: 'Freunde',     emoji: '👥' },
+  { id: 'archive', label: 'Vermächtnis', emoji: '📖' },
+  { id: 'feature', label: 'Feature',     emoji: '✨' },
+  { id: 'profile', label: 'Profil',      emoji: '👤' },
 ]
 
 export function BottomNav({ current, onNavigate, friendsBadge = 0 }: Props) {

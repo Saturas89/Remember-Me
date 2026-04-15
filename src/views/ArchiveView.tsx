@@ -245,7 +245,7 @@ export function ArchiveView({
         <button className="btn btn--ghost btn--sm no-print" onClick={onBack}>
           ← Zurück
         </button>
-        <h2 className="archive-title">📖 Mein Lebensarchiv</h2>
+        <h2 className="archive-title">📖 Mein Vermächtnis</h2>
       </div>
 
       {!hasAnything && (
