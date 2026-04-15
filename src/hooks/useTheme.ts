@@ -19,6 +19,13 @@ const THEME_BG: Record<ThemeId, string> = {
   ozean: '#0a1628',
 }
 
+const THEME_SCHEME: Record<ThemeId, 'light' | 'dark'> = {
+  nacht: 'dark',
+  hell:  'light',
+  sepia: 'light',
+  ozean: 'dark',
+}
+
 export function useTheme() {
   const [theme, setThemeState] = useState<ThemeId>(() => {
     try {
@@ -30,6 +37,7 @@ export function useTheme() {
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
+    document.documentElement.style.colorScheme = THEME_SCHEME[theme]
     const meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]')
     if (meta) meta.content = THEME_BG[theme]
     try { localStorage.setItem(STORAGE_KEY, theme) } catch { /* noop */ }
