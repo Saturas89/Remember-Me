@@ -13,6 +13,8 @@ function makeAnswers(count: number): Record<string, Answer> {
   const result: Record<string, Answer> = {}
   for (let i = 0; i < count; i++) {
     result[`q-${i}`] = {
+      id: `q-${i}`,
+      questionId: `q-${i}`,
       categoryId: 'childhood',
       value: 'Testantwort',
       createdAt: '2024-01-01T00:00:00.000Z',
