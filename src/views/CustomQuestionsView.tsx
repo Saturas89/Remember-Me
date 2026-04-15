@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { decodeQuestionPack } from '../utils/sharing'
-import { generateMemoryShareUrl } from '../utils/secureLink'
+import { generateMemoryShareUrlSync } from '../utils/secureLink'
 import { useImageStore } from '../hooks/useImageStore'
 import { addAudio, removeAudio } from '../hooks/useAudioStore'
 import { addVideo, removeVideo } from '../hooks/useVideoStore'
@@ -77,39 +77,51 @@ export function CustomQuestionsView({
     setAnsweringId(null)
   }
 
-  async function handleShare() {
+  // Synchronous handler – URL is built before any await so navigator.share()
+  // is called directly inside the click gesture (required by Safari / iOS).
+  // Same pattern as FriendsView.handleShare.
+  function handleShare() {
     if (customQuestions.length === 0 || isSharing) return
-    setIsSharing(true)
+
+    let url: string
     try {
       const memories = customQuestions.map(q => ({
         title: q.text,
         content: getAnswer(q.id).trim() || undefined,
       }))
-      const url = await generateMemoryShareUrl({ memories, sharedBy: profileName || undefined })
-      const shareData = {
-        title: 'Meine Erinnerungen',
-        text: profileName
-          ? `${profileName} hat Erinnerungen mit dir geteilt.`
-          : 'Geteilte Erinnerungen',
-        url,
-      }
-      if (typeof navigator.share === 'function') {
-        try {
-          await navigator.share(shareData)
-        } catch (e) {
-          if ((e as Error).name === 'AbortError') return
-          // share failed – fall back to clipboard
-          await navigator.clipboard.writeText(url)
-          setShareStatus('copied')
-        }
-      } else {
-        await navigator.clipboard.writeText(url)
-        setShareStatus('copied')
-      }
+      url = generateMemoryShareUrlSync({ memories, sharedBy: profileName || undefined })
     } catch {
       setShareStatus('error')
-    } finally {
-      setIsSharing(false)
+      return
+    }
+    const shareData = {
+      title: 'Meine Erinnerungen',
+      text: profileName
+        ? `${profileName} hat Erinnerungen mit dir geteilt.`
+        : 'Geteilte Erinnerungen',
+      url,
+    }
+
+    setIsSharing(true)
+
+    if (typeof navigator.share === 'function') {
+      navigator
+        .share(shareData)
+        .then(() => setIsSharing(false))
+        .catch(err => {
+          setIsSharing(false)
+          if ((err as Error).name === 'AbortError') return
+          navigator.clipboard
+            ?.writeText(url)
+            .then(() => setShareStatus('copied'))
+            .catch(() => setShareStatus('error'))
+        })
+    } else {
+      navigator.clipboard
+        .writeText(url)
+        .then(() => setShareStatus('copied'))
+        .catch(() => setShareStatus('error'))
+        .finally(() => setIsSharing(false))
     }
   }
 
