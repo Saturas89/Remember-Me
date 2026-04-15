@@ -2020,20 +2020,6 @@
   outline: none !important;
 }
 
-.profile-save-btn {
-  width: 100%;
-  background: linear-gradient(135deg, var(--logo-start), var(--logo-end));
-  border: none;
-  border-radius: 50px;
-  color: #fff;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  box-shadow: 0 3px 12px color-mix(in srgb, var(--logo-start) 30%, transparent);
-  transition: opacity 0.15s, transform 0.1s;
-}
-.profile-save-btn:hover:not(:disabled)  { opacity: 0.88; transform: scale(1.02); }
-.profile-save-btn:active:not(:disabled) { transform: scale(0.97); }
-.profile-save-btn:disabled { opacity: 0.45; }
 
 /* ── Theme cards ─────────────────────────────────────────── */
 .theme-cards {
