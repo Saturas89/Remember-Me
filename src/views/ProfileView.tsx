@@ -223,7 +223,7 @@ export function ProfileView({
 
       {/* Erinnerungs-Archiv – hero export action */}
       <section className="profile-card">
-        <h2 className="profile-card__heading">Sichern & Teilen</h2>
+        <h2 className="profile-card__heading">Meine Geschichte</h2>
         <ArchiveExportCard
           data={exportData}
           safeName={safeName}
