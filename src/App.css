@@ -3524,18 +3524,21 @@ details[open] .faq-item__chevron {
   cursor: pointer;
   background: none;
   font-family: inherit;
-  transition: opacity 0.15s ease;
   -webkit-tap-highlight-color: transparent;
+  transition: opacity 0.15s ease;
 }
 
 .feature-img-btn:active {
-  opacity: 0.85;
+  opacity: 0.82;
 }
 
 .feature-img-btn__img {
   width: 100%;
   height: auto;
   display: block;
+  /* alle Bilder haben identisches Seitenverhältnis → einheitliche Höhe */
+  aspect-ratio: 326 / 128;
+  object-fit: cover;
 }
 
 /* ── Feature detail page ──────────────────────────────── */
