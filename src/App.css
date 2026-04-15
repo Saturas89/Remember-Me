@@ -262,7 +262,7 @@
 .hero-logo__heart-wrap {
   margin-bottom: 0.6rem;
   animation: heartbeat 3.5s ease-in-out infinite;
-  filter: drop-shadow(0 6px 18px color-mix(in srgb, var(--logo-start) 40%, transparent));
+  filter: drop-shadow(0 6px 18px rgba(0, 0, 0, 0.18));
 }
 
 @keyframes heartbeat {

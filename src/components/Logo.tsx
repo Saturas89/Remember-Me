@@ -13,9 +13,13 @@ function AppLogo({ size }: { size: number }) {
   return (
     <img
       src="/logo.jpeg"
-      width={size}
-      height={size}
-      style={{ objectFit: 'contain', borderRadius: '50%' }}
+      style={{
+        width: size,
+        height: size,
+        objectFit: 'contain',
+        display: 'block',
+        borderRadius: '50%',
+      }}
       aria-hidden="true"
       alt=""
     />
