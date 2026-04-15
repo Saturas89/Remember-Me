@@ -53,7 +53,6 @@ export function ProfileView({
   const [birthYear, setBirthYear] = useState(
     profile?.birthYear ? String(profile.birthYear) : '',
   )
-  const [saved, setSaved] = useState(false)
   const [importStatus, setImportStatus] = useState<{ ok: boolean; message: string } | null>(null)
   const [importProgress, setImportProgress] = useState<{ step: string; pct: number } | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -85,8 +84,6 @@ export function ProfileView({
       birthYear: birthYear ? parseInt(birthYear, 10) : undefined,
       createdAt: profile?.createdAt ?? new Date().toISOString(),
     })
-    setSaved(true)
-    setTimeout(() => setSaved(false), 2000)
   }
 
   async function handleImportFile(e: React.ChangeEvent<HTMLInputElement>) {
@@ -173,12 +170,10 @@ export function ProfileView({
             <span className="profile-stat__value">{friendCount}</span>
             <span className="profile-stat__label">Freunde</span>
           </div>
-          {daysSince > 0 && (
-            <div className="profile-stat">
-              <span className="profile-stat__value">{daysSince}</span>
-              <span className="profile-stat__label">Tage dabei</span>
-            </div>
-          )}
+          <div className="profile-stat">
+            <span className="profile-stat__value">{daysSince}</span>
+            <span className="profile-stat__label">Tage dabei</span>
+          </div>
         </div>
         <BackupStatusRow last={lastBackup} />
       </section>
@@ -194,7 +189,8 @@ export function ProfileView({
               className="input-text profile-field-input"
               value={name}
               onChange={e => setName(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && handleSave()}
+              onBlur={handleSave}
+              onKeyDown={e => e.key === 'Enter' && (e.currentTarget.blur())}
               placeholder="Dein Name…"
             />
           </div>
@@ -208,17 +204,21 @@ export function ProfileView({
               max={new Date().getFullYear()}
               value={birthYear}
               onChange={e => setBirthYear(e.target.value)}
+              onBlur={handleSave}
               placeholder="z. B. 1970"
             />
           </div>
         </div>
-        <button
-          className={`btn ${saved ? 'btn--success' : 'btn--primary'} profile-save-btn`}
-          onClick={handleSave}
-          disabled={!name.trim()}
-        >
-          {saved ? '✓ Gespeichert' : 'Speichern'}
-        </button>
+      </section>
+
+      {/* Erinnerungs-Archiv – hero export action */}
+      <section className="profile-card">
+        <h2 className="profile-card__heading">Meine Geschichte</h2>
+        <ArchiveExportCard
+          data={exportData}
+          safeName={safeName}
+          onBackupRecorded={() => setLastBackup(new Date())}
+        />
       </section>
 
       {/* Erscheinungsbild */}
@@ -259,16 +259,6 @@ export function ProfileView({
           </span>
           <span className="profile-import-card__arrow">›</span>
         </button>
-      </section>
-
-      {/* Erinnerungs-Archiv – hero export action */}
-      <section className="profile-card">
-        <h2 className="profile-card__heading">Sichern & Teilen</h2>
-        <ArchiveExportCard
-          data={exportData}
-          safeName={safeName}
-          onBackupRecorded={() => setLastBackup(new Date())}
-        />
       </section>
 
       {/* Weitere Exportformate */}
