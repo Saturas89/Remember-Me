@@ -3480,6 +3480,7 @@ details[open] .faq-item__chevron {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  animation: fade-slide-up 0.4s ease 0.05s both;
 }
 
 .feature-view__intro {
@@ -3513,6 +3514,13 @@ details[open] .faq-item__chevron {
   color: var(--text-faint);
   padding: 0 1rem 0.5rem;
 }
+
+/* ── Feature list stagger animations ─────────────────── */
+.feature-view__list .feature-img-btn:nth-child(1) { animation: fade-slide-up 0.4s ease 0.08s both; }
+.feature-view__list .feature-img-btn:nth-child(2) { animation: fade-slide-up 0.4s ease 0.15s both; }
+.feature-view__list .feature-img-btn:nth-child(3) { animation: fade-slide-up 0.4s ease 0.22s both; }
+.feature-view__list .feature-img-btn:nth-child(4) { animation: fade-slide-up 0.4s ease 0.29s both; }
+.feature-view__list .feature-img-btn:nth-child(5) { animation: fade-slide-up 0.4s ease 0.36s both; }
 
 /* ── Feature image button ─────────────────────────────── */
 .feature-img-btn {

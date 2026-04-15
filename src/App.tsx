@@ -50,6 +50,17 @@ type MainTab = 'home' | 'friends' | 'archive' | 'feature' | 'profile'
 // Detect URL type synchronously to show a loading state before async parse
 const needsAsyncParse = isSecureInviteHash() || isAnswerHash() || isMemoryShareHash()
 
+// ── Pathname ↔ View mapping (for Vercel Analytics page tracking) ──────────
+function pathToView(pathname: string): View {
+  switch (pathname.split('/')[1]) {
+    case 'friends': return { name: 'friends' }
+    case 'archive': return { name: 'archive' }
+    case 'profile': return { name: 'profile' }
+    case 'feature': return { name: 'feature' }
+    default:        return { name: 'home' }
+  }
+}
+
 const INVITE_URL_STORAGE_KEY = 'remember-me-invite-url'
 
 function loadCachedInviteUrl(): string {
@@ -124,7 +135,7 @@ export default function App() {
     if (!pendingAnswerImport || !isLoaded) return
     importFriendAnswers(pendingAnswerImport)
     setPendingAnswerImport(null)
-    window.history.replaceState(null, '', window.location.pathname)
+    history.replaceState({}, '', '/friends')
     setView({ name: 'friends' })
   }, [pendingAnswerImport, isLoaded]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -174,10 +185,19 @@ export default function App() {
     downloadFile(exportAsEnrichedJSON(exportData), `${safeName}.json`, 'application/json')
   }
 
-  const [view, setView] = useState<View>({ name: 'home' })
+  const [view, setView] = useState<View>(() =>
+    needsAsyncParse ? { name: 'home' } : pathToView(window.location.pathname)
+  )
   const { state: installState, visible: installVisible, triggerInstall, dismiss: dismissInstall } = useInstallPrompt()
   const { needRefresh, applyUpdate, dismiss: dismissUpdate } = useServiceWorker()
   const { showPrompt: showReminderPrompt, requestPermission: enableReminder, dismissPrompt: dismissReminder } = useReminder()
+
+  // Sync view with browser back/forward navigation
+  useEffect(() => {
+    const onPopstate = () => setView(pathToView(window.location.pathname))
+    window.addEventListener('popstate', onPopstate)
+    return () => window.removeEventListener('popstate', onPopstate)
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!isLoaded || urlParsing) {
     return null // avoid flicker while loading or parsing URL
@@ -202,8 +222,18 @@ export default function App() {
     )
   }
 
+  // Navigate to a main tab and update the URL so Vercel Analytics tracks the page view
+  function goTo(v: View) {
+    const paths: Partial<Record<View['name'], string>> = {
+      home: '/', friends: '/friends', archive: '/archive', profile: '/profile', feature: '/feature',
+    }
+    const path = paths[v.name]
+    if (path !== undefined) history.pushState({}, '', path)
+    setView(v)
+  }
+
   function navigate(tab: MainTab) {
-    setView({ name: tab } as View)
+    goTo({ name: tab } as View)
   }
 
   const friendsBadge = friendAnswers.filter(a => a.value.trim()).length
@@ -247,7 +277,7 @@ export default function App() {
           onBack={() =>
             view.categoryId === 'custom'
               ? setView({ name: 'custom-questions' })
-              : setView({ name: 'home' })
+              : goTo({ name: 'home' })
           }
         />
         {installVisible && <InstallBanner state={installState} onInstall={triggerInstall} onDismiss={dismissInstall} />}
@@ -271,7 +301,7 @@ export default function App() {
           onSetAudio={setAnswerAudio}
           onDeleteAnswer={deleteAnswer}
           onDeleteEntry={id => { removeCustomQuestion(id); deleteAnswer(id) }}
-          onBack={() => setView({ name: 'home' })}
+          onBack={() => goTo({ name: 'home' })}
         />
       )}
 
@@ -283,7 +313,7 @@ export default function App() {
           friendAnswers={friendAnswers}
           onRemoveFriend={removeFriend}
           onImportAnswers={importFriendAnswers}
-          onBack={() => setView({ name: 'home' })}
+          onBack={() => goTo({ name: 'home' })}
         />
       )}
 
@@ -295,7 +325,7 @@ export default function App() {
           exportData={exportData}
           safeName={safeName}
           onSave={saveProfile}
-          onBack={() => setView({ name: 'home' })}
+          onBack={() => goTo({ name: 'home' })}
           onExportMarkdown={handleExportMarkdown}
           onExportJson={handleExportJson}
           onImportBackup={restoreBackup}
@@ -307,8 +337,8 @@ export default function App() {
       {view.name === 'import' && (
         <ImportView
           onImport={importSocialMediaEntries}
-          onBack={() => setView({ name: 'profile' })}
-          onDone={() => setView({ name: 'archive' })}
+          onBack={() => goTo({ name: 'profile' })}
+          onDone={() => goTo({ name: 'archive' })}
         />
       )}
 
@@ -327,7 +357,7 @@ export default function App() {
           onAdd={addCustomQuestion}
           onRemove={removeCustomQuestion}
           onImport={importCustomQuestions}
-          onBack={() => setView({ name: 'home' })}
+          onBack={() => goTo({ name: 'home' })}
         />
       )}
 
@@ -336,7 +366,7 @@ export default function App() {
       )}
 
       {view.name === 'faq' && (
-        <FaqView onBack={() => setView({ name: view.from } as View)} />
+        <FaqView onBack={() => goTo({ name: view.from } as View)} />
       )}
 
       {view.name === 'home' && (
