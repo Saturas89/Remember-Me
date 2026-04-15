@@ -32,7 +32,8 @@ describe('HomeView – Eigene Erinnerung card', () => {
 
   it('shows placeholder text when no custom entries exist', () => {
     const { container } = render(<HomeView {...defaultProps} />)
-    expect(getCustomCard(container).textContent).toContain('Erstelle deine eigenen Erinnerungen')
+    expect(getCustomCard(container).textContent).toContain('Was hat dich geprägt?')
+    expect(getCustomCard(container).textContent).toContain('lade Liebste ein')
   })
 
   it('shows count text when custom entries exist', () => {
@@ -41,7 +42,9 @@ describe('HomeView – Eigene Erinnerung card', () => {
       { id: 'cq-2', text: 'Frage 2', type: 'text', createdAt: '2024-01-01T00:00:00.000Z' },
     ]
     const { container } = render(<HomeView {...defaultProps} customQuestions={customQuestions} />)
-    expect(getCustomCard(container).textContent).toContain('2 eigene Erinnerungen')
+    expect(getCustomCard(container).textContent).not.toContain('2')
+    expect(getCustomCard(container).textContent).toContain('Deine Erinnerungen')
+    expect(getCustomCard(container).textContent).toContain('teile sie')
   })
 
   it('calls onSelectCategory with "custom" when the card is clicked', () => {

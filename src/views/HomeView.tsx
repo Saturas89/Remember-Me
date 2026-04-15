@@ -79,8 +79,8 @@ export function HomeView({
             <h3 className="category-card__title">Eigene Erinnerung</h3>
             <p className="category-card__desc">
               {customQuestions.length > 0
-                ? `${customQuestions.length} eigene Erinnerungen`
-                : 'Erstelle deine eigenen Erinnerungen'}
+                ? 'Deine Erinnerungen – teile sie und lass Liebste deine Geschichte ergänzen'
+                : 'Was hat dich geprägt? Halte es fest – und lade Liebste ein, deine Geschichte zu bereichern'}
             </p>
           </div>
         </button>

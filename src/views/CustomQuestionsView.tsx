@@ -134,8 +134,6 @@ export function CustomQuestionsView({
     setTimeout(() => setImportMsg(null), 3000)
   }
 
-  const answeredCount = customQuestions.filter(q => getAnswer(q.id).trim()).length
-
   return (
     <div className="custom-q-view">
       <img src="/categories/custom-banner.svg" className="quiz-banner" alt="" />
@@ -148,9 +146,6 @@ export function CustomQuestionsView({
 
       <p className="friends-intro">
         Halte hier deine eigenen Erinnerungen fest – gib ihnen einen Titel und schreibe auf, was du bewahren möchtest.
-        {customQuestions.length > 0 && (
-          <> {answeredCount}/{customQuestions.length} eingetragen.</>
-        )}
       </p>
 
       {/* Add question */}

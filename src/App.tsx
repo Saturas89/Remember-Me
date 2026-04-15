@@ -23,6 +23,7 @@ import { ImportView } from './views/ImportView'
 import { FaqView } from './views/FaqView'
 import { OnboardingView } from './views/OnboardingView'
 import { SharedMemoryView } from './views/SharedMemoryView'
+import { FeatureView } from './views/FeatureView'
 import { InstallBanner } from './components/InstallBanner'
 import { UpdateBanner } from './components/UpdateBanner'
 import { ReminderBanner } from './components/ReminderBanner'
@@ -39,11 +40,12 @@ type View =
   | { name: 'archive' }
   | { name: 'friends' }
   | { name: 'profile' }
+  | { name: 'feature' }
   | { name: 'custom-questions' }
   | { name: 'import' }
   | { name: 'faq'; from: 'profile' | 'home' }
 
-type MainTab = 'home' | 'archive' | 'custom-questions' | 'friends' | 'profile'
+type MainTab = 'home' | 'friends' | 'archive' | 'feature' | 'profile'
 
 // Detect URL type synchronously to show a loading state before async parse
 const needsAsyncParse = isSecureInviteHash() || isAnswerHash() || isMemoryShareHash()
@@ -327,6 +329,10 @@ export default function App() {
           onImport={importCustomQuestions}
           onBack={() => setView({ name: 'home' })}
         />
+      )}
+
+      {view.name === 'feature' && (
+        <FeatureView />
       )}
 
       {view.name === 'faq' && (
