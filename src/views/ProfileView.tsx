@@ -170,12 +170,10 @@ export function ProfileView({
             <span className="profile-stat__value">{friendCount}</span>
             <span className="profile-stat__label">Freunde</span>
           </div>
-          {daysSince > 0 && (
-            <div className="profile-stat">
-              <span className="profile-stat__value">{daysSince}</span>
-              <span className="profile-stat__label">Tage dabei</span>
-            </div>
-          )}
+          <div className="profile-stat">
+            <span className="profile-stat__value">{daysSince}</span>
+            <span className="profile-stat__label">Tage dabei</span>
+          </div>
         </div>
         <BackupStatusRow last={lastBackup} />
       </section>
