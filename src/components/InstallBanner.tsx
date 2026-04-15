@@ -7,18 +7,12 @@ interface Props {
 }
 
 const HeartIcon = () => (
-  <svg viewBox="-6 -6 60 56" fill="none" aria-hidden="true" className="install-modal__heart">
-    <path
-      d="M24 41C24 41 2 27 2 13.5A11.5 11.5 0 0 1 24 6.1 11.5 11.5 0 0 1 46 13.5C46 27 24 41 24 41Z"
-      fill="var(--accent)"
-    />
-    <path
-      d="M13 10c-3 0-5.5 2.5-5.5 5.5"
-      stroke="rgba(255,255,255,0.35)"
-      strokeWidth="2.5"
-      strokeLinecap="round"
-    />
-  </svg>
+  <img
+    src="/logo.jpeg"
+    className="install-modal__heart"
+    aria-hidden="true"
+    alt=""
+  />
 )
 
 const ShareIcon = () => (

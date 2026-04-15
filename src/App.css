@@ -1447,9 +1447,10 @@
 
 .install-modal__heart {
   width: 3.5rem;
-  height: 3.2rem;
-  overflow: visible;
-  filter: drop-shadow(0 4px 12px color-mix(in srgb, var(--accent) 50%, transparent));
+  height: 3.5rem;
+  object-fit: contain;
+  border-radius: 50%;
+  display: block;
 }
 
 .install-modal__app-name {
