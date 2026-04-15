@@ -1910,24 +1910,34 @@
   padding: 1.5rem 0 1.75rem;
 }
 
-.profile-avatar {
-  width: 5rem;
-  height: 5rem;
-  border-radius: 50%;
-  background: var(--accent);
-  color: #fff;
-  font-size: 1.75rem;
-  font-weight: 800;
-  letter-spacing: -0.03em;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 0.75rem;
-  box-shadow:
-    0 4px 20px color-mix(in srgb, var(--accent) 38%, transparent),
-    0 0 0 4px color-mix(in srgb, var(--accent) 14%, transparent);
+.tree-progress-logo {
+  position: relative;
+  overflow: hidden;
   flex-shrink: 0;
-  user-select: none;
+  margin-bottom: 0.75rem;
+  -webkit-mask-image: url('/logo-mask.png');
+  mask-image: url('/logo-mask.png');
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+.tree-progress-logo__bg {
+  position: absolute;
+  inset: 0;
+  background: var(--surface-raised);
+}
+
+.tree-progress-logo__fill {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(to top, var(--logo-end), var(--logo-start));
+  transition: height 0.6s ease;
 }
 
 .profile-identity__name {
