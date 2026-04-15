@@ -1230,6 +1230,41 @@
 
 .export-hint { font-size: 0.82rem; color: var(--text-faint); max-width: 400px; }
 
+/* ── Answer share link box (FriendAnswerView done screen) ── */
+.answer-link-box {
+  width: 100%;
+  max-width: 480px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  text-align: left;
+}
+
+.answer-link-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.answer-link-url {
+  flex: 1;
+  font-size: 0.75rem;
+  font-family: monospace;
+  color: var(--text-muted);
+  word-break: break-all;
+  line-height: 1.4;
+  min-width: 0;
+}
+
+.answer-link-loading {
+  font-size: 0.82rem;
+  color: var(--text-faint);
+}
+
 /* ── Buttons ─────────────────────────────────────────── */
 .btn {
   display: inline-flex;

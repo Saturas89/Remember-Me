@@ -10,6 +10,7 @@ import {
   isSecureInviteHash,
   generateAnswerUrl,
   parseAnswerFromHash,
+  parseAnswerFromUrl,
   isAnswerHash,
 } from './secureLink'
 import type { InviteData, AnswerExport } from '../types'
@@ -170,5 +171,44 @@ describe('generateAnswerUrl / parseAnswerFromHash', () => {
   it('returns null when payload is corrupted', async () => {
     setHash('#ma/!!!notvalidbase64url!!!')
     expect(await parseAnswerFromHash()).toBeNull()
+  })
+})
+
+// ── parseAnswerFromUrl ────────────────────────────────────────────────────────
+
+describe('parseAnswerFromUrl', () => {
+  const answers: AnswerExport = {
+    friendId: 'f-002',
+    friendName: 'Lena',
+    answers: [{ questionId: 'q1', value: 'Hallo', questionText: 'Frage' }],
+  }
+
+  it('round-trips via full URL string', async () => {
+    const url = await generateAnswerUrl(answers)
+    expect(await parseAnswerFromUrl(url)).toEqual(answers)
+  })
+
+  it('round-trips via bare hash string', async () => {
+    const url = await generateAnswerUrl(answers)
+    const hash = '#' + url.split('#')[1]
+    expect(await parseAnswerFromUrl(hash)).toEqual(answers)
+  })
+
+  it('round-trips via plain-Base64 fallback URL', async () => {
+    const plain = btoa(encodeURIComponent(JSON.stringify(answers)))
+    const url = `https://example.com/#ma-plain/${plain}`
+    expect(await parseAnswerFromUrl(url)).toEqual(answers)
+  })
+
+  it('returns null for an invite URL', async () => {
+    expect(await parseAnswerFromUrl('https://example.com/#mi/abc:key')).toBeNull()
+  })
+
+  it('returns null for an empty string', async () => {
+    expect(await parseAnswerFromUrl('')).toBeNull()
+  })
+
+  it('returns null for corrupted payload', async () => {
+    expect(await parseAnswerFromUrl('#ma/!!!bad!!!')).toBeNull()
   })
 })
