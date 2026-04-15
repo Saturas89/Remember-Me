@@ -221,6 +221,16 @@ export function ProfileView({
         </button>
       </section>
 
+      {/* Erinnerungs-Archiv – hero export action */}
+      <section className="profile-card">
+        <h2 className="profile-card__heading">Sichern & Teilen</h2>
+        <ArchiveExportCard
+          data={exportData}
+          safeName={safeName}
+          onBackupRecorded={() => setLastBackup(new Date())}
+        />
+      </section>
+
       {/* Erscheinungsbild */}
       <section className="profile-card">
         <h2 className="profile-card__heading">Erscheinungsbild</h2>
@@ -259,16 +269,6 @@ export function ProfileView({
           </span>
           <span className="profile-import-card__arrow">›</span>
         </button>
-      </section>
-
-      {/* Erinnerungs-Archiv – hero export action */}
-      <section className="profile-card">
-        <h2 className="profile-card__heading">Sichern & Teilen</h2>
-        <ArchiveExportCard
-          data={exportData}
-          safeName={safeName}
-          onBackupRecorded={() => setLastBackup(new Date())}
-        />
       </section>
 
       {/* Weitere Exportformate */}
