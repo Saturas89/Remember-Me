@@ -99,7 +99,7 @@ export function ArchiveExportCard({ data, safeName, onBackupRecorded }: Props) {
           <h3 className="arc-title">Deine Erinnerungen</h3>
           <p className="arc-desc">
             Alles was du festgehalten hast – Texte, Fotos und Sprachaufnahmen –
-            sicher in einem Paket. Etwas das bleibt.
+            sicher in einem Paket. Etwas das für immer bleibt und du ablegen kannst wo du magst.
           </p>
           {(answerCount + photoCount + videoCount + audioCount) > 0 && (
             <div className="arc-chips">
