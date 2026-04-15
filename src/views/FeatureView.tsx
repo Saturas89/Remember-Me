@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { track } from '@vercel/analytics'
 
 // ── Feature definitions ────────────────────────────────
 
@@ -147,6 +148,9 @@ export function FeatureView() {
   const [active, setActive] = useState<{ feature: typeof FEATURES[number]; count: number } | null>(null)
 
   function handleOpen(feature: typeof FEATURES[number]) {
+    // Server-side tracking via Vercel Analytics – sichtbar im Vercel Dashboard
+    track('feature_interest', { feature: feature.id, title: feature.title })
+    // Lokaler Fallback-Zähler (für den Offline-Betrieb)
     const count = incrementCount(feature.id)
     setActive({ feature, count })
     window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior })
