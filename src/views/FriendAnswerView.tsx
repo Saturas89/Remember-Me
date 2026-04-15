@@ -40,6 +40,7 @@ export function FriendAnswerView({ invite }: Props) {
   const [exportCode, setExportCode] = useState<string | null>(null)
   const [answerUrl, setAnswerUrl] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
+  const [linkCopied, setLinkCopied] = useState(false)
   const [isSharing, setIsSharing] = useState(false)
 
   const topic = useMemo(
@@ -111,18 +112,19 @@ export function FriendAnswerView({ invite }: Props) {
     if (!answerUrl || isSharing) return
     setIsSharing(true)
     try {
-      const didShare = await shareOrCopy({
+      await shareOrCopy({
         title: 'Meine Erinnerungen',
         text: `Hier sind meine Erinnerungen für ${invite.profileName}:`,
         url: answerUrl,
       })
-      if (!didShare) {
-        // Fallback: copy the raw code
-        navigator.clipboard.writeText(exportCode ?? '').then(() => setCopied(true))
-      }
     } finally {
       setIsSharing(false)
     }
+  }
+
+  function handleCopyLink() {
+    if (!answerUrl) return
+    navigator.clipboard.writeText(answerUrl).then(() => setLinkCopied(true))
   }
 
   function handleCopyCode() {
@@ -147,14 +149,32 @@ export function FriendAnswerView({ invite }: Props) {
             onClick={handleShare}
             disabled={!answerUrl || isSharing}
           >
-            {isSharing
-              ? 'Wird geöffnet…'
-              : copied
-                ? '✓ Kopiert!'
-                : 'Erinnerungen verschicken'}
+            {isSharing ? 'Wird geöffnet…' : '📤 Erinnerungen verschicken'}
           </button>
 
-          {/* Secondary: manual code copy */}
+          {/* Copy link directly */}
+          <div className="answer-link-box">
+            {answerUrl ? (
+              <>
+                <div className="answer-link-row">
+                  <span className="answer-link-url">{answerUrl}</span>
+                  <button
+                    className={`btn btn--outline btn--sm${linkCopied ? ' btn--success' : ''}`}
+                    onClick={handleCopyLink}
+                  >
+                    {linkCopied ? '✓ Kopiert!' : '🔗 Link kopieren'}
+                  </button>
+                </div>
+                <p className="export-hint">
+                  Wenn {invite.profileName} diesen Link öffnet, werden die Antworten automatisch importiert.
+                </p>
+              </>
+            ) : (
+              <p className="answer-link-loading">Link wird erstellt…</p>
+            )}
+          </div>
+
+          {/* Deep fallback: manual code copy */}
           {exportCode && (
             <details className="export-fallback">
               <summary>Code manuell kopieren</summary>
@@ -166,8 +186,8 @@ export function FriendAnswerView({ invite }: Props) {
                 {copied ? '✓ Kopiert!' : '📋 Code kopieren'}
               </button>
               <p className="export-hint">
-                {invite.profileName} fügt den Code unter „Erinnerung einsammeln → Antwort-Code
-                eingeben" ein.
+                {invite.profileName} fügt den Code unter „Erinnerung einsammeln → Antwort-Link oder
+                Code eingeben" ein.
               </p>
             </details>
           )}

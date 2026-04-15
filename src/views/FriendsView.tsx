@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { FriendCard } from '../components/FriendCard'
 import { decodeAnswerExport } from '../utils/sharing'
+import { parseAnswerFromUrl } from '../utils/secureLink'
 import type { Friend, FriendAnswer, AnswerExport } from '../types'
 
 interface Props {
@@ -79,12 +80,26 @@ export function FriendsView({
   }
 
 
-  function handleImport() {
+  async function handleImport() {
     setImportError(null)
     setImportSuccess(false)
-    const data = decodeAnswerExport(importCode)
+    const raw = importCode.trim()
+
+    // If the pasted text looks like a share link, try URL parsing first
+    if (raw.includes('#ma/') || raw.includes('#ma-plain/')) {
+      const data = await parseAnswerFromUrl(raw)
+      if (data) {
+        onImportAnswers(data)
+        setImportSuccess(true)
+        setImportCode('')
+        return
+      }
+    }
+
+    // Fallback: treat as plain Base64 code
+    const data = decodeAnswerExport(raw)
     if (!data) {
-      setImportError('Ungültiger Code. Bitte kopiere den Code vollständig.')
+      setImportError('Ungültiger Code oder Link. Bitte kopiere ihn vollständig.')
       return
     }
     onImportAnswers(data)
@@ -155,9 +170,9 @@ export function FriendsView({
 
       {/* Manual import fallback */}
       <section className="friends-section">
-        <h3 className="friends-section-title">Antwort-Code eingeben</h3>
+        <h3 className="friends-section-title">Antwort-Link oder Code eingeben</h3>
         <p className="friends-hint">
-          Hat jemand dir einen Antwortcode geschickt? Füge ihn hier ein:
+          Hat jemand dir einen Antwort-Link oder Code geschickt? Füge ihn hier ein:
         </p>
         <textarea
           className="input-textarea"
@@ -167,7 +182,7 @@ export function FriendsView({
             setImportError(null)
             setImportSuccess(false)
           }}
-          placeholder="Antwortcode hier einfügen…"
+          placeholder="Antwort-Link oder Code hier einfügen…"
           rows={3}
         />
         {importError && <p className="import-msg import-msg--error">{importError}</p>}

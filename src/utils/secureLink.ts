@@ -213,6 +213,37 @@ export function isAnswerHash(): boolean {
 }
 
 /**
+ * Parse an answer export from an arbitrary string – either a full URL
+ * (e.g. "https://example.com/#ma/xyz") or a bare hash fragment ("#ma/xyz").
+ * Useful for the manual-import text field where the user may paste either form.
+ */
+export async function parseAnswerFromUrl(input: string): Promise<AnswerExport | null> {
+  const match = input.match(/#(ma(?:-plain)?\/\S+)/)
+  if (!match) return null
+  const hash = '#' + match[1]
+
+  const m = hash.match(/^#ma\/([A-Za-z0-9_-]+)/)
+  if (m) {
+    try {
+      return JSON.parse(await decompress(fromB64u(m[1]))) as AnswerExport
+    } catch {
+      return null
+    }
+  }
+
+  const mPlain = hash.match(/^#ma-plain\/(.+)/)
+  if (mPlain) {
+    try {
+      return JSON.parse(decodeURIComponent(atob(mPlain[1]))) as AnswerExport
+    } catch {
+      return null
+    }
+  }
+
+  return null
+}
+
+/**
  * Parse an answer export from the current URL hash.
  */
 export async function parseAnswerFromHash(): Promise<AnswerExport | null> {
