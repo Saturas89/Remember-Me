@@ -1,3 +1,4 @@
+import './Logo.css'
 import type { InstallState } from '../hooks/useInstallPrompt'
 
 interface Props {
@@ -7,12 +8,9 @@ interface Props {
 }
 
 const HeartIcon = () => (
-  <img
-    src="/logo.jpeg"
-    className="install-modal__heart"
-    aria-hidden="true"
-    alt=""
-  />
+  <div className="install-modal__heart app-logo-wrap" aria-hidden="true">
+    <img src="/logo.jpeg" className="app-logo-img" alt="" />
+  </div>
 )
 
 const ShareIcon = () => (

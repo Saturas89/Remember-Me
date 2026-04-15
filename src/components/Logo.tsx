@@ -11,18 +11,13 @@ const DEFAULT_GRAD: [string, string] = ['#f72585', '#7b2d8b']
 
 function AppLogo({ size }: { size: number }) {
   return (
-    <img
-      src="/logo.jpeg"
-      style={{
-        width: size,
-        height: size,
-        objectFit: 'contain',
-        display: 'block',
-        borderRadius: '50%',
-      }}
+    <div
+      className="app-logo-wrap"
+      style={{ width: size, height: size }}
       aria-hidden="true"
-      alt=""
-    />
+    >
+      <img src="/logo.jpeg" className="app-logo-img" alt="" />
+    </div>
   )
 }
 

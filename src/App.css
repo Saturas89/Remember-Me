@@ -1448,9 +1448,7 @@
 .install-modal__heart {
   width: 3.5rem;
   height: 3.5rem;
-  object-fit: contain;
-  border-radius: 50%;
-  display: block;
+  /* border-radius, overflow, bg, blend-mode from .app-logo-wrap / .app-logo-img in Logo.css */
 }
 
 .install-modal__app-name {
