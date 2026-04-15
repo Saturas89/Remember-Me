@@ -3499,15 +3499,10 @@ details[open] .faq-item__chevron {
   margin-top: 0.1rem;
 }
 
-.feature-view__grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+.feature-view__list {
+  display: flex;
+  flex-direction: column;
   gap: 0.75rem;
-}
-
-/* last odd card spans full width */
-.feature-view__grid > :last-child:nth-child(odd) {
-  grid-column: 1 / -1;
 }
 
 .feature-view__footer {
@@ -3518,104 +3513,39 @@ details[open] .faq-item__chevron {
   padding-bottom: 0.5rem;
 }
 
-/* ── Feature card ─────────────────────────────────────── */
-.feature-card {
-  display: flex;
-  flex-direction: column;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 18px;
+/* ── Feature image button ─────────────────────────────── */
+.feature-img-btn {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 16px;
   overflow: hidden;
   cursor: pointer;
-  text-align: left;
+  background: none;
   font-family: inherit;
-  padding: 0;
   transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1),
               box-shadow 0.18s ease,
               border-color 0.15s ease;
   -webkit-tap-highlight-color: transparent;
 }
 
-.feature-card:hover,
-.feature-card:focus-visible {
-  transform: translateY(-2px) scale(1.01);
-  box-shadow: 0 8px 24px color-mix(in srgb, var(--accent) 14%, transparent);
+.feature-img-btn:hover,
+.feature-img-btn:focus-visible {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--accent) 18%, transparent);
   border-color: var(--accent);
   outline: none;
 }
 
-.feature-card:active {
-  transform: scale(0.97);
+.feature-img-btn:active {
+  transform: scale(0.98);
 }
 
-/* Image area */
-.feature-card__img {
-  position: relative;
+.feature-img-btn__img {
   width: 100%;
-  aspect-ratio: 16 / 10;
-  overflow: hidden;
-  flex-shrink: 0;
-  background: var(--surface-raised);
-}
-
-.feature-card__img-el {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+  height: auto;
   display: block;
-}
-
-.feature-card__coming {
-  position: absolute;
-  bottom: 0.45rem;
-  right: 0.5rem;
-  background: rgba(0,0,0,0.38);
-  color: #fff;
-  font-size: 0.6rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  padding: 0.2rem 0.45rem;
-  border-radius: 999px;
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-}
-
-.feature-card__body {
-  padding: 0.7rem 0.85rem 0.85rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-  flex: 1;
-}
-
-.feature-card__label {
-  font-size: 0.88rem;
-  font-weight: 700;
-  color: var(--text);
-  line-height: 1.2;
-  margin: 0;
-}
-
-.feature-card__sub {
-  font-size: 0.73rem;
-  color: var(--text-muted);
-  line-height: 1.3;
-  margin: 0;
-}
-
-.feature-card__status {
-  display: inline-block;
-  margin-top: 0.35rem;
-  font-size: 0.62rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--accent);
-  background: var(--accent-tinted);
-  border-radius: 999px;
-  padding: 0.18rem 0.5rem;
-  align-self: flex-start;
 }
 
 /* ── Feature detail page ──────────────────────────────── */

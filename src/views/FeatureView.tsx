@@ -185,28 +185,20 @@ export function FeatureView() {
         </div>
       </div>
 
-      <div className="feature-view__grid">
+      <div className="feature-view__list">
         {FEATURES.map(feature => (
           <button
             key={feature.id}
-            className="feature-card"
+            className="feature-img-btn"
             onClick={() => handleOpen(feature)}
             type="button"
-            aria-label={`${feature.title}: ${feature.subtitle} – Interesse zeigen`}
+            aria-label={`${feature.title} – Interesse zeigen`}
           >
-            <div className="feature-card__img">
-              <img
-                src={feature.img}
-                alt={feature.title}
-                className="feature-card__img-el"
-              />
-              <span className="feature-card__coming" aria-hidden="true">Bald verfügbar</span>
-            </div>
-            <div className="feature-card__body">
-              <p className="feature-card__label">{feature.title}</p>
-              <p className="feature-card__sub">{feature.subtitle}</p>
-              <span className="feature-card__status">{feature.status}</span>
-            </div>
+            <img
+              src={feature.img}
+              alt={feature.title}
+              className="feature-img-btn__img"
+            />
           </button>
         ))}
       </div>
