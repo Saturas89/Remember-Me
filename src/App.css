@@ -2378,6 +2378,8 @@
 
 .update-banner__btn {
   flex-shrink: 0;
+  background: linear-gradient(135deg, var(--logo-start), var(--logo-end));
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--logo-start) 35%, transparent);
 }
 
 .update-banner__close {
