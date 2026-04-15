@@ -42,7 +42,8 @@ describe('HomeView – Eigene Erinnerung card', () => {
       { id: 'cq-2', text: 'Frage 2', type: 'text', createdAt: '2024-01-01T00:00:00.000Z' },
     ]
     const { container } = render(<HomeView {...defaultProps} customQuestions={customQuestions} />)
-    expect(getCustomCard(container).textContent).toContain('2 eigene Erinnerungen')
+    expect(getCustomCard(container).textContent).not.toContain('2')
+    expect(getCustomCard(container).textContent).toContain('Deine Erinnerungen')
     expect(getCustomCard(container).textContent).toContain('teile sie')
   })
 
