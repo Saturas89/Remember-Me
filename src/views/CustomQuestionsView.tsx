@@ -109,7 +109,7 @@ export function CustomQuestionsView({
 
   return (
     <div className="custom-q-view">
-      <img src="/categories/custom-banner.webp" className="quiz-banner" alt="" />
+      <img src="/categories/custom-banner.svg" className="quiz-banner" alt="" />
       <div className="archive-topbar">
         <button className="btn btn--ghost btn--sm" onClick={onBack}>
           ← Zurück
