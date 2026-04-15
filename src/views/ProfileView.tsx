@@ -36,9 +36,6 @@ function TreeProgressLogo({ pct, size = 80 }: { pct: number; size?: number }) {
         className="tree-progress-logo__fill"
         style={{ height: `${filledCount * 10}%` }}
       />
-      {[10, 20, 30, 40, 50, 60, 70, 80, 90].map(pos => (
-        <div key={pos} className="tree-progress-logo__divider" style={{ bottom: `${pos}%` }} />
-      ))}
     </div>
   )
 }

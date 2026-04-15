@@ -1940,15 +1940,6 @@
   transition: height 0.6s ease;
 }
 
-.tree-progress-logo__divider {
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: var(--bg);
-  z-index: 1;
-}
-
 .profile-identity__name {
   font-size: clamp(1.55rem, 5vw, 2rem);
   font-weight: 800;
