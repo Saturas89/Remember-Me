@@ -51,39 +51,14 @@ const FEATURES = [
   },
 ] as const
 
-type FeatureId = typeof FEATURES[number]['id']
-
-// ── localStorage tracking ──────────────────────────────
-
-const STORAGE_PREFIX = 'feature-interest-'
-
-function getCount(id: FeatureId): number {
-  try {
-    return parseInt(localStorage.getItem(STORAGE_PREFIX + id) ?? '0', 10) || 0
-  } catch {
-    return 0
-  }
-}
-
-function incrementCount(id: FeatureId): number {
-  try {
-    const next = getCount(id) + 1
-    localStorage.setItem(STORAGE_PREFIX + id, String(next))
-    return next
-  } catch {
-    return 1
-  }
-}
-
 // ── Detail page ────────────────────────────────────────
 
 interface DetailProps {
   feature: typeof FEATURES[number]
-  count: number
   onBack: () => void
 }
 
-function FeatureDetailPage({ feature, count, onBack }: DetailProps) {
+function FeatureDetailPage({ feature, onBack }: DetailProps) {
   return (
     <div className="feature-detail">
       <div className="feature-detail__topbar">
@@ -120,21 +95,6 @@ function FeatureDetailPage({ feature, count, onBack }: DetailProps) {
 
         <p className="feature-detail__desc">{feature.description}</p>
 
-        <div className="feature-detail__interest-box">
-          <div className="feature-detail__interest-header">
-            <span className="feature-detail__interest-heart" aria-hidden="true">❤️</span>
-            <strong className="feature-detail__interest-count">
-              {count} {count === 1 ? 'Person' : 'Personen'} interessiert
-            </strong>
-          </div>
-          <p className="feature-detail__interest-text">
-            Dein Interesse wurde vermerkt – vielen Dank! Da Remember Me vollständig
-            offline arbeitet, ist das Antippen der Features unsere einzige Möglichkeit
-            zu erfahren, was euch besonders am Herzen liegt. Je mehr Interesse wir
-            sehen, desto schneller setzen wir es um.
-          </p>
-        </div>
-
         <p className="feature-detail__note">
           Hast du Ideen oder Wünsche zu diesem Feature? Schreib uns unter{' '}
           <strong>remember-me.app</strong> – wir freuen uns auf dein Feedback! 🙏
@@ -147,22 +107,18 @@ function FeatureDetailPage({ feature, count, onBack }: DetailProps) {
 // ── Main Feature view ──────────────────────────────────
 
 export function FeatureView() {
-  const [active, setActive] = useState<{ feature: typeof FEATURES[number]; count: number } | null>(null)
+  const [active, setActive] = useState<typeof FEATURES[number] | null>(null)
 
   function handleOpen(feature: typeof FEATURES[number]) {
-    // Server-side tracking via Vercel Analytics – sichtbar im Vercel Dashboard
     track('feature_interest', { feature: feature.id, title: feature.title })
-    // Lokaler Fallback-Zähler (für den Offline-Betrieb)
-    const count = incrementCount(feature.id)
-    setActive({ feature, count })
+    setActive(feature)
     window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior })
   }
 
   if (active) {
     return (
       <FeatureDetailPage
-        feature={active.feature}
-        count={active.count}
+        feature={active}
         onBack={() => setActive(null)}
       />
     )
