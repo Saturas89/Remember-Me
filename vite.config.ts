@@ -15,7 +15,7 @@ export default defineConfig({
         description: 'Halte deine Lebensgeschichte für die Nachwelt und deine Familie fest.',
         lang: 'de',
         theme_color: '#1a1a2e',
-        background_color: '#1a1a2e',
+        background_color: '#f3e2bd',
         display: 'standalone',
         orientation: 'portrait',
         start_url: '/',
