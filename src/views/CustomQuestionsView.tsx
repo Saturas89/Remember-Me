@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { decodeQuestionPack } from '../utils/sharing'
-import { generateMemoryShareUrl, shareOrCopy } from '../utils/secureLink'
+import { generateMemoryShareUrl } from '../utils/secureLink'
 import { useImageStore } from '../hooks/useImageStore'
 import { addAudio, removeAudio } from '../hooks/useAudioStore'
 import { addVideo, removeVideo } from '../hooks/useVideoStore'
@@ -52,6 +52,31 @@ export function CustomQuestionsView({
   const [importCode, setImportCode] = useState('')
   const [importMsg, setImportMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const [isSharing, setIsSharing] = useState(false)
+  const [shareUrl, setShareUrl] = useState('')
+  const [shareStatus, setShareStatus] = useState<'idle' | 'copied' | 'error'>('idle')
+
+  // Auto-clear the "Kopiert!" / "Fehler" status after a moment
+  useEffect(() => {
+    if (shareStatus === 'idle') return
+    const t = setTimeout(() => setShareStatus('idle'), 2500)
+    return () => clearTimeout(t)
+  }, [shareStatus])
+
+  // Pre-generate share URL whenever questions or answers change.
+  // answersSnapshot captures all current answer values so the effect re-runs
+  // whenever the user edits an answer (parent re-renders → new snapshot string).
+  const answersSnapshot = customQuestions.map(q => getAnswer(q.id)).join('\0')
+  useEffect(() => {
+    if (customQuestions.length === 0) { setShareUrl(''); return }
+    const memories = customQuestions.map(q => ({
+      title: q.text,
+      content: getAnswer(q.id).trim() || undefined,
+    }))
+    generateMemoryShareUrl({ memories, sharedBy: profileName || undefined })
+      .then(url => setShareUrl(url))
+      .catch(() => {})
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [answersSnapshot, profileName])
 
   function handleAdd() {
     if (!newText.trim()) return
@@ -69,27 +94,36 @@ export function CustomQuestionsView({
     setAnsweringId(null)
   }
 
-  async function handleShare() {
-    if (customQuestions.length === 0 || isSharing) return
+  // Synchronous share handler: Safari requires navigator.share() to be called
+  // directly inside the click gesture (no awaits before the call).
+  function handleShare() {
+    if (!shareUrl || isSharing) return
     setIsSharing(true)
-    try {
-      const memories = customQuestions.map(q => ({
-        title: q.text,
-        content: getAnswer(q.id).trim() || undefined,
-      }))
-      const url = await generateMemoryShareUrl({
-        memories,
-        sharedBy: profileName || undefined,
-      })
-      await shareOrCopy({
-        title: 'Meine Erinnerungen',
-        text: profileName
-          ? `${profileName} hat Erinnerungen mit dir geteilt.`
-          : 'Geteilte Erinnerungen',
-        url,
-      })
-    } finally {
-      setIsSharing(false)
+    const shareData = {
+      title: 'Meine Erinnerungen',
+      text: profileName
+        ? `${profileName} hat Erinnerungen mit dir geteilt.`
+        : 'Geteilte Erinnerungen',
+      url: shareUrl,
+    }
+    if (typeof navigator.share === 'function') {
+      navigator
+        .share(shareData)
+        .then(() => setIsSharing(false))
+        .catch(err => {
+          setIsSharing(false)
+          if ((err as Error).name === 'AbortError') return
+          navigator.clipboard
+            ?.writeText(shareUrl)
+            .then(() => setShareStatus('copied'))
+            .catch(() => setShareStatus('error'))
+        })
+    } else {
+      navigator.clipboard
+        .writeText(shareUrl)
+        .then(() => setShareStatus('copied'))
+        .catch(() => setShareStatus('error'))
+        .finally(() => setIsSharing(false))
     }
   }
 
@@ -274,13 +308,23 @@ export function CustomQuestionsView({
           <p className="friends-hint">
             Teile die Erinnerung, sodass andere ihre Gedanken und Erinnerungen daran hinzufügen können.
           </p>
-          <button
-            className="btn btn--outline"
-            onClick={handleShare}
-            disabled={isSharing}
-          >
-            {isSharing ? 'Wird geöffnet…' : '🔗 Erinnerungen teilen'}
-          </button>
+          <div className="friends-share">
+            <button
+              className={`share-cta-btn${shareStatus === 'copied' ? ' share-cta-btn--success' : shareStatus === 'error' ? ' share-cta-btn--error' : ''}`}
+              onClick={handleShare}
+              disabled={isSharing || !shareUrl}
+            >
+              {isSharing ? (
+                <><span className="share-cta-btn__spinner" aria-hidden="true" />Wird geöffnet…</>
+              ) : shareStatus === 'copied' ? (
+                '✓ Link kopiert!'
+              ) : shareStatus === 'error' ? (
+                '⚠ Nochmal versuchen'
+              ) : (
+                '🔗 Erinnerungen teilen'
+              )}
+            </button>
+          </div>
         </section>
       )}
 
