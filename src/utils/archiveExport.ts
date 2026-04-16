@@ -4,6 +4,8 @@ import { getAudioBlob } from '../hooks/useAudioStore'
 import { getVideoBlob } from '../hooks/useVideoStore'
 import { getImageDataUrl } from '../hooks/useImageStore'
 import type { ExportData } from './export'
+import { FRIEND_ANSWER_ZIP_TYPE } from '../types'
+import type { FriendAnswerZipPayload } from '../types'
 
 export interface ArchiveStats {
   photoCount:  number
@@ -85,6 +87,119 @@ export async function buildMemoryArchive({ data, onProgress }: BuildOptions): Pr
       videoCount++
     }
   }
+
+  onProgress?.('Fast fertig – alles wird sicher verpackt…', 93)
+  const zipBlob = await zip.generateAsync({
+    type: 'blob',
+    compression: 'DEFLATE',
+    compressionOptions: { level: 6 },
+  })
+
+  return { blob: zipBlob, stats: { photoCount, audioCount, videoCount, totalBytes: zipBlob.size } }
+}
+
+export interface FriendArchiveBuildOptions {
+  friendId: string
+  friendName: string
+  answers: Array<{
+    questionId: string
+    value: string
+    questionText?: string
+    imageIds: string[]
+    audioId?: string
+    videoIds: string[]
+  }>
+  onProgress?: (step: string, pct: number) => void
+}
+
+export async function buildFriendAnswerArchive(
+  opts: FriendArchiveBuildOptions,
+): Promise<{ blob: Blob; stats: ArchiveStats }> {
+  const { friendId, friendName, answers, onProgress } = opts
+  const zip = new JSZip()
+  onProgress?.('Anhänge werden verpackt…', 5)
+
+  const photos = zip.folder('photos')!
+  const audio  = zip.folder('audio')!
+  const videos = zip.folder('videos')!
+
+  const payload: FriendAnswerZipPayload = {
+    $type: FRIEND_ANSWER_ZIP_TYPE,
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    friendId,
+    friendName,
+    answers: [],
+  }
+
+  let photoCount = 0
+  let audioCount = 0
+  let videoCount = 0
+
+  const totalMedia = answers.reduce(
+    (sum, a) => sum + a.imageIds.length + (a.audioId ? 1 : 0) + a.videoIds.length,
+    0,
+  )
+  let mediaProcessed = 0
+
+  for (let ai = 0; ai < answers.length; ai++) {
+    const a = answers[ai]
+    const imageFiles: string[] = []
+    let   audioFile: string | undefined
+    const videoFiles: string[] = []
+
+    for (let ii = 0; ii < a.imageIds.length; ii++) {
+      const dataUrl = await getImageDataUrl(a.imageIds[ii])
+      if (dataUrl) {
+        const filename = `photos/photo-${ai}-${ii}.jpg`
+        const base64   = dataUrl.split(',')[1]
+        photos.file(`photo-${ai}-${ii}.jpg`, base64, { base64: true })
+        imageFiles.push(filename)
+        photoCount++
+      }
+      mediaProcessed++
+      onProgress?.(`Foto ${photoCount} wird verpackt…`, 10 + Math.round((mediaProcessed / Math.max(totalMedia, 1)) * 80))
+    }
+
+    if (a.audioId) {
+      const blob = await getAudioBlob(a.audioId)
+      if (blob) {
+        const ext      = blob.type.includes('mp4') ? 'mp4' : 'webm'
+        const filename = `audio/audio-${ai}.${ext}`
+        audio.file(`audio-${ai}.${ext}`, blob)
+        audioFile = filename
+        audioCount++
+      }
+      mediaProcessed++
+      onProgress?.(`Aufnahme wird verpackt…`, 10 + Math.round((mediaProcessed / Math.max(totalMedia, 1)) * 80))
+    }
+
+    for (let vi = 0; vi < a.videoIds.length; vi++) {
+      const blob = await getVideoBlob(a.videoIds[vi])
+      if (blob) {
+        const ext      = blob.type.includes('mp4') ? 'mp4'
+                       : blob.type.includes('quicktime') ? 'mov'
+                       : 'webm'
+        const filename = `videos/video-${ai}-${vi}.${ext}`
+        videos.file(`video-${ai}-${vi}.${ext}`, blob)
+        videoFiles.push(filename)
+        videoCount++
+      }
+      mediaProcessed++
+      onProgress?.(`Video ${videoCount} wird verpackt…`, 10 + Math.round((mediaProcessed / Math.max(totalMedia, 1)) * 80))
+    }
+
+    payload.answers.push({
+      questionId: a.questionId,
+      value: a.value,
+      questionText: a.questionText,
+      imageFiles: imageFiles.length ? imageFiles : undefined,
+      audioFile,
+      videoFiles: videoFiles.length ? videoFiles : undefined,
+    })
+  }
+
+  zip.file('friend-answers.json', JSON.stringify(payload))
 
   onProgress?.('Fast fertig – alles wird sicher verpackt…', 93)
   const zipBlob = await zip.generateAsync({

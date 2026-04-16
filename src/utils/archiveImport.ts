@@ -3,6 +3,8 @@ import { putImageById } from '../hooks/useImageStore'
 import { putAudioById } from '../hooks/useAudioStore'
 import { putVideoById } from '../hooks/useVideoStore'
 import { BACKUP_TYPE } from './export'
+import { FRIEND_ANSWER_ZIP_TYPE } from '../types'
+import type { FriendAnswerZipPayload } from '../types'
 
 export interface ImportStats {
   photos: number
@@ -15,6 +17,8 @@ export interface ImportResult {
   error?:   string
   /** The memories.json text, ready to pass to restoreBackup(). */
   jsonText?: string
+  /** Populated when the ZIP is a friend-answer ZIP (friend-answers.json present). */
+  friendAnswerPayload?: FriendAnswerZipPayload
   stats?:   ImportStats
 }
 
@@ -50,13 +54,11 @@ async function importJson(file: File): Promise<ImportResult> {
 
 // ── ZIP archive import ────────────────────────────────────────
 
-async function importZip(
-  file: File,
+async function importZipFromLoaded(
+  zip: JSZip,
   onProgress: (step: string, pct: number) => void,
 ): Promise<ImportResult> {
   try {
-    onProgress('Archiv wird geöffnet…', 5)
-    const zip = await JSZip.loadAsync(file)
 
     // Validate memories.json
     const jsonEntry = zip.file('memories.json')
@@ -149,6 +151,122 @@ async function importZip(
   }
 }
 
+// ── Friend-answer ZIP import ──────────────────────────────────
+
+async function importFriendAnswerZip(
+  zip: JSZip,
+  onProgress: (step: string, pct: number) => void,
+): Promise<ImportResult> {
+  try {
+    const jsonEntry = zip.file('friend-answers.json')
+    if (!jsonEntry) return { ok: false, error: 'Keine friend-answers.json im Archiv.' }
+
+    const parsed = JSON.parse(await jsonEntry.async('string')) as Record<string, unknown>
+    if (parsed.$type !== FRIEND_ANSWER_ZIP_TYPE) {
+      return { ok: false, error: 'Unbekanntes Freundes-Antworten-Format.' }
+    }
+
+    const rawPayload = parsed as unknown as FriendAnswerZipPayload
+
+    // Count total media for progress
+    const totalMedia = rawPayload.answers.reduce(
+      (sum, a) =>
+        sum +
+        (a.imageFiles?.length ?? 0) +
+        (a.audioFile ? 1 : 0) +
+        (a.videoFiles?.length ?? 0),
+      0,
+    )
+    let mediaProcessed = 0
+    let photos = 0
+    let audio  = 0
+    let videos = 0
+
+    // Build a remapped payload with fresh device-local IDs
+    const remappedAnswers: FriendAnswerZipPayload['answers'] = []
+
+    for (const a of rawPayload.answers) {
+      const imageIds: string[] = []
+      let   audioId: string | undefined
+      const videoIds: string[] = []
+
+      for (const zipPath of a.imageFiles ?? []) {
+        const entry = zip.file(zipPath.replace(/^photos\//, 'photos/'))
+                  ?? zip.file(zipPath)
+        if (entry) {
+          const base64  = await entry.async('base64')
+          const newId   = `img-${crypto.randomUUID()}`
+          await putImageById(newId, `data:image/jpeg;base64,${base64}`)
+          imageIds.push(newId)
+          photos++
+        }
+        mediaProcessed++
+        onProgress(
+          `Foto ${photos} wird importiert…`,
+          10 + Math.round((mediaProcessed / Math.max(totalMedia, 1)) * 80),
+        )
+      }
+
+      if (a.audioFile) {
+        const entry = zip.file(a.audioFile.replace(/^audio\//, 'audio/'))
+                  ?? zip.file(a.audioFile)
+        if (entry) {
+          const ab       = await entry.async('arraybuffer')
+          const mimeType = a.audioFile.endsWith('.mp4') ? 'audio/mp4' : 'audio/webm'
+          const newId    = `aud-${crypto.randomUUID()}`
+          await putAudioById(newId, new Blob([ab], { type: mimeType }))
+          audioId = newId
+          audio++
+        }
+        mediaProcessed++
+        onProgress(
+          'Aufnahme wird importiert…',
+          10 + Math.round((mediaProcessed / Math.max(totalMedia, 1)) * 80),
+        )
+      }
+
+      for (const zipPath of a.videoFiles ?? []) {
+        const entry = zip.file(zipPath.replace(/^videos\//, 'videos/'))
+                  ?? zip.file(zipPath)
+        if (entry) {
+          const ab       = await entry.async('arraybuffer')
+          const mimeType = zipPath.endsWith('.mp4') ? 'video/mp4'
+                         : zipPath.endsWith('.mov') ? 'video/quicktime'
+                         : 'video/webm'
+          const newId    = `vid-${crypto.randomUUID()}`
+          await putVideoById(newId, new Blob([ab], { type: mimeType }))
+          videoIds.push(newId)
+          videos++
+        }
+        mediaProcessed++
+        onProgress(
+          `Video ${videos} wird importiert…`,
+          10 + Math.round((mediaProcessed / Math.max(totalMedia, 1)) * 80),
+        )
+      }
+
+      remappedAnswers.push({
+        questionId: a.questionId,
+        value: a.value,
+        questionText: a.questionText,
+        imageFiles: imageIds.length ? imageIds : undefined,
+        audioFile: audioId,
+        videoFiles: videoIds.length ? videoIds : undefined,
+      })
+    }
+
+    const friendAnswerPayload: FriendAnswerZipPayload = {
+      ...rawPayload,
+      answers: remappedAnswers,
+    }
+
+    onProgress('Erinnerungen werden gespeichert…', 95)
+    return { ok: true, friendAnswerPayload, stats: { photos, audio, videos } }
+  } catch {
+    return { ok: false, error: 'Das Freundes-Archiv konnte nicht gelesen werden.' }
+  }
+}
+
 // ── Public entry point ────────────────────────────────────────
 
 /**
@@ -160,6 +278,14 @@ export async function importFile(
   file: File,
   onProgress: (step: string, pct: number) => void = () => {},
 ): Promise<ImportResult> {
-  if (isZipFile(file)) return importZip(file, onProgress)
+  if (isZipFile(file)) {
+    try {
+      const zip = await JSZip.loadAsync(file)
+      if (zip.file('friend-answers.json')) return importFriendAnswerZip(zip, onProgress)
+      return importZipFromLoaded(zip, onProgress)
+    } catch {
+      return { ok: false, error: 'Das Archiv konnte nicht gelesen werden.' }
+    }
+  }
   return importJson(file)
 }

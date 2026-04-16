@@ -65,7 +65,30 @@ export interface FriendAnswer {
    *  so the archive never depends on runtime ID lookup. */
   questionText?: string
   value: string
+  imageIds?: string[]
+  videoIds?: string[]
+  audioId?: string
   createdAt: string
+}
+
+/** Written as `friend-answers.json` inside a friend-answer ZIP */
+export const FRIEND_ANSWER_ZIP_TYPE = 'remember-me-friend-answers'
+
+export interface FriendAnswerZipPayload {
+  $type: typeof FRIEND_ANSWER_ZIP_TYPE
+  version: 1
+  exportedAt: string
+  friendId: string
+  friendName: string
+  answers: Array<{
+    questionId: string
+    value: string
+    questionText?: string
+    /** Stable ZIP-internal paths, e.g. "photos/photo-0-0.jpg". Not IndexedDB IDs. */
+    imageFiles?: string[]
+    audioFile?: string
+    videoFiles?: string[]
+  }>
 }
 
 export interface CustomQuestion {

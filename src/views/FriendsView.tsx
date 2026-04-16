@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { FriendCard } from '../components/FriendCard'
 import type { Friend, FriendAnswer } from '../types'
 
@@ -8,6 +8,7 @@ interface Props {
   friends: Friend[]
   friendAnswers: FriendAnswer[]
   onRemoveFriend: (id: string) => void
+  onImportZip: (file: File) => void
   onBack: () => void
 }
 
@@ -17,10 +18,12 @@ export function FriendsView({
   friends,
   friendAnswers,
   onRemoveFriend,
+  onImportZip,
   onBack,
 }: Props) {
   const [isSharing, setIsSharing] = useState(false)
   const [shareStatus, setShareStatus] = useState<'idle' | 'copied' | 'error'>('idle')
+  const zipInputRef = useRef<HTMLInputElement>(null)
 
   // Auto-clear the "Kopiert!" / "Fehler" status after a moment.
   useEffect(() => {
@@ -131,6 +134,31 @@ export function FriendsView({
           </div>
         </section>
       )}
+
+      {/* ZIP import for friends who attached photos / audio / video */}
+      <section className="friends-section">
+        <h3 className="friends-section-title">Anhänge empfangen</h3>
+        <p className="friends-hint">
+          Hat ein Freund Fotos, Aufnahmen oder Videos mitgeschickt? Importiere die ZIP-Datei hier.
+        </p>
+        <button
+          className="btn btn--ghost btn--sm"
+          onClick={() => zipInputRef.current?.click()}
+        >
+          📥 ZIP importieren
+        </button>
+        <input
+          ref={zipInputRef}
+          type="file"
+          accept=".zip,application/zip,application/x-zip-compressed"
+          style={{ display: 'none' }}
+          onChange={e => {
+            const file = e.target.files?.[0]
+            if (file) onImportZip(file)
+            e.target.value = ''
+          }}
+        />
+      </section>
     </div>
   )
 }

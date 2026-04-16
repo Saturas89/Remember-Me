@@ -31,6 +31,7 @@ import { BottomNav } from './components/BottomNav'
 import { useServiceWorker } from './hooks/useServiceWorker'
 import { useReminder } from './hooks/useReminder'
 import { exportAsMarkdown, exportAsEnrichedJSON, downloadFile } from './utils/export'
+import { importFile } from './utils/archiveImport'
 import type { Category, InviteData, AnswerExport, MemorySharePayload } from './types'
 import './App.css'
 
@@ -98,6 +99,7 @@ export default function App() {
     saveProfile,
     removeFriend,
     importFriendAnswers,
+    importFriendAnswerZipData,
     addCustomQuestion,
     removeCustomQuestion,
     importCustomQuestions,
@@ -183,6 +185,14 @@ export default function App() {
   }
   function handleExportJson() {
     downloadFile(exportAsEnrichedJSON(exportData), `${safeName}.json`, 'application/json')
+  }
+
+  async function handleImportFriendZip(file: File) {
+    const result = await importFile(file)
+    if (result.ok && result.friendAnswerPayload) {
+      importFriendAnswerZipData(result.friendAnswerPayload)
+    }
+    // Errors are silently dropped here; the caller can be extended with toasts if needed
   }
 
   const [view, setView] = useState<View>(() =>
@@ -313,6 +323,7 @@ export default function App() {
           friends={friends}
           friendAnswers={friendAnswers}
           onRemoveFriend={removeFriend}
+          onImportZip={handleImportFriendZip}
           onBack={() => goTo({ name: 'home' })}
         />
       )}
