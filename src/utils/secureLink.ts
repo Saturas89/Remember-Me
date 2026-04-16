@@ -31,6 +31,35 @@ function decodeInvitePlain(str: string): InviteData | null {
   }
 }
 
+// ── Plain answer encoding (URL-safe, no compression) ─────────────────────────
+//
+// Standard btoa() produces chars (+, /, =) that messaging apps (WhatsApp,
+// iMessage, …) can corrupt when they re-encode URL fragments. We use
+// base64url (RFC 4648 §5) – the same alphabet already used for #ma/ –
+// so the payload survives sharing unchanged.
+
+function encodeAnswerPlain(data: AnswerExport): string {
+  return btoa(encodeURIComponent(JSON.stringify(data)))
+    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '')
+}
+
+/**
+ * Decode a #ma-plain/ payload that may be base64url (new) or standard
+ * base64 (legacy links generated before this encoding change).
+ */
+function decodeAnswerPlain(encoded: string): AnswerExport | null {
+  try {
+    // Strip any existing padding, normalise base64url → standard base64,
+    // then re-add correct padding so atob() accepts the string.
+    const stripped = encoded.replace(/=/g, '')
+    const b64 = stripped.replace(/-/g, '+').replace(/_/g, '/')
+    const padded = b64 + '='.repeat((4 - b64.length % 4) % 4)
+    return JSON.parse(decodeURIComponent(atob(padded))) as AnswerExport
+  } catch {
+    return null
+  }
+}
+
 // ── Feature detection ─────────────────────────────────────────────────────────
 
 function canUseSecureCrypto(): boolean {
@@ -196,7 +225,7 @@ export async function parseSecureInviteFromHash(): Promise<InviteData | null> {
  * generateAnswerUrl().
  */
 export function generatePlainAnswerUrl(data: AnswerExport): string {
-  return `${appBase()}#ma-plain/${btoa(encodeURIComponent(JSON.stringify(data)))}`
+  return `${appBase()}#ma-plain/${encodeAnswerPlain(data)}`
 }
 
 /**
@@ -215,7 +244,7 @@ export async function generateAnswerUrl(data: AnswerExport): Promise<string> {
       // fall through
     }
   }
-  return `${appBase()}#ma-plain/${btoa(encodeURIComponent(JSON.stringify(data)))}`
+  return `${appBase()}#ma-plain/${encodeAnswerPlain(data)}`
 }
 
 /** Detect synchronously whether the current URL is an answer-import URL. */
@@ -244,13 +273,7 @@ export async function parseAnswerFromUrl(input: string): Promise<AnswerExport | 
   }
 
   const mPlain = hash.match(/^#ma-plain\/(.+)/)
-  if (mPlain) {
-    try {
-      return JSON.parse(decodeURIComponent(atob(mPlain[1]))) as AnswerExport
-    } catch {
-      return null
-    }
-  }
+  if (mPlain) return decodeAnswerPlain(mPlain[1])
 
   return null
 }
@@ -271,13 +294,7 @@ export async function parseAnswerFromHash(): Promise<AnswerExport | null> {
   }
 
   const mPlain = h.match(/^#ma-plain\/(.+)$/)
-  if (mPlain) {
-    try {
-      return JSON.parse(decodeURIComponent(atob(mPlain[1]))) as AnswerExport
-    } catch {
-      return null
-    }
-  }
+  if (mPlain) return decodeAnswerPlain(mPlain[1])
 
   return null
 }
