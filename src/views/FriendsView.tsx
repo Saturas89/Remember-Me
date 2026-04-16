@@ -41,8 +41,8 @@ export function FriendsView({
   function buildShareData(url: string) {
     const name = profileName || 'Ich'
     return {
-      title: `${name} möchte deine Erinnerungen`,
-      text: `Hallo! ${name} baut gerade ein persönliches Lebensarchiv und würde sich sehr freuen, wenn du ein paar Fragen beantwortest – es dauert nur 5 Minuten. Deine Erinnerungen werden ein unvergesslicher Teil davon. 💛`,
+      title: 'Ich erstelle mein persönliches Lebensarchiv',
+      text: `Hallo! Ich erstelle gerade mein persönliches Lebensarchiv mit Erinnerungen und würde mich sehr freuen, wenn du ein paar Fragen beantwortest – es dauert nur 5 Minuten. Deine Erinnerungen werden ein unvergesslicher Teil davon. 💛`,
       url,
     }
   }
