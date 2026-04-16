@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react'
 import { FriendCard } from '../components/FriendCard'
-import { decodeAnswerExport } from '../utils/sharing'
-import { parseAnswerFromUrl } from '../utils/secureLink'
-import type { Friend, FriendAnswer, AnswerExport } from '../types'
+import type { Friend, FriendAnswer } from '../types'
 
 interface Props {
   profileName: string
@@ -10,7 +8,6 @@ interface Props {
   friends: Friend[]
   friendAnswers: FriendAnswer[]
   onRemoveFriend: (id: string) => void
-  onImportAnswers: (data: AnswerExport) => void
   onBack: () => void
 }
 
@@ -20,16 +17,10 @@ export function FriendsView({
   friends,
   friendAnswers,
   onRemoveFriend,
-  onImportAnswers,
   onBack,
 }: Props) {
   const [isSharing, setIsSharing] = useState(false)
   const [shareStatus, setShareStatus] = useState<'idle' | 'copied' | 'error'>('idle')
-
-  // Import fallback
-  const [importCode, setImportCode] = useState('')
-  const [importError, setImportError] = useState<string | null>(null)
-  const [importSuccess, setImportSuccess] = useState(false)
 
   // Auto-clear the "Kopiert!" / "Fehler" status after a moment.
   useEffect(() => {
@@ -79,34 +70,6 @@ export function FriendsView({
     }
   }
 
-
-  async function handleImport() {
-    setImportError(null)
-    setImportSuccess(false)
-    const raw = importCode.trim()
-
-    // If the pasted text looks like a share link, try URL parsing first
-    if (raw.includes('#ma/') || raw.includes('#ma-plain/')) {
-      const data = await parseAnswerFromUrl(raw)
-      if (data) {
-        onImportAnswers(data)
-        setImportSuccess(true)
-        setImportCode('')
-        return
-      }
-    }
-
-    // Fallback: treat as plain Base64 code
-    const data = decodeAnswerExport(raw)
-    if (!data) {
-      setImportError('Ungültiger Code oder Link. Bitte kopiere ihn vollständig.')
-      return
-    }
-    onImportAnswers(data)
-    setImportSuccess(true)
-    setImportCode('')
-  }
-
   return (
     <div className="friends-view">
       <div className="quiz-topbar">
@@ -127,7 +90,8 @@ export function FriendsView({
         <p className="friends-hint">
           Lade Freunde und Familie ein, ihre Erinnerungen an dich festzuhalten.
           Teile den Link beliebig oft – jede Person gibt ihren Namen ein, wählt eine Kategorie
-          und schickt dir die Antworten zurück. Sie werden Teil deines persönlichen Lebensarchivs.
+          und schickt dir die Antworten zurück. Sie werden automatisch in deinem persönlichen
+          Lebensarchiv gespeichert.
         </p>
 
         <div className="friends-share">
@@ -167,36 +131,6 @@ export function FriendsView({
           </div>
         </section>
       )}
-
-      {/* Manual import fallback */}
-      <section className="friends-section">
-        <h3 className="friends-section-title">Antwort-Link eingeben</h3>
-        <p className="friends-hint">
-          Hat jemand dir den Antwort-Link geschickt? Füge ihn hier ein:
-        </p>
-        <textarea
-          className="input-textarea"
-          value={importCode}
-          onChange={e => {
-            setImportCode(e.target.value)
-            setImportError(null)
-            setImportSuccess(false)
-          }}
-          placeholder="Antwort-Link hier einfügen…"
-          rows={3}
-        />
-        {importError && <p className="import-msg import-msg--error">{importError}</p>}
-        {importSuccess && (
-          <p className="import-msg import-msg--success">Erinnerungen erfolgreich hinzugefügt!</p>
-        )}
-        <button
-          className="btn btn--primary"
-          onClick={handleImport}
-          disabled={!importCode.trim()}
-        >
-          Importieren
-        </button>
-      </section>
     </div>
   )
 }
