@@ -312,7 +312,6 @@ export default function App() {
           friends={friends}
           friendAnswers={friendAnswers}
           onRemoveFriend={removeFriend}
-          onImportAnswers={importFriendAnswers}
           onBack={() => goTo({ name: 'home' })}
         />
       )}

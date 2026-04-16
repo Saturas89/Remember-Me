@@ -38,7 +38,7 @@ export function FriendAnswerView({ invite }: Props) {
   const [index, setIndex] = useState(0)
   const [localAnswers, setLocalAnswers] = useState<Record<string, string>>({})
   const [exportCode, setExportCode] = useState<string | null>(null)
-  const [answerUrl, setAnswerUrl] = useState<string | null>(null)
+
   // Ref always holds the latest (preferably compressed) URL so the synchronous
   // share handler can access it without relying on React state timing.
   const shareUrlRef = useRef<string | null>(null)
@@ -46,9 +46,6 @@ export function FriendAnswerView({ invite }: Props) {
   // Share-button state – same pattern as FriendsView
   const [isSharing, setIsSharing] = useState(false)
   const [shareStatus, setShareStatus] = useState<'idle' | 'copied' | 'error'>('idle')
-
-  // Link-copy and code-copy fallback buttons
-  const [linkCopied, setLinkCopied] = useState(false)
 
   // Auto-clear share status feedback after 2.5 s (same as FriendsView)
   useEffect(() => {
@@ -118,16 +115,15 @@ export function FriendAnswerView({ invite }: Props) {
     const data = buildExportData()
     setExportCode(encodeAnswerExport(data))
 
-    // Set a plain URL immediately (sync) so the button is never disabled.
+    // Set a plain URL immediately (sync) so the share button is never disabled.
     const plainUrl = generatePlainAnswerUrl(data)
-    setAnswerUrl(plainUrl)
     shareUrlRef.current = plainUrl
 
     // Upgrade to the short compressed #ma/ URL in the background (<50 ms).
     // The ref is updated synchronously inside the then-callback so it is
     // always current when the user eventually taps the share button.
     generateAnswerUrl(data)
-      .then(url => { setAnswerUrl(url); shareUrlRef.current = url })
+      .then(url => { shareUrlRef.current = url })
       .catch(() => {})
 
     setStep('done')
@@ -141,7 +137,6 @@ export function FriendAnswerView({ invite }: Props) {
 
     // Always use the ref – it holds the compressed #ma/ URL once the async
     // upgrade finishes (typically within 50 ms, well before the user taps).
-    // Falling back to the plain URL is safe but produces a longer fragment.
     const url = shareUrlRef.current
     const shareData = {
       title: `Meine Erinnerungen an ${invite.profileName}`,
@@ -171,11 +166,6 @@ export function FriendAnswerView({ invite }: Props) {
     }
   }
 
-  function handleCopyLink() {
-    if (!answerUrl) return
-    navigator.clipboard.writeText(answerUrl).then(() => setLinkCopied(true))
-  }
-
   // ── Done screen ──────────────────────────────────────────
   if (step === 'done' && exportCode) {
     return (
@@ -188,7 +178,6 @@ export function FriendAnswerView({ invite }: Props) {
             direkt in deren Lebensarchiv gespeichert.
           </p>
 
-          {/* Share button – same class and pattern as the invite share in FriendsView */}
           <button
             className={`share-cta-btn${shareStatus === 'copied' ? ' share-cta-btn--success' : shareStatus === 'error' ? ' share-cta-btn--error' : ''}`}
             onClick={handleShare}
@@ -204,25 +193,6 @@ export function FriendAnswerView({ invite }: Props) {
               '📤 Erinnerungen verschicken'
             )}
           </button>
-
-          {/* Visible link with copy button – always shown since URL is pre-generated */}
-          {answerUrl && (
-            <div className="answer-link-box">
-              <div className="answer-link-row">
-                <span className="answer-link-url">{answerUrl}</span>
-                <button
-                  className={`btn btn--outline btn--sm${linkCopied ? ' btn--success' : ''}`}
-                  onClick={handleCopyLink}
-                >
-                  {linkCopied ? '✓ Kopiert!' : '🔗 Kopieren'}
-                </button>
-              </div>
-              <p className="export-hint">
-                Wenn {invite.profileName} diesen Link öffnet, werden die Antworten automatisch importiert.
-              </p>
-            </div>
-          )}
-
         </div>
       </div>
     )
