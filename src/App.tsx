@@ -330,7 +330,7 @@ export default function App() {
           onExportJson={handleExportJson}
           onImportBackup={restoreBackup}
           onOpenImport={() => setView({ name: 'import' })}
-          onOpenFaq={() => setView({ name: 'faq', from: 'profile' })}
+          onOpenFaq={() => { window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior }); setView({ name: 'faq', from: 'profile' }) }}
         />
       )}
 
@@ -381,7 +381,7 @@ export default function App() {
             if (id === 'custom') setView({ name: 'custom-questions' })
             else setView({ name: 'quiz', categoryId: id })
           }}
-          onOpenFaq={() => setView({ name: 'faq', from: 'home' })}
+          onOpenFaq={() => { window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior }); setView({ name: 'faq', from: 'home' }) }}
         />
       )}
 
