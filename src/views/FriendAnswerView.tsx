@@ -193,6 +193,16 @@ export function FriendAnswerView({ invite }: Props) {
               '📤 Erinnerungen verschicken'
             )}
           </button>
+
+          <div className="export-done__own-cta">
+            <p>
+              Möchtest du auch deine eigenen Erinnerungen festhalten?{' '}
+              <a href="https://remembermee.dad" target="_blank" rel="noopener noreferrer">
+                Erstelle dein eigenes Lebensarchiv
+              </a>{' '}
+              – kostenlos und für immer.
+            </p>
+          </div>
         </div>
       </div>
     )
