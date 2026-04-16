@@ -214,6 +214,16 @@
   display: block;
 }
 
+.bottom-nav__icon-img {
+  width: 1.75rem;
+  height: 1.75rem;
+  display: block;
+  object-fit: cover;
+  border-radius: 50%;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
 .bottom-nav__label {
   font-size: 0.6rem;
   font-weight: 500;
