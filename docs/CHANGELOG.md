@@ -5,6 +5,43 @@ Alle veröffentlichten Versionen des Projekts, absteigend sortiert.
 Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 Versionierung folgt [Semantic Versioning](https://semver.org/lang/de/).
 
+## [1.5.9] – 2026-04-16
+
+### Hinzugefügt
+
+#### Freunde-Einladung: Share-Link-Flow
+
+Der manuelle Antwort-Code-Export wurde durch einen vollautomatischen Share-Link-Flow ersetzt.
+
+**Freund beantwortet Fragen (`FriendAnswerView`):**
+- Share-Button auf dem Fertig-Screen verschickt den Antwort-Link direkt via Web Share API (Safari-kompatibel: synchroner Aufruf, kein `await` vor `navigator.share()`)
+- Komprimierter `#ma/`-Link wird asynchron erzeugt und per `useRef` für den synchronen Share-Handler bereitgestellt; synchroner `#ma-plain/`-Fallback verhindert deaktivierten Button
+- Base64url-Encoding (RFC 4648) verhindert Link-Korruption durch WhatsApp / iMessage
+- Fallback auf Clipboard-Copy wenn Web Share API nicht verfügbar
+
+**Einladender importiert Antworten (`FriendsView`):**
+- Antworten werden beim App-Start automatisch importiert, wenn die URL einen `#ma/`- oder `#ma-plain/`-Hash enthält (kein manueller Import mehr nötig)
+- Manuelle Import-Textbox und zugehörige Sektion vollständig entfernt
+
+**Aufgeräumt:**
+- `onImportAnswers`-Prop aus `FriendsView` entfernt (Import läuft direkt in `App.tsx`)
+- Base64-Code-Fallback-Sektion (`<details class="export-fallback">`) aus Fertig-Screen entfernt
+- Sichtbare Link-Box mit Kopier-Button entfernt
+
+**Share-Texte:**
+- Einladender: *„Ich erstelle gerade mein persönliches Lebensarchiv …"*
+- Beantworter: *„Hey {Name}! Ich habe gerade ein paar Fragen über dich beantwortet …"*
+
+**CTA auf Fertig-Screen:**
+- Promo-Bild (`/friend-invite-promo.jpeg`) verlinkt auf [rememberme.dad](https://rememberme.dad)
+- Datenschutzhinweis: „deine Daten bleiben komplett privat"
+
+**Tests:**
+- Neue Testdatei `src/views/FriendAnswerView.test.tsx` (8 Tests): URL-Korrektheit, verlinktes Bild, Datenschutztext, `target="_blank"`, Welcome-Screen-Verhalten
+- `FriendsView.test.tsx` angepasst: `onImportAnswers`-Prop entfernt, Textprüfung aktualisiert
+
+---
+
 ## [1.5.8] – 2026-04-12
 
 ### Hinzugefügt

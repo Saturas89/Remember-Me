@@ -47,6 +47,17 @@ describe('FriendAnswerView – Fertig-Screen CTA', () => {
     expect(img?.src).toContain('friend-invite-promo.jpeg')
   })
 
+  it('das Promo-Bild ist mit rememberme.dad verlinkt', () => {
+    const { container } = render(<FriendAnswerView invite={invite} />)
+    reachDoneScreen(container)
+
+    const img = container.querySelector('.export-done__own-cta-img')
+    const parentLink = img?.closest('a') as HTMLAnchorElement | null
+    expect(parentLink).toBeTruthy()
+    expect(parentLink?.href).toBe('https://rememberme.dad/')
+    expect(parentLink?.target).toBe('_blank')
+  })
+
   it('erwähnt dass Daten privat bleiben', () => {
     const { container } = render(<FriendAnswerView invite={invite} />)
     reachDoneScreen(container)

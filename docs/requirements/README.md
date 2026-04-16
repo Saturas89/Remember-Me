@@ -11,7 +11,7 @@ Alle funktionalen und nicht-funktionalen Anforderungen des Projekts.
 | [REQ-001](./REQ-001-pwa-foundation-clean.md) | PWA Foundation & Responsive Design | Core | High | ✔️ COMPLETED |
 | [REQ-002](./REQ-002-question-engine.md) | Frage-Engine & Fragenkatalog | Questions | High | ✔️ COMPLETED |
 | [REQ-003](./REQ-003-story-storage.md) | Lebensarchiv & Datenspeicherung | Data | High | ✔️ COMPLETED |
-| [REQ-004](./REQ-004-export-sharing.md) | Export & Teilen | Export | Medium | 🔵 IN PROGRESS |
+| [REQ-004](./REQ-004-export-sharing.md) | Export & Teilen | Export | Medium | ✔️ COMPLETED |
 | [REQ-005](./REQ-005-ci-cd-pipeline.md) | CI/CD Pipeline | DevOps | Low | ✔️ COMPLETED |
 | REQ-006 | KI-lesbarer Datenexport | Export | Medium | ✔️ COMPLETED |
 | REQ-007 | Medienanhänge (Fotos) | Data | Low | 🟢 DRAFT |
@@ -36,7 +36,7 @@ Alle funktionalen und nicht-funktionalen Anforderungen des Projekts.
 - [x] Antworten nachträglich bearbeiten (Inline-Edit im Archiv)
 - [x] Export als PDF / druckbares Dokument (`window.print()` + `@media print`)
 - [x] Responsive Design (Mobile-first, 1-/2-Spalten-Grid)
-- [x] Freunde einladen und Beiträge importieren
+- [x] Freunde einladen, Fragen beantworten und Antworten automatisch per Share-Link importieren
 - [x] Eigene Fragen erstellen und teilen
 
 ### COULD – Geplant 📋
