@@ -96,6 +96,7 @@ export default function App() {
     setAnswerImages,
     setAnswerVideos,
     saveProfile,
+    addFriend,
     removeFriend,
     importFriendAnswers,
     addCustomQuestion,
@@ -236,7 +237,7 @@ export default function App() {
     goTo({ name: tab } as View)
   }
 
-  const friendsBadge = friendAnswers.filter(a => a.value.trim()).length
+  const friendsBadge = friends.filter(f => !friendAnswers.some(a => a.friendId === f.id)).length
 
   // Bottom nav shown on all main views (not during focused quiz/friend-answer/faq)
   const showNav = view.name !== 'quiz' && view.name !== 'faq'
@@ -311,6 +312,7 @@ export default function App() {
           inviteUrl={inviteUrl}
           friends={friends}
           friendAnswers={friendAnswers}
+          onAddFriend={addFriend}
           onRemoveFriend={removeFriend}
           onBack={() => goTo({ name: 'home' })}
         />

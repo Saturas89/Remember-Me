@@ -211,35 +211,47 @@ export function useAnswers() {
           value: a.value,
           createdAt: now,
         }))
-      // Replace any previous answers from this friend
-      const filtered = prev.friendAnswers.filter(a => a.friendId !== data.friendId)
-
       // Auto-create a Friend entry when we don't know this friend yet.
       // This is the common path now that the invite link is generic: the
       // inviter doesn't enter the friend's name up-front – it arrives with
       // the answer bundle.
       let friends = prev.friends
       const existing = friends.find(f => f.id === data.friendId)
-      if (!existing) {
+      // Also check for a pre-registered pending friend with the same name so
+      // that manually-added "sent invite" entries are resolved instead of
+      // creating a duplicate.
+      const pendingByName = !existing
+        ? friends.find(
+            f =>
+              f.name.trim().toLowerCase() ===
+                (data.friendName || '').trim().toLowerCase() &&
+              !prev.friendAnswers.some(a => a.friendId === f.id),
+          )
+        : undefined
+      const resolvedId = existing?.id ?? pendingByName?.id ?? data.friendId
+      // Re-key answers to the resolved friend id
+      const rekeyed = newAnswers.map(a => ({ ...a, id: `${resolvedId}-${a.questionId}`, friendId: resolvedId }))
+      const filteredAnswers = prev.friendAnswers.filter(a => a.friendId !== resolvedId && a.friendId !== data.friendId)
+      if (!existing && !pendingByName) {
         friends = [
           ...friends,
           {
-            id: data.friendId,
+            id: resolvedId,
             name: data.friendName || 'Anonym',
             addedAt: now,
           },
         ]
-      } else if (data.friendName && existing.name !== data.friendName) {
+      } else if (data.friendName && (existing ?? pendingByName)!.name !== data.friendName) {
         // Update the stored name if the friend resubmitted under a different name.
         friends = friends.map(f =>
-          f.id === data.friendId ? { ...f, name: data.friendName } : f,
+          f.id === resolvedId ? { ...f, name: data.friendName } : f,
         )
       }
 
       const next: AppState = {
         ...prev,
         friends,
-        friendAnswers: [...filtered, ...newAnswers],
+        friendAnswers: [...filteredAnswers, ...rekeyed],
       }
       saveState(next)
       return next
