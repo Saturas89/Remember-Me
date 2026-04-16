@@ -1213,6 +1213,30 @@
 
 .export-done p { color: var(--text-muted); line-height: 1.6; max-width: 480px; }
 
+.export-done__own-cta {
+  margin-top: 0.5rem;
+  padding: 1.25rem 1.5rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  max-width: 420px;
+}
+
+.export-done__own-cta p {
+  color: var(--text-muted);
+  font-size: 0.92rem;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.export-done__own-cta a {
+  color: var(--accent);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.export-done__own-cta a:hover { text-decoration: underline; }
+
 .export-code {
   background: var(--surface);
   border: 1px solid var(--border);
