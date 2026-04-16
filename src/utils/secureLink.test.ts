@@ -9,6 +9,7 @@ import {
   parseSecureInviteFromHash,
   isSecureInviteHash,
   generateAnswerUrl,
+  generatePlainAnswerUrl,
   parseAnswerFromHash,
   parseAnswerFromUrl,
   isAnswerHash,
@@ -194,9 +195,21 @@ describe('parseAnswerFromUrl', () => {
     expect(await parseAnswerFromUrl(hash)).toEqual(answers)
   })
 
-  it('round-trips via plain-Base64 fallback URL', async () => {
+  it('round-trips via legacy standard-base64 #ma-plain/ URL (backward compat)', async () => {
+    // Old links used plain btoa() which can produce +/= – must still decode
     const plain = btoa(encodeURIComponent(JSON.stringify(answers)))
     const url = `https://example.com/#ma-plain/${plain}`
+    expect(await parseAnswerFromUrl(url)).toEqual(answers)
+  })
+
+  it('round-trips via generatePlainAnswerUrl (URL-safe base64url)', async () => {
+    // New links use base64url: no +, /, = that messaging apps could corrupt
+    setHash('')
+    const url = generatePlainAnswerUrl(answers)
+    expect(url).toContain('#ma-plain/')
+    // base64url chars only – no +, /, =
+    const fragment = url.split('#ma-plain/')[1]
+    expect(fragment).toMatch(/^[A-Za-z0-9_-]+$/)
     expect(await parseAnswerFromUrl(url)).toEqual(answers)
   })
 
