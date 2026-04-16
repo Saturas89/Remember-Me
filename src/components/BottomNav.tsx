@@ -7,11 +7,11 @@ interface Props {
 }
 
 const TABS: { id: MainTab; label: string; icon: string }[] = [
-  { id: 'home',    label: 'Lebensweg',   icon: '/menu-icons/lebensweg.svg' },
-  { id: 'friends', label: 'Freunde',     icon: '/menu-icons/freunde.svg' },
-  { id: 'archive', label: 'Vermächtnis', icon: '/menu-icons/vermaechtnis.svg' },
-  { id: 'feature', label: 'Features',    icon: '/menu-icons/features.svg' },
-  { id: 'profile', label: 'Profil',      icon: '/menu-icons/profil.svg' },
+  { id: 'home',    label: 'Lebensweg',   icon: '/menu-icons/lebensweg.jpeg' },
+  { id: 'friends', label: 'Freunde',     icon: '/menu-icons/freunde.jpeg' },
+  { id: 'archive', label: 'Vermächtnis', icon: '/menu-icons/vermaechtnis.jpeg' },
+  { id: 'feature', label: 'Features',    icon: '/menu-icons/features.jpeg' },
+  { id: 'profile', label: 'Profil',      icon: '/menu-icons/profil.jpeg' },
 ]
 
 export function BottomNav({ current, onNavigate, friendsBadge = 0 }: Props) {
