@@ -43,18 +43,11 @@ function encodeAnswerPlain(data: AnswerExport): string {
     .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '')
 }
 
-/**
- * Decode a #ma-plain/ payload that may be base64url (new) or standard
- * base64 (legacy links generated before this encoding change).
- */
 function decodeAnswerPlain(encoded: string): AnswerExport | null {
   try {
-    // Strip any existing padding, normalise base64url → standard base64,
-    // then re-add correct padding so atob() accepts the string.
-    const stripped = encoded.replace(/=/g, '')
-    const b64 = stripped.replace(/-/g, '+').replace(/_/g, '/')
-    const padded = b64 + '='.repeat((4 - b64.length % 4) % 4)
-    return JSON.parse(decodeURIComponent(atob(padded))) as AnswerExport
+    const pad = (4 - (encoded.length % 4)) % 4
+    const b64 = encoded.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat(pad)
+    return JSON.parse(decodeURIComponent(atob(b64))) as AnswerExport
   } catch {
     return null
   }
