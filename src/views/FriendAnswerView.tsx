@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useRef, useMemo, useEffect } from 'react'
 import { QuestionCard } from '../components/QuestionCard'
 import { ProgressBar } from '../components/ProgressBar'
 import { FRIEND_TOPICS } from '../data/friendQuestions'
@@ -39,6 +39,9 @@ export function FriendAnswerView({ invite }: Props) {
   const [localAnswers, setLocalAnswers] = useState<Record<string, string>>({})
   const [exportCode, setExportCode] = useState<string | null>(null)
   const [answerUrl, setAnswerUrl] = useState<string | null>(null)
+  // Ref always holds the latest (preferably compressed) URL so the synchronous
+  // share handler can access it without relying on React state timing.
+  const shareUrlRef = useRef<string | null>(null)
 
   // Share-button state – same pattern as FriendsView
   const [isSharing, setIsSharing] = useState(false)
@@ -116,12 +119,17 @@ export function FriendAnswerView({ invite }: Props) {
     const data = buildExportData()
     setExportCode(encodeAnswerExport(data))
 
-    // Set a plain URL immediately (synchronous) so the share button is
-    // never disabled – identical pattern to the invite-link generation.
-    setAnswerUrl(generatePlainAnswerUrl(data))
+    // Set a plain URL immediately (sync) so the button is never disabled.
+    const plainUrl = generatePlainAnswerUrl(data)
+    setAnswerUrl(plainUrl)
+    shareUrlRef.current = plainUrl
 
-    // Upgrade to a compressed URL in the background
-    generateAnswerUrl(data).then(url => setAnswerUrl(url)).catch(() => {})
+    // Upgrade to the short compressed #ma/ URL in the background (<50 ms).
+    // The ref is updated synchronously inside the then-callback so it is
+    // always current when the user eventually taps the share button.
+    generateAnswerUrl(data)
+      .then(url => { setAnswerUrl(url); shareUrlRef.current = url })
+      .catch(() => {})
 
     setStep('done')
   }
@@ -130,13 +138,16 @@ export function FriendAnswerView({ invite }: Props) {
   // inside the click gesture (no await before the call), otherwise Safari
   // blocks the share sheet. Identical pattern to FriendsView.handleShare.
   function handleShare() {
-    if (isSharing || !answerUrl) return
+    if (isSharing || !shareUrlRef.current) return
 
-    const url = answerUrl
-    // URL is embedded in text – messaging apps (e.g. WhatsApp on iOS) that
-    // strip the separate url field still send the full link including fragment.
+    // Always use the ref – it holds the compressed #ma/ URL once the async
+    // upgrade finishes (typically within 50 ms, well before the user taps).
+    // Falling back to the plain URL is safe but produces a longer fragment.
+    const url = shareUrlRef.current
     const shareData = {
-      text: `Hey ${invite.profileName}! Ich habe gerade ein paar Fragen über dich beantwortet – öffne einfach diesen Link und meine Erinnerungen landen direkt in deinem Lebensarchiv. 🎉\n\n${url}`,
+      title: `Meine Erinnerungen an ${invite.profileName}`,
+      text: `Hey ${invite.profileName}! Ich habe gerade ein paar Fragen über dich beantwortet – öffne einfach diesen Link und meine Erinnerungen landen direkt in deinem Lebensarchiv. 🎉`,
+      url,
     }
     setIsSharing(true)
 
