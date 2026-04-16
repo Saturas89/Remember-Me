@@ -195,12 +195,17 @@ export function FriendAnswerView({ invite }: Props) {
           </button>
 
           <div className="export-done__own-cta">
+            <img
+              src="/friend-invite-promo.jpeg"
+              alt="RememberMe – Lebensarchiv für deine Erinnerungen"
+              className="export-done__own-cta-img"
+            />
             <p>
               Möchtest du auch deine eigenen Erinnerungen festhalten?{' '}
-              <a href="https://remembermee.dad" target="_blank" rel="noopener noreferrer">
+              <a href="https://rememberme.dad" target="_blank" rel="noopener noreferrer">
                 Erstelle dein eigenes Lebensarchiv
               </a>{' '}
-              – kostenlos und für immer.
+              – kostenlos, für immer und deine Daten bleiben komplett privat.
             </p>
           </div>
         </div>
