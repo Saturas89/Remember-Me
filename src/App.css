@@ -1213,16 +1213,27 @@
 
 .export-done p { color: var(--text-muted); line-height: 1.6; max-width: 480px; }
 
+.export-done__own-cta-img {
+  width: 100%;
+  border-radius: 10px 10px 0 0;
+  display: block;
+  object-fit: cover;
+  max-height: 160px;
+}
+
 .export-done__own-cta {
   margin-top: 0.5rem;
-  padding: 1.25rem 1.5rem;
+  padding: 0;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 14px;
   max-width: 420px;
+  overflow: hidden;
+  text-align: left;
 }
 
 .export-done__own-cta p {
+  padding: 1rem 1.25rem 1.25rem;
   color: var(--text-muted);
   font-size: 0.92rem;
   line-height: 1.6;
