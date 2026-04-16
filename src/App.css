@@ -3062,7 +3062,7 @@
   min-height: 100dvh;
   max-width: 680px;
   margin: 0 auto;
-  padding: env(safe-area-inset-top, 0px) 1rem calc(2.5rem + env(safe-area-inset-bottom, 0px));
+  padding: env(safe-area-inset-top, 0px) 1rem calc(4.5rem + env(safe-area-inset-bottom, 0px));
 }
 
 .faq-topbar {

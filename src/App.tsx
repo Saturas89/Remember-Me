@@ -224,6 +224,7 @@ export default function App() {
 
   // Navigate to a main tab and update the URL so Vercel Analytics tracks the page view
   function goTo(v: View) {
+    window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior })
     const paths: Partial<Record<View['name'], string>> = {
       home: '/', friends: '/friends', archive: '/archive', profile: '/profile', feature: '/feature',
     }
@@ -238,8 +239,8 @@ export default function App() {
 
   const friendsBadge = friendAnswers.filter(a => a.value.trim()).length
 
-  // Bottom nav shown on all main views (not during focused quiz/friend-answer/faq)
-  const showNav = view.name !== 'quiz' && view.name !== 'faq'
+  // Bottom nav shown on all main views (not during focused quiz/friend-answer)
+  const showNav = view.name !== 'quiz'
 
   if (view.name === 'quiz') {
     let category: Category | undefined
@@ -329,7 +330,7 @@ export default function App() {
           onExportJson={handleExportJson}
           onImportBackup={restoreBackup}
           onOpenImport={() => setView({ name: 'import' })}
-          onOpenFaq={() => setView({ name: 'faq', from: 'profile' })}
+          onOpenFaq={() => { window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior }); setView({ name: 'faq', from: 'profile' }) }}
         />
       )}
 
@@ -375,12 +376,12 @@ export default function App() {
           friendAnswers={friendAnswers}
           customQuestions={customQuestions}
           getCategoryProgress={getCategoryProgress}
-          onSelectCategory={id =>
-            id === 'custom'
-              ? setView({ name: 'custom-questions' })
-              : setView({ name: 'quiz', categoryId: id })
-          }
-          onOpenFaq={() => setView({ name: 'faq', from: 'home' })}
+          onSelectCategory={id => {
+            window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior })
+            if (id === 'custom') setView({ name: 'custom-questions' })
+            else setView({ name: 'quiz', categoryId: id })
+          }}
+          onOpenFaq={() => { window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior }); setView({ name: 'faq', from: 'home' }) }}
         />
       )}
 
