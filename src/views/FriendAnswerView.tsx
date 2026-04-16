@@ -1,9 +1,9 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { QuestionCard } from '../components/QuestionCard'
 import { ProgressBar } from '../components/ProgressBar'
 import { FRIEND_TOPICS } from '../data/friendQuestions'
 import { encodeAnswerExport } from '../utils/sharing'
-import { generateAnswerUrl, shareOrCopy } from '../utils/secureLink'
+import { generateAnswerUrl, generatePlainAnswerUrl } from '../utils/secureLink'
 import type { InviteData, AnswerExport } from '../types'
 
 interface Props {
@@ -39,9 +39,20 @@ export function FriendAnswerView({ invite }: Props) {
   const [localAnswers, setLocalAnswers] = useState<Record<string, string>>({})
   const [exportCode, setExportCode] = useState<string | null>(null)
   const [answerUrl, setAnswerUrl] = useState<string | null>(null)
-  const [copied, setCopied] = useState(false)
-  const [linkCopied, setLinkCopied] = useState(false)
+
+  // Share-button state – same pattern as FriendsView
   const [isSharing, setIsSharing] = useState(false)
+  const [shareStatus, setShareStatus] = useState<'idle' | 'copied' | 'error'>('idle')
+
+  // Code-copy fallback button
+  const [codeCopied, setCodeCopied] = useState(false)
+
+  // Auto-clear share status feedback after 2.5 s (same as FriendsView)
+  useEffect(() => {
+    if (shareStatus === 'idle') return
+    const t = setTimeout(() => setShareStatus('idle'), 2500)
+    return () => clearTimeout(t)
+  }, [shareStatus])
 
   const topic = useMemo(
     () =>
@@ -103,32 +114,54 @@ export function FriendAnswerView({ invite }: Props) {
   function finish() {
     const data = buildExportData()
     setExportCode(encodeAnswerExport(data))
-    // Pre-generate the answer URL in the background
+
+    // Set a plain URL immediately (synchronous) so the share button is
+    // never disabled – identical pattern to the invite-link generation.
+    setAnswerUrl(generatePlainAnswerUrl(data))
+
+    // Upgrade to a compressed URL in the background
     generateAnswerUrl(data).then(url => setAnswerUrl(url)).catch(() => {})
+
     setStep('done')
   }
 
-  async function handleShare() {
-    if (!answerUrl || isSharing) return
+  // Synchronous share handler – navigator.share() must be called directly
+  // inside the click gesture (no await before the call), otherwise Safari
+  // blocks the share sheet. Identical pattern to FriendsView.handleShare.
+  function handleShare() {
+    if (isSharing || !answerUrl) return
+
+    const shareData = {
+      title: 'Meine Erinnerungen',
+      text: `Hier sind meine Erinnerungen für ${invite.profileName}:`,
+      url: answerUrl,
+    }
     setIsSharing(true)
-    try {
-      await shareOrCopy({
-        title: 'Meine Erinnerungen',
-        text: `Hier sind meine Erinnerungen für ${invite.profileName}:`,
-        url: answerUrl,
-      })
-    } finally {
-      setIsSharing(false)
+
+    if (typeof navigator.share === 'function') {
+      navigator
+        .share(shareData)
+        .then(() => setIsSharing(false))
+        .catch(err => {
+          setIsSharing(false)
+          if ((err as Error).name === 'AbortError') return
+          // Non-abort error – fall back to clipboard copy
+          navigator.clipboard
+            ?.writeText(answerUrl)
+            .then(() => setShareStatus('copied'))
+            .catch(() => setShareStatus('error'))
+        })
+    } else {
+      navigator.clipboard
+        .writeText(answerUrl)
+        .then(() => setShareStatus('copied'))
+        .catch(() => setShareStatus('error'))
+        .finally(() => setIsSharing(false))
     }
   }
 
-  function handleCopyLink() {
-    if (!answerUrl) return
-    navigator.clipboard.writeText(answerUrl).then(() => setLinkCopied(true))
-  }
-
   function handleCopyCode() {
-    navigator.clipboard.writeText(exportCode ?? '').then(() => setCopied(true))
+    navigator.clipboard.writeText(exportCode ?? '').then(() => setCodeCopied(true))
   }
 
   // ── Done screen ──────────────────────────────────────────
@@ -143,36 +176,34 @@ export function FriendAnswerView({ invite }: Props) {
             direkt in deren Lebensarchiv gespeichert.
           </p>
 
-          {/* Primary: share via Web Share / WhatsApp / iMessage */}
+          {/* Share button – same class and pattern as the invite share in FriendsView */}
           <button
-            className="btn btn--primary share-btn"
+            className={`share-cta-btn${shareStatus === 'copied' ? ' share-cta-btn--success' : shareStatus === 'error' ? ' share-cta-btn--error' : ''}`}
             onClick={handleShare}
-            disabled={!answerUrl || isSharing}
+            disabled={isSharing}
           >
-            {isSharing ? 'Wird geöffnet…' : '📤 Erinnerungen verschicken'}
+            {isSharing ? (
+              <><span className="share-cta-btn__spinner" aria-hidden="true" />Wird geöffnet…</>
+            ) : shareStatus === 'copied' ? (
+              '✓ Link kopiert!'
+            ) : shareStatus === 'error' ? (
+              '⚠ Nochmal versuchen'
+            ) : (
+              '📤 Erinnerungen verschicken'
+            )}
           </button>
 
-          {/* Copy link directly */}
-          <div className="answer-link-box">
-            {answerUrl ? (
-              <>
-                <div className="answer-link-row">
-                  <span className="answer-link-url">{answerUrl}</span>
-                  <button
-                    className={`btn btn--outline btn--sm${linkCopied ? ' btn--success' : ''}`}
-                    onClick={handleCopyLink}
-                  >
-                    {linkCopied ? '✓ Kopiert!' : '🔗 Link kopieren'}
-                  </button>
-                </div>
-                <p className="export-hint">
-                  Wenn {invite.profileName} diesen Link öffnet, werden die Antworten automatisch importiert.
-                </p>
-              </>
-            ) : (
-              <p className="answer-link-loading">Link wird erstellt…</p>
-            )}
-          </div>
+          {/* Visible link with copy button – always shown since URL is pre-generated */}
+          {answerUrl && (
+            <div className="answer-link-box">
+              <div className="answer-link-row">
+                <span className="answer-link-url">{answerUrl}</span>
+              </div>
+              <p className="export-hint">
+                Wenn {invite.profileName} diesen Link öffnet, werden die Antworten automatisch importiert.
+              </p>
+            </div>
+          )}
 
           {/* Deep fallback: manual code copy */}
           {exportCode && (
@@ -180,10 +211,10 @@ export function FriendAnswerView({ invite }: Props) {
               <summary>Code manuell kopieren</summary>
               <div className="export-code">{exportCode}</div>
               <button
-                className={`btn btn--outline btn--sm ${copied ? 'btn--success' : ''}`}
+                className={`btn btn--outline btn--sm ${codeCopied ? 'btn--success' : ''}`}
                 onClick={handleCopyCode}
               >
-                {copied ? '✓ Kopiert!' : '📋 Code kopieren'}
+                {codeCopied ? '✓ Kopiert!' : '📋 Code kopieren'}
               </button>
               <p className="export-hint">
                 {invite.profileName} fügt den Code unter „Erinnerung einsammeln → Antwort-Link oder

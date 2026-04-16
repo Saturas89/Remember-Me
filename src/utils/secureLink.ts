@@ -188,6 +188,18 @@ export async function parseSecureInviteFromHash(): Promise<InviteData | null> {
 }
 
 /**
+ * Generate a plain (uncompressed) answer URL synchronously.
+ *
+ * Use this when the URL must be available immediately inside a click handler –
+ * any await before navigator.share() breaks Safari's user-gesture context.
+ * The result is functionally equivalent to the #ma-plain/ fallback path of
+ * generateAnswerUrl().
+ */
+export function generatePlainAnswerUrl(data: AnswerExport): string {
+  return `${appBase()}#ma-plain/${btoa(encodeURIComponent(JSON.stringify(data)))}`
+}
+
+/**
  * Generate a compressed answer URL to share back with the inviter.
  * Falls back to plain Base64 when CompressionStream is unavailable.
  *
