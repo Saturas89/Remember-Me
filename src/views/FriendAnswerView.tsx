@@ -44,7 +44,8 @@ export function FriendAnswerView({ invite }: Props) {
   const [isSharing, setIsSharing] = useState(false)
   const [shareStatus, setShareStatus] = useState<'idle' | 'copied' | 'error'>('idle')
 
-  // Code-copy fallback button
+  // Link-copy and code-copy fallback buttons
+  const [linkCopied, setLinkCopied] = useState(false)
   const [codeCopied, setCodeCopied] = useState(false)
 
   // Auto-clear share status feedback after 2.5 s (same as FriendsView)
@@ -131,10 +132,11 @@ export function FriendAnswerView({ invite }: Props) {
   function handleShare() {
     if (isSharing || !answerUrl) return
 
+    const url = answerUrl
+    // URL is embedded in text – messaging apps (e.g. WhatsApp on iOS) that
+    // strip the separate url field still send the full link including fragment.
     const shareData = {
-      title: `Meine Erinnerungen an ${invite.profileName}`,
-      text: `Hey ${invite.profileName}! Ich habe gerade ein paar Fragen über dich beantwortet – öffne einfach diesen Link und meine Erinnerungen landen direkt in deinem Lebensarchiv. 🎉`,
-      url: answerUrl,
+      text: `Hey ${invite.profileName}! Ich habe gerade ein paar Fragen über dich beantwortet – öffne einfach diesen Link und meine Erinnerungen landen direkt in deinem Lebensarchiv. 🎉\n\n${url}`,
     }
     setIsSharing(true)
 
@@ -145,19 +147,23 @@ export function FriendAnswerView({ invite }: Props) {
         .catch(err => {
           setIsSharing(false)
           if ((err as Error).name === 'AbortError') return
-          // Non-abort error – fall back to clipboard copy
           navigator.clipboard
-            ?.writeText(answerUrl)
+            ?.writeText(url)
             .then(() => setShareStatus('copied'))
             .catch(() => setShareStatus('error'))
         })
     } else {
       navigator.clipboard
-        .writeText(answerUrl)
+        .writeText(url)
         .then(() => setShareStatus('copied'))
         .catch(() => setShareStatus('error'))
         .finally(() => setIsSharing(false))
     }
+  }
+
+  function handleCopyLink() {
+    if (!answerUrl) return
+    navigator.clipboard.writeText(answerUrl).then(() => setLinkCopied(true))
   }
 
   function handleCopyCode() {
@@ -198,6 +204,12 @@ export function FriendAnswerView({ invite }: Props) {
             <div className="answer-link-box">
               <div className="answer-link-row">
                 <span className="answer-link-url">{answerUrl}</span>
+                <button
+                  className={`btn btn--outline btn--sm${linkCopied ? ' btn--success' : ''}`}
+                  onClick={handleCopyLink}
+                >
+                  {linkCopied ? '✓ Kopiert!' : '🔗 Kopieren'}
+                </button>
               </div>
               <p className="export-hint">
                 Wenn {invite.profileName} diesen Link öffnet, werden die Antworten automatisch importiert.

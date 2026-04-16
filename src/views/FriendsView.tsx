@@ -40,9 +40,9 @@ export function FriendsView({
 
   function buildShareData(url: string) {
     return {
-      title: 'Ich erstelle mein persönliches Lebensarchiv',
-      text: `Hallo! Ich erstelle gerade mein persönliches Lebensarchiv mit Erinnerungen und würde mich sehr freuen, wenn du ein paar Fragen über mich beantwortest. Deine Erinnerungen werden ein unvergesslicher Teil davon. 💛`,
-      url,
+      // URL is embedded in text so messaging apps (e.g. WhatsApp on iOS) that
+      // strip the separate url field still send the full link including fragment.
+      text: `Hallo! Ich erstelle gerade mein persönliches Lebensarchiv mit Erinnerungen und würde mich sehr freuen, wenn du ein paar Fragen über mich beantwortest. Deine Erinnerungen werden ein unvergesslicher Teil davon. 💛\n\n${url}`,
     }
   }
 
