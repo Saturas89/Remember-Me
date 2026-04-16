@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+  <defs>
+    <linearGradient id="vmPage" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FBF4E3"/>
+      <stop offset="100%" stop-color="#E9DAB5"/>
+    </linearGradient>
+    <linearGradient id="vmCover" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#A67638"/>
+      <stop offset="100%" stop-color="#6D4A1F"/>
+    </linearGradient>
+    <linearGradient id="vmFeather" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#F0D79A"/>
+      <stop offset="100%" stop-color="#A87A34"/>
+    </linearGradient>
+  </defs>
+  <path d="M6 20 C14 16 24 16 32 20 V52 C24 48 14 48 6 52 Z" fill="url(#vmCover)"/>
+  <path d="M58 20 C50 16 40 16 32 20 V52 C40 48 50 48 58 52 Z" fill="url(#vmCover)"/>
+  <path d="M8 22 C15 19 24 19 31 22 V50 C24 47 15 47 8 50 Z" fill="url(#vmPage)"/>
+  <path d="M56 22 C49 19 40 19 33 22 V50 C40 47 49 47 56 50 Z" fill="url(#vmPage)"/>
+  <path d="M32 20 V52" stroke="#6D4A1F" stroke-width="1"/>
+  <g stroke="#9B7A3E" stroke-width="0.8" stroke-linecap="round">
+    <line x1="12" y1="26" x2="28" y2="25"/>
+    <line x1="12" y1="30" x2="28" y2="29"/>
+    <line x1="12" y1="34" x2="28" y2="33"/>
+    <line x1="12" y1="38" x2="28" y2="37"/>
+    <line x1="12" y1="42" x2="28" y2="41"/>
+    <line x1="12" y1="46" x2="28" y2="45"/>
+    <line x1="36" y1="25" x2="52" y2="26"/>
+    <line x1="36" y1="29" x2="52" y2="30"/>
+    <line x1="36" y1="33" x2="52" y2="34"/>
+    <line x1="36" y1="37" x2="52" y2="38"/>
+    <line x1="36" y1="41" x2="52" y2="42"/>
+    <line x1="36" y1="45" x2="52" y2="46"/>
+  </g>
+  <path d="M48 10 C52 14 55 20 54 30 C52 28 50 27 47 27 C49 24 50 18 48 10 Z" fill="url(#vmFeather)" stroke="#8C6521" stroke-width="0.8"/>
+  <line x1="48" y1="10" x2="41" y2="34" stroke="#8C6521" stroke-width="1.2" stroke-linecap="round"/>
+  <path d="M41 34 L40 36 L43 35 Z" fill="#3A2814"/>
+</svg>

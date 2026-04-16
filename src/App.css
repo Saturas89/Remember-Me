@@ -214,6 +214,15 @@
   display: block;
 }
 
+.bottom-nav__icon-img {
+  width: 1.65rem;
+  height: 1.65rem;
+  display: block;
+  object-fit: contain;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
 .bottom-nav__label {
   font-size: 0.6rem;
   font-weight: 500;

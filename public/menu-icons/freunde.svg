@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+  <defs>
+    <linearGradient id="frShield" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#4E73A8"/>
+      <stop offset="100%" stop-color="#2B466F"/>
+    </linearGradient>
+    <linearGradient id="frEdge" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#E6C179"/>
+      <stop offset="100%" stop-color="#B88A3E"/>
+    </linearGradient>
+    <pattern id="frDots" width="3" height="3" patternUnits="userSpaceOnUse">
+      <circle cx="1.5" cy="1.5" r="0.5" fill="#7FA2D0" opacity="0.55"/>
+    </pattern>
+  </defs>
+  <path d="M32 4 L55 11 V30 C55 44 45 54 32 60 C19 54 9 44 9 30 V11 Z" fill="url(#frEdge)"/>
+  <path d="M32 8 L51 14 V30 C51 42 42 51 32 56 C22 51 13 42 13 30 V14 Z" fill="url(#frShield)"/>
+  <path d="M32 8 L51 14 V30 C51 42 42 51 32 56 C22 51 13 42 13 30 V14 Z" fill="url(#frDots)"/>
+  <circle cx="25" cy="25" r="5" fill="#4E73A8" stroke="#1E3557" stroke-width="1.2"/>
+  <circle cx="35" cy="22" r="4.5" fill="#E6C179" stroke="#8C6521" stroke-width="1.2"/>
+  <path d="M17 44 C17 36 22 32 26 32 C30 32 33 34 33 40 V44 Z" fill="#4E73A8" stroke="#1E3557" stroke-width="1.2"/>
+  <path d="M28 44 C28 36 33 30 37 30 C41 30 45 33 45 40 V44 Z" fill="#E6C179" stroke="#8C6521" stroke-width="1.2"/>
+</svg>
