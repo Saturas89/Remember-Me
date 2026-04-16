@@ -1,8 +1,8 @@
 # Projektübersicht – Remember Me
 
 **Status:** 🔵 IN PROGRESS  
-**Version:** 1.5.8  
-**Letzte Aktualisierung:** 2026-04-12
+**Version:** 1.5.9  
+**Letzte Aktualisierung:** 2026-04-16
 
 ---
 
@@ -58,20 +58,29 @@ Teilen / Exportieren (PDF, Freunde einladen, KI-Export)
 - [x] PWA installierbar: iOS-Meta-Tags, android `mobile-web-app-capable`
 - [x] Install-Prompt: Android nativ (`beforeinstallprompt`), iOS Anleitung
 
-### Geplant 📋
+### Geplant 📋 / Umgesetzt ✔️
 - [x] KI-lesbarer Export: Markdown (`.md`) + Enriched JSON (`.json`) im Archiv – v1.4.0
 - [x] Foto-Anhänge zu Antworten (IndexedDB, Komprimierung, Lightbox) – v1.5.0
 - [x] Themen-Auswahl für Freundes-Einladungen (4 Themen × 5 Fragen) – v1.5.0
 - [x] Fragen überspringen (eigener Flow + Freunde-Flow) – v1.5.1
 - [x] Onboarding-Screen beim Erststart (Erklärung, Offline-Hinweis, Namenseingabe) – v1.5.2
 - [x] Profil-Seite UX-Redesign (Avatar, Karten, iOS-Settings-Felder, Theme-Grid) + App-weite Typografie – v1.5.4
-- [ ] Optionaler E2EE-Sync (Web Crypto API + Supabase, opt-in) – v1.6.0
-- [ ] Push Notifications (Erinnerung zum Weitermachen) – v1.6.x
-- [ ] **Lebenszeitlinie** – chronologische Ansicht aller Erlebnisse und Fotos auf einer visuellen Timeline, filterbar nach Jahr und Kategorie; optional ungefähres Alter pro Eintrag (z. B. „ca. 8 Jahre alt"), wird automatisch aus Geburtsjahr vorgeschlagen (REQ-006) – v1.7.0
-- [ ] **Social Media Import** – Erinnerungen und Fotos aus Facebook- und Instagram-Datenexporten importieren, mit optionaler eigener Beschreibung (REQ-007) – v1.8.0
-- [ ] **Audio-Aufnahme & Transkription** – Fragen einsprechen statt tippen; Originalton in IndexedDB gespeichert, automatische Transkription via Web Speech API (lokal, kein Cloud-Upload); Archiv zeigt Audio-Player neben dem Text (REQ-009) – v1.9.0
-- [ ] Backend-Sync + Familien-Freigabe-Links – v2.0.0
-- [ ] **Biografie erzeugen** – aus den gespeicherten Antworten per KI eine fertige, lesbare Lebensgeschichte in verschiedenen Stilen und Sprachen generieren, vorschau- und exportierbar (REQ-008) – v2.1.0
+- [x] Bottom-Tab-Navigation (5 Tabs, iOS/Android-Stil, Badge-Zähler) – v1.5.5
+- [x] Export & Backup-Funktion im Profil (Markdown, JSON, Backup + Wiederherstellung) – v1.5.6
+- [x] PWA Update-Benachrichtigung (Service Worker Prompt, Banner) – v1.5.8
+- [x] Freunde-Einladung: Share-Link-Flow (Web Share API, automatischer Import) – v1.5.9
+- [x] **Audio-Aufnahme & Transkription** – Fragen einsprechen statt tippen; Originalton in IndexedDB gespeichert, automatische Transkription via Web Speech API (lokal, kein Cloud-Upload); Archiv zeigt Audio-Player neben dem Text (REQ-009)
+- [x] **Video-Anhänge** – Videos zu Antworten hinzufügen; IndexedDB-Speicher (`rm-videos`), Inline-Wiedergabe, ZIP-Export-Integration (REQ-012)
+- [x] **Hilfe & FAQ** – Datenschutz, Import, Export, Offline-Nutzung erklärt; eigene FAQ-Ansicht (REQ-010)
+- [x] **Erinnerungs-Archiv ZIP-Export** – Komplettarchiv als ZIP inkl. Fotos, Audio & Video; Share Sheet Integration (REQ-011)
+- [x] **Erinnerungs-Archiv-Import** – Wiederherstellung aus ZIP oder JSON-Backup; Fotos, Videos, Audio werden mitimportiert (REQ-013)
+- [ ] Push Notifications (Erinnerung zum Weitermachen)
+- [ ] Mehrsprachigkeit (DE / EN)
+- [ ] **Lebenszeitlinie** – chronologische Ansicht aller Erlebnisse und Fotos auf einer visuellen Timeline, filterbar nach Jahr und Kategorie; optional ungefähres Alter pro Eintrag (z. B. „ca. 8 Jahre alt"), wird automatisch aus Geburtsjahr vorgeschlagen (REQ-006)
+- [ ] **Privater Sync** – Optionaler E2EE-Sync (Web Crypto API, verschlüsselte Synchronisation zwischen Geräten, opt-in)
+- [ ] **Familienmodus** – Mehrere Familienmitglieder können eigene Geschichten und Fotos beitragen und so ein gemeinsames Familienarchiv aufbauen
+- [ ] **Import bestehender Erinnerungen** – Erinnerungen und Fotos aus sozialen Netzwerken (Facebook, Instagram), Clouds und lokalen Ordnern importieren, mit optionaler eigener Beschreibung (REQ-007)
+- [ ] **Automatische Lebensgeschichte** – aus den gespeicherten Antworten per KI eine fertige, lesbare Lebensgeschichte in verschiedenen Stilen und Sprachen generieren, vorschau- und exportierbar (REQ-008)
 
 ---
 
@@ -98,7 +107,7 @@ Teilen / Exportieren (PDF, Freunde einladen, KI-Export)
 | Build | Vite 6 |
 | PWA | vite-plugin-pwa + Workbox |
 | Styling | CSS Custom Properties (4 Themes) |
-| Persistenz | localStorage (Zustand) + IndexedDB (Bilder) |
+| Persistenz | localStorage (Zustand) + IndexedDB (Bilder, Audio, Video) |
 | Deployment | Vercel (static SPA) |
 | Icons | sharp (SVG → PNG, `npm run generate-icons`) |
 
@@ -110,7 +119,8 @@ Teilen / Exportieren (PDF, Freunde einladen, KI-Export)
 AppState (localStorage: 'remember-me-state')
 ├── profile: { name, birthYear?, createdAt }
 ├── answers: Record<questionId, Answer>
-│   └── Answer: { id, questionId, categoryId, value, imageIds?, createdAt, updatedAt }
+│   └── Answer: { id, questionId, categoryId, value, imageIds?, audioIds?, videoIds?,
+│                  eventDate?, approxAge?, importSource?, createdAt, updatedAt }
 ├── friends: Friend[]
 │   └── Friend: { id, name, addedAt }
 ├── friendAnswers: FriendAnswer[]
@@ -119,7 +129,13 @@ AppState (localStorage: 'remember-me-state')
     └── CustomQuestion: { id, text, type, helpText?, options?, createdAt }
 
 IndexedDB: 'rm-images' (store: 'images')
-└── key: imageId ('img-{timestamp}-{random}') → value: JPEG data URL (max 1200px, 82% quality)
+└── key: imageId → value: JPEG data URL (max 1200px, 82% quality)
+
+IndexedDB: 'rm-audio' (store: 'audio')
+└── key: audioId → value: Audio-Aufnahme (WebM/Opus)
+
+IndexedDB: 'rm-videos' (store: 'videos')
+└── key: videoId → value: Video-Datei
 ```
 
 Vollständige Typ-Definitionen: `src/types.ts`  
@@ -142,13 +158,17 @@ Update-Banner: `src/components/UpdateBanner.tsx` – Toast bei verfügbarem SW-U
 | AnswerExport | Antworten eines Freundes (base64-codierter Code) |
 | InviteData | Daten im Einladungslink (profileName + friendId + topicId?) |
 | FriendTopic | Thema für Freundes-Einladung (id, title, emoji, description, 5 questions) |
-| E2EE | Ende-zu-Ende-Verschlüsselung (geplant für Sync) |
-| KI-Export | Archiv in KI-lesbarem Format (Markdown/JSON, geplant) |
-| Lebenszeitlinie | Chronologische visuelle Ansicht aller Einträge und Fotos; mit optionalem ca. Alter (geplant v1.7.0) |
-| Social Media Import | Import von Erinnerungen/Fotos aus Facebook-/Instagram-Datenexporten (geplant v1.8.0) |
-| Audio-Aufnahme | Fragen einsprechen statt tippen; Originalton + automatische Transkription (geplant v1.9.0) |
+| E2EE | Ende-zu-Ende-Verschlüsselung (geplant für Privater Sync) |
+| KI-Export | Archiv in KI-lesbarem Format (Markdown/JSON) – ✔️ umgesetzt |
+| Audio-Aufnahme | Fragen einsprechen statt tippen; Originalton + automatische Transkription – ✔️ umgesetzt |
+| Video-Anhänge | Videos zu Antworten hinzufügen; IndexedDB-basiert – ✔️ umgesetzt |
+| Erinnerungs-Archiv | ZIP-Export & -Import inkl. Fotos, Audio, Video – ✔️ umgesetzt |
 | approxAge | Ungefähres Lebensalter zum Zeitpunkt eines Erlebnisses, für die Zeitlinie |
-| Biografie-Generator | KI-gestützte Umwandlung der Antworten in eine fertige Lebensgeschichte (geplant v2.1.0) |
+| Lebenszeitlinie | Chronologische visuelle Ansicht aller Einträge und Fotos; mit optionalem ca. Alter (geplant) |
+| Privater Sync | Verschlüsselte Synchronisation zwischen Geräten (geplant) |
+| Familienmodus | Mehrere Familienmitglieder tragen zum gemeinsamen Archiv bei (geplant) |
+| Import Erinnerungen | Import aus sozialen Netzwerken, Clouds, lokalen Ordnern (geplant) |
+| Biografie-Generator | KI-gestützte Umwandlung der Antworten in eine fertige Lebensgeschichte (geplant) |
 
 ---
 
@@ -163,5 +183,5 @@ Update-Banner: `src/components/UpdateBanner.tsx` – Toast bei verfügbarem SW-U
 ## Dokumentation
 
 - [CHANGELOG](./CHANGELOG.md) – Versionshistorie
-- [Anforderungen](./requirements/README.md) – REQ-001 bis REQ-005
+- [Anforderungen](./requirements/README.md) – REQ-001 bis REQ-013
 - [KI-Export Konzept](./design/AI_READABLE_EXPORT.md) – Vorschläge für KI-lesbare Formate

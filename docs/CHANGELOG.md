@@ -475,6 +475,15 @@ Wenn im Hintergrund eine neue Version der App als Service Worker bereit steht, e
 | **1.5.1** | Fragen überspringen (eigener Flow + Freunde-Flow) | ✔️ Fertig |
 | **1.5.2** | Onboarding-Screen beim Erststart | ✔️ Fertig |
 | **1.5.3** | Theme-Auswahl ins Profil-Menü verschoben | ✔️ Fertig |
-| **1.6.0** | Optionaler E2EE-Sync (Web Crypto API + Supabase, opt-in) | Geplant |
-| **2.0.0** | Backend-Sync, Familien-Freigabe-Links mit geteilten Schlüsseln | Zukunft |
-| **2.1.0** | LLM-Direktintegration: Biografie auf Knopfdruck in der App | Zukunft |
+| **1.5.4** | Profil-Seite UX-Redesign + App-weite Typografie | ✔️ Fertig |
+| **1.5.5** | Bottom-Tab-Navigation (5 Tabs, iOS/Android-Stil) | ✔️ Fertig |
+| **1.5.6** | Export & Backup-Funktion in der Profilansicht | ✔️ Fertig |
+| **1.5.7** | Fix: Freundes-Fragen im Archiv (ID-Platzhalter → Fragentext) | ✔️ Fertig |
+| **1.5.8** | PWA Update-Benachrichtigung (Service Worker Prompt) | ✔️ Fertig |
+| **1.5.9** | Freunde-Einladung: Share-Link-Flow (Web Share API) | ✔️ Fertig |
+| — | **Geplante Features** | — |
+| **TBD** | Lebenszeitlinie – chronologische visuelle Ansicht | Geplant |
+| **TBD** | Privater Sync – E2EE-Synchronisation zwischen Geräten | Geplant |
+| **TBD** | Familienmodus – gemeinsames Familienarchiv | Geplant |
+| **TBD** | Import bestehender Erinnerungen (Social Media, Clouds) | Geplant |
+| **TBD** | Automatische Lebensgeschichte – KI-generierte Biografie | Geplant |

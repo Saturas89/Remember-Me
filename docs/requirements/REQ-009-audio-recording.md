@@ -1,12 +1,11 @@
 # Anforderung: Audio-Aufnahme & Transkription
 
-**Status:** 🟡 PLANNED  
+**Status:** ✔️ COMPLETED  
 **ID:** REQ-009  
 **Version:** 1.0.0  
-**Letzte Aktualisierung:** 2026-04-12  
+**Letzte Aktualisierung:** 2026-04-16  
 **Modul:** Input / Media  
 **Priorität:** High  
-**Geplante Version:** v1.9.0  
 
 ---
 
