@@ -6,12 +6,12 @@ interface Props {
   friendsBadge?: number
 }
 
-const TABS: { id: MainTab; label: string; emoji: string }[] = [
-  { id: 'home',    label: 'Lebensweg',   emoji: '🛤️' },
-  { id: 'friends', label: 'Freunde',     emoji: '👥' },
-  { id: 'archive', label: 'Vermächtnis', emoji: '📖' },
-  { id: 'feature', label: 'Features',    emoji: '✨' },
-  { id: 'profile', label: 'Profil',      emoji: '👤' },
+const TABS: { id: MainTab; label: string; icon: string }[] = [
+  { id: 'home',    label: 'Lebensweg',   icon: '/menu/home.svg' },
+  { id: 'friends', label: 'Freunde',     icon: '/menu/friends.svg' },
+  { id: 'archive', label: 'Vermächtnis', icon: '/menu/archive.svg' },
+  { id: 'feature', label: 'Features',    icon: '/menu/feature.svg' },
+  { id: 'profile', label: 'Profil',      icon: '/menu/profile.svg' },
 ]
 
 export function BottomNav({ current, onNavigate, friendsBadge = 0 }: Props) {
@@ -28,7 +28,9 @@ export function BottomNav({ current, onNavigate, friendsBadge = 0 }: Props) {
             onClick={() => onNavigate(tab.id)}
             aria-current={active ? 'page' : undefined}
           >
-            <span className="bottom-nav__icon" aria-hidden="true">{tab.emoji}</span>
+            <span className="bottom-nav__icon" aria-hidden="true">
+              <img src={tab.icon} alt="" className="bottom-nav__icon-img" />
+            </span>
             <span className="bottom-nav__label">{tab.label}</span>
             {badge > 0 && (
               <span className="bottom-nav__badge" aria-hidden="true">
