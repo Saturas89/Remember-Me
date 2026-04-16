@@ -42,7 +42,7 @@ export function FriendsView({
     const name = profileName || 'Ich'
     return {
       title: 'Ich erstelle mein persönliches Lebensarchiv',
-      text: `Hallo! Ich erstelle gerade mein persönliches Lebensarchiv mit Erinnerungen und würde mich sehr freuen, wenn du ein paar Fragen beantwortest – es dauert nur 5 Minuten. Deine Erinnerungen werden ein unvergesslicher Teil davon. 💛`,
+      text: `Hallo! Ich erstelle gerade mein persönliches Lebensarchiv mit Erinnerungen und würde mich sehr freuen, wenn du ein paar Fragen über mich beantwortest. Deine Erinnerungen werden ein unvergesslicher Teil davon. 💛`,
       url,
     }
   }
