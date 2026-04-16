@@ -137,15 +137,15 @@ export function FriendsView({
 
       {/* ZIP import for friends who attached photos / audio / video */}
       <section className="friends-section">
-        <h3 className="friends-section-title">Anhänge empfangen</h3>
+        <h3 className="friends-section-title">Erinnerungen mit Anhängen empfangen</h3>
         <p className="friends-hint">
-          Hat ein Freund Fotos, Aufnahmen oder Videos mitgeschickt? Importiere die ZIP-Datei hier.
+          Hat ein Freund Fotos, Aufnahmen oder Videos mitgeschickt? Öffne die Datei hier und sie landen in deinem Archiv.
         </p>
         <button
           className="btn btn--ghost btn--sm"
           onClick={() => zipInputRef.current?.click()}
         >
-          📥 ZIP importieren
+          🎁 Erinnerungen öffnen
         </button>
         <input
           ref={zipInputRef}

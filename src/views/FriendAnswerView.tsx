@@ -319,7 +319,7 @@ export function FriendAnswerView({ invite }: Props) {
               ) : zipState === 'building' ? (
                 <><span className="share-cta-btn__spinner" aria-hidden="true" />{zipStep || 'Anhänge werden verpackt…'}</>
               ) : zipState === 'ready' ? (
-                `📦 Als ZIP teilen${zipSize ? ` (${fmtBytes(zipSize)})` : ''}`
+                `🎁 Mit Fotos & Aufnahmen verschicken${zipSize ? ` (${fmtBytes(zipSize)})` : ''}`
               ) : zipState === 'error' ? (
                 '⚠ Fehler – nur Text teilen'
               ) : (
