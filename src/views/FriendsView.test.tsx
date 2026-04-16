@@ -10,7 +10,6 @@ const defaultProps = {
   friends: [],
   friendAnswers: [],
   onRemoveFriend: vi.fn(),
-  onImportAnswers: vi.fn(),
   onBack: vi.fn(),
 }
 
@@ -19,7 +18,7 @@ describe('FriendsView – Einladungstext', () => {
     const { container } = render(<FriendsView {...defaultProps} />)
     const hint = container.querySelector('.friends-hint')
     expect(hint?.textContent).toContain('Lade Freunde und Familie ein')
-    expect(hint?.textContent).toContain('Teil deines persönlichen Lebensarchivs')
+    expect(hint?.textContent).toContain('automatisch in deinem persönlichen Lebensarchiv gespeichert')
   })
 
   it('hat keinen separaten friends-intro-Absatz mehr', () => {
