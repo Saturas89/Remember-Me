@@ -1,26 +1,94 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
-  <!-- Book spine shadow -->
-  <path d="M50 18 L50 88" stroke="#8b7355" stroke-width="4"/>
-  <!-- Left page -->
-  <path d="M10 22 Q30 18 48 20 L48 85 Q30 83 10 87Z" fill="#f5f0e0" stroke="#a0896a" stroke-width="1.5"/>
-  <!-- Right page -->
-  <path d="M52 20 Q70 18 90 22 L90 87 Q70 83 52 85Z" fill="#faf5e8" stroke="#a0896a" stroke-width="1.5"/>
-  <!-- Page lines left -->
-  <line x1="18" y1="34" x2="42" y2="32" stroke="#c4b89a" stroke-width="1" opacity="0.6"/>
-  <line x1="18" y1="42" x2="42" y2="40" stroke="#c4b89a" stroke-width="1" opacity="0.6"/>
-  <line x1="18" y1="50" x2="42" y2="48" stroke="#c4b89a" stroke-width="1" opacity="0.6"/>
-  <line x1="18" y1="58" x2="42" y2="56" stroke="#c4b89a" stroke-width="1" opacity="0.6"/>
-  <line x1="18" y1="66" x2="42" y2="64" stroke="#c4b89a" stroke-width="1" opacity="0.6"/>
-  <!-- Page lines right -->
-  <line x1="58" y1="32" x2="82" y2="34" stroke="#c4b89a" stroke-width="1" opacity="0.6"/>
-  <line x1="58" y1="40" x2="82" y2="42" stroke="#c4b89a" stroke-width="1" opacity="0.6"/>
-  <line x1="58" y1="48" x2="82" y2="50" stroke="#c4b89a" stroke-width="1" opacity="0.6"/>
-  <line x1="58" y1="56" x2="82" y2="58" stroke="#c4b89a" stroke-width="1" opacity="0.6"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 180" fill="none">
+  <defs>
+    <linearGradient id="pageLeft" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#ede4d0"/>
+      <stop offset="100%" stop-color="#f5efe0"/>
+    </linearGradient>
+    <linearGradient id="pageRight" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#f8f2e6"/>
+      <stop offset="100%" stop-color="#f0e8d4"/>
+    </linearGradient>
+    <linearGradient id="quillGrad" x1="0" y1="0" x2="0.3" y2="1">
+      <stop offset="0%" stop-color="#ddb850"/>
+      <stop offset="40%" stop-color="#c9a840"/>
+      <stop offset="100%" stop-color="#a88828"/>
+    </linearGradient>
+    <linearGradient id="coverGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#a0896a"/>
+      <stop offset="100%" stop-color="#8a7358"/>
+    </linearGradient>
+    <filter id="bookShadow">
+      <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#5a4a30" flood-opacity="0.2"/>
+    </filter>
+    <filter id="quillGlow">
+      <feDropShadow dx="0" dy="1" stdDeviation="1.5" flood-color="#c9a840" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+
+  <g filter="url(#bookShadow)">
+    <!-- Book cover/spine bottom edge -->
+    <path d="M14 48 Q14 42 20 40 L96 34 L100 34 L104 34 L180 40 Q186 42 186 48 L186 158 Q186 162 180 163 L104 168 L100 168 L96 168 L20 163 Q14 162 14 158Z"
+          fill="url(#coverGrad)" opacity="0.6"/>
+
+    <!-- Page thickness (bottom pages) -->
+    <path d="M18 155 Q60 148 98 152 L98 156 Q60 152 18 158Z" fill="#d8cdb8"/>
+    <path d="M102 152 Q140 148 182 155 L182 158 Q140 152 102 156Z" fill="#d8cdb8"/>
+
+    <!-- Left page -->
+    <path d="M16 42 Q55 35 96 38 L96 155 Q55 152 16 158Z" fill="url(#pageLeft)" stroke="#baa880" stroke-width="1.2"/>
+
+    <!-- Right page -->
+    <path d="M104 38 Q145 35 184 42 L184 158 Q145 152 104 155Z" fill="url(#pageRight)" stroke="#baa880" stroke-width="1.2"/>
+
+    <!-- Page highlight (left) -->
+    <path d="M20 46 Q55 40 94 42 L94 50 Q55 48 20 52Z" fill="#ffffff" opacity="0.25"/>
+
+    <!-- Page highlight (right) -->
+    <path d="M106 42 Q145 40 180 46 L180 52 Q145 48 106 50Z" fill="#ffffff" opacity="0.2"/>
+
+    <!-- Spine center -->
+    <path d="M96 36 Q100 34 104 36 L104 155 Q100 157 96 155Z" fill="#8a7358"/>
+    <line x1="100" y1="36" x2="100" y2="156" stroke="#7a6348" stroke-width="1.5"/>
+  </g>
+
+  <!-- Text lines left page -->
+  <line x1="30" y1="60" x2="84" y2="57" stroke="#c4b494" stroke-width="1.2" stroke-linecap="round" opacity="0.5"/>
+  <line x1="30" y1="70" x2="84" y2="67" stroke="#c4b494" stroke-width="1.2" stroke-linecap="round" opacity="0.5"/>
+  <line x1="30" y1="80" x2="84" y2="77" stroke="#c4b494" stroke-width="1.2" stroke-linecap="round" opacity="0.5"/>
+  <line x1="30" y1="90" x2="84" y2="87" stroke="#c4b494" stroke-width="1.2" stroke-linecap="round" opacity="0.5"/>
+  <line x1="30" y1="100" x2="84" y2="97" stroke="#c4b494" stroke-width="1.2" stroke-linecap="round" opacity="0.5"/>
+  <line x1="30" y1="110" x2="70" y2="107" stroke="#c4b494" stroke-width="1.2" stroke-linecap="round" opacity="0.5"/>
+  <line x1="30" y1="120" x2="78" y2="117" stroke="#c4b494" stroke-width="1.2" stroke-linecap="round" opacity="0.5"/>
+  <line x1="30" y1="130" x2="60" y2="128" stroke="#c4b494" stroke-width="1.2" stroke-linecap="round" opacity="0.5"/>
+
+  <!-- Text lines right page -->
+  <line x1="116" y1="57" x2="170" y2="60" stroke="#c4b494" stroke-width="1.2" stroke-linecap="round" opacity="0.5"/>
+  <line x1="116" y1="67" x2="170" y2="70" stroke="#c4b494" stroke-width="1.2" stroke-linecap="round" opacity="0.5"/>
+  <line x1="116" y1="77" x2="170" y2="80" stroke="#c4b494" stroke-width="1.2" stroke-linecap="round" opacity="0.5"/>
+  <line x1="116" y1="87" x2="170" y2="90" stroke="#c4b494" stroke-width="1.2" stroke-linecap="round" opacity="0.5"/>
+  <line x1="116" y1="97" x2="170" y2="100" stroke="#c4b494" stroke-width="1.2" stroke-linecap="round" opacity="0.5"/>
+  <line x1="116" y1="107" x2="160" y2="110" stroke="#c4b494" stroke-width="1.2" stroke-linecap="round" opacity="0.5"/>
+
   <!-- Quill feather -->
-  <path d="M72 10 Q78 20 76 35 Q74 45 70 55 L68 50 Q72 40 73 30 Q74 22 72 10Z" fill="#c9a84c"/>
-  <path d="M72 10 Q66 22 65 35 Q64 45 68 50" fill="none" stroke="#a08030" stroke-width="1"/>
-  <!-- Quill tip -->
-  <line x1="68" y1="50" x2="65" y2="62" stroke="#8b7355" stroke-width="1.5"/>
-  <!-- Quill writing point -->
-  <circle cx="65" cy="63" r="1" fill="#8b7355"/>
+  <g filter="url(#quillGlow)">
+    <!-- Feather vane (main shape) -->
+    <path d="M152 8 Q162 28 158 52 Q155 70 148 88 L144 82 Q150 65 153 48 Q156 30 152 8Z" fill="url(#quillGrad)"/>
+    <!-- Feather left barbs -->
+    <path d="M152 8 Q142 30 140 52 Q138 70 144 82" fill="none" stroke="#b89428" stroke-width="1.2"/>
+    <!-- Rachis (central shaft) -->
+    <path d="M152 8 Q150 40 146 85" stroke="#8a6a18" stroke-width="1.5" fill="none"/>
+    <!-- Right side detail barbs -->
+    <path d="M153 20 Q158 22 157 28" stroke="#c9a840" stroke-width="0.8" fill="none" opacity="0.6"/>
+    <path d="M153 32 Q159 34 157 42" stroke="#c9a840" stroke-width="0.8" fill="none" opacity="0.6"/>
+    <path d="M152 46 Q158 48 156 56" stroke="#c9a840" stroke-width="0.8" fill="none" opacity="0.6"/>
+    <!-- Left barb details -->
+    <path d="M150 20 Q144 24 143 30" stroke="#c9a840" stroke-width="0.8" fill="none" opacity="0.5"/>
+    <path d="M149 35 Q143 38 142 46" stroke="#c9a840" stroke-width="0.8" fill="none" opacity="0.5"/>
+    <!-- Quill shaft/nib -->
+    <line x1="146" y1="85" x2="138" y2="118" stroke="#6a5020" stroke-width="2" stroke-linecap="round"/>
+    <!-- Nib -->
+    <path d="M138 118 L136 126 L140 126Z" fill="#4a3818"/>
+    <!-- Ink dot -->
+    <circle cx="137" cy="128" r="1.5" fill="#4a3818" opacity="0.6"/>
+  </g>
 </svg>

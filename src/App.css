@@ -208,8 +208,8 @@
 }
 
 .bottom-nav__icon {
-  width: 2.4rem;
-  height: 2.4rem;
+  width: 2.6rem;
+  height: 2.6rem;
   border-radius: 50%;
   background: var(--surface-raised);
   display: flex;
@@ -225,8 +225,8 @@
 }
 
 .bottom-nav__icon-img {
-  width: 1.6rem;
-  height: 1.6rem;
+  width: 1.8rem;
+  height: 1.8rem;
   object-fit: contain;
   display: block;
 }

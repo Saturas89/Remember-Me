@@ -1,22 +1,83 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#dce8f4"/>
+      <stop offset="100%" stop-color="#eef3f9"/>
+    </linearGradient>
+    <linearGradient id="mountain1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1e3050"/>
+      <stop offset="100%" stop-color="#1a2844"/>
+    </linearGradient>
+    <linearGradient id="mountain2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2a4470"/>
+      <stop offset="100%" stop-color="#223860"/>
+    </linearGradient>
+    <linearGradient id="mountain3" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#3a5a90"/>
+      <stop offset="100%" stop-color="#2e4a78"/>
+    </linearGradient>
+    <linearGradient id="goldPath" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#d4a84c"/>
+      <stop offset="100%" stop-color="#b8902e"/>
+    </linearGradient>
+    <clipPath id="circleClip">
+      <circle cx="100" cy="100" r="88"/>
+    </clipPath>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
   <!-- Gold circle border -->
-  <circle cx="50" cy="50" r="46" stroke="#c9a84c" stroke-width="3" fill="none"/>
-  <!-- Background sky hint -->
-  <path d="M50 4C25.2 4 5 24 5 49c0 0 0-20 45-20s45 20 45 20C95 24 74.8 4 50 4z" fill="#e8f0f8" opacity="0.3"/>
-  <!-- Back mountain (darker) -->
-  <path d="M12 75 L35 30 L58 75Z" fill="#1a2a4a"/>
-  <!-- Snow cap back mountain -->
-  <path d="M35 30 L29 42 L35 38 L41 42Z" fill="#ffffff"/>
-  <!-- Front mountain (medium blue) -->
-  <path d="M38 75 L62 25 L88 75Z" fill="#2c4a7c"/>
-  <!-- Snow cap front mountain -->
-  <path d="M62 25 L55 40 L62 35 L69 40Z" fill="#ffffff"/>
-  <!-- Small mountain left -->
-  <path d="M4 75 L20 50 L36 75Z" fill="#3a5a8a" opacity="0.7"/>
-  <!-- Winding golden path -->
-  <path d="M50 75 Q55 65 48 58 Q40 50 52 42 Q58 38 55 32" stroke="#c9a84c" stroke-width="3.5" fill="none" stroke-linecap="round"/>
-  <!-- Star sparkle at top -->
-  <path d="M72 18 L73.5 14 L75 18 L79 19.5 L75 21 L73.5 25 L72 21 L68 19.5Z" fill="#c9a84c"/>
-  <!-- Ground line -->
-  <path d="M8 75 Q30 78 50 75 Q70 72 92 75" stroke="#c9a84c" stroke-width="2" fill="none"/>
+  <circle cx="100" cy="100" r="91" fill="none" stroke="#c8a44a" stroke-width="4.5"/>
+  <circle cx="100" cy="100" r="89" fill="none" stroke="#dfc06a" stroke-width="1" opacity="0.6"/>
+
+  <!-- Sky background inside circle -->
+  <circle cx="100" cy="100" r="88" fill="url(#sky)"/>
+
+  <g clip-path="url(#circleClip)">
+    <!-- Far background mountain (lightest) -->
+    <path d="M0 155 L30 100 L45 120 L60 90 L80 155Z" fill="#8a9ab8" opacity="0.35"/>
+
+    <!-- Right background ridge -->
+    <path d="M130 155 L155 95 L175 110 L200 85 L200 155Z" fill="#6a7a98" opacity="0.3"/>
+
+    <!-- Back left mountain (darkest blue) -->
+    <path d="M5 155 L55 52 L68 80 L80 60 L105 155Z" fill="url(#mountain1)"/>
+    <!-- Snow cap -->
+    <path d="M55 52 L47 70 L55 64 L63 70Z" fill="#ffffff"/>
+    <path d="M55 52 L48 68 L55 63 L62 68Z" fill="#e8eef6" opacity="0.5"/>
+    <!-- Mountain shadow/ridge -->
+    <path d="M55 52 L80 100 L82 155 L105 155 L80 60Z" fill="#162240" opacity="0.4"/>
+
+    <!-- Front right mountain (medium blue) -->
+    <path d="M70 155 L120 38 L132 65 L148 48 L195 155Z" fill="url(#mountain2)"/>
+    <!-- Snow cap -->
+    <path d="M120 38 L111 60 L120 53 L129 60Z" fill="#ffffff"/>
+    <path d="M120 38 L112 58 L120 52 L128 58Z" fill="#dce6f0" opacity="0.5"/>
+    <!-- Ridge detail -->
+    <path d="M120 38 L148 48 L170 100 L195 155 L155 155Z" fill="#1e3660" opacity="0.35"/>
+
+    <!-- Small foreground hill left -->
+    <path d="M0 155 L25 120 L55 155Z" fill="url(#mountain3)" opacity="0.7"/>
+
+    <!-- Small foreground hill right -->
+    <path d="M155 155 L180 125 L200 155Z" fill="url(#mountain3)" opacity="0.5"/>
+
+    <!-- Winding golden river/path -->
+    <path d="M108 155 Q112 140 105 128 Q96 115 106 102 Q114 92 108 78 Q103 68 112 55 Q118 46 115 40"
+          stroke="url(#goldPath)" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M108 155 Q112 140 105 128 Q96 115 106 102 Q114 92 108 78 Q103 68 112 55 Q118 46 115 40"
+          stroke="#e0c060" stroke-width="3" fill="none" stroke-linecap="round" opacity="0.5"/>
+
+    <!-- Ground/valley floor -->
+    <path d="M12 155 Q60 148 100 152 Q140 156 188 150 L200 155 L200 200 L0 200 L0 155Z" fill="#2a4468" opacity="0.3"/>
+  </g>
+
+  <!-- Sparkle star upper right -->
+  <g filter="url(#glow)">
+    <path d="M148 34 L150.5 26 L153 34 L161 36.5 L153 39 L150.5 47 L148 39 L140 36.5Z" fill="#d4aa40"/>
+    <path d="M149.2 34 L150.5 29 L151.8 34 L157 35.5 L151.8 37 L150.5 42 L149.2 37 L144 35.5Z" fill="#f0d878" opacity="0.7"/>
+  </g>
 </svg>

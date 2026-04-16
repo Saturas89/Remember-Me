@@ -1,43 +1,124 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
-  <!-- Chest body -->
-  <rect x="14" y="48" width="72" height="38" rx="4" fill="#8b6914" stroke="#6b4f10" stroke-width="2"/>
-  <!-- Chest wood grain -->
-  <line x1="14" y1="60" x2="86" y2="60" stroke="#7a5c12" stroke-width="1" opacity="0.5"/>
-  <line x1="14" y1="72" x2="86" y2="72" stroke="#7a5c12" stroke-width="1" opacity="0.5"/>
-  <!-- Chest front detail -->
-  <rect x="40" y="62" width="20" height="14" rx="2" fill="#6b4f10" opacity="0.4"/>
-  <!-- Keyhole -->
-  <circle cx="50" cy="67" r="3" fill="#c9a84c"/>
-  <rect x="48.5" y="69" width="3" height="5" rx="1" fill="#c9a84c"/>
-  <!-- Chest lid (open, tilted back) -->
-  <path d="M14 48 L14 32 Q14 28 18 28 L82 28 Q86 28 86 32 L86 48" fill="#a07818" stroke="#6b4f10" stroke-width="2"/>
-  <path d="M14 48 L8 38 Q6 34 10 30 L18 20 Q22 16 28 18 L72 18 Q78 16 82 20 L90 30 Q94 34 92 38 L86 48" fill="#a07818" stroke="#6b4f10" stroke-width="2"/>
-  <!-- Lid wood grain -->
-  <path d="M18 38 L82 38" stroke="#8b6914" stroke-width="1" opacity="0.5"/>
-  <!-- Metal band on lid -->
-  <rect x="12" y="44" width="76" height="4" rx="1" fill="#c9a84c" opacity="0.6"/>
-  <!-- Gear 1 (left) -->
-  <g transform="translate(30, 16)">
-    <circle cx="0" cy="0" r="7" fill="none" stroke="#7a8a9a" stroke-width="2.5"/>
-    <circle cx="0" cy="0" r="3" fill="#7a8a9a"/>
-    <line x1="0" y1="-9" x2="0" y2="9" stroke="#7a8a9a" stroke-width="2.5"/>
-    <line x1="-9" y1="0" x2="9" y2="0" stroke="#7a8a9a" stroke-width="2.5"/>
-    <line x1="-6.4" y1="-6.4" x2="6.4" y2="6.4" stroke="#7a8a9a" stroke-width="2.5"/>
-    <line x1="6.4" y1="-6.4" x2="-6.4" y2="6.4" stroke="#7a8a9a" stroke-width="2.5"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none">
+  <defs>
+    <linearGradient id="woodLight" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#b88420"/>
+      <stop offset="100%" stop-color="#8a6210"/>
+    </linearGradient>
+    <linearGradient id="woodDark" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#9a6e14"/>
+      <stop offset="100%" stop-color="#6a4a08"/>
+    </linearGradient>
+    <linearGradient id="lidGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#c49828"/>
+      <stop offset="50%" stop-color="#a88018"/>
+      <stop offset="100%" stop-color="#9a7214"/>
+    </linearGradient>
+    <linearGradient id="metalBand" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#dcc060"/>
+      <stop offset="50%" stop-color="#c9a840"/>
+      <stop offset="100%" stop-color="#b89430"/>
+    </linearGradient>
+    <linearGradient id="gearGrad1" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#8a9aac"/>
+      <stop offset="100%" stop-color="#6a7a8c"/>
+    </linearGradient>
+    <linearGradient id="gearGrad2" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#7a8a9c"/>
+      <stop offset="100%" stop-color="#5a6a7c"/>
+    </linearGradient>
+    <linearGradient id="glowGrad" x1="0.5" y1="1" x2="0.5" y2="0">
+      <stop offset="0%" stop-color="#daa830" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#daa830" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="chestShadow">
+      <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#3a2a08" flood-opacity="0.3"/>
+    </filter>
+    <filter id="sparkle">
+      <feGaussianBlur stdDeviation="1.5" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Glow from chest -->
+  <ellipse cx="100" cy="90" rx="55" ry="40" fill="url(#glowGrad)" opacity="0.4"/>
+
+  <g filter="url(#chestShadow)">
+    <!-- Chest body -->
+    <rect x="26" y="100" width="148" height="68" rx="6" fill="url(#woodDark)"/>
+    <!-- Wood grain lines -->
+    <line x1="30" y1="118" x2="170" y2="118" stroke="#7a5a0e" stroke-width="0.8" opacity="0.4"/>
+    <line x1="30" y1="136" x2="170" y2="136" stroke="#7a5a0e" stroke-width="0.8" opacity="0.4"/>
+    <line x1="30" y1="152" x2="170" y2="152" stroke="#7a5a0e" stroke-width="0.8" opacity="0.4"/>
+
+    <!-- Front panel detail -->
+    <rect x="60" y="120" width="80" height="36" rx="3" fill="#5a420a" opacity="0.3"/>
+
+    <!-- Metal band bottom -->
+    <rect x="24" y="96" width="152" height="8" rx="2" fill="url(#metalBand)"/>
+    <rect x="24" y="96" width="152" height="3" rx="1" fill="#e0c868" opacity="0.3"/>
+
+    <!-- Corner brackets -->
+    <rect x="26" y="98" width="14" height="70" rx="2" fill="url(#metalBand)" opacity="0.4"/>
+    <rect x="160" y="98" width="14" height="70" rx="2" fill="url(#metalBand)" opacity="0.4"/>
+
+    <!-- Keyhole plate -->
+    <ellipse cx="100" cy="132" rx="10" ry="10" fill="#c9a840" opacity="0.8"/>
+    <circle cx="100" cy="130" r="4.5" fill="#3a2a08"/>
+    <rect x="98" y="133" width="4" height="8" rx="1.5" fill="#3a2a08"/>
+    <!-- Keyhole highlight -->
+    <ellipse cx="100" cy="132" rx="10" ry="10" fill="none" stroke="#ddc060" stroke-width="1" opacity="0.5"/>
+
+    <!-- Chest lid (open, tilted back) -->
+    <path d="M26 100 L26 72 Q26 62 36 60 L164 60 Q174 62 174 72 L174 100Z" fill="url(#lidGrad)"/>
+    <!-- Lid inner curve (rounded top) -->
+    <path d="M26 72 Q26 50 50 44 L150 44 Q174 50 174 72 L174 100 L26 100Z" fill="url(#woodLight)" opacity="0.6"/>
+    <!-- Lid highlight -->
+    <path d="M34 68 Q34 52 55 48 L145 48 Q166 52 166 68" fill="none" stroke="#d4a830" stroke-width="1" opacity="0.4"/>
+    <!-- Lid wood grain -->
+    <path d="M30 78 L170 78" stroke="#8a6a14" stroke-width="0.8" opacity="0.3"/>
+    <path d="M28 88 L172 88" stroke="#8a6a14" stroke-width="0.8" opacity="0.3"/>
+    <!-- Metal band on lid -->
+    <rect x="24" y="92" width="152" height="8" rx="2" fill="url(#metalBand)"/>
+    <rect x="24" y="92" width="152" height="3" rx="1" fill="#e0c868" opacity="0.3"/>
   </g>
-  <!-- Gear 2 (right, smaller) -->
-  <g transform="translate(68, 12)">
-    <circle cx="0" cy="0" r="5.5" fill="none" stroke="#8a9aaa" stroke-width="2"/>
-    <circle cx="0" cy="0" r="2.5" fill="#8a9aaa"/>
-    <line x1="0" y1="-7" x2="0" y2="7" stroke="#8a9aaa" stroke-width="2"/>
-    <line x1="-7" y1="0" x2="7" y2="0" stroke="#8a9aaa" stroke-width="2"/>
-    <line x1="-5" y1="-5" x2="5" y2="5" stroke="#8a9aaa" stroke-width="2"/>
-    <line x1="5" y1="-5" x2="-5" y2="5" stroke="#8a9aaa" stroke-width="2"/>
+
+  <!-- Left gear (larger) -->
+  <g transform="translate(62, 38)">
+    <circle cx="0" cy="0" r="14" fill="url(#gearGrad1)" stroke="#5a6a7c" stroke-width="2"/>
+    <circle cx="0" cy="0" r="6" fill="#5a6a7c"/>
+    <circle cx="0" cy="0" r="4" fill="#8a9aac" opacity="0.5"/>
+    <!-- Gear teeth -->
+    <rect x="-3.5" y="-18" width="7" height="8" rx="1.5" fill="url(#gearGrad1)" stroke="#5a6a7c" stroke-width="1"/>
+    <rect x="-3.5" y="10" width="7" height="8" rx="1.5" fill="url(#gearGrad1)" stroke="#5a6a7c" stroke-width="1"/>
+    <rect x="-18" y="-3.5" width="8" height="7" rx="1.5" fill="url(#gearGrad1)" stroke="#5a6a7c" stroke-width="1"/>
+    <rect x="10" y="-3.5" width="8" height="7" rx="1.5" fill="url(#gearGrad1)" stroke="#5a6a7c" stroke-width="1"/>
+    <rect x="8.7" y="-13.2" width="7" height="8" rx="1.5" fill="url(#gearGrad1)" stroke="#5a6a7c" stroke-width="1" transform="rotate(45 12.2 -9.7)"/>
+    <rect x="-15.7" y="5.2" width="7" height="8" rx="1.5" fill="url(#gearGrad1)" stroke="#5a6a7c" stroke-width="1" transform="rotate(45 -12.2 9.2)"/>
+    <rect x="-15.7" y="-13.2" width="7" height="8" rx="1.5" fill="url(#gearGrad1)" stroke="#5a6a7c" stroke-width="1" transform="rotate(-45 -12.2 -9.7)"/>
+    <rect x="8.7" y="5.2" width="7" height="8" rx="1.5" fill="url(#gearGrad1)" stroke="#5a6a7c" stroke-width="1" transform="rotate(-45 12.2 9.2)"/>
   </g>
-  <!-- Sparkle 1 -->
-  <path d="M50 4 L51.5 0 L53 4 L57 5.5 L53 7 L51.5 11 L50 7 L46 5.5Z" fill="#c9a84c"/>
-  <!-- Sparkle 2 -->
-  <path d="M80 22 L81 19 L82 22 L85 23 L82 24 L81 27 L80 24 L77 23Z" fill="#c9a84c" opacity="0.8"/>
-  <!-- Sparkle 3 -->
-  <path d="M18 8 L19 5.5 L20 8 L22.5 9 L20 10 L19 12.5 L18 10 L15.5 9Z" fill="#c9a84c" opacity="0.6"/>
+
+  <!-- Right gear (smaller) -->
+  <g transform="translate(142, 30)">
+    <circle cx="0" cy="0" r="11" fill="url(#gearGrad2)" stroke="#4a5a6c" stroke-width="1.8"/>
+    <circle cx="0" cy="0" r="4.5" fill="#4a5a6c"/>
+    <circle cx="0" cy="0" r="3" fill="#7a8a9c" opacity="0.5"/>
+    <!-- Gear teeth -->
+    <rect x="-3" y="-15" width="6" height="7" rx="1.5" fill="url(#gearGrad2)" stroke="#4a5a6c" stroke-width="0.8"/>
+    <rect x="-3" y="8" width="6" height="7" rx="1.5" fill="url(#gearGrad2)" stroke="#4a5a6c" stroke-width="0.8"/>
+    <rect x="-15" y="-3" width="7" height="6" rx="1.5" fill="url(#gearGrad2)" stroke="#4a5a6c" stroke-width="0.8"/>
+    <rect x="8" y="-3" width="7" height="6" rx="1.5" fill="url(#gearGrad2)" stroke="#4a5a6c" stroke-width="0.8"/>
+    <rect x="6" y="-12" width="6" height="7" rx="1.5" fill="url(#gearGrad2)" stroke="#4a5a6c" stroke-width="0.8" transform="rotate(45 9 -8.5)"/>
+    <rect x="-12" y="5" width="6" height="7" rx="1.5" fill="url(#gearGrad2)" stroke="#4a5a6c" stroke-width="0.8" transform="rotate(45 -9 8.5)"/>
+  </g>
+
+  <!-- Sparkles -->
+  <g filter="url(#sparkle)">
+    <!-- Sparkle 1 (top center) -->
+    <path d="M100 8 L102 0 L104 8 L112 10 L104 12 L102 20 L100 12 L92 10Z" fill="#d4aa40"/>
+    <!-- Sparkle 2 (right) -->
+    <path d="M166 48 L167.5 43 L169 48 L174 49.5 L169 51 L167.5 56 L166 51 L161 49.5Z" fill="#d4aa40" opacity="0.7"/>
+    <!-- Sparkle 3 (left) -->
+    <path d="M36 18 L37.5 13 L39 18 L44 19.5 L39 21 L37.5 26 L36 21 L31 19.5Z" fill="#d4aa40" opacity="0.6"/>
+  </g>
 </svg>

@@ -1,40 +1,124 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
-  <!-- Pedestal base -->
-  <rect x="28" y="88" width="44" height="6" rx="1" fill="#3a3a4a"/>
-  <rect x="32" y="82" width="36" height="8" rx="1" fill="#4a4a5a"/>
-  <!-- Pedestal marble texture -->
-  <line x1="35" y1="86" x2="65" y2="86" stroke="#555568" stroke-width="0.5" opacity="0.5"/>
-  <!-- Pedestal top -->
-  <rect x="34" y="78" width="32" height="5" rx="1" fill="#555568"/>
-  <!-- Neck -->
-  <rect x="43" y="68" width="14" height="12" rx="2" fill="#c9a84c"/>
-  <!-- Bust shoulders -->
-  <path d="M30 82 Q30 70 43 68 L57 68 Q70 70 70 82Z" fill="#c9a84c"/>
-  <!-- Shoulder details -->
-  <path d="M30 82 Q32 74 40 70" stroke="#a88030" stroke-width="1" fill="none" opacity="0.5"/>
-  <path d="M70 82 Q68 74 60 70" stroke="#a88030" stroke-width="1" fill="none" opacity="0.5"/>
-  <!-- Clothing drape -->
-  <path d="M36 78 Q42 72 50 74 Q58 72 64 78" stroke="#a88030" stroke-width="1.5" fill="none"/>
-  <!-- Head -->
-  <ellipse cx="50" cy="48" rx="16" ry="20" fill="#c9a84c"/>
-  <!-- Face shadow/features -->
-  <ellipse cx="50" cy="50" rx="13" ry="16" fill="#d4ac5a" opacity="0.5"/>
-  <!-- Eyes -->
-  <ellipse cx="44" cy="48" rx="2" ry="1.5" fill="#a88030"/>
-  <ellipse cx="56" cy="48" rx="2" ry="1.5" fill="#a88030"/>
-  <!-- Nose -->
-  <path d="M50 46 L48 54 L52 54" stroke="#a88030" stroke-width="1.2" fill="none" stroke-linecap="round"/>
-  <!-- Mouth -->
-  <path d="M45 58 Q50 61 55 58" stroke="#a88030" stroke-width="1" fill="none"/>
-  <!-- Hair/curls -->
-  <path d="M34 44 Q32 34 38 28 Q44 22 50 22 Q56 22 62 28 Q68 34 66 44" fill="#b8942c" stroke="#a08020" stroke-width="1"/>
-  <!-- Hair curls detail -->
-  <path d="M36 40 Q34 36 36 32 Q38 28 42 26" stroke="#a08020" stroke-width="1.5" fill="none"/>
-  <path d="M64 40 Q66 36 64 32 Q62 28 58 26" stroke="#a08020" stroke-width="1.5" fill="none"/>
-  <path d="M40 24 Q45 20 50 22" stroke="#a08020" stroke-width="1" fill="none"/>
-  <path d="M60 24 Q55 20 50 22" stroke="#a08020" stroke-width="1" fill="none"/>
-  <!-- Hair top curls -->
-  <circle cx="42" cy="24" r="3" fill="#b8942c" stroke="#a08020" stroke-width="0.5"/>
-  <circle cx="50" cy="22" r="3" fill="#b8942c" stroke="#a08020" stroke-width="0.5"/>
-  <circle cx="58" cy="24" r="3" fill="#b8942c" stroke="#a08020" stroke-width="0.5"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 220" fill="none">
+  <defs>
+    <linearGradient id="bronzeLight" x1="0.3" y1="0" x2="0.7" y2="1">
+      <stop offset="0%" stop-color="#ddb850"/>
+      <stop offset="50%" stop-color="#c9a040"/>
+      <stop offset="100%" stop-color="#a88428"/>
+    </linearGradient>
+    <linearGradient id="bronzeDark" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#b89430"/>
+      <stop offset="100%" stop-color="#8a6a18"/>
+    </linearGradient>
+    <linearGradient id="bronzeHair" x1="0.3" y1="0" x2="0.7" y2="1">
+      <stop offset="0%" stop-color="#c49a38"/>
+      <stop offset="100%" stop-color="#8a6a18"/>
+    </linearGradient>
+    <linearGradient id="pedestalDark" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#3a3a4c"/>
+      <stop offset="30%" stop-color="#2a2a3c"/>
+      <stop offset="70%" stop-color="#3a3a4c"/>
+      <stop offset="100%" stop-color="#2a2a3a"/>
+    </linearGradient>
+    <linearGradient id="pedestalTop" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#4a4a5c"/>
+      <stop offset="50%" stop-color="#555568"/>
+      <stop offset="100%" stop-color="#3a3a4c"/>
+    </linearGradient>
+    <filter id="bustShadow">
+      <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#1a1a2a" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+
+  <g filter="url(#bustShadow)">
+    <!-- Pedestal base (widest) -->
+    <rect x="48" y="200" width="104" height="14" rx="2" fill="url(#pedestalDark)"/>
+    <!-- Marble veining on base -->
+    <path d="M55 207 Q70 204 85 207 Q100 210 120 206 Q135 203 145 207" stroke="#4a4a5c" stroke-width="0.8" fill="none" opacity="0.5"/>
+    <rect x="48" y="200" width="104" height="4" rx="1" fill="#4a4a5c" opacity="0.4"/>
+
+    <!-- Pedestal middle -->
+    <rect x="56" y="180" width="88" height="22" rx="2" fill="url(#pedestalDark)"/>
+    <!-- Marble veining -->
+    <path d="M62 190 Q80 186 100 191 Q120 196 138 188" stroke="#4a4a5c" stroke-width="0.7" fill="none" opacity="0.4"/>
+    <rect x="56" y="180" width="88" height="4" rx="1" fill="#4a4a5c" opacity="0.3"/>
+
+    <!-- Pedestal top plate -->
+    <rect x="60" y="170" width="80" height="12" rx="2" fill="url(#pedestalTop)"/>
+    <rect x="60" y="170" width="80" height="3" rx="1" fill="#666678" opacity="0.4"/>
+
+    <!-- Neck -->
+    <rect x="82" y="142" width="36" height="30" rx="4" fill="url(#bronzeLight)"/>
+    <!-- Neck shadow -->
+    <rect x="82" y="158" width="36" height="14" rx="2" fill="#a88428" opacity="0.3"/>
+
+    <!-- Shoulders/chest -->
+    <path d="M46 178 Q46 152 70 146 L82 142 L118 142 L130 146 Q154 152 154 178Z" fill="url(#bronzeLight)"/>
+    <!-- Shoulder highlights -->
+    <path d="M52 174 Q54 158 72 150" stroke="#e0c860" stroke-width="1.5" fill="none" opacity="0.25"/>
+    <path d="M148 174 Q146 158 128 150" stroke="#e0c860" stroke-width="1.5" fill="none" opacity="0.2"/>
+    <!-- Clothing drape lines -->
+    <path d="M62 172 Q75 156 88 160 Q100 164 100 170" stroke="#a08020" stroke-width="1.5" fill="none" opacity="0.5"/>
+    <path d="M138 172 Q125 156 112 160 Q100 164 100 170" stroke="#a08020" stroke-width="1.5" fill="none" opacity="0.4"/>
+    <!-- Center drape -->
+    <path d="M90 150 Q100 146 110 150 L108 170 Q100 166 92 170Z" fill="#b89430" opacity="0.3"/>
+
+    <!-- Head -->
+    <ellipse cx="100" cy="95" rx="32" ry="40" fill="url(#bronzeLight)"/>
+    <!-- Face contour shadow -->
+    <ellipse cx="100" cy="100" rx="26" ry="32" fill="#c9a040" opacity="0.3"/>
+    <!-- Forehead highlight -->
+    <ellipse cx="96" cy="80" rx="14" ry="10" fill="#e0c860" opacity="0.15"/>
+
+    <!-- Brow ridge -->
+    <path d="M78 88 Q88 82 100 84 Q112 82 122 88" stroke="#a08020" stroke-width="2" fill="none" opacity="0.6"/>
+
+    <!-- Eyes -->
+    <ellipse cx="88" cy="94" rx="4" ry="2.5" fill="#8a6a18"/>
+    <ellipse cx="112" cy="94" rx="4" ry="2.5" fill="#8a6a18"/>
+    <!-- Eye sockets shadow -->
+    <path d="M82 92 Q88 88 94 92" stroke="#a08020" stroke-width="1" fill="none" opacity="0.4"/>
+    <path d="M106 92 Q112 88 118 92" stroke="#a08020" stroke-width="1" fill="none" opacity="0.4"/>
+
+    <!-- Nose -->
+    <path d="M100 88 L97 106 Q100 109 103 106Z" fill="#b89430" opacity="0.5"/>
+    <path d="M97 106 Q100 109 103 106" stroke="#a08020" stroke-width="1.5" fill="none" opacity="0.6"/>
+
+    <!-- Mouth -->
+    <path d="M90 116 Q96 112 100 113 Q104 112 110 116" stroke="#a08020" stroke-width="1.5" fill="none" opacity="0.5"/>
+    <!-- Lower lip -->
+    <path d="M92 118 Q100 122 108 118" stroke="#a08020" stroke-width="1" fill="none" opacity="0.3"/>
+
+    <!-- Beard -->
+    <path d="M80 110 Q82 125 90 132 Q96 136 100 136 Q104 136 110 132 Q118 125 120 110"
+          fill="url(#bronzeHair)" opacity="0.6"/>
+    <!-- Beard detail lines -->
+    <path d="M86 118 Q90 128 96 134" stroke="#8a6a18" stroke-width="1" fill="none" opacity="0.4"/>
+    <path d="M114 118 Q110 128 104 134" stroke="#8a6a18" stroke-width="1" fill="none" opacity="0.4"/>
+    <path d="M90 120 Q94 130 100 136" stroke="#8a6a18" stroke-width="0.8" fill="none" opacity="0.3"/>
+
+    <!-- Hair -->
+    <path d="M68 90 Q64 70 72 55 Q80 40 92 36 Q100 34 108 36 Q120 40 128 55 Q136 70 132 90"
+          fill="url(#bronzeHair)"/>
+    <!-- Hair highlight -->
+    <path d="M74 80 Q72 65 78 52 Q85 42 95 38" stroke="#ddb850" stroke-width="2" fill="none" opacity="0.3"/>
+
+    <!-- Hair curls/texture -->
+    <circle cx="78" cy="48" r="7" fill="#b89430" stroke="#9a7a20" stroke-width="0.8"/>
+    <circle cx="92" cy="38" r="7" fill="#b89430" stroke="#9a7a20" stroke-width="0.8"/>
+    <circle cx="108" cy="38" r="7" fill="#b89430" stroke="#9a7a20" stroke-width="0.8"/>
+    <circle cx="122" cy="48" r="7" fill="#b89430" stroke="#9a7a20" stroke-width="0.8"/>
+    <circle cx="85" cy="42" r="5.5" fill="#c49a38" stroke="#9a7a20" stroke-width="0.6"/>
+    <circle cx="100" cy="35" r="5.5" fill="#c49a38" stroke="#9a7a20" stroke-width="0.6"/>
+    <circle cx="115" cy="42" r="5.5" fill="#c49a38" stroke="#9a7a20" stroke-width="0.6"/>
+    <!-- Top curl -->
+    <circle cx="100" cy="30" r="5" fill="#b89430" stroke="#9a7a20" stroke-width="0.6"/>
+
+    <!-- Side curls -->
+    <path d="M70 85 Q64 78 66 68 Q68 58 74 52" stroke="#9a7a20" stroke-width="2" fill="none" opacity="0.5"/>
+    <path d="M130 85 Q136 78 134 68 Q132 58 126 52" stroke="#9a7a20" stroke-width="2" fill="none" opacity="0.5"/>
+
+    <!-- Ear hints -->
+    <ellipse cx="68" cy="96" rx="4" ry="7" fill="url(#bronzeLight)" opacity="0.7"/>
+    <ellipse cx="132" cy="96" rx="4" ry="7" fill="url(#bronzeLight)" opacity="0.7"/>
+  </g>
 </svg>

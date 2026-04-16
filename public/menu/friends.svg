@@ -1,18 +1,72 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
-  <!-- Shield shape -->
-  <path d="M50 8 L88 22 L88 52 Q88 78 50 95 Q12 78 12 52 L12 22Z" fill="url(#shieldGrad)" stroke="#c9a84c" stroke-width="3"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none">
   <defs>
-    <linearGradient id="shieldGrad" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#4a7ab5"/>
-      <stop offset="100%" stop-color="#2c4a7c"/>
+    <linearGradient id="shieldFill" x1="0.2" y1="0" x2="0.8" y2="1">
+      <stop offset="0%" stop-color="#6a9fd4"/>
+      <stop offset="40%" stop-color="#4a80b8"/>
+      <stop offset="100%" stop-color="#2c5a8c"/>
     </linearGradient>
+    <linearGradient id="shieldEdge" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#d4aa4c"/>
+      <stop offset="50%" stop-color="#c49a3c"/>
+      <stop offset="100%" stop-color="#b08830"/>
+    </linearGradient>
+    <linearGradient id="personGold" x1="0.5" y1="0" x2="0.5" y2="1">
+      <stop offset="0%" stop-color="#ddb850"/>
+      <stop offset="100%" stop-color="#c49a38"/>
+    </linearGradient>
+    <linearGradient id="personBlue" x1="0.5" y1="0" x2="0.5" y2="1">
+      <stop offset="0%" stop-color="#7ab4e0"/>
+      <stop offset="100%" stop-color="#5090c0"/>
+    </linearGradient>
+    <linearGradient id="shieldHighlight" x1="0" y1="0" x2="0.5" y2="0.5">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="shadow">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#1a1a3a" flood-opacity="0.25"/>
+    </filter>
   </defs>
-  <!-- Inner shield highlight -->
-  <path d="M50 14 L82 26 L82 52 Q82 74 50 89 Q18 74 18 52 L18 26Z" fill="none" stroke="#6a9ad5" stroke-width="1" opacity="0.5"/>
-  <!-- Left person (smaller, blue) -->
-  <circle cx="38" cy="38" r="8" fill="#6a9ad5"/>
-  <path d="M24 68 Q24 52 38 52 Q52 52 52 68" fill="#6a9ad5"/>
-  <!-- Right person (larger, gold) -->
-  <circle cx="58" cy="35" r="9" fill="#c9a84c"/>
-  <path d="M42 70 Q42 52 58 52 Q74 52 74 70" fill="#c9a84c"/>
+
+  <g filter="url(#shadow)">
+    <!-- Shield outer gold border -->
+    <path d="M100 10 L180 38 L180 98 Q180 155 100 190 Q20 155 20 98 L20 38Z"
+          fill="url(#shieldEdge)"/>
+
+    <!-- Shield inner fill -->
+    <path d="M100 18 L172 43 L172 98 Q172 150 100 182 Q28 150 28 98 L28 43Z"
+          fill="url(#shieldFill)"/>
+
+    <!-- Shield highlight/gloss -->
+    <path d="M100 18 L172 43 L172 98 Q172 150 100 182 Q28 150 28 98 L28 43Z"
+          fill="url(#shieldHighlight)"/>
+
+    <!-- Inner shield border accent -->
+    <path d="M100 24 L166 47 L166 98 Q166 146 100 176 Q34 146 34 98 L34 47Z"
+          fill="none" stroke="#7ab0d8" stroke-width="1.5" opacity="0.4"/>
+
+    <!-- Divider line on shield -->
+    <line x1="54" y1="82" x2="146" y2="82" stroke="#5a8ab8" stroke-width="1" opacity="0.3"/>
+  </g>
+
+  <!-- Left person (blue, smaller) -->
+  <circle cx="76" cy="68" r="15" fill="url(#personBlue)"/>
+  <circle cx="76" cy="68" r="15" fill="none" stroke="#4a80b0" stroke-width="1" opacity="0.5"/>
+  <!-- highlight -->
+  <circle cx="73" cy="65" r="6" fill="#ffffff" opacity="0.15"/>
+
+  <path d="M50 128 Q50 98 76 98 Q102 98 102 128" fill="url(#personBlue)"/>
+  <path d="M50 128 Q50 98 76 98 Q102 98 102 128" fill="none" stroke="#4a80b0" stroke-width="1" opacity="0.4"/>
+  <!-- body highlight -->
+  <path d="M58 124 Q58 102 76 102 Q80 102 84 104" stroke="#ffffff" stroke-width="1.5" fill="none" opacity="0.12"/>
+
+  <!-- Right person (gold, larger) -->
+  <circle cx="118" cy="62" r="18" fill="url(#personGold)"/>
+  <circle cx="118" cy="62" r="18" fill="none" stroke="#b08830" stroke-width="1" opacity="0.5"/>
+  <!-- highlight -->
+  <circle cx="114" cy="58" r="7" fill="#ffffff" opacity="0.15"/>
+
+  <path d="M86 136 Q86 100 118 100 Q150 100 150 136" fill="url(#personGold)"/>
+  <path d="M86 136 Q86 100 118 100 Q150 100 150 136" fill="none" stroke="#b08830" stroke-width="1" opacity="0.4"/>
+  <!-- body highlight -->
+  <path d="M94 132 Q94 106 118 104 Q122 104 128 106" stroke="#ffffff" stroke-width="1.5" fill="none" opacity="0.12"/>
 </svg>
