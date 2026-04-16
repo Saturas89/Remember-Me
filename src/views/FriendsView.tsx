@@ -39,7 +39,6 @@ export function FriendsView({
   }, [shareStatus])
 
   function buildShareData(url: string) {
-    const name = profileName || 'Ich'
     return {
       title: 'Ich erstelle mein persönliches Lebensarchiv',
       text: `Hallo! Ich erstelle gerade mein persönliches Lebensarchiv mit Erinnerungen und würde mich sehr freuen, wenn du ein paar Fragen über mich beantwortest. Deine Erinnerungen werden ein unvergesslicher Teil davon. 💛`,
