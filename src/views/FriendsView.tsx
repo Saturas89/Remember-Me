@@ -39,9 +39,10 @@ export function FriendsView({
   }, [shareStatus])
 
   function buildShareData(url: string) {
+    const name = profileName || 'Ich'
     return {
-      title: 'Erinnerung einsammeln',
-      text: `${profileName || 'Jemand'} möchte deine Erinnerungen festhalten – teile deine Geschichte.`,
+      title: `${name} möchte deine Erinnerungen`,
+      text: `Hallo! ${name} baut gerade ein persönliches Lebensarchiv und würde sich sehr freuen, wenn du ein paar Fragen beantwortest – es dauert nur 5 Minuten. Deine Erinnerungen werden ein unvergesslicher Teil davon. 💛`,
       url,
     }
   }

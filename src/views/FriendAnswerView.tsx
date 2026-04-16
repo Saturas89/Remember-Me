@@ -132,8 +132,8 @@ export function FriendAnswerView({ invite }: Props) {
     if (isSharing || !answerUrl) return
 
     const shareData = {
-      title: 'Meine Erinnerungen',
-      text: `Hier sind meine Erinnerungen für ${invite.profileName}:`,
+      title: `Meine Erinnerungen an ${invite.profileName}`,
+      text: `Hey ${invite.profileName}! Ich habe gerade ein paar Fragen über dich beantwortet – öffne einfach diesen Link und meine Erinnerungen landen direkt in deinem Lebensarchiv. 🎉`,
       url: answerUrl,
     }
     setIsSharing(true)
