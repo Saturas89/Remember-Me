@@ -49,7 +49,6 @@ export function FriendAnswerView({ invite }: Props) {
 
   // Link-copy and code-copy fallback buttons
   const [linkCopied, setLinkCopied] = useState(false)
-  const [codeCopied, setCodeCopied] = useState(false)
 
   // Auto-clear share status feedback after 2.5 s (same as FriendsView)
   useEffect(() => {
@@ -177,10 +176,6 @@ export function FriendAnswerView({ invite }: Props) {
     navigator.clipboard.writeText(answerUrl).then(() => setLinkCopied(true))
   }
 
-  function handleCopyCode() {
-    navigator.clipboard.writeText(exportCode ?? '').then(() => setCodeCopied(true))
-  }
-
   // ── Done screen ──────────────────────────────────────────
   if (step === 'done' && exportCode) {
     return (
@@ -228,23 +223,6 @@ export function FriendAnswerView({ invite }: Props) {
             </div>
           )}
 
-          {/* Deep fallback: manual code copy */}
-          {exportCode && (
-            <details className="export-fallback">
-              <summary>Code manuell kopieren</summary>
-              <div className="export-code">{exportCode}</div>
-              <button
-                className={`btn btn--outline btn--sm ${codeCopied ? 'btn--success' : ''}`}
-                onClick={handleCopyCode}
-              >
-                {codeCopied ? '✓ Kopiert!' : '📋 Code kopieren'}
-              </button>
-              <p className="export-hint">
-                {invite.profileName} fügt den Code unter „Erinnerung einsammeln → Antwort-Link oder
-                Code eingeben" ein.
-              </p>
-            </details>
-          )}
         </div>
       </div>
     )

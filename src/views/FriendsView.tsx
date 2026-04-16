@@ -170,9 +170,9 @@ export function FriendsView({
 
       {/* Manual import fallback */}
       <section className="friends-section">
-        <h3 className="friends-section-title">Antwort-Link oder Code eingeben</h3>
+        <h3 className="friends-section-title">Antwort-Link eingeben</h3>
         <p className="friends-hint">
-          Hat jemand dir einen Antwort-Link oder Code geschickt? Füge ihn hier ein:
+          Hat jemand dir den Antwort-Link geschickt? Füge ihn hier ein:
         </p>
         <textarea
           className="input-textarea"
@@ -182,7 +182,7 @@ export function FriendsView({
             setImportError(null)
             setImportSuccess(false)
           }}
-          placeholder="Antwort-Link oder Code hier einfügen…"
+          placeholder="Antwort-Link hier einfügen…"
           rows={3}
         />
         {importError && <p className="import-msg import-msg--error">{importError}</p>}
