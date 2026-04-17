@@ -275,7 +275,7 @@ export function FriendAnswerView({ invite }: Props) {
         .share({
           files: [zipFile],
           title: `Meine Erinnerungen an ${invite.profileName}`,
-          text: `Hey ${invite.profileName}! Meine Erinnerungen sind als Datei angehängt. Zum Importieren öffne diesen Link: ${importUrl}`,
+          text: `Hey ${invite.profileName}! Meine Erinnerungen an dich sind dabei 💛 Öffne diesen Link, lade die Datei hoch und sie landen für immer in deinem Lebensarchiv: ${importUrl}`,
         })
         .then(() => setIsSharing(false))
         .catch(err => {
