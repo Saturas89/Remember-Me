@@ -56,6 +56,7 @@ export function useAnswers() {
         answers: {
           ...prev.answers,
           [questionId]: {
+            ...existing,
             id: questionId,
             questionId,
             categoryId,

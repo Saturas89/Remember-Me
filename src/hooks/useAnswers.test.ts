@@ -109,6 +109,19 @@ describe('useAnswers', () => {
       expect(stored.answers['q-1'].value).toBe('Gespeichert')
     })
 
+    it('preserves audioId, imageIds and videoIds when updating text', async () => {
+      const { result } = renderHook(() => useAnswers())
+      await waitFor(() => expect(result.current.isLoaded).toBe(true))
+      act(() => { result.current.setAnswerAudio('q-1', 'childhood', 'aud-001', '2024-06-01T10:00:00.000Z', 'Transkript') })
+      act(() => { result.current.setAnswerImages('q-1', 'childhood', ['img-1']) })
+      act(() => { result.current.saveAnswer('q-1', 'childhood', 'Neuer Text') })
+      const ans = result.current.answers['q-1']
+      expect(ans.value).toBe('Neuer Text')
+      expect(ans.audioId).toBe('aud-001')
+      expect(ans.audioTranscript).toBe('Transkript')
+      expect(ans.imageIds).toEqual(['img-1'])
+    })
+
     it('survives a fresh hook mount (persisted in localStorage)', async () => {
       const { result: r1 } = renderHook(() => useAnswers())
       await waitFor(() => expect(r1.current.isLoaded).toBe(true))

@@ -234,14 +234,15 @@ export function CustomQuestionsView({
                         imageCache={cache}
                         videoIds={videoIds}
                         audioId={audioId}
+                        currentValue={draftAnswer}
                         onLoadImages={loadImages}
                         onAddImage={handleAddImage}
                         onRemoveImage={handleRemoveImage}
                         onAddVideo={handleAddVideo}
                         onRemoveVideo={handleRemoveVideo}
-                        onSaveAudio={async (transcript, blob) => {
+                        onSaveAudio={async (transcript, blob, replaceText) => {
                           await handleSaveAudio(transcript, blob)
-                          if (transcript.trim() && !draftAnswer.trim()) {
+                          if (replaceText && transcript.trim()) {
                             setDraftAnswer(transcript)
                           }
                         }}

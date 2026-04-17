@@ -5,9 +5,12 @@ import { AudioPlayer } from './AudioPlayer'
 interface Props {
   /** If set, shows the saved audio player + replace / delete actions */
   existingAudioId?: string
+  /** Current text value of the answer – used to detect transcript conflict on re-recording */
+  existingValue?: string
   /** Called when the user confirms a new recording.
-   *  blob is null when the user chose not to save the audio file (transcript-only mode). */
-  onSave: (transcript: string, blob: Blob | null) => Promise<void>
+   *  blob is null when the user chose not to save the audio file (transcript-only mode).
+   *  replaceText indicates whether the transcript should overwrite the existing text field. */
+  onSave: (transcript: string, blob: Blob | null, replaceText: boolean) => Promise<void>
   /** Called when the user deletes the existing audio */
   onRemove?: () => void
 }
@@ -18,17 +21,23 @@ function fmtDur(secs: number): string {
   return `${m}:${s}`
 }
 
-export function AudioRecorder({ existingAudioId, onSave, onRemove }: Props) {
+export function AudioRecorder({ existingAudioId, existingValue, onSave, onRemove }: Props) {
   const rec          = useAudioRecorder()
   const savingRef    = useRef(false)
   const [saveAudioFile, setSaveAudioFile] = useState(false)
+  const [textChoice, setTextChoice] = useState<'new' | 'keep'>('new')
+
+  const hasTextConflict = !!(existingValue?.trim()) && !!rec.transcript.trim()
+    && existingValue!.trim() !== rec.transcript.trim()
 
   async function handleConfirm() {
     if (!rec.previewBlob || savingRef.current) return
     savingRef.current = true
     try {
-      await onSave(rec.transcript, saveAudioFile ? rec.previewBlob : null)
+      const replaceText = !hasTextConflict || textChoice === 'new'
+      await onSave(rec.transcript, saveAudioFile ? rec.previewBlob : null, replaceText)
       rec.reset()
+      setTextChoice('new')
     } finally {
       savingRef.current = false
     }
@@ -83,6 +92,29 @@ export function AudioRecorder({ existingAudioId, onSave, onRemove }: Props) {
             💡 Automatische Transkription ist in diesem Browser nicht verfügbar –
             du kannst den Text oben manuell eintippen.
           </p>
+        )}
+        {hasTextConflict && (
+          <div className="audio-text-choice">
+            <p className="audio-text-choice__label">Welchen Text übernehmen?</p>
+            <div className="audio-text-choice__options">
+              <button
+                type="button"
+                className={`audio-text-choice__btn${textChoice === 'new' ? ' audio-text-choice__btn--selected' : ''}`}
+                onClick={() => setTextChoice('new')}
+              >
+                <span>🆕 Neue Transkription</span>
+                <span className="audio-text-choice__preview">{rec.transcript.length > 60 ? `${rec.transcript.substring(0, 60)}…` : rec.transcript}</span>
+              </button>
+              <button
+                type="button"
+                className={`audio-text-choice__btn${textChoice === 'keep' ? ' audio-text-choice__btn--selected' : ''}`}
+                onClick={() => setTextChoice('keep')}
+              >
+                <span>💾 Bisherigen Text behalten</span>
+                <span className="audio-text-choice__preview">{existingValue!.length > 60 ? `${existingValue!.substring(0, 60)}…` : existingValue}</span>
+              </button>
+            </div>
+          </div>
         )}
         <label className="audio-rec-save-toggle">
           <input

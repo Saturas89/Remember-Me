@@ -113,13 +113,14 @@ export function ArchiveView({
     categoryId: string,
     transcript: string,
     blob: Blob | null,
+    replaceText: boolean,
   ) {
     const oldId = answers[questionId]?.audioId
     if (oldId) await removeAudio(oldId)
     const newId = blob ? await addAudio(blob) : undefined
     onSetAudio(questionId, categoryId, newId, new Date().toISOString(), transcript || undefined)
-    if (transcript.trim() && editingId === questionId) {
-      setEditValue(prev => prev ? `${prev}\n\n${transcript}` : transcript)
+    if (transcript.trim() && editingId === questionId && replaceText) {
+      setEditValue(transcript)
     }
   }
 
@@ -211,8 +212,9 @@ export function ArchiveView({
         {/* Audio in edit mode */}
         <AudioRecorder
           existingAudioId={answer?.audioId}
-          onSave={(transcript, blob) =>
-            handleSaveAudio(questionId, categoryId, transcript, blob)
+          existingValue={editValue}
+          onSave={(transcript, blob, replaceText) =>
+            handleSaveAudio(questionId, categoryId, transcript, blob, replaceText)
           }
           onRemove={answer?.audioId
             ? () => handleDeleteAudio(questionId, categoryId, answer.audioId!)
