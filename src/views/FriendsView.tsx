@@ -36,8 +36,7 @@ export function FriendsView({
     const name = profileName.trim()
     return {
       title: name ? `${name}s Lebensarchiv` : 'Mein Lebensarchiv',
-      text: `Ich möchte meine Lebensgeschichte für immer festhalten – und deine Erinnerungen an mich sind ein unverzichtbarer Teil davon. Würdest du kurz ein paar Fragen über mich beantworten? Das wäre ein unvergessliches Geschenk 💛`,
-      url,
+      text: `Ich möchte meine Lebensgeschichte für immer festhalten – und deine Erinnerungen an mich sind ein unverzichtbarer Teil davon. Würdest du kurz ein paar Fragen über mich beantworten? Das wäre ein unvergessliches Geschenk 💛\n\n${url}`,
     }
   }
 

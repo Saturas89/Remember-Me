@@ -236,8 +236,7 @@ export function FriendAnswerView({ invite }: Props) {
     const url = shareUrlRef.current
     const shareData = {
       title: `Meine Erinnerungen an ${invite.profileName}`,
-      text: `Hey ${invite.profileName}! Ich habe gerade ein paar Fragen über dich beantwortet – öffne einfach diesen Link und meine Erinnerungen landen direkt in deinem Lebensarchiv. 🎉`,
-      url,
+      text: `Hey ${invite.profileName}! Ich habe gerade ein paar Fragen über dich beantwortet – öffne einfach diesen Link und meine Erinnerungen landen direkt in deinem Lebensarchiv. 🎉\n\n${url}`,
     }
     setIsSharing(true)
 
