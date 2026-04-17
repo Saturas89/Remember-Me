@@ -240,7 +240,9 @@ export function FriendAnswerView({ invite }: Props) {
     }
     setIsSharing(true)
 
-    if (typeof navigator.share === 'function') {
+    const canUseShare = typeof navigator.share === 'function' && navigator.canShare?.(shareData) !== false
+
+    if (canUseShare) {
       navigator
         .share(shareData)
         .then(() => setIsSharing(false))
@@ -248,13 +250,13 @@ export function FriendAnswerView({ invite }: Props) {
           setIsSharing(false)
           if ((err as Error).name === 'AbortError') return
           navigator.clipboard
-            ?.writeText(url)
+            ?.writeText(shareData.text)
             .then(() => setShareStatus('copied'))
             .catch(() => setShareStatus('error'))
         })
     } else {
       navigator.clipboard
-        .writeText(url)
+        .writeText(shareData.text)
         .then(() => setShareStatus('copied'))
         .catch(() => setShareStatus('error'))
         .finally(() => setIsSharing(false))

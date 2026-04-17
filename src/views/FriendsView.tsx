@@ -49,7 +49,9 @@ export function FriendsView({
     const shareData = buildShareData(url)
     setIsSharing(true)
 
-    if (typeof navigator.share === 'function') {
+    const canUseShare = typeof navigator.share === 'function' && navigator.canShare?.(shareData) !== false
+
+    if (canUseShare) {
       navigator
         .share(shareData)
         .then(() => {
@@ -58,15 +60,15 @@ export function FriendsView({
         .catch(err => {
           setIsSharing(false)
           if ((err as Error).name === 'AbortError') return
-          // Non-abort error – fall back to clipboard copy.
+          // Non-abort error – fall back to clipboard with full message text.
           navigator.clipboard
-            ?.writeText(url)
+            ?.writeText(shareData.text)
             .then(() => setShareStatus('copied'))
             .catch(() => setShareStatus('error'))
         })
     } else {
       navigator.clipboard
-        .writeText(url)
+        .writeText(shareData.text)
         .then(() => setShareStatus('copied'))
         .catch(() => setShareStatus('error'))
         .finally(() => setIsSharing(false))
@@ -106,7 +108,7 @@ export function FriendsView({
             {isSharing ? (
               <><span className="share-cta-btn__spinner" aria-hidden="true" />Wird geöffnet…</>
             ) : shareStatus === 'copied' ? (
-              '✓ Link kopiert!'
+              '✓ Nachricht kopiert!'
             ) : shareStatus === 'error' ? (
               '⚠ Nochmal versuchen'
             ) : (
