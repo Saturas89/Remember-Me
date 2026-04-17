@@ -493,5 +493,61 @@ describe('useAnswers', () => {
       const stored = JSON.parse(localStorage.getItem('remember-me-state')!)
       expect(stored.answers['q-a'].audioId).toBe('aud-persist')
     })
+
+    it('stores audioTranscript when provided', async () => {
+      const { result } = renderHook(() => useAnswers())
+      await waitFor(() => expect(result.current.isLoaded).toBe(true))
+      act(() => {
+        result.current.setAnswerAudio('q-a', 'childhood', 'aud-001', '2024-06-01T10:00:00.000Z', 'Ich wuchs in München auf.')
+      })
+      expect(result.current.answers['q-a'].audioTranscript).toBe('Ich wuchs in München auf.')
+    })
+
+    it('returns stored transcript via getAnswerTranscript', async () => {
+      const { result } = renderHook(() => useAnswers())
+      await waitFor(() => expect(result.current.isLoaded).toBe(true))
+      act(() => {
+        result.current.setAnswerAudio('q-a', 'childhood', undefined, '2024-06-01T10:00:00.000Z', 'Transkription ohne Audio-Datei')
+      })
+      expect(result.current.getAnswerTranscript('q-a')).toBe('Transkription ohne Audio-Datei')
+    })
+
+    it('returns undefined from getAnswerTranscript when no transcript stored', async () => {
+      const { result } = renderHook(() => useAnswers())
+      await waitFor(() => expect(result.current.isLoaded).toBe(true))
+      expect(result.current.getAnswerTranscript('non-existent')).toBeUndefined()
+    })
+
+    it('stores transcript without audioId (transcript-only mode)', async () => {
+      const { result } = renderHook(() => useAnswers())
+      await waitFor(() => expect(result.current.isLoaded).toBe(true))
+      act(() => {
+        result.current.setAnswerAudio('q-a', 'childhood', undefined, '2024-06-01T10:00:00.000Z', 'Nur Text, kein Audio')
+      })
+      expect(result.current.getAnswerAudioId('q-a')).toBeUndefined()
+      expect(result.current.answers['q-a'].audioTranscript).toBe('Nur Text, kein Audio')
+    })
+
+    it('preserves existing transcript when updating audioId without new transcript', async () => {
+      const { result } = renderHook(() => useAnswers())
+      await waitFor(() => expect(result.current.isLoaded).toBe(true))
+      act(() => {
+        result.current.setAnswerAudio('q-a', 'childhood', 'aud-001', '2024-06-01T10:00:00.000Z', 'Erste Transkription')
+      })
+      act(() => {
+        result.current.setAnswerAudio('q-a', 'childhood', undefined, undefined)
+      })
+      expect(result.current.answers['q-a'].audioTranscript).toBe('Erste Transkription')
+    })
+
+    it('persists audioTranscript to localStorage', async () => {
+      const { result } = renderHook(() => useAnswers())
+      await waitFor(() => expect(result.current.isLoaded).toBe(true))
+      act(() => {
+        result.current.setAnswerAudio('q-a', 'childhood', 'aud-001', '2024-06-01T10:00:00.000Z', 'Gespeicherter Text')
+      })
+      const stored = JSON.parse(localStorage.getItem('remember-me-state')!)
+      expect(stored.answers['q-a'].audioTranscript).toBe('Gespeicherter Text')
+    })
   })
 })

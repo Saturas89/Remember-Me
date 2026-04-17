@@ -15,7 +15,7 @@ interface Props {
   onSave: (questionId: string, categoryId: string, value: string) => void
   onSetImages: (questionId: string, categoryId: string, imageIds: string[]) => void
   onSetVideos: (questionId: string, categoryId: string, videoIds: string[]) => void
-  onSetAudio: (questionId: string, categoryId: string, audioId: string | undefined, audioTranscribedAt: string | undefined) => void
+  onSetAudio: (questionId: string, categoryId: string, audioId: string | undefined, audioTranscribedAt: string | undefined, audioTranscript?: string) => void
   onBack: () => void
 }
 
@@ -55,10 +55,10 @@ export function QuizView({
     onSetVideos(question.id, category.id, videoIds.filter(v => v !== id))
   }
 
-  async function handleSaveAudio(_transcript: string, blob: Blob) {
-    if (audioId) await removeAudio(audioId)  // replace existing
-    const id = await addAudio(blob)
-    onSetAudio(question.id, category.id, id, new Date().toISOString())
+  async function handleSaveAudio(transcript: string, blob: Blob | null) {
+    if (audioId) await removeAudio(audioId)
+    const id = blob ? await addAudio(blob) : undefined
+    onSetAudio(question.id, category.id, id, new Date().toISOString(), transcript || undefined)
   }
 
   async function handleRemoveAudio() {

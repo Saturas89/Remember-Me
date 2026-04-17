@@ -146,10 +146,11 @@ export function FriendAnswerView({ invite }: Props) {
     setLocalVideoIds(prev => ({ ...prev, [qId]: (prev[qId] ?? []).filter(v => v !== id) }))
   }
 
-  async function handleSaveAudio(_transcript: string, blob: Blob) {
+  async function handleSaveAudio(_transcript: string, blob: Blob | null) {
     const qId    = questions[index].id
     const existing = localAudioIds[qId]
     if (existing) await removeAudio(existing)
+    if (!blob) { setLocalAudioIds(prev => ({ ...prev, [qId]: undefined })); return }
     const id = await addAudio(blob)
     setLocalAudioIds(prev => ({ ...prev, [qId]: id }))
   }

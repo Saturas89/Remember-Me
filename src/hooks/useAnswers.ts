@@ -125,6 +125,7 @@ export function useAnswers() {
     categoryId: string,
     audioId: string | undefined,
     audioTranscribedAt: string | undefined,
+    audioTranscript?: string,
   ) => {
     setState(prev => {
       const existing = prev.answers[questionId]
@@ -143,6 +144,7 @@ export function useAnswers() {
             updatedAt: now,
             audioId,
             audioTranscribedAt,
+            audioTranscript: audioTranscript ?? existing?.audioTranscript,
           },
         },
       }
@@ -435,6 +437,11 @@ export function useAnswers() {
     [state.answers],
   )
 
+  const getAnswerTranscript = useCallback(
+    (questionId: string): string | undefined => state.answers[questionId]?.audioTranscript,
+    [state.answers],
+  )
+
   const getCategoryProgress = useCallback(
     (categoryId: string, totalQuestions: number): number => {
       const answered = Object.values(state.answers).filter(
@@ -480,6 +487,7 @@ export function useAnswers() {
     getAnswerImageIds,
     getAnswerVideoIds,
     getAnswerAudioId,
+    getAnswerTranscript,
     getCategoryProgress,
     getFriendAnswers,
   }

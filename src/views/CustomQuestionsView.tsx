@@ -17,7 +17,7 @@ interface Props {
   onSave: (questionId: string, categoryId: string, value: string) => void
   onSetImages: (questionId: string, categoryId: string, imageIds: string[]) => void
   onSetVideos: (questionId: string, categoryId: string, videoIds: string[]) => void
-  onSetAudio: (questionId: string, categoryId: string, audioId: string | undefined, audioTranscribedAt: string | undefined) => void
+  onSetAudio: (questionId: string, categoryId: string, audioId: string | undefined, audioTranscribedAt: string | undefined, audioTranscript?: string) => void
   onAdd: (
     text: string,
     type: CustomQuestion['type'],
@@ -195,10 +195,10 @@ export function CustomQuestionsView({
                 await removeVideo(id)
                 onSetVideos(q.id, 'custom', videoIds.filter(v => v !== id))
               }
-              async function handleSaveAudio(_transcript: string, blob: Blob) {
+              async function handleSaveAudio(transcript: string, blob: Blob | null) {
                 if (audioId) await removeAudio(audioId)
-                const id = await addAudio(blob)
-                onSetAudio(q.id, 'custom', id, new Date().toISOString())
+                const id = blob ? await addAudio(blob) : undefined
+                onSetAudio(q.id, 'custom', id, new Date().toISOString(), transcript || undefined)
               }
               async function handleRemoveAudio() {
                 if (audioId) await removeAudio(audioId)

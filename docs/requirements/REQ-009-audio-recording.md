@@ -2,8 +2,8 @@
 
 **Status:** ✔️ COMPLETED  
 **ID:** REQ-009  
-**Version:** 1.0.0  
-**Letzte Aktualisierung:** 2026-04-16  
+**Version:** 1.1.0  
+**Letzte Aktualisierung:** 2026-04-17  
 **Modul:** Input / Media  
 **Priorität:** High  
 
@@ -11,7 +11,7 @@
 
 ## 1. Zusammenfassung
 
-Statt Fragen zu tippen, können Benutzer ihre Antworten **einsprechen**. Die Aufnahme wird als Originalton in IndexedDB gespeichert und gleichzeitig automatisch transkribiert. Der transkribierte Text dient als bearbeitbare Textantwort – der Originalton bleibt als emotionaler Beweis erhalten.
+Statt Fragen zu tippen, können Benutzer ihre Antworten **einsprechen**. Die Aufnahme wird **immer transkribiert** und der Text dauerhaft im Datenmodell gespeichert – als Basis für spätere Features wie Suche oder KI-Auswertung. Das Speichern der Originalton-Datei ist **optional**: Der Benutzer entscheidet im Vorschau-Screen, ob die Audio-Datei zusätzlich zum Transkript gespeichert werden soll.
 
 Besonders für ältere Nutzer oder Menschen, die beim Erzählen freier sprechen als beim Schreiben, ist dies ein niedrigschwelliger Einstieg.
 
@@ -45,8 +45,9 @@ Besonders für ältere Nutzer oder Menschen, die beim Erzählen freier sprechen 
 
 ### 3.3 Speicherung
 
-- [ ] **FR-9.13:** Originalton wird als `audio/webm` (oder `audio/mp4` auf iOS) in IndexedDB gespeichert
-- [ ] **FR-9.14:** Neue Felder in `Answer`: `audioId?: string`, `audioTranscribedAt?: string`
+- [ ] **FR-9.13:** Originalton wird **optional** als `audio/webm` (oder `audio/mp4` auf iOS) in IndexedDB gespeichert – nur wenn der Benutzer die Checkbox „🗂 Aufnahme als Audio-Datei speichern" aktiviert
+- [ ] **FR-9.13b:** **Transkription wird immer gespeichert** (Feld `audioTranscript` in `Answer`) – unabhängig davon, ob der Originalton gespeichert wird
+- [ ] **FR-9.14:** Neue Felder in `Answer`: `audioId?: string`, `audioTranscribedAt?: string`, `audioTranscript?: string`
 - [ ] **FR-9.15:** Beim Export (Markdown, JSON, Backup) wird ein Hinweis `🎙 Originalton vorhanden` eingefügt – die Audiodatei selbst ist nicht im Text-Export enthalten
 - [ ] **FR-9.16:** Foto-Backup: Audio-Dateien können separat als ZIP exportiert werden (optional, spätere Version)
 
@@ -116,9 +117,10 @@ interface Answer {
   updatedAt: string
   eventDate?: string
   importSource?: { ... }
-  // NEU:
-  audioId?: string        // Verweis auf Audio-Blob in IndexedDB
+  // Audio:
+  audioId?: string             // Verweis auf Audio-Blob in IndexedDB (nur wenn Benutzer Audio-Datei speichern gewählt hat)
   audioTranscribedAt?: string  // ISO 8601 – Zeitpunkt der Transkription
+  audioTranscript?: string     // Transkriptionstext – immer gespeichert wenn Aufnahme gemacht wurde
 }
 ```
 
@@ -183,8 +185,11 @@ IndexedDB-Store für Audio:
 
 - [ ] Benutzer kann eine Frage einsprechen und die Aufnahme hören, bevor er speichert
 - [ ] Transkription erscheint automatisch als Text (auf Chrome/Android/Desktop)
-- [ ] Originalton ist im Archiv als kompakter Player abspielbar
-- [ ] Audio-Datei bleibt auch nach App-Neustart erhalten (IndexedDB)
+- [ ] **Transkriptionstext wird immer in `Answer.audioTranscript` gespeichert** – auch wenn keine Audio-Datei gespeichert wird
+- [ ] Im Vorschau-Screen erscheint eine Checkbox „🗂 Aufnahme als Audio-Datei speichern" (Standard: deaktiviert)
+- [ ] Wenn Checkbox aktiviert: Originalton wird in IndexedDB gespeichert und ist im Archiv abspielbar
+- [ ] Wenn Checkbox deaktiviert: Nur Transkript wird gespeichert, kein Audio-Blob in IndexedDB
+- [ ] Audio-Datei bleibt auch nach App-Neustart erhalten (IndexedDB), falls gespeichert
 - [ ] Auf iOS Safari: Aufnahme funktioniert, Transkriptions-Fallback-Hinweis erscheint
 - [ ] Audio kann gelöscht werden ohne die Textantwort zu verlieren
 - [ ] 10-Minuten-Limit wird durchgesetzt
@@ -204,3 +209,4 @@ IndexedDB-Store für Audio:
 | Version | Datum | Autor | Änderung |
 |---------|-------|-------|---------|
 | 1.0.0 | 2026-04-12 | Claude | Initiale Version |
+| 1.1.0 | 2026-04-17 | Claude | Transkript wird immer gespeichert (`audioTranscript`); Audio-Datei-Speicherung optional via Checkbox |

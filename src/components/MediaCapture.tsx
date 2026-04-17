@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import { useAudioRecorder } from '../hooks/useAudioRecorder'
 import { ImageAttachment } from './ImageAttachment'
 import { VideoAttachment } from './VideoAttachment'
@@ -23,7 +23,7 @@ interface Props {
   onRemoveImage: (id: string) => void
   onAddVideo: (file: File) => void
   onRemoveVideo: (id: string) => void
-  onSaveAudio: (transcript: string, blob: Blob) => Promise<void>
+  onSaveAudio: (transcript: string, blob: Blob | null) => Promise<void>
   onRemoveAudio: () => void
 }
 
@@ -37,12 +37,13 @@ export function MediaCapture({
   const videoTrigger = useRef<HTMLInputElement>(null)
   const rec = useAudioRecorder()
   const savingRef = useRef(false)
+  const [saveAudioFile, setSaveAudioFile] = useState(false)
 
   async function handleAudioConfirm() {
     if (!rec.previewBlob || savingRef.current) return
     savingRef.current = true
     try {
-      await onSaveAudio(rec.transcript, rec.previewBlob)
+      await onSaveAudio(rec.transcript, saveAudioFile ? rec.previewBlob : null)
       rec.reset()
     } finally {
       savingRef.current = false
@@ -135,6 +136,14 @@ export function MediaCapture({
               💡 Keine automatische Transkription verfügbar – du kannst den Text oben manuell eintippen.
             </p>
           )}
+          <label className="audio-rec-save-toggle">
+            <input
+              type="checkbox"
+              checked={saveAudioFile}
+              onChange={e => setSaveAudioFile(e.target.checked)}
+            />
+            <span>🗂 Aufnahme als Audio-Datei speichern</span>
+          </label>
           <div className="audio-rec-actions">
             <button type="button" className="btn btn--primary btn--sm" onClick={handleAudioConfirm}>
               ✓ Übernehmen
