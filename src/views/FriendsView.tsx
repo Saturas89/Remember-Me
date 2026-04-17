@@ -24,6 +24,16 @@ export function FriendsView({
   const [isSharing, setIsSharing] = useState(false)
   const [shareStatus, setShareStatus] = useState<'idle' | 'copied' | 'error'>('idle')
   const zipInputRef = useRef<HTMLInputElement>(null)
+  // Pre-load the app icon so it can be included in the share as a file.
+  // WhatsApp on iOS only shows the message text when a file is attached;
+  // for URL-only shares it renders just the link preview and ignores text.
+  const logoBlobRef = useRef<Blob | null>(null)
+  useEffect(() => {
+    fetch('/pwa-192x192.png')
+      .then(r => r.blob())
+      .then(b => { logoBlobRef.current = b })
+      .catch(() => {})
+  }, [])
 
   // Auto-clear the "Kopiert!" / "Fehler" status after a moment.
   useEffect(() => {
@@ -32,13 +42,8 @@ export function FriendsView({
     return () => clearTimeout(t)
   }, [shareStatus])
 
-  function buildShareData(url: string) {
-    const name = profileName.trim()
-    return {
-      title: name ? `${name}s Lebensarchiv` : 'Mein Lebensarchiv',
-      text: `Ich möchte meine Lebensgeschichte für immer festhalten – und deine Erinnerungen an mich sind ein unverzichtbarer Teil davon. Würdest du kurz ein paar Fragen über mich beantworten? Das wäre ein unvergessliches Geschenk 💛`,
-      url,
-    }
+  function buildText(url: string) {
+    return `Ich möchte meine Lebensgeschichte für immer festhalten – und deine Erinnerungen an mich sind ein unverzichtbarer Teil davon. Würdest du kurz ein paar Fragen über mich beantworten? Das wäre ein unvergessliches Geschenk 💛\n\n${url}`
   }
 
   // Synchronous share handler: Safari requires navigator.share() to be called
@@ -46,32 +51,49 @@ export function FriendsView({
   function handleShare() {
     if (isSharing) return
 
-    const url = inviteUrl
-    const shareData = buildShareData(url)
+    const url   = inviteUrl
+    const text  = buildText(url)
+    const name  = profileName.trim()
+    const title = name ? `${name}s Lebensarchiv` : 'Mein Lebensarchiv'
     setIsSharing(true)
 
+    // Mirror the ZIP-share pattern: share the icon as a file so WhatsApp iOS
+    // treats this as a "message with attachment" and shows the full text.
+    const blob = logoBlobRef.current
+    if (blob && typeof navigator.share === 'function') {
+      const logoFile = new File([blob], 'remember-me.png', { type: 'image/png' })
+      if (navigator.canShare?.({ files: [logoFile] })) {
+        navigator
+          .share({ files: [logoFile], title, text })
+          .then(() => setIsSharing(false))
+          .catch(err => {
+            setIsSharing(false)
+            if ((err as Error).name !== 'AbortError') fallbackShare(text)
+          })
+        return
+      }
+    }
+
+    // Fallback: text-only share (no separate url field — mirrors ZIP text)
     if (typeof navigator.share === 'function') {
       navigator
-        .share(shareData)
-        .then(() => {
-          setIsSharing(false)
-        })
+        .share({ title, text })
+        .then(() => setIsSharing(false))
         .catch(err => {
           setIsSharing(false)
-          if ((err as Error).name === 'AbortError') return
-          // Non-abort error – fall back to clipboard with full message text.
-          navigator.clipboard
-            ?.writeText(`${shareData.text}\n\n${url}`)
-            .then(() => setShareStatus('copied'))
-            .catch(() => setShareStatus('error'))
+          if ((err as Error).name !== 'AbortError') fallbackShare(text)
         })
     } else {
-      navigator.clipboard
-        .writeText(`${shareData.text}\n\n${url}`)
-        .then(() => setShareStatus('copied'))
-        .catch(() => setShareStatus('error'))
-        .finally(() => setIsSharing(false))
+      fallbackShare(text)
+      setIsSharing(false)
     }
+  }
+
+  function fallbackShare(text: string) {
+    navigator.clipboard
+      ?.writeText(text)
+      .then(() => setShareStatus('copied'))
+      .catch(() => setShareStatus('error'))
   }
 
   return (
