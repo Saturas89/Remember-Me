@@ -83,7 +83,7 @@ describe('FriendsView – Teilen mit Datei (iOS WhatsApp)', () => {
     }))
     // text should contain the personal message
     const call = share.mock.calls[0][0]
-    expect(call.text).toContain('Erinnerungen ergänzen')
+    expect(call.text).toContain('Erinnerung ergänzen')
     expect(call.text).toContain('https://example.com/invite')
   })
 
@@ -120,7 +120,7 @@ describe('FriendsView – Clipboard-Fallback', () => {
 
     await waitFor(() => expect(writeText).toHaveBeenCalled())
     const copied = writeText.mock.calls[0][0] as string
-    expect(copied).toContain('Erinnerungen ergänzen')
+    expect(copied).toContain('Erinnerung ergänzen')
     expect(copied).toContain('https://example.com/invite')
   })
 })

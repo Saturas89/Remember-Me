@@ -43,7 +43,7 @@ export function FriendsView({
   }, [shareStatus])
 
   function buildText(url: string) {
-    return `Ich halte meine Geschichte fest und würde gerne deine Erinnerungen ergänzen ✨\n\n${url}`
+    return `Ich halte meine Geschichte fest und würde gerne deine Erinnerung ergänzen ✨\n\n${url}`
   }
 
   // Synchronous share handler: Safari requires navigator.share() to be called
