@@ -4,6 +4,10 @@ import { ProgressBar } from '../components/ProgressBar'
 import { FRIEND_TOPICS } from '../data/friendQuestions'
 import { encodeAnswerExport } from '../utils/sharing'
 import { generateAnswerUrl, generatePlainAnswerUrl } from '../utils/secureLink'
+import { buildFriendAnswerArchive, fmtBytes } from '../utils/archiveExport'
+import { useImageStore } from '../hooks/useImageStore'
+import { addAudio, removeAudio } from '../hooks/useAudioStore'
+import { addVideo, removeVideo } from '../hooks/useVideoStore'
 import type { InviteData, AnswerExport } from '../types'
 
 interface Props {
@@ -39,6 +43,19 @@ export function FriendAnswerView({ invite }: Props) {
   const [localAnswers, setLocalAnswers] = useState<Record<string, string>>({})
   const [exportCode, setExportCode] = useState<string | null>(null)
 
+  // ── Media state (per question) ───────────────────────────
+  const { cache, loadImages, addImage, removeImage } = useImageStore()
+  const [localImageIds, setLocalImageIds] = useState<Record<string, string[]>>({})
+  const [localVideoIds, setLocalVideoIds] = useState<Record<string, string[]>>({})
+  const [localAudioIds, setLocalAudioIds] = useState<Record<string, string | undefined>>({})
+
+  // ── ZIP generation state ─────────────────────────────────
+  type ZipState = 'idle' | 'building' | 'ready' | 'error'
+  const [zipState, setZipState] = useState<ZipState>('idle')
+  const [zipStep, setZipStep] = useState('')
+  const [zipBlob, setZipBlob] = useState<Blob | null>(null)
+  const [zipSize, setZipSize] = useState(0)
+
   // Ref always holds the latest (preferably compressed) URL so the synchronous
   // share handler can access it without relying on React state timing.
   const shareUrlRef = useRef<string | null>(null)
@@ -71,6 +88,12 @@ export function FriendAnswerView({ invite }: Props) {
     [topic, invite.profileName],
   )
 
+  // Whether any attachments were added across all questions
+  const hasAttachments =
+    Object.values(localImageIds).some(ids => ids.length > 0) ||
+    Object.values(localVideoIds).some(ids => ids.length > 0) ||
+    Object.values(localAudioIds).some(id => !!id)
+
   function handleStartFromWelcome() {
     if (!friendName.trim()) return
     // If no topic was pre-selected, show the picker; else go straight to quiz.
@@ -97,6 +120,49 @@ export function FriendAnswerView({ invite }: Props) {
     }
   }
 
+  // ── Media handlers (mirror QuizView pattern) ─────────────
+
+  async function handleAddImage(file: File) {
+    const qId = questions[index].id
+    const id  = await addImage(file)
+    setLocalImageIds(prev => ({ ...prev, [qId]: [...(prev[qId] ?? []), id] }))
+  }
+
+  async function handleRemoveImage(id: string) {
+    const qId = questions[index].id
+    await removeImage(id)
+    setLocalImageIds(prev => ({ ...prev, [qId]: (prev[qId] ?? []).filter(i => i !== id) }))
+  }
+
+  async function handleAddVideo(file: File) {
+    const qId = questions[index].id
+    const id  = await addVideo(file)
+    setLocalVideoIds(prev => ({ ...prev, [qId]: [...(prev[qId] ?? []), id] }))
+  }
+
+  async function handleRemoveVideo(id: string) {
+    const qId = questions[index].id
+    await removeVideo(id)
+    setLocalVideoIds(prev => ({ ...prev, [qId]: (prev[qId] ?? []).filter(v => v !== id) }))
+  }
+
+  async function handleSaveAudio(_transcript: string, blob: Blob) {
+    const qId    = questions[index].id
+    const existing = localAudioIds[qId]
+    if (existing) await removeAudio(existing)
+    const id = await addAudio(blob)
+    setLocalAudioIds(prev => ({ ...prev, [qId]: id }))
+  }
+
+  async function handleRemoveAudio() {
+    const qId    = questions[index].id
+    const existing = localAudioIds[qId]
+    if (existing) await removeAudio(existing)
+    setLocalAudioIds(prev => ({ ...prev, [qId]: undefined }))
+  }
+
+  // ── Export helpers ───────────────────────────────────────
+
   function buildExportData(): AnswerExport {
     const questionMap = new Map(questions.map(q => [q.id, q]))
     return {
@@ -111,32 +177,62 @@ export function FriendAnswerView({ invite }: Props) {
     }
   }
 
+  function buildZipOptions() {
+    const questionMap = new Map(questions.map(q => [q.id, q]))
+    const allQuestionIds = questions.map(q => q.id)
+    return {
+      friendId,
+      friendName: friendName.trim() || 'Anonym',
+      answers: allQuestionIds
+        .filter(qId =>
+          (localAnswers[qId]?.trim()) ||
+          (localImageIds[qId]?.length) ||
+          localVideoIds[qId]?.length ||
+          localAudioIds[qId],
+        )
+        .map(qId => ({
+          questionId: qId,
+          value: localAnswers[qId] ?? '',
+          questionText: questionMap.get(qId)?.text,
+          imageIds: localImageIds[qId] ?? [],
+          audioId: localAudioIds[qId],
+          videoIds: localVideoIds[qId] ?? [],
+        })),
+    }
+  }
+
   function finish() {
     const data = buildExportData()
     setExportCode(encodeAnswerExport(data))
 
-    // Set a plain URL immediately (sync) so the share button is never disabled.
+    // Always generate URL as fallback / text-only path
     const plainUrl = generatePlainAnswerUrl(data)
     shareUrlRef.current = plainUrl
-
-    // Upgrade to the short compressed #ma/ URL in the background (<50 ms).
-    // The ref is updated synchronously inside the then-callback so it is
-    // always current when the user eventually taps the share button.
     generateAnswerUrl(data)
       .then(url => { shareUrlRef.current = url })
       .catch(() => {})
 
+    // If attachments present, build ZIP in background
+    if (hasAttachments) {
+      setZipState('building')
+      buildFriendAnswerArchive({ ...buildZipOptions(), onProgress: (s) => setZipStep(s) })
+        .then(({ blob, stats }) => {
+          setZipBlob(blob)
+          setZipSize(stats.totalBytes)
+          setZipState('ready')
+        })
+        .catch(() => setZipState('error'))
+    }
+
     setStep('done')
   }
 
-  // Synchronous share handler – navigator.share() must be called directly
+  // Synchronous URL share handler – navigator.share() must be called directly
   // inside the click gesture (no await before the call), otherwise Safari
   // blocks the share sheet. Identical pattern to FriendsView.handleShare.
   function handleShare() {
     if (isSharing || !shareUrlRef.current) return
 
-    // Always use the ref – it holds the compressed #ma/ URL once the async
-    // upgrade finishes (typically within 50 ms, well before the user taps).
     const url = shareUrlRef.current
     const shareData = {
       title: `Meine Erinnerungen an ${invite.profileName}`,
@@ -153,17 +249,52 @@ export function FriendAnswerView({ invite }: Props) {
           setIsSharing(false)
           if ((err as Error).name === 'AbortError') return
           navigator.clipboard
-            ?.writeText(url)
+            ?.writeText(`${shareData.text}\n\n${url}`)
             .then(() => setShareStatus('copied'))
             .catch(() => setShareStatus('error'))
         })
     } else {
       navigator.clipboard
-        .writeText(url)
+        .writeText(`${shareData.text}\n\n${url}`)
         .then(() => setShareStatus('copied'))
         .catch(() => setShareStatus('error'))
         .finally(() => setIsSharing(false))
     }
+  }
+
+  // ZIP share: tries native file share first, falls back to download
+  function handleShareZip() {
+    if (!zipBlob || isSharing) return
+    const safeName  = invite.profileName.replace(/\s+/g, '-').toLowerCase()
+    const zipFile   = new File([zipBlob], `erinnerungen-an-${safeName}.zip`, { type: 'application/zip' })
+    const importUrl = `${window.location.origin}/friends`
+    setIsSharing(true)
+
+    if (typeof navigator.share === 'function' && navigator.canShare?.({ files: [zipFile] })) {
+      navigator
+        .share({
+          files: [zipFile],
+          title: `Meine Erinnerungen an ${invite.profileName}`,
+          text: `Hey ${invite.profileName}! Meine Erinnerungen an dich sind dabei 💛 Öffne diesen Link, lade die Datei hoch und sie landen für immer in deinem Lebensarchiv: ${importUrl}`,
+        })
+        .then(() => setIsSharing(false))
+        .catch(err => {
+          setIsSharing(false)
+          if ((err as Error).name !== 'AbortError') downloadZip(zipFile)
+        })
+    } else {
+      downloadZip(zipFile)
+      setIsSharing(false)
+    }
+  }
+
+  function downloadZip(file: File) {
+    const url = URL.createObjectURL(file)
+    const a   = document.createElement('a')
+    a.href     = url
+    a.download = file.name
+    a.click()
+    setTimeout(() => URL.revokeObjectURL(url), 60_000)
   }
 
   // ── Done screen ──────────────────────────────────────────
@@ -178,21 +309,54 @@ export function FriendAnswerView({ invite }: Props) {
             direkt in deren Lebensarchiv gespeichert.
           </p>
 
-          <button
-            className={`share-cta-btn${shareStatus === 'copied' ? ' share-cta-btn--success' : shareStatus === 'error' ? ' share-cta-btn--error' : ''}`}
-            onClick={handleShare}
-            disabled={isSharing}
-          >
-            {isSharing ? (
-              <><span className="share-cta-btn__spinner" aria-hidden="true" />Wird geöffnet…</>
-            ) : shareStatus === 'copied' ? (
-              '✓ Link kopiert!'
-            ) : shareStatus === 'error' ? (
-              '⚠ Nochmal versuchen'
-            ) : (
-              '📤 Erinnerungen verschicken'
-            )}
-          </button>
+          {/* Primary share action */}
+          {hasAttachments ? (
+            <button
+              className={`share-cta-btn${zipState === 'error' ? ' share-cta-btn--error' : ''}`}
+              onClick={zipState === 'ready' ? handleShareZip : handleShare}
+              disabled={isSharing || zipState === 'building'}
+            >
+              {isSharing ? (
+                <><span className="share-cta-btn__spinner" aria-hidden="true" />Wird geöffnet…</>
+              ) : zipState === 'building' ? (
+                <><span className="share-cta-btn__spinner" aria-hidden="true" />{zipStep || 'Anhänge werden verpackt…'}</>
+              ) : zipState === 'ready' ? (
+                `🎁 Mit Fotos & Aufnahmen verschicken${zipSize ? ` (${fmtBytes(zipSize)})` : ''}`
+              ) : zipState === 'error' ? (
+                '⚠ Fehler – nur Text teilen'
+              ) : (
+                '📤 Erinnerungen verschicken'
+              )}
+            </button>
+          ) : (
+            <button
+              className={`share-cta-btn${shareStatus === 'copied' ? ' share-cta-btn--success' : shareStatus === 'error' ? ' share-cta-btn--error' : ''}`}
+              onClick={handleShare}
+              disabled={isSharing}
+            >
+              {isSharing ? (
+                <><span className="share-cta-btn__spinner" aria-hidden="true" />Wird geöffnet…</>
+              ) : shareStatus === 'copied' ? (
+                '✓ Link kopiert!'
+              ) : shareStatus === 'error' ? (
+                '⚠ Nochmal versuchen'
+              ) : (
+                '📤 Erinnerungen verschicken'
+              )}
+            </button>
+          )}
+
+          {/* Fallback: text-only link when ZIP is ready */}
+          {hasAttachments && zipState === 'ready' && (
+            <button
+              className="btn btn--ghost btn--sm"
+              style={{ marginTop: '0.5rem' }}
+              onClick={handleShare}
+              disabled={isSharing}
+            >
+              Nur Text (ohne Anhänge) teilen
+            </button>
+          )}
 
           <div className="export-done__own-cta">
             <a href="https://rememberme.dad" target="_blank" rel="noopener noreferrer">
@@ -311,19 +475,20 @@ export function FriendAnswerView({ invite }: Props) {
       <QuestionCard
         question={question}
         initialValue={localAnswers[question.id] ?? ''}
-        imageIds={[]}
-        imageCache={{}}
-        videoIds={[]}
+        imageIds={localImageIds[question.id] ?? []}
+        imageCache={cache}
+        videoIds={localVideoIds[question.id] ?? []}
+        audioId={localAudioIds[question.id]}
         index={index}
         total={questions.length}
         onSave={handleSave}
-        onLoadImages={() => {}}
-        onAddImage={() => {}}
-        onRemoveImage={() => {}}
-        onAddVideo={() => {}}
-        onRemoveVideo={() => {}}
-        onSaveAudio={async () => {}}
-        onRemoveAudio={() => {}}
+        onLoadImages={loadImages}
+        onAddImage={handleAddImage}
+        onRemoveImage={handleRemoveImage}
+        onAddVideo={handleAddVideo}
+        onRemoveVideo={handleRemoveVideo}
+        onSaveAudio={handleSaveAudio}
+        onRemoveAudio={handleRemoveAudio}
         onNext={handleNext}
         onPrev={() => setIndex(i => Math.max(0, i - 1))}
         canGoBack={index > 0}

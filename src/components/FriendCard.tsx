@@ -13,7 +13,7 @@ interface Props {
 }
 
 export function FriendCard({ friend, answers, onRemove }: Props) {
-  const answered = answers.filter(a => a.value.trim()).length
+  const answered = answers.filter(a => a.value.trim() || (a.imageIds?.length ?? 0) > 0 || (a.videoIds?.length ?? 0) > 0 || !!a.audioId).length
   const progress = Math.round((answered / FRIEND_QUESTIONS.length) * 100)
 
   return (

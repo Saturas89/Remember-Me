@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react'
 import { BACKUP_TYPE } from '../utils/export'
-import type { Profile, AppState, Answer, Friend, FriendAnswer, AnswerExport, CustomQuestion } from '../types'
+import type { Profile, AppState, Answer, Friend, FriendAnswer, AnswerExport, CustomQuestion, FriendAnswerZipPayload } from '../types'
 
 const STORAGE_KEY = 'remember-me-state'
 
@@ -246,6 +246,45 @@ export function useAnswers() {
     })
   }, [])
 
+  /** Import friend answers that arrived as a ZIP (with media IDs already remapped). */
+  const importFriendAnswerZipData = useCallback((payload: FriendAnswerZipPayload) => {
+    setState(prev => {
+      const now = new Date().toISOString()
+      const newAnswers: FriendAnswer[] = payload.answers
+        .filter(a => a.value.trim() || a.imageFiles?.length || a.audioFile || a.videoFiles?.length)
+        .map(a => ({
+          id: `${payload.friendId}-${a.questionId}`,
+          friendId: payload.friendId,
+          friendName: payload.friendName,
+          questionId: a.questionId,
+          questionText: a.questionText,
+          value: a.value,
+          imageIds: a.imageFiles?.length ? a.imageFiles : undefined,
+          videoIds: a.videoFiles?.length ? a.videoFiles : undefined,
+          audioId: a.audioFile,
+          createdAt: now,
+        }))
+      const filtered = prev.friendAnswers.filter(a => a.friendId !== payload.friendId)
+
+      let friends = prev.friends
+      const existing = friends.find(f => f.id === payload.friendId)
+      if (!existing) {
+        friends = [
+          ...friends,
+          { id: payload.friendId, name: payload.friendName || 'Anonym', addedAt: now },
+        ]
+      } else if (payload.friendName && existing.name !== payload.friendName) {
+        friends = friends.map(f =>
+          f.id === payload.friendId ? { ...f, name: payload.friendName } : f,
+        )
+      }
+
+      const next: AppState = { ...prev, friends, friendAnswers: [...filtered, ...newAnswers] }
+      saveState(next)
+      return next
+    })
+  }, [])
+
   // ── Custom questions ─────────────────────────────────────
 
   const addCustomQuestion = useCallback((
@@ -430,6 +469,7 @@ export function useAnswers() {
     addFriend,
     removeFriend,
     importFriendAnswers,
+    importFriendAnswerZipData,
     addCustomQuestion,
     removeCustomQuestion,
     importCustomQuestions,

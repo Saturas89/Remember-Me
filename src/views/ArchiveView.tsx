@@ -52,7 +52,8 @@ export function ArchiveView({
 
   const friendAnswersByFriendId = useMemo(() => {
     return friendAnswers.reduce((acc, a) => {
-      if (a.value.trim()) {
+      const hasContent = a.value.trim() || (a.imageIds?.length ?? 0) > 0 || (a.videoIds?.length ?? 0) > 0 || !!a.audioId
+      if (hasContent) {
         acc[a.friendId] = acc[a.friendId] || []
         acc[a.friendId].push(a)
       }
@@ -60,9 +61,11 @@ export function ArchiveView({
     }, {} as Record<string, FriendAnswer[]>)
   }, [friendAnswers])
 
-  // Pre-load all images referenced by any answer
+  // Pre-load all images (owner answers + friend answers)
   useEffect(() => {
-    const allIds = Object.values(answers).flatMap(a => a.imageIds ?? [])
+    const ownerIds  = Object.values(answers).flatMap(a => a.imageIds ?? [])
+    const friendIds = friendAnswers.flatMap(a => a.imageIds ?? [])
+    const allIds    = [...ownerIds, ...friendIds]
     if (allIds.length > 0) loadImages(allIds)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -434,7 +437,21 @@ export function ArchiveView({
                   return (
                     <div key={a.id} className="archive-entry archive-entry--friend">
                       <p className="archive-entry__question">{questionText}</p>
-                      <p className="archive-entry__answer">{a.value}</p>
+                      {a.value && <p className="archive-entry__answer">{a.value}</p>}
+                      {(a.imageIds?.length ?? 0) > 0 && (
+                        <ImageAttachment
+                          imageIds={a.imageIds!}
+                          cache={cache}
+                          onLoad={loadImages}
+                        />
+                      )}
+                      {(a.videoIds?.length ?? 0) > 0 && (
+                        <VideoAttachment
+                          videoIds={a.videoIds!}
+                          readOnly
+                        />
+                      )}
+                      {a.audioId && <AudioPlayer audioId={a.audioId} />}
                       <span className="archive-entry__date">
                         {new Date(a.createdAt).toLocaleDateString('de-DE')}
                       </span>
