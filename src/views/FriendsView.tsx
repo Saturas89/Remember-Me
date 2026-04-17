@@ -36,7 +36,8 @@ export function FriendsView({
     const name = profileName.trim()
     return {
       title: name ? `${name}s Lebensarchiv` : 'Mein Lebensarchiv',
-      text: `Ich möchte meine Lebensgeschichte für immer festhalten – und deine Erinnerungen an mich sind ein unverzichtbarer Teil davon. Würdest du kurz ein paar Fragen über mich beantworten? Das wäre ein unvergessliches Geschenk 💛\n\n${url}`,
+      text: `Ich möchte meine Lebensgeschichte für immer festhalten – und deine Erinnerungen an mich sind ein unverzichtbarer Teil davon. Würdest du kurz ein paar Fragen über mich beantworten? Das wäre ein unvergessliches Geschenk 💛`,
+      url,
     }
   }
 
@@ -60,13 +61,13 @@ export function FriendsView({
           if ((err as Error).name === 'AbortError') return
           // Non-abort error – fall back to clipboard with full message text.
           navigator.clipboard
-            ?.writeText(shareData.text)
+            ?.writeText(`${shareData.text}\n\n${url}`)
             .then(() => setShareStatus('copied'))
             .catch(() => setShareStatus('error'))
         })
     } else {
       navigator.clipboard
-        .writeText(shareData.text)
+        .writeText(`${shareData.text}\n\n${url}`)
         .then(() => setShareStatus('copied'))
         .catch(() => setShareStatus('error'))
         .finally(() => setIsSharing(false))
