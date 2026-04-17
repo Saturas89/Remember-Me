@@ -447,7 +447,11 @@ export function useAnswers() {
       const answered = Object.values(state.answers).filter(
         a =>
           a.categoryId === categoryId &&
-          (a.value.trim() !== '' || (a.imageIds?.length ?? 0) > 0 || (a.videoIds?.length ?? 0) > 0),
+          (a.value.trim() !== '' ||
+           (a.imageIds?.length ?? 0) > 0 ||
+           (a.videoIds?.length ?? 0) > 0 ||
+           !!a.audioId ||
+           !!a.audioTranscript),
       ).length
       return totalQuestions > 0 ? Math.round((answered / totalQuestions) * 100) : 0
     },

@@ -56,6 +56,15 @@ Besonders für ältere Nutzer oder Menschen, die beim Erzählen freier sprechen 
 - [ ] **FR-9.17:** Im Archiv-Eintrag erscheint ein kompakter Audio-Player, falls `audioId` vorhanden
 - [ ] **FR-9.18:** Player zeigt: Playback-Button, Laufzeit, Fortschrittsbalken
 - [ ] **FR-9.19:** Audio kann gelöscht werden (mit Bestätigung) – die Textantwort bleibt erhalten
+- [ ] **FR-9.17b:** Ein Eintrag erscheint im Archiv sobald er Inhalt hat: Text, Foto, Video, Audio-Datei **oder** Transkription – nicht nur bei Text/Foto
+- [ ] **FR-9.17c:** Fortschritts-Zähler der Kategorie zählt Aufnahmen (audioId oder audioTranscript) als beantwortete Fragen
+
+### 3.5b Backup & Export
+
+- [ ] **FR-9.22:** Audio-Blob wird im ZIP-Archiv-Export (`buildMemoryArchive`) gesichert, wenn `audioId` gesetzt ist
+- [ ] **FR-9.23:** Transkript (`audioTranscript`) ist im JSON-Backup und im Markdown-Export enthalten – auch ohne Audio-Datei
+- [ ] **FR-9.24:** Markdown-Export nutzt `audioTranscript` als Antworttext wenn `value` leer ist; zeigt Transkript als Blockquote wenn beide vorhanden und unterschiedlich
+- [ ] **FR-9.25:** JSON-Backup allein enthält keine Audio-Blobs; der vollständige ZIP-Export (`Erinnerungs-Archiv`) sichert alle Mediendateien
 
 ### 3.5 Archiv-Edit-Modus
 
@@ -189,7 +198,10 @@ IndexedDB-Store für Audio:
 - [ ] Im Vorschau-Screen erscheint eine Checkbox „🗂 Aufnahme als Audio-Datei speichern" (Standard: deaktiviert)
 - [ ] Wenn Checkbox aktiviert: Originalton wird in IndexedDB gespeichert und ist im Archiv abspielbar
 - [ ] Wenn Checkbox deaktiviert: Nur Transkript wird gespeichert, kein Audio-Blob in IndexedDB
+- [ ] **Eintrag erscheint im Archiv sobald er irgendwelchen Inhalt hat** (Text, Foto, Video, Audio-Datei oder Transkription)
+- [ ] **Kategorie-Fortschritt zählt Audio-Aufnahmen als beantwortet** (auch ohne Text)
 - [ ] Audio-Datei bleibt auch nach App-Neustart erhalten (IndexedDB), falls gespeichert
+- [ ] ZIP-Export enthält Audio-Blob wenn `audioId` gesetzt; JSON-Backup enthält Transkript
 - [ ] Auf iOS Safari: Aufnahme funktioniert, Transkriptions-Fallback-Hinweis erscheint
 - [ ] Audio kann gelöscht werden ohne die Textantwort zu verlieren
 - [ ] 10-Minuten-Limit wird durchgesetzt
@@ -210,3 +222,4 @@ IndexedDB-Store für Audio:
 |---------|-------|-------|---------|
 | 1.0.0 | 2026-04-12 | Claude | Initiale Version |
 | 1.1.0 | 2026-04-17 | Claude | Transkript wird immer gespeichert (`audioTranscript`); Audio-Datei-Speicherung optional via Checkbox |
+| 1.2.0 | 2026-04-17 | Claude | Archiv-Sichtbarkeit & Backup-Korrekturen: `hasContent` und `getCategoryProgress` berücksichtigen Audio; Markdown-Export zeigt Transkript; Backup-Kommentar präzisiert |

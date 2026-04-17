@@ -185,6 +185,20 @@ describe('useAnswers', () => {
       expect(result.current.getCategoryProgress('childhood', 10)).toBe(10)
     })
 
+    it('counts audio-file answers (audioId, no text) as answered', async () => {
+      const { result } = renderHook(() => useAnswers())
+      await waitFor(() => expect(result.current.isLoaded).toBe(true))
+      act(() => { result.current.setAnswerAudio('q-1', 'childhood', 'aud-001', '2024-06-01T10:00:00.000Z') })
+      expect(result.current.getCategoryProgress('childhood', 10)).toBe(10)
+    })
+
+    it('counts transcript-only answers (audioTranscript, no audioId, no text) as answered', async () => {
+      const { result } = renderHook(() => useAnswers())
+      await waitFor(() => expect(result.current.isLoaded).toBe(true))
+      act(() => { result.current.setAnswerAudio('q-1', 'childhood', undefined, '2024-06-01T10:00:00.000Z', 'Transkription') })
+      expect(result.current.getCategoryProgress('childhood', 10)).toBe(10)
+    })
+
     it('does not count whitespace-only answers', async () => {
       const { result } = renderHook(() => useAnswers())
       await waitFor(() => expect(result.current.isLoaded).toBe(true))

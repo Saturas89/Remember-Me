@@ -144,7 +144,13 @@ export function ArchiveView({
 
   function hasContent(questionId: string) {
     const a = answers[questionId]
-    return a && (a.value.trim() !== '' || (a.imageIds?.length ?? 0) > 0)
+    return a && (
+      a.value.trim() !== '' ||
+      (a.imageIds?.length ?? 0) > 0 ||
+      (a.videoIds?.length ?? 0) > 0 ||
+      !!a.audioId ||
+      !!a.audioTranscript
+    )
   }
 
   function displayDate(answer: Answer): string {

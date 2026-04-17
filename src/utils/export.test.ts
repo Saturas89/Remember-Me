@@ -224,6 +224,39 @@ describe('exportAsMarkdown', () => {
     const md = exportAsMarkdown(EMPTY)
     expect(md).toContain('Remember Me')
   })
+
+  it('includes audio-only answers (audioId, no text value)', () => {
+    const q = CATEGORIES[0].questions[0]
+    const answer: Answer = {
+      ...makeAnswer(q.id, q.categoryId, ''),
+      audioId: 'aud-001',
+    }
+    const md = exportAsMarkdown({ ...EMPTY, profile: makeProfile(), answers: { [q.id]: answer } })
+    expect(md).toContain(q.text)
+    expect(md).toContain('🎙 Originalton')
+  })
+
+  it('uses audioTranscript as answer text when value is empty', () => {
+    const q = CATEGORIES[0].questions[0]
+    const answer: Answer = {
+      ...makeAnswer(q.id, q.categoryId, ''),
+      audioTranscript: 'Ich wuchs auf dem Land auf.',
+    }
+    const md = exportAsMarkdown({ ...EMPTY, profile: makeProfile(), answers: { [q.id]: answer } })
+    expect(md).toContain('Ich wuchs auf dem Land auf.')
+  })
+
+  it('shows audioTranscript as blockquote when value differs', () => {
+    const q = CATEGORIES[0].questions[0]
+    const answer: Answer = {
+      ...makeAnswer(q.id, q.categoryId, 'Manuell eingetippt'),
+      audioTranscript: 'Automatisch erkannt',
+    }
+    const md = exportAsMarkdown({ ...EMPTY, profile: makeProfile(), answers: { [q.id]: answer } })
+    expect(md).toContain('Manuell eingetippt')
+    expect(md).toContain('Automatisch erkannt')
+    expect(md).toContain('Transkription')
+  })
 })
 
 // ── exportAsEnrichedJSON ──────────────────────────────────────────────────────
