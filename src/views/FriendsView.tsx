@@ -43,7 +43,7 @@ export function FriendsView({
   }, [shareStatus])
 
   function buildText(url: string) {
-    return `Ich möchte meine Lebensgeschichte für immer festhalten – und deine Erinnerungen an mich sind ein unverzichtbarer Teil davon. Würdest du kurz ein paar Fragen über mich beantworten? Das wäre ein unvergessliches Geschenk 💛\n\n${url}`
+    return `Ich halte meine Geschichte fest und würde gerne deine Erinnerungen ergänzen ✨\n\n${url}`
   }
 
   // Synchronous share handler: Safari requires navigator.share() to be called
