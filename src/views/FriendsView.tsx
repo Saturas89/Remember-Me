@@ -49,9 +49,7 @@ export function FriendsView({
     const shareData = buildShareData(url)
     setIsSharing(true)
 
-    const canUseShare = typeof navigator.share === 'function' && navigator.canShare?.(shareData) !== false
-
-    if (canUseShare) {
+    if (typeof navigator.share === 'function') {
       navigator
         .share(shareData)
         .then(() => {

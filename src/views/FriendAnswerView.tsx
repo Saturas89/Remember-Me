@@ -240,9 +240,7 @@ export function FriendAnswerView({ invite }: Props) {
     }
     setIsSharing(true)
 
-    const canUseShare = typeof navigator.share === 'function' && navigator.canShare?.(shareData) !== false
-
-    if (canUseShare) {
+    if (typeof navigator.share === 'function') {
       navigator
         .share(shareData)
         .then(() => setIsSharing(false))
