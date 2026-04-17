@@ -265,8 +265,9 @@ export function FriendAnswerView({ invite }: Props) {
   // ZIP share: tries native file share first, falls back to download
   function handleShareZip() {
     if (!zipBlob || isSharing) return
-    const safeName = invite.profileName.replace(/\s+/g, '-').toLowerCase()
-    const zipFile  = new File([zipBlob], `erinnerungen-an-${safeName}.zip`, { type: 'application/zip' })
+    const safeName  = invite.profileName.replace(/\s+/g, '-').toLowerCase()
+    const zipFile   = new File([zipBlob], `erinnerungen-an-${safeName}.zip`, { type: 'application/zip' })
+    const importUrl = `${window.location.origin}/friends`
     setIsSharing(true)
 
     if (typeof navigator.share === 'function' && navigator.canShare?.({ files: [zipFile] })) {
@@ -274,6 +275,7 @@ export function FriendAnswerView({ invite }: Props) {
         .share({
           files: [zipFile],
           title: `Meine Erinnerungen an ${invite.profileName}`,
+          text: `Hey ${invite.profileName}! Meine Erinnerungen sind als Datei angehängt. Zum Importieren öffne diesen Link: ${importUrl}`,
         })
         .then(() => setIsSharing(false))
         .catch(err => {
