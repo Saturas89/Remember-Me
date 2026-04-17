@@ -247,7 +247,7 @@ export default function App() {
     goTo({ name: tab } as View)
   }
 
-  const friendsBadge = friendAnswers.filter(a => a.value.trim()).length
+  const friendsBadge = friendAnswers.filter(a => a.value.trim() || (a.imageIds?.length ?? 0) > 0 || (a.videoIds?.length ?? 0) > 0 || !!a.audioId).length
 
   // Bottom nav shown on all main views (not during focused quiz/friend-answer)
   const showNav = view.name !== 'quiz'

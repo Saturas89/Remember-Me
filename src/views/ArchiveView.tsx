@@ -52,7 +52,8 @@ export function ArchiveView({
 
   const friendAnswersByFriendId = useMemo(() => {
     return friendAnswers.reduce((acc, a) => {
-      if (a.value.trim()) {
+      const hasContent = a.value.trim() || (a.imageIds?.length ?? 0) > 0 || (a.videoIds?.length ?? 0) > 0 || !!a.audioId
+      if (hasContent) {
         acc[a.friendId] = acc[a.friendId] || []
         acc[a.friendId].push(a)
       }
