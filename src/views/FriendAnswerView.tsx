@@ -215,7 +215,7 @@ export function FriendAnswerView({ invite }: Props) {
     // If attachments present, build ZIP in background
     if (hasAttachments) {
       setZipState('building')
-      buildFriendAnswerArchive(buildZipOptions(), (s, _pct) => setZipStep(s))
+      buildFriendAnswerArchive({ ...buildZipOptions(), onProgress: (s) => setZipStep(s) })
         .then(({ blob, stats }) => {
           setZipBlob(blob)
           setZipSize(stats.totalBytes)

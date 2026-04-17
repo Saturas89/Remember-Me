@@ -10,6 +10,7 @@ const defaultProps = {
   friends: [],
   friendAnswers: [],
   onRemoveFriend: vi.fn(),
+  onImportZip: vi.fn(),
   onBack: vi.fn(),
 }
 
