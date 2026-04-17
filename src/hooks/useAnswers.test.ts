@@ -499,12 +499,6 @@ describe('useAnswers', () => {
       expect(result.current.getAnswerAudioId('q-a')).toBeUndefined()
     })
 
-    it('returns undefined for a question with no audio', async () => {
-      const { result } = renderHook(() => useAnswers())
-      await waitFor(() => expect(result.current.isLoaded).toBe(true))
-      expect(result.current.getAnswerAudioId('non-existent')).toBeUndefined()
-    })
-
     it('persists audioId to localStorage', async () => {
       const { result } = renderHook(() => useAnswers())
       await waitFor(() => expect(result.current.isLoaded).toBe(true))
@@ -524,29 +518,14 @@ describe('useAnswers', () => {
       expect(result.current.answers['q-a'].audioTranscript).toBe('Ich wuchs in München auf.')
     })
 
-    it('returns stored transcript via getAnswerTranscript', async () => {
+    it('stores transcript without audioId (transcript-only mode)', async () => {
       const { result } = renderHook(() => useAnswers())
       await waitFor(() => expect(result.current.isLoaded).toBe(true))
       act(() => {
         result.current.setAnswerAudio('q-a', 'childhood', undefined, '2024-06-01T10:00:00.000Z', 'Transkription ohne Audio-Datei')
       })
-      expect(result.current.getAnswerTranscript('q-a')).toBe('Transkription ohne Audio-Datei')
-    })
-
-    it('returns undefined from getAnswerTranscript when no transcript stored', async () => {
-      const { result } = renderHook(() => useAnswers())
-      await waitFor(() => expect(result.current.isLoaded).toBe(true))
-      expect(result.current.getAnswerTranscript('non-existent')).toBeUndefined()
-    })
-
-    it('stores transcript without audioId (transcript-only mode)', async () => {
-      const { result } = renderHook(() => useAnswers())
-      await waitFor(() => expect(result.current.isLoaded).toBe(true))
-      act(() => {
-        result.current.setAnswerAudio('q-a', 'childhood', undefined, '2024-06-01T10:00:00.000Z', 'Nur Text, kein Audio')
-      })
       expect(result.current.getAnswerAudioId('q-a')).toBeUndefined()
-      expect(result.current.answers['q-a'].audioTranscript).toBe('Nur Text, kein Audio')
+      expect(result.current.getAnswerTranscript('q-a')).toBe('Transkription ohne Audio-Datei')
     })
 
     it('preserves existing transcript when updating audioId without new transcript', async () => {

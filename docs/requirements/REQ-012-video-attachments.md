@@ -2,8 +2,8 @@
 
 **Status:** ✔️ COMPLETED  
 **ID:** REQ-012  
-**Version:** 1.0.0  
-**Letzte Aktualisierung:** 2026-04-13  
+**Version:** 1.1.0  
+**Letzte Aktualisierung:** 2026-04-17  
 **Modul:** Medien / Antworten  
 **Priorität:** Medium  
 
@@ -11,7 +11,7 @@
 
 ## 1. Zusammenfassung
 
-Nutzer können zu Text-Antworten Videos hinzufügen. Videos werden lokal im Browser (IndexedDB `rm-videos`) gespeichert, können inline abgespielt werden und sind vollständig in das Erinnerungs-Archiv (ZIP-Export) integriert.
+Nutzer können zu Text-Antworten Videos hinzufügen. Videos werden lokal im Browser (IndexedDB `rm-videos`) gespeichert, können inline abgespielt werden und sind vollständig in das Erinnerungs-Archiv (ZIP-Export) integriert. Antworten mit Videos (auch ohne Text) erscheinen im Archiv und werden beim Kategorie-Fortschritt gezählt.
 
 ---
 
@@ -19,31 +19,35 @@ Nutzer können zu Text-Antworten Videos hinzufügen. Videos werden lokal im Brow
 
 ### 2.1 Video hinzufügen
 
-- **FR-12.1:** In jeder Text-Frage (QuizView) erscheint ein „🎬 Video hinzufügen"-Button unterhalb der Fotozeile.
-- **FR-12.2:** Es können bis zu **3 Videos** pro Antwort angehängt werden.
-- **FR-12.3:** Der Datei-Picker akzeptiert alle Videoformate (`video/*`).
-- **FR-12.4:** Videos werden als Blob direkt in IndexedDB (`rm-videos`) gespeichert – keine Kompression, kein Upload.
-- **FR-12.5:** Eine Antwort gilt als „beantwortet", wenn sie Text, Fotos, Videos oder eine Sprachaufnahme enthält.
+- [x] **FR-12.1:** In jeder Text-Frage (QuizView) erscheint ein „🎬 Video hinzufügen"-Button unterhalb der Fotozeile.
+- [x] **FR-12.2:** Es können bis zu **3 Videos** pro Antwort angehängt werden.
+- [x] **FR-12.3:** Der Datei-Picker akzeptiert alle Videoformate (`video/*`).
+- [x] **FR-12.4:** Videos werden als Blob direkt in IndexedDB (`rm-videos`) gespeichert – keine Kompression, kein Upload.
+- [x] **FR-12.5:** Eine Antwort gilt als „beantwortet", wenn sie Text, Fotos, Videos, eine Sprachaufnahme oder ein Transkript enthält.
 
 ### 2.2 Video-Vorschau & Wiedergabe
 
-- **FR-12.6:** Gespeicherte Videos erscheinen als 90×90 px Thumbnails mit Play-Button-Overlay.
-- **FR-12.7:** Tippen auf ein Thumbnail öffnet einen Vollbild-Lightbox-Player mit nativen Browser-Controls.
-- **FR-12.8:** Die Lightbox schließt beim Tippen außerhalb des Videos oder auf das ✕-Symbol.
-- **FR-12.9:** Videos sind in der QuizView (Bearbeitung) und ArchiveView (Lese-Ansicht) sichtbar.
+- [x] **FR-12.6:** Gespeicherte Videos erscheinen als 90×90 px Thumbnails mit Play-Button-Overlay.
+- [x] **FR-12.7:** Tippen auf ein Thumbnail öffnet einen Vollbild-Lightbox-Player mit nativen Browser-Controls.
+- [x] **FR-12.8:** Die Lightbox schließt beim Tippen außerhalb des Videos oder auf das ✕-Symbol.
+- [x] **FR-12.9:** Videos sind in der QuizView (Bearbeitung) und ArchiveView (Lese-Ansicht) sichtbar.
 
 ### 2.3 Video entfernen
 
-- **FR-12.10:** Jedes Thumbnail zeigt ein ✕-Symbol zum Entfernen.
-- **FR-12.11:** Beim Entfernen wird der Blob aus IndexedDB gelöscht und die Video-ID aus der Antwort entfernt.
+- [x] **FR-12.10:** Jedes Thumbnail zeigt ein ✕-Symbol zum Entfernen.
+- [x] **FR-12.11:** Beim Entfernen wird der Blob aus IndexedDB gelöscht und die Video-ID aus der Antwort entfernt.
 
 ### 2.4 Export
 
-- **FR-12.12:** Das Erinnerungs-Archiv (ZIP) enthält alle Videos im Ordner `/videos/` als `vid-{id}.{ext}`.
-- **FR-12.13:** Unterstützte Ausgabeformate: `.mp4`, `.webm`, `.mov` (je nach MIME-Type des gespeicherten Blobs).
-- **FR-12.14:** Der Markdown-Export vermerkt Videos pro Antwort: `_🎬 N Video(s) · im Archiv_`.
-- **FR-12.15:** Das Archiv-Fortschrittssystem zeigt während des Video-Exports einen eigenen Step-Text.
-- **FR-12.16:** Die ArchiveExportCard zeigt im Idle-State einen `🎬 N Videos`-Chip.
+- [x] **FR-12.12:** Das Erinnerungs-Archiv (ZIP) enthält alle Videos im Ordner `/videos/` als `vid-{id}.{ext}`.
+- [x] **FR-12.13:** Unterstützte Ausgabeformate: `.mp4`, `.webm`, `.mov` (je nach MIME-Type des gespeicherten Blobs).
+- [x] **FR-12.14:** Der Markdown-Export vermerkt Videos pro Antwort: `_🎬 N Video(s) · im Archiv_` – auch für Antworten ohne Textinhalt.
+- [x] **FR-12.15:** Das Archiv-Fortschrittssystem zeigt während des Video-Exports einen eigenen Step-Text.
+- [x] **FR-12.16:** Die ArchiveExportCard zeigt im Idle-State einen `🎬 N Videos`-Chip.
+
+### 2.5 Archiv-Sichtbarkeit
+
+- [x] **FR-12.17:** Ein Archiv-Eintrag erscheint sobald er irgendwelchen Inhalt hat – Text, Foto, Video, Audio-Datei oder Transkript. Reine Video-Einträge (ohne Text) sind vollständig sichtbar.
 
 ---
 
@@ -94,6 +98,8 @@ remember-me-{name}-archiv-{datum}.zip
 - [x] Fortschrittstext zeigt Video-Export-Status
 - [x] ArchiveView zeigt Videos in Lese-Ansicht
 - [x] Bestehende Backups ohne `videoIds` laden fehlerfrei
+- [x] Antworten mit Videos (ohne Text) erscheinen im Archiv und zählen beim Kategorie-Fortschritt
+- [x] Markdown-Export enthält Video-Hinweis auch für reine Video-Antworten
 
 ---
 
@@ -102,3 +108,4 @@ remember-me-{name}-archiv-{datum}.zip
 | Version | Datum | Autor | Änderung |
 |---------|-------|-------|---------|
 | 1.0.0 | 2026-04-13 | Claude | Initiale Version – vollständig implementiert |
+| 1.1.0 | 2026-04-17 | Claude | Bugfix-Dokumentation: Video-only-Einträge waren im Archiv nicht sichtbar (`hasContent` fix) und wurden nicht im Markdown-Export berücksichtigt (`hasExportableContent` + `renderAnswerText` fix). FR-12.17 ergänzt, Akzeptanzkriterien aktualisiert. |
