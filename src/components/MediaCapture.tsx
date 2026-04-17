@@ -62,27 +62,25 @@ export function MediaCapture({
         </p>
       )}
 
-      {/* Thumbnail strip – only when content exists */}
-      {(imageIds.length > 0 || videoIds.length > 0) && (
-        <div className="media-capture__strip">
-          <ImageAttachment
-            imageIds={imageIds}
-            cache={imageCache}
-            onLoad={onLoadImages}
-            onAdd={onAddImage}
-            onRemove={onRemoveImage}
-            triggerRef={photoTrigger}
-            noAddButton
-          />
-          <VideoAttachment
-            videoIds={videoIds}
-            onAdd={onAddVideo}
-            onRemove={onRemoveVideo}
-            triggerRef={videoTrigger}
-            noAddButton
-          />
-        </div>
-      )}
+      {/* Thumbnail strip – shown when content exists; components always rendered so triggerRefs stay in DOM */}
+      <div className={imageIds.length > 0 || videoIds.length > 0 ? 'media-capture__strip' : undefined}>
+        <ImageAttachment
+          imageIds={imageIds}
+          cache={imageCache}
+          onLoad={onLoadImages}
+          onAdd={onAddImage}
+          onRemove={onRemoveImage}
+          triggerRef={photoTrigger}
+          noAddButton
+        />
+        <VideoAttachment
+          videoIds={videoIds}
+          onAdd={onAddVideo}
+          onRemove={onRemoveVideo}
+          triggerRef={videoTrigger}
+          noAddButton
+        />
+      </div>
 
       {/* ── Audio panel ─────────────────────────────────────── */}
 
