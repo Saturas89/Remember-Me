@@ -107,11 +107,21 @@ export function exportAsMarkdown(data: ExportData): string {
 
   function hasExportableContent(a: Answer | undefined): boolean {
     if (!a) return false
-    return !!(a.value.trim() || a.audioId || a.audioTranscript || (a.imageIds?.length ?? 0) > 0)
+    return !!(
+      a.value.trim() ||
+      a.audioId ||
+      a.audioTranscript ||
+      (a.imageIds?.length ?? 0) > 0 ||
+      (a.videoIds?.length ?? 0) > 0
+    )
   }
 
   function renderAnswerText(a: Answer): string {
-    return a.value.trim() || a.audioTranscript || (a.audioId ? '🎙 [Nur Sprachaufnahme]' : '')
+    if (a.value.trim()) return a.value.trim()
+    if (a.audioTranscript) return a.audioTranscript
+    if (a.audioId) return '🎙 [Nur Sprachaufnahme]'
+    if ((a.videoIds?.length ?? 0) > 0) return '🎬 [Nur Videoaufnahme]'
+    return ''
   }
 
   // Own answers by category

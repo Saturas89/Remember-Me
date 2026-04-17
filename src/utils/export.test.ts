@@ -225,6 +225,17 @@ describe('exportAsMarkdown', () => {
     expect(md).toContain('Remember Me')
   })
 
+  it('includes video-only answers (videoIds, no text value)', () => {
+    const q = CATEGORIES[0].questions[0]
+    const answer: Answer = {
+      ...makeAnswer(q.id, q.categoryId, ''),
+      videoIds: ['vid-001'],
+    }
+    const md = exportAsMarkdown({ ...EMPTY, profile: makeProfile(), answers: { [q.id]: answer } })
+    expect(md).toContain(q.text)
+    expect(md).toContain('🎬')
+  })
+
   it('includes audio-only answers (audioId, no text value)', () => {
     const q = CATEGORIES[0].questions[0]
     const answer: Answer = {

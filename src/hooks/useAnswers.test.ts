@@ -185,6 +185,13 @@ describe('useAnswers', () => {
       expect(result.current.getCategoryProgress('childhood', 10)).toBe(10)
     })
 
+    it('counts video-only answers (videoIds, no text) as answered', async () => {
+      const { result } = renderHook(() => useAnswers())
+      await waitFor(() => expect(result.current.isLoaded).toBe(true))
+      act(() => { result.current.setAnswerVideos('q-1', 'childhood', ['vid-001']) })
+      expect(result.current.getCategoryProgress('childhood', 10)).toBe(10)
+    })
+
     it('counts audio-file answers (audioId, no text) as answered', async () => {
       const { result } = renderHook(() => useAnswers())
       await waitFor(() => expect(result.current.isLoaded).toBe(true))
