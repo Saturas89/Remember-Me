@@ -1324,6 +1324,9 @@
   border: none;
   transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
   font-family: inherit;
+  -webkit-appearance: none;
+  appearance: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .btn:disabled { opacity: 0.35; cursor: not-allowed; }
