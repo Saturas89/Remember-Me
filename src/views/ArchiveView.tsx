@@ -7,6 +7,7 @@ import { AudioPlayer } from '../components/AudioPlayer'
 import { AudioRecorder } from '../components/AudioRecorder'
 import { useImageStore } from '../hooks/useImageStore'
 import { addAudio, removeAudio } from '../hooks/useAudioStore'
+import { addVideo, removeVideo } from '../hooks/useVideoStore'
 import type { Answer, FriendAnswer, Friend, CustomQuestion } from '../types'
 
 interface Props {
@@ -17,6 +18,7 @@ interface Props {
   profileName: string
   onSaveAnswer: (questionId: string, categoryId: string, value: string) => void
   onSetImages: (questionId: string, categoryId: string, imageIds: string[]) => void
+  onSetVideos: (questionId: string, categoryId: string, videoIds: string[]) => void
   onSetAudio: (questionId: string, categoryId: string, audioId: string | undefined, audioTranscribedAt: string | undefined, audioTranscript?: string) => void
   onDeleteAnswer: (questionId: string) => void
   onDeleteEntry: (questionId: string) => void   // removes custom Q + its answer
@@ -31,6 +33,7 @@ export function ArchiveView({
   profileName,
   onSaveAnswer,
   onSetImages,
+  onSetVideos,
   onSetAudio,
   onDeleteAnswer,
   onDeleteEntry,
@@ -92,6 +95,20 @@ export function ArchiveView({
     await removeImage(imgId)
     const next = (answers[questionId]?.imageIds ?? []).filter(i => i !== imgId)
     onSetImages(questionId, categoryId, next)
+  }
+
+  // ── Video handlers ───────────────────────────────────────
+
+  async function handleAddVideo(questionId: string, categoryId: string, file: File) {
+    const id = await addVideo(file)
+    const current = answers[questionId]?.videoIds ?? []
+    onSetVideos(questionId, categoryId, [...current, id])
+  }
+
+  async function handleRemoveVideo(questionId: string, categoryId: string, videoId: string) {
+    await removeVideo(videoId)
+    const next = (answers[questionId]?.videoIds ?? []).filter(v => v !== videoId)
+    onSetVideos(questionId, categoryId, next)
   }
 
   // ── Edit handlers ────────────────────────────────────────
@@ -209,6 +226,12 @@ export function ArchiveView({
         >
           📷 Foto hinzufügen
         </button>
+        {/* Videos in edit mode */}
+        <VideoAttachment
+          videoIds={answer?.videoIds ?? []}
+          onAdd={file => handleAddVideo(questionId, categoryId, file)}
+          onRemove={videoId => handleRemoveVideo(questionId, categoryId, videoId)}
+        />
         {/* Audio in edit mode */}
         <AudioRecorder
           existingAudioId={answer?.audioId}

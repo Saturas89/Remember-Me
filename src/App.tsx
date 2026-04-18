@@ -309,6 +309,7 @@ export default function App() {
           profileName={profile?.name ?? ''}
           onSaveAnswer={saveAnswer}
           onSetImages={setAnswerImages}
+          onSetVideos={setAnswerVideos}
           onSetAudio={setAnswerAudio}
           onDeleteAnswer={deleteAnswer}
           onDeleteEntry={id => { removeCustomQuestion(id); deleteAnswer(id) }}
