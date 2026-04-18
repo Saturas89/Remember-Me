@@ -67,7 +67,14 @@ Besonders für ältere Nutzer oder Menschen, die beim Erzählen freier sprechen 
 ### 3.6 Archiv-Edit-Modus
 
 - [x] **FR-9.20:** Im Edit-Modus kann eine neue Audio-Aufnahme zu einem bestehenden Eintrag hinzugefügt oder die vorhandene ersetzt werden
-- [x] **FR-9.21:** Der transkribierte Text ersetzt bei Ersatz den bisherigen Textinhalt (mit Hinweis)
+- [x] **FR-9.21:** Bei Neuaufnahme mit vorhandenem Text erscheint eine Inline-Auswahl: „🆕 Neue Transkription" oder „💾 Bisherigen Text behalten". Ohne bestehenden Text wird die Transkription automatisch übernommen.
+
+### 3.7 Freunde-Antwortbereich (FriendAnswerView)
+
+- [x] **FR-9.26:** Freunde können Fragen über den Eingeladenen ebenfalls per Sprachaufnahme beantworten – über dieselbe `MediaCapture`/`QuestionCard`-Komponentenkette wie der eigene Quiz-Bereich
+- [x] **FR-9.27:** Textwahl-Verhalten bei Neuaufnahme (FR-9.21) gilt auch im Freunde-Bereich: bei vorhandenem Text erscheint die Inline-Auswahl
+- [x] **FR-9.28:** Audio-Blobs aus Freundes-Antworten werden in den ZIP-Archiv-Export (`buildFriendAnswerArchive`) eingebunden, wenn der Freund die Checkbox aktiviert hat
+- [x] **FR-9.29:** Transkript-Text (Checkbox deaktiviert) wird als `value` der Antwort übermittelt – kein gesondertes `audioTranscript`-Feld in `FriendAnswer`
 
 ---
 
@@ -220,6 +227,7 @@ IndexedDB-Store für Audio:
 - [x] Auf iOS Safari: Aufnahme funktioniert, Transkriptions-Fallback-Hinweis erscheint
 - [x] Audio kann gelöscht werden ohne die Textantwort zu verlieren
 - [x] 10-Minuten-Limit wird durchgesetzt
+- [x] **Textwahl bei Neuaufnahme**: Wenn beim Bestätigen ein vorhandener Text und ein neues Transkript vorliegen und abweichen, erscheint eine Inline-Auswahl (Neue Transkription / Bisherigen Text behalten) – in allen Bereichen (Quiz, Archiv, Eigene Fragen, Freunde)
 
 ---
 
@@ -239,3 +247,4 @@ IndexedDB-Store für Audio:
 | 1.1.0 | 2026-04-17 | Claude | Transkript wird immer gespeichert (`audioTranscript`); Audio-Datei-Speicherung optional via Checkbox |
 | 1.2.0 | 2026-04-17 | Claude | Archiv-Sichtbarkeit & Backup-Korrekturen: `hasContent` und `getCategoryProgress` berücksichtigen Audio; Markdown-Export zeigt Transkript |
 | 1.3.0 | 2026-04-17 | Claude | Spec bereinigt: Abschnitte neu geordnet, implementierte Items als `[x]` markiert, veraltete Referenzen entfernt, Fallback-Diagramm aktualisiert |
+| 1.4.0 | 2026-04-18 | Claude | FR-9.21 präzisiert (Inline-Textwahl-Dialog); Abschnitt 3.7 FriendAnswerView ergänzt (FR-9.26–29); Akzeptanzkriterium für Textwahl in allen Bereichen hinzugefügt |

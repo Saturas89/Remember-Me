@@ -147,11 +147,10 @@ export function FriendAnswerView({ invite }: Props) {
   }
 
   async function handleSaveAudio(_transcript: string, blob: Blob | null) {
-    const qId    = questions[index].id
+    const qId      = questions[index].id
     const existing = localAudioIds[qId]
     if (existing) await removeAudio(existing)
-    if (!blob) { setLocalAudioIds(prev => ({ ...prev, [qId]: undefined })); return }
-    const id = await addAudio(blob)
+    const id = blob ? await addAudio(blob) : undefined
     setLocalAudioIds(prev => ({ ...prev, [qId]: id }))
   }
 
