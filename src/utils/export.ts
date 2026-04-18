@@ -67,9 +67,10 @@ export interface BackupPayload {
 }
 
 /**
- * Exports a full raw backup suitable for re-importing.
- * Contains all text answers, profile, friends, friendAnswers, customQuestions.
- * NOTE: Photo attachments (IndexedDB) are not included.
+ * Exports a raw backup suitable for re-importing (text-only).
+ * Contains all text answers, profile, friends, friendAnswers, customQuestions,
+ * and audio transcripts (audioTranscript). Media files (photos, videos, audio
+ * blobs) are NOT included – use the full archive ZIP export for those.
  */
 export function exportAsBackup(data: ExportData): string {
   const payload: BackupPayload = {
@@ -104,9 +105,28 @@ export function exportAsMarkdown(data: ExportData): string {
   lines.push('')
   lines.push('---')
 
+  function hasExportableContent(a: Answer | undefined): boolean {
+    if (!a) return false
+    return !!(
+      a.value.trim() ||
+      a.audioId ||
+      a.audioTranscript ||
+      (a.imageIds?.length ?? 0) > 0 ||
+      (a.videoIds?.length ?? 0) > 0
+    )
+  }
+
+  function renderAnswerText(a: Answer): string {
+    if (a.value.trim()) return a.value.trim()
+    if (a.audioTranscript) return a.audioTranscript
+    if (a.audioId) return '🎙 [Nur Sprachaufnahme]'
+    if ((a.videoIds?.length ?? 0) > 0) return '🎬 [Nur Videoaufnahme]'
+    return ''
+  }
+
   // Own answers by category
   for (const cat of CATEGORIES) {
-    const catAnswers = cat.questions.filter(q => answers[q.id]?.value.trim())
+    const catAnswers = cat.questions.filter(q => hasExportableContent(answers[q.id]))
     if (catAnswers.length === 0) continue
 
     lines.push('')
@@ -114,12 +134,16 @@ export function exportAsMarkdown(data: ExportData): string {
     lines.push('')
 
     for (const q of catAnswers) {
+      const a = answers[q.id]
       lines.push(`**${q.text}**`)
-      lines.push(answers[q.id].value.trim())
+      lines.push(renderAnswerText(a))
+      if (a.audioTranscript && a.audioTranscript !== a.value.trim()) {
+        lines.push(`> 🎙 *Transkription:* ${a.audioTranscript}`)
+      }
       const mediaTags: string[] = []
-      if ((answers[q.id].imageIds?.length ?? 0) > 0) mediaTags.push(`🖼 ${answers[q.id].imageIds!.length} Foto${answers[q.id].imageIds!.length !== 1 ? 's' : ''}`)
-      if ((answers[q.id].videoIds?.length ?? 0) > 0) mediaTags.push(`🎬 ${answers[q.id].videoIds!.length} Video${answers[q.id].videoIds!.length !== 1 ? 's' : ''}`)
-      if (answers[q.id].audioId) mediaTags.push('🎙 Originalton')
+      if ((a.imageIds?.length ?? 0) > 0) mediaTags.push(`🖼 ${a.imageIds!.length} Foto${a.imageIds!.length !== 1 ? 's' : ''}`)
+      if ((a.videoIds?.length ?? 0) > 0) mediaTags.push(`🎬 ${a.videoIds!.length} Video${a.videoIds!.length !== 1 ? 's' : ''}`)
+      if (a.audioId) mediaTags.push('🎙 Originalton')
       if (mediaTags.length > 0) lines.push(`_${mediaTags.join(' · ')} im Archiv_`)
       lines.push('')
     }
@@ -128,19 +152,23 @@ export function exportAsMarkdown(data: ExportData): string {
   }
 
   // Custom questions
-  const customAnswered = customQuestions.filter(q => answers[q.id]?.value.trim())
+  const customAnswered = customQuestions.filter(q => hasExportableContent(answers[q.id]))
   if (customAnswered.length > 0) {
     lines.push('')
     lines.push('## ✏️ Eigene Fragen')
     lines.push('')
 
     for (const q of customAnswered) {
+      const a = answers[q.id]
       lines.push(`**${q.text}**`)
-      lines.push(answers[q.id].value.trim())
+      lines.push(renderAnswerText(a))
+      if (a.audioTranscript && a.audioTranscript !== a.value.trim()) {
+        lines.push(`> 🎙 *Transkription:* ${a.audioTranscript}`)
+      }
       const mediaTags2: string[] = []
-      if ((answers[q.id].imageIds?.length ?? 0) > 0) mediaTags2.push(`🖼 ${answers[q.id].imageIds!.length} Foto${answers[q.id].imageIds!.length !== 1 ? 's' : ''}`)
-      if ((answers[q.id].videoIds?.length ?? 0) > 0) mediaTags2.push(`🎬 ${answers[q.id].videoIds!.length} Video${answers[q.id].videoIds!.length !== 1 ? 's' : ''}`)
-      if (answers[q.id].audioId) mediaTags2.push('🎙 Originalton')
+      if ((a.imageIds?.length ?? 0) > 0) mediaTags2.push(`🖼 ${a.imageIds!.length} Foto${a.imageIds!.length !== 1 ? 's' : ''}`)
+      if ((a.videoIds?.length ?? 0) > 0) mediaTags2.push(`🎬 ${a.videoIds!.length} Video${a.videoIds!.length !== 1 ? 's' : ''}`)
+      if (a.audioId) mediaTags2.push('🎙 Originalton')
       if (mediaTags2.length > 0) lines.push(`_${mediaTags2.join(' · ')} im Archiv_`)
       lines.push('')
     }

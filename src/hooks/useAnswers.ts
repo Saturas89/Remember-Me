@@ -56,6 +56,7 @@ export function useAnswers() {
         answers: {
           ...prev.answers,
           [questionId]: {
+            ...existing,
             id: questionId,
             questionId,
             categoryId,
@@ -125,6 +126,7 @@ export function useAnswers() {
     categoryId: string,
     audioId: string | undefined,
     audioTranscribedAt: string | undefined,
+    audioTranscript?: string,
   ) => {
     setState(prev => {
       const existing = prev.answers[questionId]
@@ -143,6 +145,7 @@ export function useAnswers() {
             updatedAt: now,
             audioId,
             audioTranscribedAt,
+            audioTranscript: audioTranscript ?? existing?.audioTranscript,
           },
         },
       }
@@ -435,12 +438,21 @@ export function useAnswers() {
     [state.answers],
   )
 
+  const getAnswerTranscript = useCallback(
+    (questionId: string): string | undefined => state.answers[questionId]?.audioTranscript,
+    [state.answers],
+  )
+
   const getCategoryProgress = useCallback(
     (categoryId: string, totalQuestions: number): number => {
       const answered = Object.values(state.answers).filter(
         a =>
           a.categoryId === categoryId &&
-          (a.value.trim() !== '' || (a.imageIds?.length ?? 0) > 0 || (a.videoIds?.length ?? 0) > 0),
+          (a.value.trim() !== '' ||
+           (a.imageIds?.length ?? 0) > 0 ||
+           (a.videoIds?.length ?? 0) > 0 ||
+           !!a.audioId ||
+           !!a.audioTranscript),
       ).length
       return totalQuestions > 0 ? Math.round((answered / totalQuestions) * 100) : 0
     },
@@ -480,6 +492,7 @@ export function useAnswers() {
     getAnswerImageIds,
     getAnswerVideoIds,
     getAnswerAudioId,
+    getAnswerTranscript,
     getCategoryProgress,
     getFriendAnswers,
   }

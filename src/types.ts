@@ -27,10 +27,12 @@ export interface Answer {
   imageIds?: string[]
   /** IDs of video recordings stored in IndexedDB ('rm-videos') */
   videoIds?: string[]
-  /** ID of the audio recording stored in IndexedDB ('rm-audio') */
+  /** ID of the audio recording stored in IndexedDB ('rm-audio') – optional, only set when user chose to save the audio file */
   audioId?: string
   /** ISO 8601 timestamp of when the audio was transcribed */
   audioTranscribedAt?: string
+  /** Text transcript of the audio recording – always stored when audio is recorded */
+  audioTranscript?: string
   createdAt: string
   updatedAt: string
   /** ISO 8601 date of the actual event (may differ from createdAt for imported entries) */

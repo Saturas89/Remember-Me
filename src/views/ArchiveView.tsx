@@ -17,7 +17,7 @@ interface Props {
   profileName: string
   onSaveAnswer: (questionId: string, categoryId: string, value: string) => void
   onSetImages: (questionId: string, categoryId: string, imageIds: string[]) => void
-  onSetAudio: (questionId: string, categoryId: string, audioId: string | undefined, audioTranscribedAt: string | undefined) => void
+  onSetAudio: (questionId: string, categoryId: string, audioId: string | undefined, audioTranscribedAt: string | undefined, audioTranscript?: string) => void
   onDeleteAnswer: (questionId: string) => void
   onDeleteEntry: (questionId: string) => void   // removes custom Q + its answer
   onBack: () => void
@@ -112,14 +112,15 @@ export function ArchiveView({
     questionId: string,
     categoryId: string,
     transcript: string,
-    blob: Blob,
+    blob: Blob | null,
+    replaceText: boolean,
   ) {
     const oldId = answers[questionId]?.audioId
     if (oldId) await removeAudio(oldId)
-    const newId = await addAudio(blob)
-    onSetAudio(questionId, categoryId, newId, new Date().toISOString())
-    if (transcript.trim() && editingId === questionId) {
-      setEditValue(prev => prev ? `${prev}\n\n${transcript}` : transcript)
+    const newId = blob ? await addAudio(blob) : undefined
+    onSetAudio(questionId, categoryId, newId, new Date().toISOString(), transcript || undefined)
+    if (transcript.trim() && editingId === questionId && replaceText) {
+      setEditValue(transcript)
     }
   }
 
@@ -144,7 +145,13 @@ export function ArchiveView({
 
   function hasContent(questionId: string) {
     const a = answers[questionId]
-    return a && (a.value.trim() !== '' || (a.imageIds?.length ?? 0) > 0)
+    return a && (
+      a.value.trim() !== '' ||
+      (a.imageIds?.length ?? 0) > 0 ||
+      (a.videoIds?.length ?? 0) > 0 ||
+      !!a.audioId ||
+      !!a.audioTranscript
+    )
   }
 
   function displayDate(answer: Answer): string {
@@ -205,8 +212,9 @@ export function ArchiveView({
         {/* Audio in edit mode */}
         <AudioRecorder
           existingAudioId={answer?.audioId}
-          onSave={(transcript, blob) =>
-            handleSaveAudio(questionId, categoryId, transcript, blob)
+          existingValue={editValue}
+          onSave={(transcript, blob, replaceText) =>
+            handleSaveAudio(questionId, categoryId, transcript, blob, replaceText)
           }
           onRemove={answer?.audioId
             ? () => handleDeleteAudio(questionId, categoryId, answer.audioId!)

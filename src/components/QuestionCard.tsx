@@ -17,7 +17,7 @@ interface Props {
   onRemoveImage: (id: string) => void
   onAddVideo: (file: File) => void
   onRemoveVideo: (id: string) => void
-  onSaveAudio: (transcript: string, blob: Blob) => Promise<void>
+  onSaveAudio: (transcript: string, blob: Blob | null) => Promise<void>
   onRemoveAudio: () => void
   onNext: () => void
   onPrev: () => void
@@ -74,14 +74,15 @@ export function QuestionCard({
               imageCache={imageCache}
               videoIds={videoIds}
               audioId={audioId}
+              currentValue={value}
               onLoadImages={onLoadImages}
               onAddImage={onAddImage}
               onRemoveImage={onRemoveImage}
               onAddVideo={onAddVideo}
               onRemoveVideo={onRemoveVideo}
-              onSaveAudio={async (transcript, blob) => {
+              onSaveAudio={async (transcript, blob, replaceText) => {
                 await onSaveAudio(transcript, blob)
-                if (transcript.trim() && !value.trim()) {
+                if (replaceText && transcript.trim()) {
                   handleChange(transcript)
                 }
               }}
