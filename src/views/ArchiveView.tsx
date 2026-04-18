@@ -1,10 +1,10 @@
-import { useState, useEffect, useRef, useMemo } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { CATEGORIES } from '../data/categories'
 import { FRIEND_QUESTIONS } from '../data/friendQuestions'
 import { ImageAttachment } from '../components/ImageAttachment'
 import { VideoAttachment } from '../components/VideoAttachment'
 import { AudioPlayer } from '../components/AudioPlayer'
-import { AudioRecorder } from '../components/AudioRecorder'
+import { MediaCapture } from '../components/MediaCapture'
 import { useImageStore } from '../hooks/useImageStore'
 import { addAudio, removeAudio } from '../hooks/useAudioStore'
 import { addVideo, removeVideo } from '../hooks/useVideoStore'
@@ -42,9 +42,6 @@ export function ArchiveView({
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editValue, setEditValue] = useState('')
   const { cache, loadImages, addImage, removeImage } = useImageStore()
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  // remember which entry the "Add photo" picker was opened for
-  const pendingTarget = useRef<{ questionId: string; categoryId: string } | null>(null)
 
   const friendQuestionsMap = useMemo(() => {
     return Object.fromEntries(FRIEND_QUESTIONS.map(q => [
@@ -75,20 +72,10 @@ export function ArchiveView({
 
   // ── Image handlers ───────────────────────────────────────
 
-  function openImagePicker(questionId: string, categoryId: string) {
-    pendingTarget.current = { questionId, categoryId }
-    fileInputRef.current?.click()
-  }
-
-  async function handlePickImage(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file || !pendingTarget.current) return
-    const { questionId, categoryId } = pendingTarget.current
+  async function handleAddImage(questionId: string, categoryId: string, file: File) {
     const id = await addImage(file)
     const current = answers[questionId]?.imageIds ?? []
     onSetImages(questionId, categoryId, [...current, id])
-    e.target.value = ''
-    pendingTarget.current = null
   }
 
   async function handleRemoveImage(questionId: string, categoryId: string, imgId: string) {
@@ -210,39 +197,21 @@ export function ArchiveView({
           onChange={e => setEditValue(e.target.value)}
           autoFocus
         />
-        {/* Images in edit mode */}
-        {(answer?.imageIds?.length ?? 0) > 0 && (
-          <ImageAttachment
-            imageIds={answer.imageIds!}
-            cache={cache}
-            onLoad={loadImages}
-            onRemove={imgId => handleRemoveImage(questionId, categoryId, imgId)}
-          />
-        )}
-        <button
-          type="button"
-          className="archive-add-image-btn no-print"
-          onClick={() => openImagePicker(questionId, categoryId)}
-        >
-          📷 Foto hinzufügen
-        </button>
-        {/* Videos in edit mode */}
-        <VideoAttachment
+        <MediaCapture
+          imageIds={answer?.imageIds ?? []}
+          imageCache={cache}
           videoIds={answer?.videoIds ?? []}
-          onAdd={file => handleAddVideo(questionId, categoryId, file)}
-          onRemove={videoId => handleRemoveVideo(questionId, categoryId, videoId)}
-        />
-        {/* Audio in edit mode */}
-        <AudioRecorder
-          existingAudioId={answer?.audioId}
-          existingValue={editValue}
-          onSave={(transcript, blob, replaceText) =>
+          audioId={answer?.audioId}
+          currentValue={editValue}
+          onLoadImages={loadImages}
+          onAddImage={file => handleAddImage(questionId, categoryId, file)}
+          onRemoveImage={imgId => handleRemoveImage(questionId, categoryId, imgId)}
+          onAddVideo={file => handleAddVideo(questionId, categoryId, file)}
+          onRemoveVideo={videoId => handleRemoveVideo(questionId, categoryId, videoId)}
+          onSaveAudio={(transcript, blob, replaceText) =>
             handleSaveAudio(questionId, categoryId, transcript, blob, replaceText)
           }
-          onRemove={answer?.audioId
-            ? () => handleDeleteAudio(questionId, categoryId, answer.audioId!)
-            : undefined
-          }
+          onRemoveAudio={() => handleDeleteAudio(questionId, categoryId, answer?.audioId!)}
         />
         <div className="archive-entry__edit-actions">
           <button
@@ -266,15 +235,6 @@ export function ArchiveView({
 
   return (
     <div className="archive-view">
-      {/* Hidden file input shared across all edit forms */}
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        style={{ display: 'none' }}
-        onChange={handlePickImage}
-      />
-
       <div className="archive-topbar">
         <button className="btn btn--ghost btn--sm no-print" onClick={onBack}>
           ← Zurück
