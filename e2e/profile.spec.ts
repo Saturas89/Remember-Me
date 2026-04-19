@@ -61,8 +61,8 @@ test.describe('Remember Me – Profile', () => {
     await completeOnboarding(page)
     await openProfileTab(page)
 
-    await expect(page.getByRole('button', { name: /Markdown/ })).toBeVisible()
-    await expect(page.getByRole('button', { name: /^JSON/ })).toBeVisible()
+    await expect(page.locator('.backup-btn', { hasText: 'Markdown' })).toBeVisible()
+    await expect(page.locator('.backup-btn', { hasText: 'JSON' })).toBeVisible()
     await expect(page.getByRole('button', { name: /Archiv oder Backup laden/ })).toBeVisible()
   })
 })

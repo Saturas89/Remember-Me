@@ -41,7 +41,7 @@ test.describe('Remember Me – Eigene Erinnerungen', () => {
     await page.getByRole('button', { name: /Hinzufügen/ }).click()
 
     await page.getByRole('button', { name: /Eintragen/ }).click()
-    await page.locator('textarea.input-textarea').fill('Die Nordseeküste')
+    await page.locator('.custom-q-item__answer-form textarea.input-textarea').fill('Die Nordseeküste')
     await page.getByRole('button', { name: 'Speichern', exact: true }).click()
 
     await expect(page.locator('.custom-q-item__answer')).toContainText('Die Nordseeküste')

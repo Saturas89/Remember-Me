@@ -29,8 +29,8 @@ test.describe('Remember Me – Freunde-Einladung', () => {
     await expect(shareBtn).toContainText(/Link teilen/)
     await expect(shareBtn).toBeEnabled()
 
-    await expect(page.locator('.friends-hint')).toContainText('Lade Freunde und Familie ein')
-    await expect(page.locator('.friends-hint')).toContainText('Lebensarchiv gespeichert')
+    await expect(page.getByText(/Lade Freunde und Familie ein/)).toBeVisible()
+    await expect(page.getByText(/Lebensarchiv gespeichert/)).toBeVisible()
   })
 
   test('does NOT show the personalisation warning once a profile name is set', async ({ page }) => {

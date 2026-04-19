@@ -55,14 +55,13 @@ test.describe('Remember Me – Features Tab', () => {
   })
 
   test('renders the detail page directly when the URL contains a feature id', async ({ page }) => {
-    await completeOnboarding(page)
+    // Profile already seeded by test.beforeEach() onboarding above
     await page.goto('/feature/privater-sync')
     await expect(page.getByRole('heading', { name: 'Privater Sync' })).toBeVisible()
     await expect(page.getByRole('button', { name: /Zurück/ })).toBeVisible()
   })
 
   test('falls back to the banner list for unknown feature slugs', async ({ page }) => {
-    await completeOnboarding(page)
     await page.goto('/feature/does-not-exist')
     await expect(page.locator('.feature-img-btn')).toHaveCount(5)
   })
