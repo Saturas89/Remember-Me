@@ -86,7 +86,28 @@ const SECTIONS: Section[] = [
   },
 ]
 
+import { useEffect } from 'react'
+
 export function FaqView({ onBack }: Props) {
+  useEffect(() => {
+    const script = document.createElement('script')
+    script.type = 'application/ld+json'
+    script.id = 'faq-ld-schema'
+    script.textContent = JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: SECTIONS.flatMap(s =>
+        s.items.map(item => ({
+          '@type': 'Question',
+          name: item.q,
+          acceptedAnswer: { '@type': 'Answer', text: item.a },
+        }))
+      ),
+    })
+    document.head.appendChild(script)
+    return () => { document.getElementById('faq-ld-schema')?.remove() }
+  }, [])
+
   return (
     <div className="faq-view">
       <div className="faq-topbar">

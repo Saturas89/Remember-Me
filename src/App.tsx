@@ -24,6 +24,7 @@ import { FaqView } from './views/FaqView'
 import { OnboardingView } from './views/OnboardingView'
 import { SharedMemoryView } from './views/SharedMemoryView'
 import { FeatureView } from './views/FeatureView'
+import { SEOHead } from './components/SEOHead'
 import { InstallBanner } from './components/InstallBanner'
 import { UpdateBanner } from './components/UpdateBanner'
 import { ReminderBanner } from './components/ReminderBanner'
@@ -225,6 +226,7 @@ export default function App() {
   if (!profile) {
     return (
       <>
+        <SEOHead viewName="home" />
         <OnboardingView onComplete={saveProfile} onImportBackup={restoreBackup} />
         {installVisible && <InstallBanner state={installState} onInstall={triggerInstall} onDismiss={dismissInstall} />}
         {needRefresh && <UpdateBanner onUpdate={applyUpdate} onDismiss={dismissUpdate} />}
@@ -275,6 +277,7 @@ export default function App() {
     if (!category) return null
     return (
       <>
+        <SEOHead viewName="home" />
         <QuizView
           category={category}
           getAnswer={getAnswer}
@@ -299,6 +302,7 @@ export default function App() {
 
   return (
     <>
+      <SEOHead viewName={view.name} />
       {view.name === 'archive' && (
         <ArchiveView
 

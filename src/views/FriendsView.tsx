@@ -98,6 +98,7 @@ export function FriendsView({
 
   return (
     <div className="friends-view">
+      <h1 className="sr-only">Freunde einladen</h1>
       <div className="quiz-topbar">
         <button className="btn btn--ghost btn--sm" onClick={onBack}>
           ← Zurück

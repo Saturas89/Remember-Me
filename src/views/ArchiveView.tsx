@@ -235,6 +235,7 @@ export function ArchiveView({
 
   return (
     <div className="archive-view">
+      <h1 className="sr-only">Lebensarchiv</h1>
       <div className="archive-topbar">
         <button className="btn btn--ghost btn--sm no-print" onClick={onBack}>
           ← Zurück
