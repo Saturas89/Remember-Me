@@ -1,15 +1,19 @@
-import { test, expect } from '@playwright/test'
+import { test, expect, type Page } from '@playwright/test'
 
-// Suppress the PWA install modal (iOS/Android) by pre-setting the dismiss
-// flag the app itself checks. Without this, mobile-safari/mobile-chrome
-// render an aria-modal dialog that intercepts pointer events and blocks
-// the "Loslegen" button. Setting this single key leaves profile state
-// untouched, so the persistence test across reloads still works.
+// Suppress the PWA install modal so the onboarding "Loslegen" button isn't
+// covered by an aria-modal overlay on mobile-safari / mobile-chrome.
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
     localStorage.setItem('rm-install-dismissed', '1')
   })
 })
+
+async function completeOnboarding(page: Page, name: string) {
+  await page.goto('/')
+  await page.getByLabel('Wie heißt du?').fill(name)
+  await page.getByRole('button', { name: /Loslegen/ }).click()
+  await expect(page.getByText(new RegExp(`Hallo,\\s*${name}`))).toBeVisible()
+}
 
 test.describe('Remember Me – Onboarding & Home', () => {
   test('fresh visitor sees onboarding and can create a profile', async ({ page }) => {
@@ -33,9 +37,7 @@ test.describe('Remember Me – Onboarding & Home', () => {
   })
 
   test('all six built-in categories render on Home', async ({ page }) => {
-    await page.goto('/')
-    await page.getByLabel('Wie heißt du?').fill('Testuser')
-    await page.getByRole('button', { name: /Loslegen/ }).click()
+    await completeOnboarding(page, 'Testuser')
 
     for (const title of [
       'Kindheit & Jugend',
@@ -50,10 +52,7 @@ test.describe('Remember Me – Onboarding & Home', () => {
   })
 
   test('profile is persisted to localStorage across reloads', async ({ page }) => {
-    await page.goto('/')
-    await page.getByLabel('Wie heißt du?').fill('Persistence')
-    await page.getByRole('button', { name: /Loslegen/ }).click()
-    await expect(page.getByText(/Hallo,\s*Persistence/)).toBeVisible()
+    await completeOnboarding(page, 'Persistence')
 
     await page.reload()
 
@@ -64,14 +63,11 @@ test.describe('Remember Me – Onboarding & Home', () => {
 
 test.describe('Remember Me – Bottom navigation', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/')
-    await page.getByLabel('Wie heißt du?').fill('Navigator')
-    await page.getByRole('button', { name: /Loslegen/ }).click()
-    await expect(page.getByText(/Hallo,\s*Navigator/)).toBeVisible()
+    await completeOnboarding(page, 'Navigator')
   })
 
-  // Scope nav queries to the <nav aria-label="Hauptnavigation"> so labels like
-  // "Vermächtnis" don't collide with category-card buttons ("Wünsche & Vermächtnis").
+  // Scope to the <nav aria-label="Hauptnavigation"> so labels like "Vermächtnis"
+  // don't collide with the "Wünsche & Vermächtnis" category card.
   for (const label of ['Freunde', 'Vermächtnis', 'Features', 'Profil', 'Lebensweg']) {
     test(`bottom nav opens "${label}" tab`, async ({ page }) => {
       const nav = page.getByRole('navigation', { name: 'Hauptnavigation' })
@@ -84,9 +80,7 @@ test.describe('Remember Me – Bottom navigation', () => {
 
 test.describe('Remember Me – Eigene Erinnerung (custom questions)', () => {
   test('user can add a custom question and see it listed', async ({ page }) => {
-    await page.goto('/')
-    await page.getByLabel('Wie heißt du?').fill('Custom')
-    await page.getByRole('button', { name: /Loslegen/ }).click()
+    await completeOnboarding(page, 'Custom')
 
     await page.getByRole('heading', { name: 'Eigene Erinnerung' }).click()
 
