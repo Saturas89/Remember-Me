@@ -1,8 +1,15 @@
 import { test, expect } from '@playwright/test'
 
-// Each Playwright test already runs in a fresh browser context, so localStorage
-// starts empty. No manual reset needed (an addInitScript here would also fire
-// on reload and break the persistence test below).
+// Suppress the PWA install modal (iOS/Android) by pre-setting the dismiss
+// flag the app itself checks. Without this, mobile-safari/mobile-chrome
+// render an aria-modal dialog that intercepts pointer events and blocks
+// the "Loslegen" button. Setting this single key leaves profile state
+// untouched, so the persistence test across reloads still works.
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem('rm-install-dismissed', '1')
+  })
+})
 
 test.describe('Remember Me – Onboarding & Home', () => {
   test('fresh visitor sees onboarding and can create a profile', async ({ page }) => {
