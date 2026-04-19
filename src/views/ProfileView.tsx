@@ -153,6 +153,7 @@ export function ProfileView({
 
   return (
     <div className="profile-view">
+      <h1 className="sr-only">Profil & Einstellungen</h1>
 
       {/* Topbar */}
       <div className="profile-topbar">

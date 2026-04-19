@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import { useAudioRecorder } from '../hooks/useAudioRecorder'
 import { ImageAttachment } from './ImageAttachment'
 import { VideoAttachment } from './VideoAttachment'
@@ -18,17 +18,19 @@ interface Props {
   imageCache: Record<string, string>
   videoIds: string[]
   audioId?: string
+  currentValue?: string
   onLoadImages: (ids: string[]) => void
   onAddImage: (file: File) => void
   onRemoveImage: (id: string) => void
   onAddVideo: (file: File) => void
   onRemoveVideo: (id: string) => void
-  onSaveAudio: (transcript: string, blob: Blob) => Promise<void>
+  onSaveAudio: (transcript: string, blob: Blob | null, replaceText: boolean) => Promise<void>
   onRemoveAudio: () => void
 }
 
 export function MediaCapture({
   imageIds, imageCache, videoIds, audioId,
+  currentValue,
   onLoadImages, onAddImage, onRemoveImage,
   onAddVideo, onRemoveVideo,
   onSaveAudio, onRemoveAudio,
@@ -37,13 +39,20 @@ export function MediaCapture({
   const videoTrigger = useRef<HTMLInputElement>(null)
   const rec = useAudioRecorder()
   const savingRef = useRef(false)
+  const [saveAudioFile, setSaveAudioFile] = useState(false)
+  const [textChoice, setTextChoice] = useState<'new' | 'keep'>('new')
+
+  const hasTextConflict = !!(currentValue?.trim()) && !!rec.transcript.trim()
+    && currentValue!.trim() !== rec.transcript.trim()
 
   async function handleAudioConfirm() {
     if (!rec.previewBlob || savingRef.current) return
     savingRef.current = true
     try {
-      await onSaveAudio(rec.transcript, rec.previewBlob)
+      const replaceText = !hasTextConflict || textChoice === 'new'
+      await onSaveAudio(rec.transcript, saveAudioFile ? rec.previewBlob : null, replaceText)
       rec.reset()
+      setTextChoice('new')
     } finally {
       savingRef.current = false
     }
@@ -135,6 +144,37 @@ export function MediaCapture({
               💡 Keine automatische Transkription verfügbar – du kannst den Text oben manuell eintippen.
             </p>
           )}
+          {hasTextConflict && (
+            <div className="audio-text-choice">
+              <p className="audio-text-choice__label">Welchen Text übernehmen?</p>
+              <div className="audio-text-choice__options">
+                <button
+                  type="button"
+                  className={`audio-text-choice__btn${textChoice === 'new' ? ' audio-text-choice__btn--selected' : ''}`}
+                  onClick={() => setTextChoice('new')}
+                >
+                  <span>🆕 Neue Transkription</span>
+                  <span className="audio-text-choice__preview">{rec.transcript.length > 60 ? `${rec.transcript.substring(0, 60)}…` : rec.transcript}</span>
+                </button>
+                <button
+                  type="button"
+                  className={`audio-text-choice__btn${textChoice === 'keep' ? ' audio-text-choice__btn--selected' : ''}`}
+                  onClick={() => setTextChoice('keep')}
+                >
+                  <span>💾 Bisherigen Text behalten</span>
+                  <span className="audio-text-choice__preview">{currentValue!.length > 60 ? `${currentValue!.substring(0, 60)}…` : currentValue}</span>
+                </button>
+              </div>
+            </div>
+          )}
+          <label className="audio-rec-save-toggle">
+            <input
+              type="checkbox"
+              checked={saveAudioFile}
+              onChange={e => setSaveAudioFile(e.target.checked)}
+            />
+            <span>🗂 Aufnahme als Audio-Datei speichern</span>
+          </label>
           <div className="audio-rec-actions">
             <button type="button" className="btn btn--primary btn--sm" onClick={handleAudioConfirm}>
               ✓ Übernehmen

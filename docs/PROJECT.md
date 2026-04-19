@@ -69,7 +69,7 @@ Teilen / Exportieren (PDF, Freunde einladen, KI-Export)
 - [x] Export & Backup-Funktion im Profil (Markdown, JSON, Backup + Wiederherstellung) – v1.5.6
 - [x] PWA Update-Benachrichtigung (Service Worker Prompt, Banner) – v1.5.8
 - [x] Freunde-Einladung: Share-Link-Flow (Web Share API, automatischer Import) – v1.5.9
-- [x] **Audio-Aufnahme & Transkription** – Fragen einsprechen statt tippen; Originalton in IndexedDB gespeichert, automatische Transkription via Web Speech API (lokal, kein Cloud-Upload); Archiv zeigt Audio-Player neben dem Text (REQ-009)
+- [x] **Audio-Aufnahme & Transkription** – Fragen einsprechen statt tippen; automatische Transkription via Web Speech API (lokal, kein Cloud-Upload) wird **immer** als `audioTranscript` gespeichert; Originalton-Datei speicherbar als **optionaler** Schritt (Checkbox im Vorschau-Screen); Archiv zeigt Audio-Player wenn Datei gespeichert (REQ-009)
 - [x] **Video-Anhänge** – Videos zu Antworten hinzufügen; IndexedDB-Speicher (`rm-videos`), Inline-Wiedergabe, ZIP-Export-Integration (REQ-012)
 - [x] **Hilfe & FAQ** – Datenschutz, Import, Export, Offline-Nutzung erklärt; eigene FAQ-Ansicht (REQ-010)
 - [x] **Erinnerungs-Archiv ZIP-Export** – Komplettarchiv als ZIP inkl. Fotos, Audio & Video; Share Sheet Integration (REQ-011)
@@ -119,8 +119,8 @@ Teilen / Exportieren (PDF, Freunde einladen, KI-Export)
 AppState (localStorage: 'remember-me-state')
 ├── profile: { name, birthYear?, createdAt }
 ├── answers: Record<questionId, Answer>
-│   └── Answer: { id, questionId, categoryId, value, imageIds?, audioIds?, videoIds?,
-│                  eventDate?, approxAge?, importSource?, createdAt, updatedAt }
+│   └── Answer: { id, questionId, categoryId, value, imageIds?, audioId?, audioTranscribedAt?,
+│                  audioTranscript?, videoIds?, eventDate?, approxAge?, importSource?, createdAt, updatedAt }
 ├── friends: Friend[]
 │   └── Friend: { id, name, addedAt }
 ├── friendAnswers: FriendAnswer[]
@@ -160,7 +160,7 @@ Update-Banner: `src/components/UpdateBanner.tsx` – Toast bei verfügbarem SW-U
 | FriendTopic | Thema für Freundes-Einladung (id, title, emoji, description, 5 questions) |
 | E2EE | Ende-zu-Ende-Verschlüsselung (geplant für Privater Sync) |
 | KI-Export | Archiv in KI-lesbarem Format (Markdown/JSON) – ✔️ umgesetzt |
-| Audio-Aufnahme | Fragen einsprechen statt tippen; Originalton + automatische Transkription – ✔️ umgesetzt |
+| Audio-Aufnahme | Fragen einsprechen statt tippen; Transkript immer gespeichert, Originalton-Datei optional – ✔️ umgesetzt |
 | Video-Anhänge | Videos zu Antworten hinzufügen; IndexedDB-basiert – ✔️ umgesetzt |
 | Erinnerungs-Archiv | ZIP-Export & -Import inkl. Fotos, Audio, Video – ✔️ umgesetzt |
 | approxAge | Ungefähres Lebensalter zum Zeitpunkt eines Erlebnisses, für die Zeitlinie |

@@ -10,23 +10,103 @@ const invite: InviteData = {
   topicId: 'friendship', // pre-select topic to skip the picker step
 }
 
+/** Enters a name and advances to the quiz step. */
+function reachQuizScreen(container: HTMLElement, name = 'Klaus') {
+  const nameInput = container.querySelector<HTMLInputElement>('.input-text')!
+  fireEvent.change(nameInput, { target: { value: name } })
+  fireEvent.click(container.querySelector<HTMLButtonElement>('.btn--primary')!)
+}
+
 /** Drives the view from 'welcome' all the way to the done screen. */
 function reachDoneScreen(container: HTMLElement) {
-  // Welcome: enter name and proceed
-  const nameInput = container.querySelector<HTMLInputElement>('.input-text')!
-  fireEvent.change(nameInput, { target: { value: 'Klaus' } })
-  const weiterBtn = container.querySelector<HTMLButtonElement>('.btn--primary')!
-  fireEvent.click(weiterBtn)
-
-  // Quiz: click through every question without answering
-  // The "Weiter →" / "Fertig ✓" button advances unconditionally.
+  reachQuizScreen(container)
   let nextBtn: HTMLButtonElement | null
   while ((nextBtn = container.querySelector<HTMLButtonElement>('.btn--primary'))) {
     fireEvent.click(nextBtn)
-    // Stop once we reach the done screen (export-done present, no btn--primary in quiz)
     if (container.querySelector('.export-done')) break
   }
 }
+
+// ── Welcome-Screen ────────────────────────────────────────────────────────────
+
+describe('FriendAnswerView – Welcome-Screen', () => {
+  it('zeigt den Namen des Einladers', () => {
+    const { container } = render(<FriendAnswerView invite={invite} />)
+    expect(container.textContent).toContain('Anna')
+  })
+
+  it('der Weiter-Button ist deaktiviert wenn kein Name eingegeben', () => {
+    const { container } = render(<FriendAnswerView invite={invite} />)
+    const btn = container.querySelector<HTMLButtonElement>('.btn--primary')
+    expect(btn?.disabled).toBe(true)
+  })
+
+  it('der Weiter-Button wird aktiv wenn ein Name eingegeben wird', () => {
+    const { container } = render(<FriendAnswerView invite={invite} />)
+    const input = container.querySelector<HTMLInputElement>('.input-text')!
+    fireEvent.change(input, { target: { value: 'Klaus' } })
+    const btn = container.querySelector<HTMLButtonElement>('.btn--primary')
+    expect(btn?.disabled).toBe(false)
+  })
+})
+
+// ── Quiz-Screen ───────────────────────────────────────────────────────────────
+
+describe('FriendAnswerView – Quiz-Screen', () => {
+  it('zeigt die erste Frage nach dem Welcome-Screen', () => {
+    const { container } = render(<FriendAnswerView invite={invite} />)
+    reachQuizScreen(container)
+    expect(container.querySelector('.question-card')).toBeTruthy()
+  })
+
+  it('zeigt das Texteingabefeld für die erste Frage', () => {
+    const { container } = render(<FriendAnswerView invite={invite} />)
+    reachQuizScreen(container)
+    expect(container.querySelector('textarea.input-textarea')).toBeTruthy()
+  })
+
+  it('zeigt die Media-Toolbar mit Audio-Aufnahme-Button', () => {
+    const { container } = render(<FriendAnswerView invite={invite} />)
+    reachQuizScreen(container)
+    // MediaCapture renders the unified media toolbar
+    expect(container.querySelector('.media-toolbar')).toBeTruthy()
+    const audioBtn = container.querySelector<HTMLButtonElement>('[aria-label*="Sprachaufnahme"]')
+    expect(audioBtn).toBeTruthy()
+  })
+
+  it('zeigt Foto- und Video-Buttons in der Media-Toolbar', () => {
+    const { container } = render(<FriendAnswerView invite={invite} />)
+    reachQuizScreen(container)
+    const photoBtn = container.querySelector<HTMLButtonElement>('[aria-label*="Foto"]')
+    const videoBtn = container.querySelector<HTMLButtonElement>('[aria-label*="Video"]')
+    expect(photoBtn).toBeTruthy()
+    expect(videoBtn).toBeTruthy()
+  })
+
+  it('eingegebener Text bleibt erhalten beim Navigieren zurück und weiter', () => {
+    const { container } = render(<FriendAnswerView invite={invite} />)
+    reachQuizScreen(container)
+
+    const textarea = container.querySelector<HTMLTextAreaElement>('textarea.input-textarea')!
+    fireEvent.change(textarea, { target: { value: 'Ich kenne Anna seit Jahren' } })
+
+    // Go to next question
+    fireEvent.click(container.querySelector<HTMLButtonElement>('.btn--primary')!)
+    // Go back
+    fireEvent.click(container.querySelector<HTMLButtonElement>('.btn--ghost')!)
+
+    const restored = container.querySelector<HTMLTextAreaElement>('textarea.input-textarea')!
+    expect(restored.value).toBe('Ich kenne Anna seit Jahren')
+  })
+
+  it('zeigt einen Fortschrittsbalken', () => {
+    const { container } = render(<FriendAnswerView invite={invite} />)
+    reachQuizScreen(container)
+    expect(container.querySelector('.progress-bar-wrap')).toBeTruthy()
+  })
+})
+
+// ── Fertig-Screen ─────────────────────────────────────────────────────────────
 
 describe('FriendAnswerView – Fertig-Screen CTA', () => {
   it('zeigt den Link auf rememberme.dad', () => {
@@ -74,25 +154,10 @@ describe('FriendAnswerView – Fertig-Screen CTA', () => {
     expect(link?.target).toBe('_blank')
     expect(link?.rel).toContain('noopener')
   })
-})
 
-describe('FriendAnswerView – Welcome-Screen', () => {
-  it('zeigt den Namen des Einladers', () => {
+  it('zeigt den Teilen-Button nach dem Fertigstellen', () => {
     const { container } = render(<FriendAnswerView invite={invite} />)
-    expect(container.textContent).toContain('Anna')
-  })
-
-  it('der Weiter-Button ist deaktiviert wenn kein Name eingegeben', () => {
-    const { container } = render(<FriendAnswerView invite={invite} />)
-    const btn = container.querySelector<HTMLButtonElement>('.btn--primary')
-    expect(btn?.disabled).toBe(true)
-  })
-
-  it('der Weiter-Button wird aktiv wenn ein Name eingegeben wird', () => {
-    const { container } = render(<FriendAnswerView invite={invite} />)
-    const input = container.querySelector<HTMLInputElement>('.input-text')!
-    fireEvent.change(input, { target: { value: 'Klaus' } })
-    const btn = container.querySelector<HTMLButtonElement>('.btn--primary')
-    expect(btn?.disabled).toBe(false)
+    reachDoneScreen(container)
+    expect(container.querySelector('.share-cta-btn')).toBeTruthy()
   })
 })

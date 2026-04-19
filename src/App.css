@@ -2610,6 +2610,66 @@
   line-height: 1.5;
 }
 
+.audio-rec-save-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  margin: 0.2rem 0 0.4rem;
+  user-select: none;
+}
+.audio-rec-save-toggle input[type="checkbox"] {
+  accent-color: var(--accent);
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.audio-text-choice {
+  margin: 0.6rem 0;
+}
+.audio-text-choice__label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin: 0 0 0.4rem;
+}
+.audio-text-choice__options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.audio-text-choice__btn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.15rem;
+  padding: 0.5rem 0.7rem;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.82rem;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s, background 0.15s;
+}
+.audio-text-choice__btn:hover {
+  border-color: var(--accent);
+}
+.audio-text-choice__btn--selected {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface));
+}
+.audio-text-choice__preview {
+  color: var(--text-muted);
+  font-size: 0.76rem;
+  font-style: italic;
+}
+
 .audio-rec-error {
   font-size: 0.82rem;
   color: #ef4444;

@@ -11,7 +11,7 @@ export function CategoryCard({ category, progress, onClick }: Props) {
   const done = progress === 100
   return (
     <button className={`category-card ${done ? 'category-card--done' : ''}`} onClick={onClick}>
-      <img src={`/categories/${category.id}-preview.svg`} className="category-card__image" alt="" />
+      <img src={`/categories/${category.id}-preview.svg`} className="category-card__image" alt={`${category.title} – Kategorie-Vorschaubild`} />
       <div className="category-card__body">
         <h3 className="category-card__title">{category.title}</h3>
         <p className="category-card__desc">{category.description}</p>

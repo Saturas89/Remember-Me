@@ -1,12 +1,13 @@
-import { useState, useEffect, useRef, useMemo } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { CATEGORIES } from '../data/categories'
 import { FRIEND_QUESTIONS } from '../data/friendQuestions'
 import { ImageAttachment } from '../components/ImageAttachment'
 import { VideoAttachment } from '../components/VideoAttachment'
 import { AudioPlayer } from '../components/AudioPlayer'
-import { AudioRecorder } from '../components/AudioRecorder'
+import { MediaCapture } from '../components/MediaCapture'
 import { useImageStore } from '../hooks/useImageStore'
 import { addAudio, removeAudio } from '../hooks/useAudioStore'
+import { addVideo, removeVideo } from '../hooks/useVideoStore'
 import type { Answer, FriendAnswer, Friend, CustomQuestion } from '../types'
 
 interface Props {
@@ -17,7 +18,8 @@ interface Props {
   profileName: string
   onSaveAnswer: (questionId: string, categoryId: string, value: string) => void
   onSetImages: (questionId: string, categoryId: string, imageIds: string[]) => void
-  onSetAudio: (questionId: string, categoryId: string, audioId: string | undefined, audioTranscribedAt: string | undefined) => void
+  onSetVideos: (questionId: string, categoryId: string, videoIds: string[]) => void
+  onSetAudio: (questionId: string, categoryId: string, audioId: string | undefined, audioTranscribedAt: string | undefined, audioTranscript?: string) => void
   onDeleteAnswer: (questionId: string) => void
   onDeleteEntry: (questionId: string) => void   // removes custom Q + its answer
   onBack: () => void
@@ -31,6 +33,7 @@ export function ArchiveView({
   profileName,
   onSaveAnswer,
   onSetImages,
+  onSetVideos,
   onSetAudio,
   onDeleteAnswer,
   onDeleteEntry,
@@ -39,9 +42,6 @@ export function ArchiveView({
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editValue, setEditValue] = useState('')
   const { cache, loadImages, addImage, removeImage } = useImageStore()
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  // remember which entry the "Add photo" picker was opened for
-  const pendingTarget = useRef<{ questionId: string; categoryId: string } | null>(null)
 
   const friendQuestionsMap = useMemo(() => {
     return Object.fromEntries(FRIEND_QUESTIONS.map(q => [
@@ -72,26 +72,30 @@ export function ArchiveView({
 
   // ── Image handlers ───────────────────────────────────────
 
-  function openImagePicker(questionId: string, categoryId: string) {
-    pendingTarget.current = { questionId, categoryId }
-    fileInputRef.current?.click()
-  }
-
-  async function handlePickImage(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file || !pendingTarget.current) return
-    const { questionId, categoryId } = pendingTarget.current
+  async function handleAddImage(questionId: string, categoryId: string, file: File) {
     const id = await addImage(file)
     const current = answers[questionId]?.imageIds ?? []
     onSetImages(questionId, categoryId, [...current, id])
-    e.target.value = ''
-    pendingTarget.current = null
   }
 
   async function handleRemoveImage(questionId: string, categoryId: string, imgId: string) {
     await removeImage(imgId)
     const next = (answers[questionId]?.imageIds ?? []).filter(i => i !== imgId)
     onSetImages(questionId, categoryId, next)
+  }
+
+  // ── Video handlers ───────────────────────────────────────
+
+  async function handleAddVideo(questionId: string, categoryId: string, file: File) {
+    const id = await addVideo(file)
+    const current = answers[questionId]?.videoIds ?? []
+    onSetVideos(questionId, categoryId, [...current, id])
+  }
+
+  async function handleRemoveVideo(questionId: string, categoryId: string, videoId: string) {
+    await removeVideo(videoId)
+    const next = (answers[questionId]?.videoIds ?? []).filter(v => v !== videoId)
+    onSetVideos(questionId, categoryId, next)
   }
 
   // ── Edit handlers ────────────────────────────────────────
@@ -112,14 +116,15 @@ export function ArchiveView({
     questionId: string,
     categoryId: string,
     transcript: string,
-    blob: Blob,
+    blob: Blob | null,
+    replaceText: boolean,
   ) {
     const oldId = answers[questionId]?.audioId
     if (oldId) await removeAudio(oldId)
-    const newId = await addAudio(blob)
-    onSetAudio(questionId, categoryId, newId, new Date().toISOString())
-    if (transcript.trim() && editingId === questionId) {
-      setEditValue(prev => prev ? `${prev}\n\n${transcript}` : transcript)
+    const newId = blob ? await addAudio(blob) : undefined
+    onSetAudio(questionId, categoryId, newId, new Date().toISOString(), transcript || undefined)
+    if (transcript.trim() && editingId === questionId && replaceText) {
+      setEditValue(transcript)
     }
   }
 
@@ -144,7 +149,13 @@ export function ArchiveView({
 
   function hasContent(questionId: string) {
     const a = answers[questionId]
-    return a && (a.value.trim() !== '' || (a.imageIds?.length ?? 0) > 0)
+    return a && (
+      a.value.trim() !== '' ||
+      (a.imageIds?.length ?? 0) > 0 ||
+      (a.videoIds?.length ?? 0) > 0 ||
+      !!a.audioId ||
+      !!a.audioTranscript
+    )
   }
 
   function displayDate(answer: Answer): string {
@@ -186,32 +197,21 @@ export function ArchiveView({
           onChange={e => setEditValue(e.target.value)}
           autoFocus
         />
-        {/* Images in edit mode */}
-        {(answer?.imageIds?.length ?? 0) > 0 && (
-          <ImageAttachment
-            imageIds={answer.imageIds!}
-            cache={cache}
-            onLoad={loadImages}
-            onRemove={imgId => handleRemoveImage(questionId, categoryId, imgId)}
-          />
-        )}
-        <button
-          type="button"
-          className="archive-add-image-btn no-print"
-          onClick={() => openImagePicker(questionId, categoryId)}
-        >
-          📷 Foto hinzufügen
-        </button>
-        {/* Audio in edit mode */}
-        <AudioRecorder
-          existingAudioId={answer?.audioId}
-          onSave={(transcript, blob) =>
-            handleSaveAudio(questionId, categoryId, transcript, blob)
+        <MediaCapture
+          imageIds={answer?.imageIds ?? []}
+          imageCache={cache}
+          videoIds={answer?.videoIds ?? []}
+          audioId={answer?.audioId}
+          currentValue={editValue}
+          onLoadImages={loadImages}
+          onAddImage={file => handleAddImage(questionId, categoryId, file)}
+          onRemoveImage={imgId => handleRemoveImage(questionId, categoryId, imgId)}
+          onAddVideo={file => handleAddVideo(questionId, categoryId, file)}
+          onRemoveVideo={videoId => handleRemoveVideo(questionId, categoryId, videoId)}
+          onSaveAudio={(transcript, blob, replaceText) =>
+            handleSaveAudio(questionId, categoryId, transcript, blob, replaceText)
           }
-          onRemove={answer?.audioId
-            ? () => handleDeleteAudio(questionId, categoryId, answer.audioId!)
-            : undefined
-          }
+          onRemoveAudio={() => handleDeleteAudio(questionId, categoryId, answer?.audioId!)}
         />
         <div className="archive-entry__edit-actions">
           <button
@@ -235,15 +235,7 @@ export function ArchiveView({
 
   return (
     <div className="archive-view">
-      {/* Hidden file input shared across all edit forms */}
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        style={{ display: 'none' }}
-        onChange={handlePickImage}
-      />
-
+      <h1 className="sr-only">Lebensarchiv</h1>
       <div className="archive-topbar">
         <button className="btn btn--ghost btn--sm no-print" onClick={onBack}>
           ← Zurück
