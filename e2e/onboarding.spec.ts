@@ -1,11 +1,8 @@
 import { test, expect } from '@playwright/test'
 
-test.beforeEach(async ({ page }) => {
-  await page.addInitScript(() => {
-    localStorage.clear()
-    sessionStorage.clear()
-  })
-})
+// Each Playwright test already runs in a fresh browser context, so localStorage
+// starts empty. No manual reset needed (an addInitScript here would also fire
+// on reload and break the persistence test below).
 
 test.describe('Remember Me – Onboarding & Home', () => {
   test('fresh visitor sees onboarding and can create a profile', async ({ page }) => {
@@ -66,12 +63,14 @@ test.describe('Remember Me – Bottom navigation', () => {
     await expect(page.getByText(/Hallo,\s*Navigator/)).toBeVisible()
   })
 
+  // Scope nav queries to the <nav aria-label="Hauptnavigation"> so labels like
+  // "Vermächtnis" don't collide with category-card buttons ("Wünsche & Vermächtnis").
   for (const label of ['Freunde', 'Vermächtnis', 'Features', 'Profil', 'Lebensweg']) {
     test(`bottom nav opens "${label}" tab`, async ({ page }) => {
-      await page.getByRole('button', { name: label }).click()
-      // The tab we just clicked should be the active one
-      const tabButton = page.getByRole('button', { name: label })
-      await expect(tabButton).toHaveAttribute('aria-current', /page|true/)
+      const nav = page.getByRole('navigation', { name: 'Hauptnavigation' })
+      const tab = nav.getByRole('button', { name: label, exact: true })
+      await tab.click()
+      await expect(tab).toHaveAttribute('aria-current', 'page')
     })
   }
 })
