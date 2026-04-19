@@ -1,0 +1,69 @@
+name: E2E (Playwright)
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: e2e-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  e2e:
+    name: ${{ matrix.project }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        # On PRs: test all five browser projects.
+        # On pushes to main: only chromium (cheap smoke on the merged commit).
+        project: ${{ github.event_name == 'pull_request' && fromJSON('["chromium","firefox","webkit","mobile-chrome","mobile-safari"]') || fromJSON('["chromium"]') }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Resolve browser engine for project
+        id: engine
+        run: |
+          case "${{ matrix.project }}" in
+            mobile-chrome) echo "name=chromium" >> "$GITHUB_OUTPUT" ;;
+            mobile-safari) echo "name=webkit"   >> "$GITHUB_OUTPUT" ;;
+            *)             echo "name=${{ matrix.project }}" >> "$GITHUB_OUTPUT" ;;
+          esac
+
+      - name: Resolve Playwright version
+        id: pw
+        run: echo "version=$(node -p "require('@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Playwright browsers
+        id: pw-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.pw.outputs.version }}-${{ steps.engine.outputs.name }}
+
+      - name: Install Playwright browser (cached)
+        if: steps.pw-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps ${{ steps.engine.outputs.name }}
+
+      - name: Install Playwright browser (fresh)
+        if: steps.pw-cache.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps ${{ steps.engine.outputs.name }}
+
+      - name: Run E2E tests
+        run: npx playwright test --project=${{ matrix.project }}
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report-${{ matrix.project }}
+          path: playwright-report/
+          retention-days: 14
