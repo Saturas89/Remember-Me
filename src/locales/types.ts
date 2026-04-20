@@ -175,6 +175,13 @@ export interface Translations {
     dismiss: string
   }
 
+  releaseNotes: {
+    title: string
+    close: string
+    viewNotes: string
+    versionPrefix: string
+  }
+
   reminder: {
     title: string
     desc: string

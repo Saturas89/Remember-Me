@@ -27,6 +27,7 @@ import { FeatureView } from './views/FeatureView'
 import { SEOHead } from './components/SEOHead'
 import { InstallBanner } from './components/InstallBanner'
 import { UpdateBanner } from './components/UpdateBanner'
+import { ReleaseNotesModal } from './components/ReleaseNotesModal'
 import { ReminderBanner } from './components/ReminderBanner'
 import { BottomNav } from './components/BottomNav'
 import { useServiceWorker } from './hooks/useServiceWorker'
@@ -199,6 +200,7 @@ export default function App() {
   const [view, setView] = useState<View>(() =>
     needsAsyncParse ? { name: 'home' } : pathToView(window.location.pathname)
   )
+  const [showReleaseNotes, setShowReleaseNotes] = useState(false)
   const { state: installState, visible: installVisible, triggerInstall, dismiss: dismissInstall } = useInstallPrompt()
   const { needRefresh, applyUpdate, dismiss: dismissUpdate } = useServiceWorker()
   const { showPrompt: showReminderPrompt, requestPermission: enableReminder, dismissPrompt: dismissReminder } = useReminder()
@@ -229,7 +231,7 @@ export default function App() {
         <SEOHead viewName="home" />
         <OnboardingView onComplete={saveProfile} onImportBackup={restoreBackup} />
         {installVisible && <InstallBanner state={installState} onInstall={triggerInstall} onDismiss={dismissInstall} />}
-        {needRefresh && <UpdateBanner onUpdate={applyUpdate} onDismiss={dismissUpdate} />}
+        {needRefresh && <UpdateBanner onUpdate={applyUpdate} onDismiss={dismissUpdate} onViewNotes={() => setShowReleaseNotes(true)} />}
       </>
     )
   }
@@ -295,7 +297,7 @@ export default function App() {
           }
         />
         {installVisible && <InstallBanner state={installState} onInstall={triggerInstall} onDismiss={dismissInstall} />}
-        {needRefresh && <UpdateBanner onUpdate={applyUpdate} onDismiss={dismissUpdate} />}
+        {needRefresh && <UpdateBanner onUpdate={applyUpdate} onDismiss={dismissUpdate} onViewNotes={() => setShowReleaseNotes(true)} />}
       </>
     )
   }
@@ -347,6 +349,7 @@ export default function App() {
           onImportBackup={restoreBackup}
           onOpenImport={() => setView({ name: 'import' })}
           onOpenFaq={() => { window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior }); setView({ name: 'faq', from: 'profile' }) }}
+          onShowReleaseNotes={() => setShowReleaseNotes(true)}
         />
       )}
 
@@ -410,7 +413,7 @@ export default function App() {
       )}
 
       {installVisible && <InstallBanner state={installState} onInstall={triggerInstall} onDismiss={dismissInstall} />}
-      {needRefresh && <UpdateBanner onUpdate={applyUpdate} onDismiss={dismissUpdate} />}
+      {needRefresh && <UpdateBanner onUpdate={applyUpdate} onDismiss={dismissUpdate} onViewNotes={() => setShowReleaseNotes(true)} />}
       {!installVisible && !needRefresh && showReminderPrompt && (
         <ReminderBanner
           visible={showReminderPrompt}
@@ -418,6 +421,7 @@ export default function App() {
           onDismiss={dismissReminder}
         />
       )}
+      {showReleaseNotes && <ReleaseNotesModal onClose={() => setShowReleaseNotes(false)} />}
     </>
   )
 }

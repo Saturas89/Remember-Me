@@ -5,6 +5,43 @@ Alle veröffentlichten Versionen des Projekts, absteigend sortiert.
 Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 Versionierung folgt [Semantic Versioning](https://semver.org/lang/de/).
 
+## [1.6.0] – 2026-04-20
+
+### Hinzugefügt
+
+#### Release Notes / „Was ist neu?" – in-App Versionshistorie
+
+Nutzer können ab sofort direkt in der App einsehen, was sich in der jeweils neuen Version geändert hat.
+
+**Update-Banner (`UpdateBanner`):**
+- Neuer optionaler Button **„Was ist neu?"** neben dem Reload-Button
+- Öffnet das Release-Notes-Modal, ohne den Reload zu erzwingen
+- Prop `onViewNotes?: () => void` – rückwärtskompatibel (Banner funktioniert weiterhin ohne den Button)
+
+**Release-Notes-Modal (`ReleaseNotesModal`):**
+- Vollbild-Overlay (kein eigener Route-Eintrag)
+- Zeigt alle Versionen von aktuell (1.6.0) bis v1.0.0
+- Aktuelle Version ist farblich hervorgehoben
+- Schließen über ✕-Button
+- Barrierefrei: `role="dialog"`, `aria-modal`, `aria-label`
+
+**Profil-View (`ProfileView`):**
+- Neuer Einstiegspunkt „Was ist neu?" als Karte im Profil-Bereich (neben FAQ)
+- Damit dauerhaft zugänglich, unabhängig vom Update-Banner
+
+**Datenschicht:**
+- `src/data/releaseNotes.ts` – typisiertes Array `ReleaseNote[]` mit nutzerfreundlichen Kurzfassungen (Emoji + Bulletpoints) für alle Versionen
+
+**Lokalisierung:**
+- Neuer Translations-Block `releaseNotes` in `de/ui.ts` und `en/ui.ts`
+- Schlüssel: `title`, `close`, `viewNotes`, `versionPrefix`
+
+**Spezifikation & Tests:**
+- Neues Requirement `REQ-014` (Release Notes / „Was ist neu?") angelegt
+- Neue E2E-Testdatei `e2e/release-notes.spec.ts` (4 Tests: Button sichtbar, Modal öffnet, Versionsinfo vorhanden, Schließen funktioniert)
+
+---
+
 ## [1.5.9] – 2026-04-16
 
 ### Hinzugefügt
@@ -481,6 +518,7 @@ Wenn im Hintergrund eine neue Version der App als Service Worker bereit steht, e
 | **1.5.7** | Fix: Freundes-Fragen im Archiv (ID-Platzhalter → Fragentext) | ✔️ Fertig |
 | **1.5.8** | PWA Update-Benachrichtigung (Service Worker Prompt) | ✔️ Fertig |
 | **1.5.9** | Freunde-Einladung: Share-Link-Flow (Web Share API) | ✔️ Fertig |
+| **1.6.0** | Release Notes / „Was ist neu?" (UpdateBanner + Profil) | ✔️ Fertig |
 | — | **Geplante Features** | — |
 | **TBD** | Lebenszeitlinie – chronologische visuelle Ansicht | Geplant |
 | **TBD** | Privater Sync – E2EE-Synchronisation zwischen Geräten | Geplant |
