@@ -15,8 +15,8 @@ async function completeOnboarding(page: Page, name = 'ReleaseTest') {
 
 async function openProfileTab(page: Page) {
   const nav = page.getByRole('navigation', { name: 'Hauptnavigation' })
-  await nav.getByRole('button', { name: /Profil/i }).click()
-  await expect(page.getByRole('heading', { name: /Profil/i })).toBeVisible()
+  await nav.getByRole('button', { name: 'Profil', exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'Fortschritt' })).toBeVisible()
 }
 
 test.describe('Remember Me – Release Notes', () => {
