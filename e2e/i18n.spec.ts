@@ -40,7 +40,7 @@ test.describe('Sprachauswahl – manueller Wechsel', () => {
   test('zeigt standardmäßig deutschen Text (de-DE + Berlin)', async ({ page }) => {
     await page.goto('/')
     await expect(page.locator('html')).toHaveAttribute('lang', 'de')
-    await expect(page.locator('.bottom-nav').getByRole('button', { name: 'Profil', exact: true })).toBeVisible()
+    await expect(page.getByLabel('Wie heißt du?')).toBeVisible()
   })
 
   test('wechselt zu Englisch und setzt html[lang]', async ({ page }) => {
