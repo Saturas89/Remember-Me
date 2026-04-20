@@ -2173,6 +2173,52 @@
   margin-left: auto;
 }
 
+/* ── Language cards (analogous to .theme-card) ──────────── */
+.lang-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.65rem;
+}
+
+.lang-card {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.18s, background 0.18s;
+  position: relative;
+  font-family: inherit;
+  color: var(--text);
+}
+
+.lang-card:hover { border-color: var(--accent); }
+
+.lang-card--active {
+  border-color: var(--accent);
+  background: var(--accent-tinted);
+}
+
+.lang-card__flag { font-size: 1.25rem; line-height: 1; flex-shrink: 0; }
+
+.lang-card__label {
+  flex: 1;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.lang-card__check {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--accent);
+  margin-left: auto;
+}
+
 /* ── Backup / export section ─────────────────────────────── */
 .backup-desc {
   font-size: 0.85rem;

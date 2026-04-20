@@ -269,7 +269,13 @@ export function ProfileView({
               onClick={() => setLocale(l)}
               aria-pressed={locale === l}
             >
-              {l === 'de' ? '🇩🇪 Deutsch' : '🇬🇧 English'}
+              <span className="lang-card__flag" aria-hidden="true">
+                {l === 'de' ? '🇩🇪' : '🇬🇧'}
+              </span>
+              <span className="lang-card__label">
+                {l === 'de' ? 'Deutsch' : 'English'}
+              </span>
+              {locale === l && <span className="lang-card__check" aria-hidden="true">✓</span>}
             </button>
           ))}
         </div>
