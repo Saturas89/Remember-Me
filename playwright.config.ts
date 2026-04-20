@@ -15,6 +15,10 @@ export default defineConfig({
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
+    // Default to a German-speaking context so all existing tests see German UI.
+    // Individual i18n detection tests override locale/timezoneId per describe block.
+    locale: 'de-DE',
+    timezoneId: 'Europe/Berlin',
   },
   projects: [
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },

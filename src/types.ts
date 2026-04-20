@@ -93,6 +93,14 @@ export interface FriendAnswerZipPayload {
   }>
 }
 
+export interface FriendTopic {
+  id: string
+  title: string
+  emoji: string
+  description: string
+  questions: Question[]
+}
+
 export interface CustomQuestion {
   id: string
   text: string

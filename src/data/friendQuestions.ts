@@ -1,11 +1,16 @@
-import type { Question } from '../types'
+import type { FriendTopic } from '../types'
+import type { Locale } from '../locales/types'
+import { FRIEND_TOPICS_EN } from '../locales/en/friendTopics'
 
-export interface FriendTopic {
-  id: string
-  title: string
-  emoji: string
-  description: string
-  questions: Question[]
+// Re-export FriendTopic so existing imports of it from this file keep working.
+export type { FriendTopic }
+
+export function getFriendTopicsForLocale(locale: Locale): FriendTopic[] {
+  return locale === 'en' ? FRIEND_TOPICS_EN : FRIEND_TOPICS
+}
+
+export function getFriendQuestionsForLocale(locale: Locale) {
+  return getFriendTopicsForLocale(locale).flatMap(t => t.questions)
 }
 
 export const FRIEND_TOPICS: FriendTopic[] = [

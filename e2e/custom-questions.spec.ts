@@ -66,7 +66,7 @@ test.describe('Remember Me – Eigene Erinnerungen', () => {
     await completeOnboarding(page)
     await openCustomQuestions(page)
 
-    await page.getByPlaceholder('Code hier einfügen...').fill('nicht-gültiger-code')
+    await page.getByPlaceholder('Einladungs-Code einfügen…').fill('nicht-gültiger-code')
     await page.getByRole('button', { name: 'Importieren' }).click()
 
     await expect(page.locator('.import-msg--error')).toContainText(/Ungültiger Code/)

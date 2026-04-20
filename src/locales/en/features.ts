@@ -1,0 +1,42 @@
+export const FEATURES_EN = [
+  {
+    id: 'automatische-lebensgeschichte',
+    title: 'Automatic Life Story',
+    subtitle: 'A book for your loved ones',
+    img: '/features/automatische-lebensgeschichte.jpg',
+    description: 'Effortlessly create a compelling book about your life. Our AI helps you capture your most precious moments and milestones in a beautiful narrative that you can share with your loved ones.',
+    status: 'Planned',
+  },
+  {
+    id: 'lebenszeitlinie',
+    title: 'Life Timeline',
+    subtitle: 'Experience your life visually',
+    img: '/features/lebenszeitlinie.jpg',
+    description: 'Rediscover your past on a visual journey. Link photos, tickets and memories chronologically and share your shared story.',
+    status: 'In planning',
+  },
+  {
+    id: 'privater-sync',
+    title: 'Private Sync',
+    subtitle: 'Secure & encrypted',
+    img: '/features/privater-sync.jpg',
+    description: 'Your data is safe. Synchronise your memories and photos seamlessly and privately across all your devices, protected by strong encryption.',
+    status: 'In development',
+  },
+  {
+    id: 'familienmodus',
+    title: 'Family Mode',
+    subtitle: 'Collect memories together',
+    img: '/features/familienmodus.jpg',
+    description: 'Experience shared moments from every perspective. Each family member can contribute their own stories and photos, enriching the family album.',
+    status: 'Planned',
+  },
+  {
+    id: 'import-erinnerungen',
+    title: 'Import existing memories',
+    subtitle: 'Everything in one place',
+    img: '/features/import-erinnerungen.jpg',
+    description: 'Bring your scattered photos together. Effortlessly import memories from social networks, emails, clouds and local folders into your personal life story.',
+    status: 'In planning',
+  },
+] as const

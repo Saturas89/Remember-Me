@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from '../locales'
 
 interface Props {
   onEnable: () => void
@@ -19,22 +20,24 @@ export function ReminderBanner({ onEnable, onDismiss, visible }: Props) {
     }
   }, [visible])
 
+  const { t } = useTranslation()
+
   if (!visible || !mounted) return null
 
   return (
     <div className="update-banner reminder-banner" role="alert" aria-live="polite">
       <span className="update-banner__icon" aria-hidden="true">🔔</span>
       <div className="update-banner__text">
-        <strong>Erinnerungen aktivieren</strong>
-        <span>Wir erinnern dich nach 2 Tagen daran, dein Vermächtnis weiterzuschreiben.</span>
+        <strong>{t.reminder.title}</strong>
+        <span>{t.reminder.desc}</span>
       </div>
       <button className="btn btn--primary btn--sm update-banner__btn" onClick={onEnable}>
-        Erlauben
+        {t.reminder.allow}
       </button>
       <button
         className="update-banner__close"
         onClick={onDismiss}
-        aria-label="Benachrichtigung schließen"
+        aria-label={t.reminder.dismiss}
       >
         ✕
       </button>

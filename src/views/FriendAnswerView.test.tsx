@@ -138,12 +138,12 @@ describe('FriendAnswerView – Fertig-Screen CTA', () => {
     expect(parentLink?.target).toBe('_blank')
   })
 
-  it('erwähnt dass Daten privat bleiben', () => {
+  it('zeigt den CTA-Text mit Einladung zur eigenen App', () => {
     const { container } = render(<FriendAnswerView invite={invite} />)
     reachDoneScreen(container)
 
     const cta = container.querySelector('.export-done__own-cta')
-    expect(cta?.textContent).toContain('privat')
+    expect(cta?.textContent).toContain('Erinnerungen')
   })
 
   it('öffnet den Link in einem neuen Tab', () => {
