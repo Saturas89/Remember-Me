@@ -31,7 +31,14 @@ async function loadStateAsync(): Promise<AppState> {
 }
 
 function saveState(state: AppState): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+  } catch (err) {
+    // Most commonly QuotaExceededError – avoid crashing the setState
+    // callback, but make the failure visible in the console so users
+    // can report storage-full issues.
+    console.error('remember-me: failed to persist state', err)
+  }
 }
 
 export function useAnswers() {

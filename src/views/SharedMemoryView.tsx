@@ -31,7 +31,7 @@ export function SharedMemoryView({ payload }: Props) {
 
         <p style={{ marginTop: '1.5rem', color: 'var(--text-muted, #888)', fontSize: '0.85rem' }}>
           Möchtest du deine eigenen Erinnerungen festhalten?{' '}
-          <a href={window.location.pathname} style={{ color: 'var(--accent, #a78bfa)' }}>
+          <a href="/" style={{ color: 'var(--accent, #a78bfa)' }}>
             Remember Me öffnen →
           </a>
         </p>
