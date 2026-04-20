@@ -43,6 +43,7 @@ const defaultProps = {
   onImportBackup: vi.fn(() => ({ ok: true })),
   onOpenImport: vi.fn(),
   onOpenFaq: vi.fn(),
+  onShowReleaseNotes: vi.fn(),
 }
 
 function getFill(container: HTMLElement) {
