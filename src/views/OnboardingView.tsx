@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react'
 import { HeroLogo } from '../components/Logo'
 import { importFile } from '../utils/archiveImport'
+import { useTranslation } from '../locales'
 import type { Profile } from '../types'
 
 interface Props {
@@ -8,17 +9,18 @@ interface Props {
   onImportBackup: (json: string) => { ok: boolean; error?: string }
 }
 
-const FEATURES = [
-  { icon: '🔒', title: 'Privat', desc: 'Keine Anmeldung, keine Cloud' },
-  { icon: '📴', title: 'Offline', desc: 'Funktioniert ohne Internet' },
-  { icon: '❤️', title: 'Für immer', desc: 'Für Familie & Nachwelt' },
-]
-
 export function OnboardingView({ onComplete, onImportBackup }: Props) {
+  const { t } = useTranslation()
   const [name, setName] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [importProgress, setImportProgress] = useState<{ step: string; pct: number } | null>(null)
   const [importStatus, setImportStatus] = useState<{ ok: boolean; message: string } | null>(null)
+
+  const features = [
+    { icon: '🔒', title: t.onboarding.featuresPrivateTitle, desc: t.onboarding.featuresPrivateDesc },
+    { icon: '📴', title: t.onboarding.featuresOfflineTitle, desc: t.onboarding.featuresOfflineDesc },
+    { icon: '❤️', title: t.onboarding.featuresForeverTitle, desc: t.onboarding.featuresForeverDesc },
+  ]
 
   function handleStart() {
     const trimmed = name.trim()
@@ -34,17 +36,13 @@ export function OnboardingView({ onComplete, onImportBackup }: Props) {
     if (!file) return
 
     const isZip = file.name.toLowerCase().endsWith('.zip')
-    const confirmed = window.confirm(
-      isZip
-        ? 'Dies stellt alle Erinnerungen – Texte, Fotos, Videos und Aufnahmen – aus dem Archiv wieder her. Fortfahren?'
-        : 'Dies lädt die Backup-Daten. Fortfahren?'
-    )
+    const confirmed = window.confirm(isZip ? t.onboarding.confirmZip : t.onboarding.confirmJson)
     if (!confirmed) {
       e.target.value = ''
       return
     }
 
-    setImportProgress({ step: 'Vorbereitung…', pct: 0 })
+    setImportProgress({ step: t.onboarding.preparing, pct: 0 })
     setImportStatus(null)
 
     const result = await importFile(file, (step, pct) => {
@@ -55,7 +53,7 @@ export function OnboardingView({ onComplete, onImportBackup }: Props) {
     e.target.value = ''
 
     if (!result.ok) {
-      setImportStatus({ ok: false, message: result.error ?? 'Import fehlgeschlagen.' })
+      setImportStatus({ ok: false, message: result.error ?? t.onboarding.importFailed })
       return
     }
 
@@ -63,48 +61,38 @@ export function OnboardingView({ onComplete, onImportBackup }: Props) {
     const stats = result.stats
     const mediaHint = stats && (stats.photos + stats.audio + stats.videos) > 0
       ? ` (${[
-          stats.photos  > 0 ? `${stats.photos} Foto${stats.photos !== 1 ? 's' : ''}` : '',
-          stats.videos  > 0 ? `${stats.videos} Video${stats.videos !== 1 ? 's' : ''}` : '',
-          stats.audio   > 0 ? `${stats.audio} Aufnahme${stats.audio !== 1 ? 'n' : ''}` : '',
-        ].filter(Boolean).join(', ')} wiederhergestellt)`
+          stats.photos > 0 ? `${stats.photos} ${stats.photos === 1 ? t.onboarding.photo : t.onboarding.photos}` : '',
+          stats.videos > 0 ? `${stats.videos} ${stats.videos === 1 ? t.onboarding.video : t.onboarding.videos}` : '',
+          stats.audio  > 0 ? `${stats.audio}  ${stats.audio  === 1 ? t.onboarding.recording : t.onboarding.recordings}` : '',
+        ].filter(Boolean).join(', ')} ${t.onboarding.restored})`
       : ''
 
     setImportStatus({
       ok: restore.ok,
       message: restore.ok
-        ? `✓ Archiv erfolgreich geladen${mediaHint}.`
-        : (restore.error ?? 'Import fehlgeschlagen.'),
+        ? `${t.onboarding.importSuccess}${mediaHint}.`
+        : (restore.error ?? t.onboarding.importFailed),
     })
-
-    // If it was successful, App.tsx will automatically transition out of OnboardingView
-    // since `profile` will now be set in state after `restoreBackup`.
   }
 
   return (
     <div className="onboarding">
-      {/* Hero */}
       <div className="onboarding__hero">
         <HeroLogo />
         <p className="onboarding__tagline">
-          Deine Geschichte verdient es,<br />erzählt zu werden.
+          {t.onboarding.tagline.split('\n').map((line, i) => (
+            i === 0 ? <span key={i}>{line}<br /></span> : <span key={i}>{line}</span>
+          ))}
         </p>
       </div>
 
-      {/* Story text */}
       <div className="onboarding__story">
-        <p>
-          Viele Erinnerungen verblassen. Fragen, die du deinen Großeltern nie gestellt hast.
-          Momente, die niemand aufgeschrieben hat.
-        </p>
-        <p>
-          <strong>Remember Me</strong> führt dich mit gezielten Fragen durch dein Leben –
-          damit die Menschen, die dir wichtig sind, dich wirklich kennen.
-        </p>
+        <p>{t.onboarding.story1}</p>
+        <p><strong>Remember Me</strong> {t.onboarding.story2}</p>
       </div>
 
-      {/* Feature pills */}
       <div className="onboarding__features">
-        {FEATURES.map((f, i) => (
+        {features.map((f, i) => (
           <div key={f.title} className="onboarding__feature" style={{ animationDelay: `${0.1 + i * 0.1}s` }}>
             <span className="onboarding__feature-icon">{f.icon}</span>
             <span className="onboarding__feature-title">{f.title}</span>
@@ -113,24 +101,20 @@ export function OnboardingView({ onComplete, onImportBackup }: Props) {
         ))}
       </div>
 
-      {/* Divider */}
       <div className="onboarding__divider" />
 
-      {/* Name input */}
       <div className="onboarding__form">
         <label className="onboarding__label" htmlFor="onboarding-name">
-          Wie heißt du?
+          {t.onboarding.nameLabel}
         </label>
-        <p className="onboarding__label-hint">
-          Dein Name personalisiert die Einladungen für Freunde und Familie.
-        </p>
+        <p className="onboarding__label-hint">{t.onboarding.nameLabelHint}</p>
         <input
           id="onboarding-name"
           className="input-text onboarding__input"
           value={name}
           onChange={e => setName(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && handleStart()}
-          placeholder="Dein Name..."
+          placeholder={t.onboarding.namePlaceholder}
           autoFocus
           autoComplete="given-name"
         />
@@ -139,14 +123,14 @@ export function OnboardingView({ onComplete, onImportBackup }: Props) {
           onClick={handleStart}
           disabled={!name.trim()}
         >
-          Loslegen →
+          {t.onboarding.startButton}
         </button>
       </div>
 
       <div className="onboarding__import">
         <div className="onboarding__divider" />
         <p className="onboarding__label-hint" style={{ textAlign: 'center', marginBottom: '0.75rem' }}>
-          Du hast Remember Me schon einmal genutzt?
+          {t.onboarding.alreadyUsed}
         </p>
         <button
           type="button"
@@ -154,7 +138,7 @@ export function OnboardingView({ onComplete, onImportBackup }: Props) {
           onClick={() => fileInputRef.current?.click()}
           disabled={!!importProgress}
         >
-          📂 Archiv laden…
+          {t.onboarding.importButton}
         </button>
         <input
           ref={fileInputRef}
@@ -181,10 +165,7 @@ export function OnboardingView({ onComplete, onImportBackup }: Props) {
         )}
       </div>
 
-      {/* Footer note */}
-      <p className="onboarding__footer">
-        Kostenlos · Keine Anmeldung nötig · Deine Daten bleiben auf deinem Gerät
-      </p>
+      <p className="onboarding__footer">{t.onboarding.footer}</p>
     </div>
   )
 }

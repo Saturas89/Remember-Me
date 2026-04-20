@@ -1,4 +1,10 @@
 import type { Category } from '../types'
+import type { Locale } from '../locales/types'
+import { CATEGORIES_EN } from '../locales/en/categories'
+
+export function getCategoriesForLocale(locale: Locale): Category[] {
+  return locale === 'en' ? CATEGORIES_EN : CATEGORIES
+}
 
 export const CATEGORIES: Category[] = [
   {

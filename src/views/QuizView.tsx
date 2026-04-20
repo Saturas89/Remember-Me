@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { QuestionCard } from '../components/QuestionCard'
 import { ProgressBar } from '../components/ProgressBar'
+import { useTranslation } from '../locales'
 import { useImageStore } from '../hooks/useImageStore'
 import { addAudio, removeAudio } from '../hooks/useAudioStore'
 import { addVideo, removeVideo } from '../hooks/useVideoStore'
@@ -23,6 +24,7 @@ export function QuizView({
   category, getAnswer, getAnswerImageIds, getAnswerVideoIds, getAnswerAudioId,
   onSave, onSetImages, onSetVideos, onSetAudio, onBack,
 }: Props) {
+  const { t } = useTranslation()
   const [index, setIndex] = useState(0)
   const { cache, loadImages, addImage, removeImage } = useImageStore()
   const question = category.questions[index]
@@ -79,7 +81,7 @@ export function QuizView({
       <img src={`/categories/${category.id}-banner.svg`} className="quiz-banner" alt="" />
       <div className="quiz-topbar">
         <button className="btn btn--ghost btn--sm" onClick={onBack}>
-          ← Kategorien
+          {t.quiz.backButton}
         </button>
         <span className="quiz-category-title">
           {category.emoji} {category.title}

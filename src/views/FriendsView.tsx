@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { FriendCard } from '../components/FriendCard'
+import { useTranslation } from '../locales'
 import type { Friend, FriendAnswer } from '../types'
 
 interface Props {
@@ -21,13 +22,12 @@ export function FriendsView({
   onImportZip,
   onBack,
 }: Props) {
+  const { t } = useTranslation()
   const [isSharing, setIsSharing] = useState(false)
   const [shareStatus, setShareStatus] = useState<'idle' | 'copied' | 'error'>('idle')
   const zipInputRef = useRef<HTMLInputElement>(null)
-  // Pre-load the app icon so it can be included in the share as a file.
-  // WhatsApp on iOS only shows the message text when a file is attached;
-  // for URL-only shares it renders just the link preview and ignores text.
   const logoBlobRef = useRef<Blob | null>(null)
+
   useEffect(() => {
     fetch('/pwa-192x192.png')
       .then(r => r.blob())
@@ -35,15 +35,14 @@ export function FriendsView({
       .catch(() => {})
   }, [])
 
-  // Auto-clear the "Kopiert!" / "Fehler" status after a moment.
   useEffect(() => {
     if (shareStatus === 'idle') return
-    const t = setTimeout(() => setShareStatus('idle'), 2500)
-    return () => clearTimeout(t)
+    const timer = setTimeout(() => setShareStatus('idle'), 2500)
+    return () => clearTimeout(timer)
   }, [shareStatus])
 
   function buildText(url: string) {
-    return `Ich halte meine Geschichte fest und würde gerne deine Erinnerung ergänzen ✨\n\n${url}`
+    return t.friends.shareMessage.replace('{url}', url)
   }
 
   // Synchronous share handler: Safari requires navigator.share() to be called
@@ -57,8 +56,6 @@ export function FriendsView({
     const title = name ? `${name}s Lebensarchiv` : 'Mein Lebensarchiv'
     setIsSharing(true)
 
-    // Mirror the ZIP-share pattern: share the icon as a file so WhatsApp iOS
-    // treats this as a "message with attachment" and shows the full text.
     const blob = logoBlobRef.current
     if (blob && typeof navigator.share === 'function') {
       const logoFile = new File([blob], 'remember-me.png', { type: 'image/png' })
@@ -74,7 +71,6 @@ export function FriendsView({
       }
     }
 
-    // Fallback: text-only share (no separate url field — mirrors ZIP text)
     if (typeof navigator.share === 'function') {
       navigator
         .share({ title, text })
@@ -98,28 +94,20 @@ export function FriendsView({
 
   return (
     <div className="friends-view">
-      <h1 className="sr-only">Freunde einladen</h1>
+      <h1 className="sr-only">{t.friends.pageTitle}</h1>
       <div className="quiz-topbar">
         <button className="btn btn--ghost btn--sm" onClick={onBack}>
-          ← Zurück
+          {t.global.back}
         </button>
-        <h2 className="archive-title">Erinnerung einsammeln</h2>
+        <h2 className="archive-title">{t.friends.topbarTitle}</h2>
       </div>
 
-      {/* Permanent share link */}
       <section className="friends-section">
-        <h3 className="friends-section-title">Dein Einladungslink</h3>
+        <h3 className="friends-section-title">{t.friends.inviteLinkHeading}</h3>
         {!profileName && (
-          <p className="friends-hint friends-hint--warn">
-            Tipp: Gib deinen Namen auf der Startseite ein, damit die Einladung personalisiert ist.
-          </p>
+          <p className="friends-hint friends-hint--warn">{t.friends.inviteHintNoName}</p>
         )}
-        <p className="friends-hint">
-          Lade Freunde und Familie ein, ihre Erinnerungen an dich festzuhalten.
-          Teile den Link beliebig oft – jede Person gibt ihren Namen ein, wählt eine Kategorie
-          und schickt dir die Antworten zurück. Sie werden automatisch in deinem persönlichen
-          Lebensarchiv gespeichert.
-        </p>
+        <p className="friends-hint">{t.friends.inviteHint}</p>
 
         <div className="friends-share">
           <button
@@ -128,23 +116,22 @@ export function FriendsView({
             disabled={isSharing}
           >
             {isSharing ? (
-              <><span className="share-cta-btn__spinner" aria-hidden="true" />Wird geöffnet…</>
+              <><span className="share-cta-btn__spinner" aria-hidden="true" />{t.friends.opening}</>
             ) : shareStatus === 'copied' ? (
-              '✓ Nachricht kopiert!'
+              t.friends.messageCopied
             ) : shareStatus === 'error' ? (
-              '⚠ Nochmal versuchen'
+              t.friends.copyRetry
             ) : (
-              '📤 Link teilen'
+              t.friends.shareCta
             )}
           </button>
         </div>
       </section>
 
-      {/* Friends list – entries are auto-created when answers come in */}
       {friends.length > 0 && (
         <section className="friends-section">
           <h3 className="friends-section-title">
-            Erinnerungen von ({friends.length})
+            {t.friends.friendsFromHeading.replace('{n}', String(friends.length))}
           </h3>
           <div className="friends-list">
             {friends.map(f => (
@@ -159,17 +146,14 @@ export function FriendsView({
         </section>
       )}
 
-      {/* ZIP import for friends who attached photos / audio / video */}
       <section className="friends-section">
-        <h3 className="friends-section-title">Erinnerungen mit Anhängen empfangen</h3>
-        <p className="friends-hint">
-          Hat ein Freund Fotos, Aufnahmen oder Videos mitgeschickt? Öffne die Datei hier und sie landen in deinem Archiv.
-        </p>
+        <h3 className="friends-section-title">{t.friends.attachmentsHeading}</h3>
+        <p className="friends-hint">{t.friends.attachmentsHint}</p>
         <button
           className="btn btn--ghost btn--sm"
           onClick={() => zipInputRef.current?.click()}
         >
-          🎁 Erinnerungen öffnen
+          {t.friends.openGift}
         </button>
         <input
           ref={zipInputRef}
