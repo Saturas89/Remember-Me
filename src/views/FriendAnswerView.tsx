@@ -223,6 +223,10 @@ export function FriendAnswerView({ invite }: Props) {
       text: `${t.friendAnswer.doneText.replace('{name}', invite.profileName)}`,
       url,
     }
+    const clipboardText = `${shareData.text}\n\n${url}`
+    // 1 MB — well above any legitimate share URL, guards against hangs
+    // or silent failures on browsers/OSes with stricter clipboard limits.
+    const MAX_CLIPBOARD = 1_000_000
     setIsSharing(true)
 
     if (typeof navigator.share === 'function') {
@@ -232,14 +236,21 @@ export function FriendAnswerView({ invite }: Props) {
         .catch(err => {
           setIsSharing(false)
           if ((err as Error).name === 'AbortError') return
+          if (clipboardText.length > MAX_CLIPBOARD) {
+            setShareStatus('error')
+            return
+          }
           navigator.clipboard
-            ?.writeText(`${shareData.text}\n\n${url}`)
+            ?.writeText(clipboardText)
             .then(() => setShareStatus('copied'))
             .catch(() => setShareStatus('error'))
         })
+    } else if (clipboardText.length > MAX_CLIPBOARD) {
+      setShareStatus('error')
+      setIsSharing(false)
     } else {
       navigator.clipboard
-        .writeText(`${shareData.text}\n\n${url}`)
+        .writeText(clipboardText)
         .then(() => setShareStatus('copied'))
         .catch(() => setShareStatus('error'))
         .finally(() => setIsSharing(false))
@@ -365,14 +376,16 @@ export function FriendAnswerView({ invite }: Props) {
         <div className="friend-welcome">
           <div className="friend-welcome__icon">{t.friendAnswer.welcomeIcon}</div>
           <h1>{t.friendAnswer.welcomeTitle}</h1>
-          <p
-            dangerouslySetInnerHTML={{
-              __html: t.friendAnswer.welcomeText.replace(
-                '{name}',
-                `<strong>${invite.profileName}</strong>`,
-              ),
-            }}
-          />
+          {(() => {
+            const [before, after = ''] = t.friendAnswer.welcomeText.split('{name}')
+            return (
+              <p>
+                {before}
+                <strong>{invite.profileName}</strong>
+                {after}
+              </p>
+            )
+          })()}
           <div className="friend-name-input">
             <label className="input-label">{t.friendAnswer.nameLabel}</label>
             <input
