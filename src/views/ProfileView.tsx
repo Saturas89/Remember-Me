@@ -22,6 +22,7 @@ interface Props {
   onImportBackup: (json: string) => { ok: boolean; error?: string }
   onOpenImport: () => void
   onOpenFaq: () => void
+  onShowReleaseNotes: () => void
 }
 
 function TreeProgressLogo({ pct, size = 80 }: { pct: number; size?: number }) {
@@ -68,7 +69,7 @@ export function ProfileView({
   exportData, safeName,
   onSave, onBack,
   onExportMarkdown, onExportJson, onImportBackup,
-  onOpenImport, onOpenFaq,
+  onOpenImport, onOpenFaq, onShowReleaseNotes,
 }: Props) {
   const { t, locale, setLocale } = useTranslation()
   const { theme, setTheme } = useTheme()
@@ -352,6 +353,14 @@ export function ProfileView({
           <span className="profile-import-card__body">
             <span className="profile-import-card__title">{t.profile.faqTitle}</span>
             <span className="profile-import-card__desc">{t.profile.faqDesc}</span>
+          </span>
+          <span className="profile-import-card__arrow">›</span>
+        </button>
+        <button type="button" className="profile-import-card" onClick={onShowReleaseNotes}>
+          <span className="profile-import-card__icon">🆕</span>
+          <span className="profile-import-card__body">
+            <span className="profile-import-card__title">{t.releaseNotes.title}</span>
+            <span className="profile-import-card__desc">{t.releaseNotes.versionPrefix} 1.6.0</span>
           </span>
           <span className="profile-import-card__arrow">›</span>
         </button>

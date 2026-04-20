@@ -2535,6 +2535,116 @@
   color: var(--text-primary);
 }
 
+.update-banner__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.update-banner__notes-btn {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-size: 0.8rem;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+  white-space: nowrap;
+}
+
+/* ── Release Notes Modal ────────────────────────────── */
+.release-notes-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.release-notes-modal__topbar {
+  position: sticky;
+  top: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  z-index: 1;
+}
+
+.release-notes-modal__title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.release-notes-modal__close {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  transition: color 0.15s;
+}
+
+.release-notes-modal__close:hover {
+  color: var(--text-primary);
+}
+
+.release-notes-modal__body {
+  overflow-y: auto;
+  flex: 1;
+  padding: 0.5rem 0 4rem;
+}
+
+.release-notes-entry {
+  padding: 1.25rem 1.25rem 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.release-notes-entry--current {
+  background: color-mix(in srgb, var(--accent) 6%, transparent);
+}
+
+.release-notes-entry__header {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  margin-bottom: 0.6rem;
+}
+
+.release-notes-entry__version {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--accent);
+}
+
+.release-notes-entry__date {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+
+.release-notes-entry__list {
+  margin: 0;
+  padding-left: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.release-notes-entry__list li {
+  font-size: 0.88rem;
+  color: var(--text-primary);
+  line-height: 1.4;
+}
+
 /* ── Audio Recorder ─────────────────────────────────── */
 .audio-recorder {
   margin-top: 0.6rem;

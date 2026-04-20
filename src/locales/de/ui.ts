@@ -169,6 +169,13 @@ export const UI_DE = {
     dismiss: 'Benachrichtigung schließen',
   },
 
+  releaseNotes: {
+    title: 'Was ist neu?',
+    close: 'Schließen',
+    viewNotes: 'Was ist neu?',
+    versionPrefix: 'Version',
+  },
+
   reminder: {
     title: 'Erinnerungen aktivieren',
     desc: 'Wir erinnern dich nach 2 Tagen daran, dein Vermächtnis weiterzuschreiben.',

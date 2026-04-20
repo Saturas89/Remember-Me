@@ -169,6 +169,13 @@ export const UI_EN = {
     dismiss: 'Dismiss notification',
   },
 
+  releaseNotes: {
+    title: "What's new?",
+    close: 'Close',
+    viewNotes: "What's new?",
+    versionPrefix: 'Version',
+  },
+
   reminder: {
     title: 'Enable reminders',
     desc: 'We\'ll remind you after 2 days to continue writing your legacy.',
