@@ -59,7 +59,7 @@ test.describe('Sprachauswahl – manueller Wechsel', () => {
     await expect(page.locator('html')).toHaveAttribute('lang', 'en')
     await page.reload()
     await expect(page.locator('html')).toHaveAttribute('lang', 'en')
-    await expect(page.locator('.home-view')).toBeVisible()
+    await expect(page.locator('.profile-view')).toBeVisible()
   })
 
   test('Nav-Labels wechseln nach Sprachwechsel auf Englisch', async ({ page }) => {
