@@ -1,60 +1,71 @@
 name: Parallel Spec-Driven Generation
 
 on:
+  push:
+    branches-ignore:
+      - main
+    paths:
+      - 'docs/requirements/REQ-*.md'
   workflow_dispatch:
     inputs:
       spec_file:
         description: "Filename under docs/requirements/ (e.g. REQ-010-faq.md)"
         required: true
-      base_branch:
-        description: "Base branch"
-        default: "main"
 
 concurrency:
-  group: parallel-gen-${{ github.event.inputs.spec_file }}
+  group: parallel-gen-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
   prepare:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
     outputs:
       feature_branch: ${{ steps.vars.outputs.branch }}
-      spec_slug:      ${{ steps.vars.outputs.slug }}
-      spec_content:   ${{ steps.vars.outputs.content }}
+      spec_file:     ${{ steps.vars.outputs.spec_file }}
+      spec_slug:     ${{ steps.vars.outputs.slug }}
+      spec_content:  ${{ steps.vars.outputs.content }}
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          ref: ${{ github.event.inputs.base_branch }}
 
       - id: vars
         env:
-          SPEC_FILE: ${{ github.event.inputs.spec_file }}
+          EVENT_NAME: ${{ github.event_name }}
+          DISPATCH_SPEC: ${{ github.event.inputs.spec_file }}
+          REF_NAME: ${{ github.ref_name }}
         run: |
+          set -euo pipefail
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            SPEC_FILE="$DISPATCH_SPEC"
+            BRANCH="$REF_NAME"
+          else
+            SPEC_FILE=$(jq -r \
+              '[.commits[] | (.added + .modified)[] | select(startswith("docs/requirements/REQ-") and endswith(".md"))][0] // ""' \
+              "$GITHUB_EVENT_PATH")
+            if [ -z "$SPEC_FILE" ] || [ "$SPEC_FILE" = "null" ]; then
+              echo "Push touched a REQ-*.md file (per path filter) but event payload lists none — aborting." >&2
+              exit 1
+            fi
+            SPEC_FILE="$(basename "$SPEC_FILE")"
+            BRANCH="$REF_NAME"
+          fi
           if [ ! -f "docs/requirements/$SPEC_FILE" ]; then
-            echo "Spec file docs/requirements/$SPEC_FILE not found" >&2
+            echo "Spec file docs/requirements/$SPEC_FILE not found on branch $BRANCH" >&2
             exit 1
           fi
           SLUG="${SPEC_FILE%.md}"
-          SLUG_LOWER="${SLUG,,}"
-          BRANCH="feat/${SLUG_LOWER}-parallel-$(date +%Y%m%d-%H%M%S)"
-          echo "slug=$SLUG"      >> "$GITHUB_OUTPUT"
-          echo "branch=$BRANCH"  >> "$GITHUB_OUTPUT"
+          echo "spec_file=$SPEC_FILE" >> "$GITHUB_OUTPUT"
+          echo "slug=$SLUG"           >> "$GITHUB_OUTPUT"
+          echo "branch=$BRANCH"       >> "$GITHUB_OUTPUT"
           {
             echo "content<<SPECEOF"
             cat "docs/requirements/$SPEC_FILE"
             echo
             echo "SPECEOF"
           } >> "$GITHUB_OUTPUT"
-
-      - name: Create empty feature branch
-        run: |
-          git config user.name  "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git checkout -b "${{ steps.vars.outputs.branch }}"
-          git push -u origin "${{ steps.vars.outputs.branch }}"
 
   generate:
     needs: prepare
@@ -66,7 +77,6 @@ jobs:
         role: [implementation, tests]
     permissions:
       contents: write
-      pull-requests: write
       id-token: write
     steps:
       - uses: actions/checkout@v4
@@ -119,7 +129,7 @@ jobs:
             echo "No changes produced by ${{ matrix.role }} agent"
             exit 0
           fi
-          git commit -m "chore(${{ matrix.role }}): generated for ${{ needs.prepare.outputs.spec_slug }}"
+          git commit -m "chore(${{ matrix.role }}): generated for ${{ needs.prepare.outputs.spec_slug }} [skip ci]"
           for i in 1 2 3 4 5; do
             if git pull --rebase origin "${{ needs.prepare.outputs.feature_branch }}" && \
                git push origin HEAD:"${{ needs.prepare.outputs.feature_branch }}"; then
@@ -141,16 +151,20 @@ jobs:
         with:
           ref: ${{ needs.prepare.outputs.feature_branch }}
 
-      - name: Open PR against base branch
+      - name: Open PR against main (if none exists)
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SPEC_FILE: ${{ github.event.inputs.spec_file }}
+          GH_TOKEN:  ${{ secrets.GITHUB_TOKEN }}
+          SPEC_FILE: ${{ needs.prepare.outputs.spec_file }}
           SPEC_SLUG: ${{ needs.prepare.outputs.spec_slug }}
-          BASE: ${{ github.event.inputs.base_branch }}
-          HEAD: ${{ needs.prepare.outputs.feature_branch }}
+          HEAD:      ${{ needs.prepare.outputs.feature_branch }}
         run: |
+          existing=$(gh pr list --head "$HEAD" --base main --state open --json number --jq '.[0].number // empty')
+          if [ -n "$existing" ]; then
+            echo "PR #$existing already open for $HEAD — skipping."
+            exit 0
+          fi
           gh pr create \
-            --base "$BASE" \
+            --base main \
             --head "$HEAD" \
             --title "feat($SPEC_SLUG): parallel impl + tests" \
             --body "Parallel-generiert aus \`docs/requirements/$SPEC_FILE\`.
