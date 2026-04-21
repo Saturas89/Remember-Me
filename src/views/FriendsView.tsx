@@ -11,6 +11,12 @@ interface Props {
   onRemoveFriend: (id: string) => void
   onImportZip: (file: File) => void
   onBack: () => void
+  /** Open the online-sharing entry point (intro if not yet opted in, hub if opted in). */
+  onOpenOnlineSharing?: () => void
+  /** True when the user has already opted in to online sharing. Drives the CTA label. */
+  onlineSharingEnabled?: boolean
+  /** True when the build has a Supabase URL/anon key configured. Hides the CTA if false. */
+  onlineSharingConfigured?: boolean
 }
 
 export function FriendsView({
@@ -21,6 +27,9 @@ export function FriendsView({
   onRemoveFriend,
   onImportZip,
   onBack,
+  onOpenOnlineSharing,
+  onlineSharingEnabled,
+  onlineSharingConfigured,
 }: Props) {
   const { t } = useTranslation()
   const [isSharing, setIsSharing] = useState(false)
@@ -127,6 +136,24 @@ export function FriendsView({
           </button>
         </div>
       </section>
+
+      {onlineSharingConfigured && onOpenOnlineSharing && (
+        <section className="friends-section">
+          <h3 className="friends-section-title">Online teilen</h3>
+          <p className="friends-hint">
+            Teile einzelne Erinnerungen verschlüsselt mit ausgewählten
+            Personen. <strong>Optional</strong> – der Einladungs-Link oben
+            funktioniert weiterhin komplett offline.
+          </p>
+          <button
+            className="btn btn--ghost btn--sm"
+            onClick={onOpenOnlineSharing}
+            data-testid="open-online-sharing"
+          >
+            {onlineSharingEnabled ? 'Geteilte Erinnerungen öffnen' : 'Online-Teilen einrichten'}
+          </button>
+        </section>
+      )}
 
       {friends.length > 0 && (
         <section className="friends-section">

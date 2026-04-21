@@ -1,4 +1,4 @@
-import type { InviteData, AnswerExport, MemorySharePayload } from '../types'
+import type { InviteData, AnswerExport, MemorySharePayload, ContactHandshake } from '../types'
 
 // ── Base64-URL helpers ────────────────────────────────────────────────────────
 
@@ -350,6 +350,41 @@ export async function parseMemoryShareFromHash(): Promise<MemorySharePayload | n
   }
 
   return null
+}
+
+// ── Contact handshake URLs (#contact/) ───────────────────────────────────────
+//
+// Used only by the opt-in online-sharing feature. Encodes the sender's opaque
+// device-id + ECDH public key + display name so the recipient can save them
+// as an online-linked Friend and start E2E-encrypting memories to them.
+//
+// Format: {origin}#contact/{base64url(JSON(ContactHandshake))}
+//
+// The handshake is itself plaintext (the public key and device-id are not
+// secrets — they're meant to be shared). All *content* that later gets
+// exchanged between the two devices is AES-GCM-encrypted with a content-key
+// that is wrapped per recipient using ECDH(private, public).
+
+export function generateContactUrl(data: ContactHandshake): string {
+  return `${appBase()}#contact/${toB64u(new TextEncoder().encode(JSON.stringify(data)))}`
+}
+
+export function isContactHash(): boolean {
+  return /^#contact\/[A-Za-z0-9_-]+$/.test(window.location.hash)
+}
+
+export function parseContactFromHash(): ContactHandshake | null {
+  const m = window.location.hash.match(/^#contact\/([A-Za-z0-9_-]+)$/)
+  if (!m) return null
+  try {
+    const json = new TextDecoder().decode(fromB64u(m[1]))
+    const parsed = JSON.parse(json) as ContactHandshake
+    if (parsed.$type !== 'remember-me-contact') return null
+    if (!parsed.deviceId || !parsed.publicKey) return null
+    return parsed
+  } catch {
+    return null
+  }
 }
 
 /**

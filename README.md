@@ -19,16 +19,28 @@
 - Export: PDF, Markdown, JSON, Backup, ZIP-Archiv mit allen Medien
 - Vollständig offline-fähig (PWA, Service Worker)
 - Installierbar auf iOS & Android
+- **Optional:** Online-Teilen mit E2E-Verschlüsselung (strikt opt-in, Standard aus)
+
+## Privacy by default
+
+Remember Me arbeitet standardmäßig **komplett offline**. Keine Accounts,
+keine Server-Kommunikation, keine Tracker. Wer eigene Erinnerungen
+online mit bestimmten Kontakten teilen möchte, kann das optionale
+Online-Teilen aktivieren – es ist Ende-zu-Ende-verschlüsselt (ECDH P-256
++ AES-256-GCM, Zero-Knowledge-Server). Details:
+[`docs/DATA_STORAGE.md`](./docs/DATA_STORAGE.md).
 
 ## Tech Stack
 
-| Schicht | Technologie |
-|---------|-------------|
-| Framework | React 19 + TypeScript |
-| Build | Vite 6 + vite-plugin-pwa |
-| Persistenz | localStorage + IndexedDB (Bilder, Audio, Video) |
-| Deployment | Vercel |
-| Tests | Vitest |
+| Schicht        | Technologie                                                      |
+|----------------|------------------------------------------------------------------|
+| Framework      | React 19 + TypeScript                                            |
+| Build          | Vite 6 + vite-plugin-pwa                                         |
+| Persistenz     | localStorage + IndexedDB (Bilder, Audio, Video)                  |
+| Crypto         | Web Crypto API (ECDH P-256, HKDF-SHA256, AES-256-GCM)            |
+| Online-Backend (optional) | Supabase (anonymous auth, Postgres mit RLS, Storage) |
+| Deployment     | Vercel                                                           |
+| Tests          | Vitest (Unit), Playwright (E2E, 5-Browser-Matrix in CI)          |
 
 ## Entwicklung
 
