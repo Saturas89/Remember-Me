@@ -1,8 +1,7 @@
 name: Claude Smoke Test
 
 on:
-  push:
-    branches: [claude/parallel-code-test-generation-uqXh3]
+  pull_request:
     paths: ['.github/workflows/claude-smoke.yml']
   workflow_dispatch:
 
