@@ -1,0 +1,162 @@
+name: Parallel Spec-Driven Generation
+
+on:
+  workflow_dispatch:
+    inputs:
+      spec_file:
+        description: "Filename under docs/requirements/ (e.g. REQ-010-faq.md)"
+        required: true
+      base_branch:
+        description: "Base branch"
+        default: "main"
+
+concurrency:
+  group: parallel-gen-${{ github.event.inputs.spec_file }}
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      feature_branch: ${{ steps.vars.outputs.branch }}
+      spec_slug:      ${{ steps.vars.outputs.slug }}
+      spec_content:   ${{ steps.vars.outputs.content }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.inputs.base_branch }}
+
+      - id: vars
+        env:
+          SPEC_FILE: ${{ github.event.inputs.spec_file }}
+        run: |
+          if [ ! -f "docs/requirements/$SPEC_FILE" ]; then
+            echo "Spec file docs/requirements/$SPEC_FILE not found" >&2
+            exit 1
+          fi
+          SLUG="${SPEC_FILE%.md}"
+          SLUG_LOWER="${SLUG,,}"
+          BRANCH="feat/${SLUG_LOWER}-parallel-$(date +%Y%m%d-%H%M%S)"
+          echo "slug=$SLUG"      >> "$GITHUB_OUTPUT"
+          echo "branch=$BRANCH"  >> "$GITHUB_OUTPUT"
+          {
+            echo "content<<SPECEOF"
+            cat "docs/requirements/$SPEC_FILE"
+            echo
+            echo "SPECEOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Create empty feature branch
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "${{ steps.vars.outputs.branch }}"
+          git push -u origin "${{ steps.vars.outputs.branch }}"
+
+  generate:
+    needs: prepare
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        role: [implementation, tests]
+    permissions:
+      contents: write
+      pull-requests: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prepare.outputs.feature_branch }}
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+
+      - name: Build role-specific prompt
+        id: prompt
+        env:
+          SPEC_CONTENT: ${{ needs.prepare.outputs.spec_content }}
+          SPEC_SLUG:    ${{ needs.prepare.outputs.spec_slug }}
+          ROLE:         ${{ matrix.role }}
+        run: |
+          {
+            echo "text<<PEOF"
+            if [ "$ROLE" = "implementation" ]; then
+              cat .github/prompts/impl-agent.md
+            else
+              cat .github/prompts/test-agent.md
+            fi
+            echo
+            echo "## Spec: $SPEC_SLUG"
+            echo
+            echo "$SPEC_CONTENT"
+            echo "PEOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Run Claude Code agent (${{ matrix.role }})
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: ${{ steps.prompt.outputs.text }}
+          claude_args: >-
+            --allowedTools "Read,Glob,Grep,Edit,Write,Bash(npm test:*),Bash(npx vitest:*),Bash(npx playwright:*)"
+            --max-turns 40
+
+      - name: Rebase & push disjoint changes
+        run: |
+          git config user.name  "claude-agent-${{ matrix.role }}"
+          git config user.email "claude-${{ matrix.role }}@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No changes produced by ${{ matrix.role }} agent"
+            exit 0
+          fi
+          git commit -m "chore(${{ matrix.role }}): generated for ${{ needs.prepare.outputs.spec_slug }}"
+          for i in 1 2 3 4 5; do
+            if git pull --rebase origin "${{ needs.prepare.outputs.feature_branch }}" && \
+               git push origin HEAD:"${{ needs.prepare.outputs.feature_branch }}"; then
+              exit 0
+            fi
+            echo "Push attempt $i failed, retrying..."
+            sleep $((RANDOM % 10 + 5))
+          done
+          exit 1
+
+  open_pr:
+    needs: [prepare, generate]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prepare.outputs.feature_branch }}
+
+      - name: Open PR against base branch
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SPEC_FILE: ${{ github.event.inputs.spec_file }}
+          SPEC_SLUG: ${{ needs.prepare.outputs.spec_slug }}
+          BASE: ${{ github.event.inputs.base_branch }}
+          HEAD: ${{ needs.prepare.outputs.feature_branch }}
+        run: |
+          gh pr create \
+            --base "$BASE" \
+            --head "$HEAD" \
+            --title "feat($SPEC_SLUG): parallel impl + tests" \
+            --body "Parallel-generiert aus \`docs/requirements/$SPEC_FILE\`.
+
+Zwei unabhängige Claude-Code-Sessions haben parallel gegen dieselbe Spec gearbeitet:
+- **Implementation-Agent** hat Produktionscode unter \`src/\` geschrieben (ohne \`*.test.*\`).
+- **Test-Agent** hat Tests unter \`src/**/*.test.*\` und \`e2e/\` geschrieben, **ohne den Produktionscode zu sehen** — reine Black-Box-Verifikation aus der Spec.
+
+Die bestehende E2E-Matrix (5 Browser) läuft auf diesem PR. Grün = beide Spec-Interpretationen passen zusammen."
