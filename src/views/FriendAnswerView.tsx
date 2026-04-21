@@ -1,20 +1,20 @@
 import { useState, useRef, useMemo, useEffect } from 'react'
 import { QuestionCard } from '../components/QuestionCard'
 import { ProgressBar } from '../components/ProgressBar'
-import { FRIEND_TOPICS } from '../data/friendQuestions'
+import { getFriendTopicsForLocale } from '../data/friendQuestions'
 import { encodeAnswerExport } from '../utils/sharing'
 import { generateAnswerUrl, generatePlainAnswerUrl } from '../utils/secureLink'
 import { buildFriendAnswerArchive, fmtBytes } from '../utils/archiveExport'
 import { useImageStore } from '../hooks/useImageStore'
 import { addAudio, removeAudio } from '../hooks/useAudioStore'
 import { addVideo, removeVideo } from '../hooks/useVideoStore'
+import { useTranslation } from '../locales'
 import type { InviteData, AnswerExport } from '../types'
 
 interface Props {
   invite: InviteData
 }
 
-/** Resolves {name} placeholder in question texts */
 function resolve(text: string, name: string): string {
   return text.replace(/\{name\}/g, name)
 }
@@ -24,14 +24,11 @@ function newFriendId(): string {
 }
 
 export function FriendAnswerView({ invite }: Props) {
-  // Use the friendId from the invite if it was a legacy per-friend link,
-  // otherwise generate a fresh one for this visitor.
+  const { t, locale } = useTranslation()
+  const friendTopics = getFriendTopicsForLocale(locale)
+
   const [friendId] = useState<string>(() => invite.friendId ?? newFriendId())
-
   const [friendName, setFriendName] = useState('')
-
-  // The inviter may have pre-selected a topic (legacy per-friend invite).
-  // For general invites the friend picks their own topic.
   const [selectedTopicId, setSelectedTopicId] = useState<string | null>(
     invite.topicId ?? null,
   )
@@ -43,38 +40,30 @@ export function FriendAnswerView({ invite }: Props) {
   const [localAnswers, setLocalAnswers] = useState<Record<string, string>>({})
   const [exportCode, setExportCode] = useState<string | null>(null)
 
-  // ── Media state (per question) ───────────────────────────
   const { cache, loadImages, addImage, removeImage } = useImageStore()
   const [localImageIds, setLocalImageIds] = useState<Record<string, string[]>>({})
   const [localVideoIds, setLocalVideoIds] = useState<Record<string, string[]>>({})
   const [localAudioIds, setLocalAudioIds] = useState<Record<string, string | undefined>>({})
 
-  // ── ZIP generation state ─────────────────────────────────
   type ZipState = 'idle' | 'building' | 'ready' | 'error'
   const [zipState, setZipState] = useState<ZipState>('idle')
   const [zipStep, setZipStep] = useState('')
   const [zipBlob, setZipBlob] = useState<Blob | null>(null)
   const [zipSize, setZipSize] = useState(0)
 
-  // Ref always holds the latest (preferably compressed) URL so the synchronous
-  // share handler can access it without relying on React state timing.
   const shareUrlRef = useRef<string | null>(null)
-
-  // Share-button state – same pattern as FriendsView
   const [isSharing, setIsSharing] = useState(false)
   const [shareStatus, setShareStatus] = useState<'idle' | 'copied' | 'error'>('idle')
 
-  // Auto-clear share status feedback after 2.5 s (same as FriendsView)
   useEffect(() => {
     if (shareStatus === 'idle') return
-    const t = setTimeout(() => setShareStatus('idle'), 2500)
-    return () => clearTimeout(t)
+    const timer = setTimeout(() => setShareStatus('idle'), 2500)
+    return () => clearTimeout(timer)
   }, [shareStatus])
 
   const topic = useMemo(
-    () =>
-      FRIEND_TOPICS.find(t => t.id === selectedTopicId) ?? FRIEND_TOPICS[0],
-    [selectedTopicId],
+    () => friendTopics.find(topic => topic.id === selectedTopicId) ?? friendTopics[0],
+    [selectedTopicId, friendTopics],
   )
 
   const questions = useMemo(
@@ -88,7 +77,6 @@ export function FriendAnswerView({ invite }: Props) {
     [topic, invite.profileName],
   )
 
-  // Whether any attachments were added across all questions
   const hasAttachments =
     Object.values(localImageIds).some(ids => ids.length > 0) ||
     Object.values(localVideoIds).some(ids => ids.length > 0) ||
@@ -96,7 +84,6 @@ export function FriendAnswerView({ invite }: Props) {
 
   function handleStartFromWelcome() {
     if (!friendName.trim()) return
-    // If no topic was pre-selected, show the picker; else go straight to quiz.
     setStep(selectedTopicId ? 'quiz' : 'topic')
   }
 
@@ -120,7 +107,7 @@ export function FriendAnswerView({ invite }: Props) {
     }
   }
 
-  // ── Media handlers (mirror QuizView pattern) ─────────────
+  // ── Media handlers ───────────────────────────────────────
 
   async function handleAddImage(file: File) {
     const qId = questions[index].id
@@ -205,14 +192,12 @@ export function FriendAnswerView({ invite }: Props) {
     const data = buildExportData()
     setExportCode(encodeAnswerExport(data))
 
-    // Always generate URL as fallback / text-only path
     const plainUrl = generatePlainAnswerUrl(data)
     shareUrlRef.current = plainUrl
     generateAnswerUrl(data)
       .then(url => { shareUrlRef.current = url })
       .catch(() => {})
 
-    // If attachments present, build ZIP in background
     if (hasAttachments) {
       setZipState('building')
       buildFriendAnswerArchive({ ...buildZipOptions(), onProgress: (s) => setZipStep(s) })
@@ -228,17 +213,20 @@ export function FriendAnswerView({ invite }: Props) {
   }
 
   // Synchronous URL share handler – navigator.share() must be called directly
-  // inside the click gesture (no await before the call), otherwise Safari
-  // blocks the share sheet. Identical pattern to FriendsView.handleShare.
+  // inside the click gesture (no await before the call).
   function handleShare() {
     if (isSharing || !shareUrlRef.current) return
 
     const url = shareUrlRef.current
     const shareData = {
-      title: `Meine Erinnerungen an ${invite.profileName}`,
-      text: `Hey ${invite.profileName}! Ich habe gerade ein paar Fragen über dich beantwortet – öffne einfach diesen Link und meine Erinnerungen landen direkt in deinem Lebensarchiv. 🎉`,
+      title: `${t.friendAnswer.doneTitle}`,
+      text: `${t.friendAnswer.doneText.replace('{name}', invite.profileName)}`,
       url,
     }
+    const clipboardText = `${shareData.text}\n\n${url}`
+    // 1 MB — well above any legitimate share URL, guards against hangs
+    // or silent failures on browsers/OSes with stricter clipboard limits.
+    const MAX_CLIPBOARD = 1_000_000
     setIsSharing(true)
 
     if (typeof navigator.share === 'function') {
@@ -248,21 +236,27 @@ export function FriendAnswerView({ invite }: Props) {
         .catch(err => {
           setIsSharing(false)
           if ((err as Error).name === 'AbortError') return
+          if (clipboardText.length > MAX_CLIPBOARD) {
+            setShareStatus('error')
+            return
+          }
           navigator.clipboard
-            ?.writeText(`${shareData.text}\n\n${url}`)
+            ?.writeText(clipboardText)
             .then(() => setShareStatus('copied'))
             .catch(() => setShareStatus('error'))
         })
+    } else if (clipboardText.length > MAX_CLIPBOARD) {
+      setShareStatus('error')
+      setIsSharing(false)
     } else {
       navigator.clipboard
-        .writeText(`${shareData.text}\n\n${url}`)
+        .writeText(clipboardText)
         .then(() => setShareStatus('copied'))
         .catch(() => setShareStatus('error'))
         .finally(() => setIsSharing(false))
     }
   }
 
-  // ZIP share: tries native file share first, falls back to download
   function handleShareZip() {
     if (!zipBlob || isSharing) return
     const safeName  = invite.profileName.replace(/\s+/g, '-').toLowerCase()
@@ -274,8 +268,8 @@ export function FriendAnswerView({ invite }: Props) {
       navigator
         .share({
           files: [zipFile],
-          title: `Meine Erinnerungen an ${invite.profileName}`,
-          text: `Hey ${invite.profileName}! Meine Erinnerungen an dich sind dabei 💛 Öffne diesen Link, lade die Datei hoch und sie landen für immer in deinem Lebensarchiv: ${importUrl}`,
+          title: `${t.friendAnswer.doneTitle}`,
+          text: `${t.friendAnswer.doneText.replace('{name}', invite.profileName)} ${importUrl}`,
         })
         .then(() => setIsSharing(false))
         .catch(err => {
@@ -302,14 +296,12 @@ export function FriendAnswerView({ invite }: Props) {
     return (
       <div className="friend-answer-view">
         <div className="export-done">
-          <div className="export-done__icon">🎉</div>
-          <h2>Danke für deine Erinnerungen!</h2>
+          <div className="export-done__icon">{t.friendAnswer.doneIcon}</div>
+          <h2>{t.friendAnswer.doneTitle}</h2>
           <p>
-            Schick deine Antworten jetzt an <strong>{invite.profileName}</strong> – sie werden
-            direkt in deren Lebensarchiv gespeichert.
+            {t.friendAnswer.doneText.replace('{name}', invite.profileName)}
           </p>
 
-          {/* Primary share action */}
           {hasAttachments ? (
             <button
               className={`share-cta-btn${zipState === 'error' ? ' share-cta-btn--error' : ''}`}
@@ -317,15 +309,15 @@ export function FriendAnswerView({ invite }: Props) {
               disabled={isSharing || zipState === 'building'}
             >
               {isSharing ? (
-                <><span className="share-cta-btn__spinner" aria-hidden="true" />Wird geöffnet…</>
+                <><span className="share-cta-btn__spinner" aria-hidden="true" />{t.friendAnswer.shareOpening}</>
               ) : zipState === 'building' ? (
-                <><span className="share-cta-btn__spinner" aria-hidden="true" />{zipStep || 'Anhänge werden verpackt…'}</>
+                <><span className="share-cta-btn__spinner" aria-hidden="true" />{zipStep || t.friendAnswer.buildingAttachments}</>
               ) : zipState === 'ready' ? (
-                `🎁 Mit Fotos & Aufnahmen verschicken${zipSize ? ` (${fmtBytes(zipSize)})` : ''}`
+                `${t.friendAnswer.shareWithAttachments}${zipSize ? ` (${fmtBytes(zipSize)})` : ''}`
               ) : zipState === 'error' ? (
-                '⚠ Fehler – nur Text teilen'
+                t.friendAnswer.shareError
               ) : (
-                '📤 Erinnerungen verschicken'
+                t.friendAnswer.shareButton
               )}
             </button>
           ) : (
@@ -335,18 +327,17 @@ export function FriendAnswerView({ invite }: Props) {
               disabled={isSharing}
             >
               {isSharing ? (
-                <><span className="share-cta-btn__spinner" aria-hidden="true" />Wird geöffnet…</>
+                <><span className="share-cta-btn__spinner" aria-hidden="true" />{t.friendAnswer.shareOpening}</>
               ) : shareStatus === 'copied' ? (
-                '✓ Link kopiert!'
+                t.friendAnswer.shareCopied
               ) : shareStatus === 'error' ? (
-                '⚠ Nochmal versuchen'
+                t.friendAnswer.shareRetry
               ) : (
-                '📤 Erinnerungen verschicken'
+                t.friendAnswer.shareTextOnly
               )}
             </button>
           )}
 
-          {/* Fallback: text-only link when ZIP is ready */}
           {hasAttachments && zipState === 'ready' && (
             <button
               className="btn btn--ghost btn--sm"
@@ -354,7 +345,7 @@ export function FriendAnswerView({ invite }: Props) {
               onClick={handleShare}
               disabled={isSharing}
             >
-              Nur Text (ohne Anhänge) teilen
+              {t.friendAnswer.textOnlyShare}
             </button>
           )}
 
@@ -362,16 +353,15 @@ export function FriendAnswerView({ invite }: Props) {
             <a href="https://rememberme.dad" target="_blank" rel="noopener noreferrer">
               <img
                 src="/friend-invite-promo.jpeg"
-                alt="RememberMe – Lebensarchiv für deine Erinnerungen"
+                alt={t.friendAnswer.ownCtaImgAlt}
                 className="export-done__own-cta-img"
               />
             </a>
             <p>
-              Möchtest du auch deine eigenen Erinnerungen festhalten?{' '}
+              {t.friendAnswer.ownCtaText}{' '}
               <a href="https://rememberme.dad" target="_blank" rel="noopener noreferrer">
-                Erstelle dein eigenes Lebensarchiv
-              </a>{' '}
-              – kostenlos, für immer und deine Daten bleiben komplett privat.
+                {t.friendAnswer.ownCtaLink}
+              </a>
             </p>
           </div>
         </div>
@@ -384,15 +374,20 @@ export function FriendAnswerView({ invite }: Props) {
     return (
       <div className="friend-answer-view">
         <div className="friend-welcome">
-          <div className="friend-welcome__icon">👋</div>
-          <h1>Hallo!</h1>
-          <p>
-            Du wurdest von <strong>{invite.profileName}</strong> eingeladen, ein paar Fragen
-            über sie oder ihn zu beantworten. Deine Antworten werden im persönlichen
-            Lebensarchiv gespeichert – ein schönes Geschenk!
-          </p>
+          <div className="friend-welcome__icon">{t.friendAnswer.welcomeIcon}</div>
+          <h1>{t.friendAnswer.welcomeTitle}</h1>
+          {(() => {
+            const [before, after = ''] = t.friendAnswer.welcomeText.split('{name}')
+            return (
+              <p>
+                {before}
+                <strong>{invite.profileName}</strong>
+                {after}
+              </p>
+            )
+          })()}
           <div className="friend-name-input">
-            <label className="input-label">Wie heißt du?</label>
+            <label className="input-label">{t.friendAnswer.nameLabel}</label>
             <input
               className="input-text"
               value={friendName}
@@ -400,7 +395,7 @@ export function FriendAnswerView({ invite }: Props) {
               onKeyDown={e =>
                 e.key === 'Enter' && friendName.trim() && handleStartFromWelcome()
               }
-              placeholder="Dein Name..."
+              placeholder={t.friendAnswer.namePlaceholder}
               autoFocus
             />
           </div>
@@ -409,7 +404,7 @@ export function FriendAnswerView({ invite }: Props) {
             onClick={handleStartFromWelcome}
             disabled={!friendName.trim()}
           >
-            Weiter →
+            {t.friendAnswer.startButton}
           </button>
           {selectedTopicId && (
             <p className="friend-welcome__note">
@@ -427,24 +422,20 @@ export function FriendAnswerView({ invite }: Props) {
       <div className="friend-answer-view">
         <div className="friend-topic-picker">
           <h2 className="friend-topic-picker__title">
-            Worüber möchtest du erzählen, {friendName}?
+            {t.friendAnswer.topicHeading.replace('{name}', friendName)}
           </h2>
-          <p className="friend-topic-picker__intro">
-            Wähle eine Kategorie – pro Kategorie gibt es ein paar Fragen über{' '}
-            <strong>{invite.profileName}</strong>.
-          </p>
           <div className="friends-topic-grid">
-            {FRIEND_TOPICS.map(t => (
+            {friendTopics.map(topic => (
               <button
-                key={t.id}
+                key={topic.id}
                 type="button"
                 className="friend-topic-card"
-                onClick={() => handleChooseTopic(t.id)}
+                onClick={() => handleChooseTopic(topic.id)}
               >
-                <span className="friend-topic-card__emoji">{t.emoji}</span>
-                <span className="friend-topic-card__title">{t.title}</span>
+                <span className="friend-topic-card__emoji">{topic.emoji}</span>
+                <span className="friend-topic-card__title">{topic.title}</span>
                 <span className="friend-topic-card__desc">
-                  {resolve(t.description, invite.profileName)}
+                  {resolve(topic.description, invite.profileName)}
                 </span>
               </button>
             ))}
@@ -453,7 +444,7 @@ export function FriendAnswerView({ invite }: Props) {
             className="btn btn--ghost btn--sm"
             onClick={() => setStep('welcome')}
           >
-            ← Zurück
+            {t.friendAnswer.back}
           </button>
         </div>
       </div>
@@ -468,7 +459,7 @@ export function FriendAnswerView({ invite }: Props) {
     <div className="friend-answer-view">
       <div className="quiz-topbar">
         <span className="quiz-category-title">
-          {topic.emoji} {topic.title} – über {invite.profileName}
+          {topic.emoji} {topic.title} – {invite.profileName}
         </span>
       </div>
       <ProgressBar value={progress} />

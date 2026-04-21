@@ -31,6 +31,17 @@ function isZipFile(file: File): boolean {
   )
 }
 
+// Reject ZIP entry names that try to escape their expected prefix
+// (defense-in-depth against malicious archives – JSZip does not sandbox).
+function safeZipEntry(zip: JSZip, path: string, allowedPrefixes: string[]) {
+  if (!path || path.includes('\0')) return null
+  if (path.startsWith('/') || path.startsWith('\\')) return null
+  const normalized = path.replace(/\\/g, '/')
+  if (normalized.split('/').some(seg => seg === '..')) return null
+  if (!allowedPrefixes.some(p => normalized.startsWith(p))) return null
+  return zip.file(normalized)
+}
+
 function validateBackupText(text: string): { ok: true } | { ok: false; error: string } {
   try {
     const parsed = JSON.parse(text) as Record<string, unknown>
@@ -95,7 +106,7 @@ async function importZipFromLoaded(
         10 + Math.round((i / Math.max(imageIds.length, 1)) * 30),
       )
       const id    = imageIds[i]
-      const entry = zip.file(`photos/${id}.jpg`)
+      const entry = safeZipEntry(zip, `photos/${id}.jpg`, ['photos/'])
       if (entry) {
         const base64 = await entry.async('base64')
         await putImageById(id, `data:image/jpeg;base64,${base64}`)
@@ -112,7 +123,8 @@ async function importZipFromLoaded(
         40 + Math.round((i / Math.max(audioIds.length, 1)) * 25),
       )
       const id    = audioIds[i]
-      const entry = zip.file(`audio/${id}.webm`) ?? zip.file(`audio/${id}.mp4`)
+      const entry = safeZipEntry(zip, `audio/${id}.webm`, ['audio/'])
+                 ?? safeZipEntry(zip, `audio/${id}.mp4`, ['audio/'])
       if (entry) {
         const ab      = await entry.async('arraybuffer')
         const mimeType = entry.name.endsWith('.mp4') ? 'audio/mp4' : 'audio/webm'
@@ -131,9 +143,9 @@ async function importZipFromLoaded(
       )
       const id    = videoIds[i]
       const entry =
-        zip.file(`videos/${id}.mp4`) ??
-        zip.file(`videos/${id}.webm`) ??
-        zip.file(`videos/${id}.mov`)
+        safeZipEntry(zip, `videos/${id}.mp4`, ['videos/']) ??
+        safeZipEntry(zip, `videos/${id}.webm`, ['videos/']) ??
+        safeZipEntry(zip, `videos/${id}.mov`, ['videos/'])
       if (entry) {
         const ab      = await entry.async('arraybuffer')
         const mimeType = entry.name.endsWith('.mp4')  ? 'video/mp4'
@@ -191,8 +203,7 @@ async function importFriendAnswerZip(
       const videoIds: string[] = []
 
       for (const zipPath of a.imageFiles ?? []) {
-        const entry = zip.file(zipPath.replace(/^photos\//, 'photos/'))
-                  ?? zip.file(zipPath)
+        const entry = safeZipEntry(zip, zipPath, ['photos/'])
         if (entry) {
           const base64  = await entry.async('base64')
           const newId   = `img-${crypto.randomUUID()}`
@@ -208,8 +219,7 @@ async function importFriendAnswerZip(
       }
 
       if (a.audioFile) {
-        const entry = zip.file(a.audioFile.replace(/^audio\//, 'audio/'))
-                  ?? zip.file(a.audioFile)
+        const entry = safeZipEntry(zip, a.audioFile, ['audio/'])
         if (entry) {
           const ab       = await entry.async('arraybuffer')
           const mimeType = a.audioFile.endsWith('.mp4') ? 'audio/mp4' : 'audio/webm'
@@ -226,8 +236,7 @@ async function importFriendAnswerZip(
       }
 
       for (const zipPath of a.videoFiles ?? []) {
-        const entry = zip.file(zipPath.replace(/^videos\//, 'videos/'))
-                  ?? zip.file(zipPath)
+        const entry = safeZipEntry(zip, zipPath, ['videos/'])
         if (entry) {
           const ab       = await entry.async('arraybuffer')
           const mimeType = zipPath.endsWith('.mp4') ? 'video/mp4'

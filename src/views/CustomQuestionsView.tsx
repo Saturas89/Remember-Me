@@ -5,6 +5,7 @@ import { useImageStore } from '../hooks/useImageStore'
 import { addAudio, removeAudio } from '../hooks/useAudioStore'
 import { addVideo, removeVideo } from '../hooks/useVideoStore'
 import { MediaCapture } from '../components/MediaCapture'
+import { useTranslation } from '../locales'
 import type { CustomQuestion } from '../types'
 
 interface Props {
@@ -45,6 +46,7 @@ export function CustomQuestionsView({
   onImport,
   onBack,
 }: Props) {
+  const { t } = useTranslation()
   const { cache, loadImages, addImage, removeImage } = useImageStore()
   const [newText, setNewText] = useState('')
   const [answeringId, setAnsweringId] = useState<string | null>(null)
@@ -54,11 +56,10 @@ export function CustomQuestionsView({
   const [isSharing, setIsSharing] = useState(false)
   const [shareStatus, setShareStatus] = useState<'idle' | 'copied' | 'error'>('idle')
 
-  // Auto-clear the "Kopiert!" / "Fehler" status after a moment
   useEffect(() => {
     if (shareStatus === 'idle') return
-    const t = setTimeout(() => setShareStatus('idle'), 2500)
-    return () => clearTimeout(t)
+    const timer = setTimeout(() => setShareStatus('idle'), 2500)
+    return () => clearTimeout(timer)
   }, [shareStatus])
 
   function handleAdd() {
@@ -79,7 +80,6 @@ export function CustomQuestionsView({
 
   // Synchronous handler – URL is built before any await so navigator.share()
   // is called directly inside the click gesture (required by Safari / iOS).
-  // Same pattern as FriendsView.handleShare.
   function handleShare() {
     if (customQuestions.length === 0 || isSharing) return
 
@@ -94,10 +94,7 @@ export function CustomQuestionsView({
       setShareStatus('error')
       return
     }
-    const shareData = {
-      title: 'Meine Erinnerungen',
-      url,
-    }
+    const shareData = { title: 'Meine Erinnerungen', url }
 
     setIsSharing(true)
 
@@ -125,12 +122,12 @@ export function CustomQuestionsView({
   function handleImport() {
     const pack = decodeQuestionPack(importCode.trim())
     if (!pack) {
-      setImportMsg({ type: 'error', text: 'Ungültiger Code. Bitte erneut versuchen.' })
+      setImportMsg({ type: 'error', text: t.customQ.importFailed })
       return
     }
     onImport(pack.questions)
     setImportCode('')
-    setImportMsg({ type: 'success', text: `${pack.questions.length} Erinnerung(en) importiert.` })
+    setImportMsg({ type: 'success', text: t.customQ.importSuccess.replace('{n}', String(pack.questions.length)) })
     setTimeout(() => setImportMsg(null), 3000)
   }
 
@@ -139,37 +136,33 @@ export function CustomQuestionsView({
       <img src="/categories/custom-banner.svg" className="quiz-banner" alt="" />
       <div className="archive-topbar">
         <button className="btn btn--ghost btn--sm" onClick={onBack}>
-          ← Zurück
+          {t.global.back}
         </button>
-        <h2 className="archive-title">✏️ Eigene Erinnerungen</h2>
+        <h2 className="archive-title">{t.customQ.title}</h2>
       </div>
 
-      <p className="friends-intro">
-        Halte hier deine eigenen Erinnerungen fest – gib ihnen einen Titel und schreibe auf, was du bewahren möchtest.
-      </p>
+      <p className="friends-intro">{t.customQ.intro}</p>
 
-      {/* Add question */}
       <section className="friends-section">
-        <h3 className="friends-section-title">Erinnerung hinzufügen</h3>
+        <h3 className="friends-section-title">{t.customQ.addHeading}</h3>
         <div className="friends-add-row">
           <input
             className="input-text"
             value={newText}
             onChange={e => setNewText(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleAdd()}
-            placeholder="Titel der Erinnerung..."
+            placeholder={t.customQ.titlePlaceholder}
             style={{ flex: 1 }}
           />
           <button className="btn btn--primary" onClick={handleAdd} disabled={!newText.trim()}>
-            + Hinzufügen
+            {t.customQ.addButton}
           </button>
         </div>
       </section>
 
-      {/* Question list */}
       {customQuestions.length > 0 && (
         <section className="friends-section">
-          <h3 className="friends-section-title">Meine Erinnerungen</h3>
+          <h3 className="friends-section-title">{t.customQ.listHeading}</h3>
           <div className="custom-q-list">
             {customQuestions.map(q => {
               const answer = getAnswer(q.id)
@@ -212,7 +205,7 @@ export function CustomQuestionsView({
                     <button
                       className="btn btn--ghost btn--sm custom-q-delete"
                       onClick={() => onRemove(q.id)}
-                      aria-label="Erinnerung löschen"
+                      aria-label={t.customQ.deleteAriaLabel}
                     >
                       ✕
                     </button>
@@ -226,7 +219,7 @@ export function CustomQuestionsView({
                         value={draftAnswer}
                         onChange={e => setDraftAnswer(e.target.value)}
                         autoFocus
-                        placeholder="Deine Erinnerung..."
+                        placeholder={t.customQ.answerPlaceholder}
                         style={{ marginBottom: '0.6rem' }}
                       />
                       <MediaCapture
@@ -253,13 +246,13 @@ export function CustomQuestionsView({
                           className="btn btn--primary btn--sm"
                           onClick={() => saveAnswer(q)}
                         >
-                          Speichern
+                          {t.customQ.save}
                         </button>
                         <button
                           className="btn btn--ghost btn--sm"
                           onClick={() => setAnsweringId(null)}
                         >
-                          Abbrechen
+                          {t.customQ.cancel}
                         </button>
                       </div>
                     </div>
@@ -268,7 +261,7 @@ export function CustomQuestionsView({
                       {answer.trim() ? (
                         <p className="custom-q-item__answer">{answer}</p>
                       ) : !hasMedia ? (
-                        <span className="custom-q-item__unanswered">Noch nichts eingetragen</span>
+                        <span className="custom-q-item__unanswered">{t.customQ.noAnswerYet}</span>
                       ) : null}
                       {hasMedia && !isAnswering && (
                         <span className="custom-q-item__media-badges">
@@ -281,7 +274,7 @@ export function CustomQuestionsView({
                         className="btn btn--ghost btn--sm"
                         onClick={() => startAnswering(q)}
                       >
-                        {answer.trim() || hasMedia ? '✎ Bearbeiten' : '+ Eintragen'}
+                        {answer.trim() || hasMedia ? t.customQ.editLabel : t.customQ.enterLabel}
                       </button>
                     </div>
                   )}
@@ -292,13 +285,10 @@ export function CustomQuestionsView({
         </section>
       )}
 
-      {/* Share */}
       {customQuestions.length > 0 && (
         <section className="friends-section">
-          <h3 className="friends-section-title">Erinnerungen teilen</h3>
-          <p className="friends-hint">
-            Teile die Erinnerung, sodass andere ihre Gedanken und Erinnerungen daran hinzufügen können.
-          </p>
+          <h3 className="friends-section-title">{t.customQ.shareHeading}</h3>
+          <p className="friends-hint">{t.customQ.shareHint}</p>
           <div className="friends-share">
             <button
               className={`share-cta-btn${shareStatus === 'copied' ? ' share-cta-btn--success' : shareStatus === 'error' ? ' share-cta-btn--error' : ''}`}
@@ -306,31 +296,27 @@ export function CustomQuestionsView({
               disabled={isSharing}
             >
               {isSharing ? (
-                <><span className="share-cta-btn__spinner" aria-hidden="true" />Wird geöffnet…</>
+                <><span className="share-cta-btn__spinner" aria-hidden="true" />{t.customQ.opening}</>
               ) : shareStatus === 'copied' ? (
-                '✓ Link kopiert!'
+                t.customQ.linkCopied
               ) : shareStatus === 'error' ? (
-                '⚠ Nochmal versuchen'
+                t.customQ.shareRetry
               ) : (
-                '🔗 Erinnerungen teilen'
+                t.customQ.shareCta
               )}
             </button>
           </div>
         </section>
       )}
 
-      {/* Import */}
       <section className="friends-section">
-        <h3 className="friends-section-title">Erinnerungen importieren</h3>
-        <p className="friends-hint">
-          Hast du einen Erinnerungs-Code erhalten? Füge ihn hier ein.
-        </p>
+        <h3 className="friends-section-title">{t.customQ.importHeading}</h3>
         <textarea
           className="input-textarea"
           rows={3}
           value={importCode}
           onChange={e => setImportCode(e.target.value)}
-          placeholder="Code hier einfügen..."
+          placeholder={t.customQ.importPlaceholder}
           style={{ marginBottom: '0.6rem' }}
         />
         {importMsg && (
@@ -343,7 +329,7 @@ export function CustomQuestionsView({
           onClick={handleImport}
           disabled={!importCode.trim()}
         >
-          Importieren
+          {t.customQ.importButton}
         </button>
       </section>
     </div>

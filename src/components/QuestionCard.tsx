@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { MediaCapture } from './MediaCapture'
+import { useTranslation } from '../locales'
 import type { Question } from '../types'
 
 interface Props {
@@ -31,6 +32,7 @@ export function QuestionCard({
   onSaveAudio, onRemoveAudio,
   onNext, onPrev, canGoBack,
 }: Props) {
+  const { t } = useTranslation()
   const [value, setValue] = useState(initialValue)
 
   useEffect(() => {
@@ -50,7 +52,7 @@ export function QuestionCard({
   return (
     <div className="question-card">
       <div className="question-card__meta">
-        Frage {index + 1} von {total}
+        {t.questionCard.questionOf.replace('{n}', String(index + 1)).replace('{total}', String(total))}
       </div>
 
       <h2 className="question-card__text">{question.text}</h2>
@@ -66,7 +68,7 @@ export function QuestionCard({
               className="input-textarea"
               value={value}
               onChange={e => handleChange(e.target.value)}
-              placeholder="Deine Antwort…"
+              placeholder={t.questionCard.textPlaceholder}
               rows={5}
             />
             <MediaCapture
@@ -136,16 +138,16 @@ export function QuestionCard({
 
       <div className="question-card__nav">
         <button className="btn btn--ghost" onClick={onPrev} disabled={!canGoBack}>
-          ← Zurück
+          {t.questionCard.prevButton}
         </button>
         <button className="btn btn--primary" onClick={onNext}>
-          {index + 1 < total ? 'Weiter →' : 'Fertig ✓'}
+          {index + 1 < total ? t.questionCard.nextButton : t.questionCard.doneButton}
         </button>
       </div>
 
       {!hasAnswer && (
         <button type="button" className="question-card__skip" onClick={onNext}>
-          Frage überspringen
+          {t.questionCard.skipButton}
         </button>
       )}
     </div>

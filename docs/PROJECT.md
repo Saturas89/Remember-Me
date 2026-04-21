@@ -1,8 +1,8 @@
 # Projektübersicht – Remember Me
 
 **Status:** 🔵 IN PROGRESS  
-**Version:** 1.5.9  
-**Letzte Aktualisierung:** 2026-04-16
+**Version:** 1.6.0  
+**Letzte Aktualisierung:** 2026-04-20
 
 ---
 
@@ -69,6 +69,7 @@ Teilen / Exportieren (PDF, Freunde einladen, KI-Export)
 - [x] Export & Backup-Funktion im Profil (Markdown, JSON, Backup + Wiederherstellung) – v1.5.6
 - [x] PWA Update-Benachrichtigung (Service Worker Prompt, Banner) – v1.5.8
 - [x] Freunde-Einladung: Share-Link-Flow (Web Share API, automatischer Import) – v1.5.9
+- [x] **Release Notes / „Was ist neu?"** – in-App Versionshistorie; UpdateBanner mit optionalem „Was ist neu?"-Button; dauerhafter Einstieg im Profil – v1.6.0
 - [x] **Audio-Aufnahme & Transkription** – Fragen einsprechen statt tippen; automatische Transkription via Web Speech API (lokal, kein Cloud-Upload) wird **immer** als `audioTranscript` gespeichert; Originalton-Datei speicherbar als **optionaler** Schritt (Checkbox im Vorschau-Screen); Archiv zeigt Audio-Player wenn Datei gespeichert (REQ-009)
 - [x] **Video-Anhänge** – Videos zu Antworten hinzufügen; IndexedDB-Speicher (`rm-videos`), Inline-Wiedergabe, ZIP-Export-Integration (REQ-012)
 - [x] **Hilfe & FAQ** – Datenschutz, Import, Export, Offline-Nutzung erklärt; eigene FAQ-Ansicht (REQ-010)
@@ -158,6 +159,7 @@ Update-Banner: `src/components/UpdateBanner.tsx` – Toast bei verfügbarem SW-U
 | AnswerExport | Antworten eines Freundes (base64-codierter Code) |
 | InviteData | Daten im Einladungslink (profileName + friendId + topicId?) |
 | FriendTopic | Thema für Freundes-Einladung (id, title, emoji, description, 5 questions) |
+| Release Notes | Versionsbeschreibungen für Nutzer – was hat sich in der neuen Version geändert; abrufbar im Update-Banner und im Profil |
 | E2EE | Ende-zu-Ende-Verschlüsselung (geplant für Privater Sync) |
 | KI-Export | Archiv in KI-lesbarem Format (Markdown/JSON) – ✔️ umgesetzt |
 | Audio-Aufnahme | Fragen einsprechen statt tippen; Transkript immer gespeichert, Originalton-Datei optional – ✔️ umgesetzt |

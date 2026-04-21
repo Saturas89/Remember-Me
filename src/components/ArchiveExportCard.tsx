@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { buildMemoryArchive, fmtBytes, type ArchiveStats } from '../utils/archiveExport'
 import { recordBackup } from '../utils/backupStatus'
 import { LogoIcon } from './Logo'
+import { useTranslation } from '../locales'
 import type { ExportData } from '../utils/export'
 
 type Phase = 'idle' | 'building' | 'ready' | 'error'
@@ -13,6 +14,7 @@ interface Props {
 }
 
 export function ArchiveExportCard({ data, safeName, onBackupRecorded }: Props) {
+  const { t } = useTranslation()
   const [phase,    setPhase]    = useState<Phase>('idle')
   const [step,     setStep]     = useState('')
   const [pct,      setPct]      = useState(0)
@@ -33,7 +35,7 @@ export function ArchiveExportCard({ data, safeName, onBackupRecorded }: Props) {
   async function handleCreate() {
     setPhase('building')
     setPct(0)
-    setStep('Vorbereitung…')
+    setStep(t.onboarding.preparing)
     try {
       const res = await buildMemoryArchive({
         data,
@@ -44,7 +46,7 @@ export function ArchiveExportCard({ data, safeName, onBackupRecorded }: Props) {
       setPct(100)
       setPhase('ready')
     } catch {
-      setErrMsg('Etwas ist schiefgelaufen. Bitte versuche es noch einmal.')
+      setErrMsg(t.archiveExport.error)
       setPhase('error')
     }
   }
@@ -72,8 +74,8 @@ export function ArchiveExportCard({ data, safeName, onBackupRecorded }: Props) {
       if (typeof navigator.canShare === 'function' && navigator.canShare({ files: [file] })) {
         await navigator.share({
           files: [file],
-          title: 'Mein Erinnerungs-Archiv',
-          text:  'Meine persönliche Lebensgeschichte – erstellt mit Remember Me.',
+          title: t.archiveExport.shareTitle,
+          text:  t.archiveExport.shareText,
         })
         recordBackup()
         onBackupRecorded?.()
@@ -93,24 +95,19 @@ export function ArchiveExportCard({ data, safeName, onBackupRecorded }: Props) {
     return (
       <div className="arc-outer">
         <div className="arc-card">
-          <div className="arc-icon">
-            <LogoIcon size={56} />
-          </div>
-          <h3 className="arc-title">Deine Erinnerungen</h3>
-          <p className="arc-desc">
-            Alles was du festgehalten hast – Texte, Fotos und Sprachaufnahmen –
-            sicher in einem Paket. Etwas das für immer bleibt und du ablegen kannst wo du magst.
-          </p>
+          <div className="arc-icon"><LogoIcon size={56} /></div>
+          <h3 className="arc-title">{t.archiveExport.title}</h3>
+          <p className="arc-desc">{t.archiveExport.desc}</p>
           {(answerCount + photoCount + videoCount + audioCount) > 0 && (
             <div className="arc-chips">
-              {answerCount > 0 && <span className="arc-chip">📝 {answerCount} Antworten</span>}
-              {photoCount  > 0 && <span className="arc-chip">🖼 {photoCount} Fotos</span>}
-              {videoCount  > 0 && <span className="arc-chip">🎬 {videoCount} Videos</span>}
-              {audioCount  > 0 && <span className="arc-chip">🎙 {audioCount} Aufnahmen</span>}
+              {answerCount > 0 && <span className="arc-chip">📝 {t.archiveExport.answersChip.replace('{n}', String(answerCount))}</span>}
+              {photoCount  > 0 && <span className="arc-chip">🖼 {t.archiveExport.photosChip.replace('{n}', String(photoCount))}</span>}
+              {videoCount  > 0 && <span className="arc-chip">🎬 {t.archiveExport.videosChip.replace('{n}', String(videoCount))}</span>}
+              {audioCount  > 0 && <span className="arc-chip">🎙 {t.archiveExport.recordingsChip.replace('{n}', String(audioCount))}</span>}
             </div>
           )}
           <button className="btn btn--primary arc-cta" onClick={handleCreate}>
-            ✦ Jetzt sichern
+            {t.archiveExport.saveButton}
           </button>
         </div>
       </div>
@@ -135,28 +132,29 @@ export function ArchiveExportCard({ data, safeName, onBackupRecorded }: Props) {
   }
 
   if (phase === 'ready' && stats && zipBlob) {
+    const fmt = (n: number, one: string, many: string) => n === 1 ? `${n} ${one}` : `${n} ${many}`
     const mediaLine = [
-      stats.photoCount > 0 ? `${stats.photoCount} Foto${stats.photoCount !== 1 ? 's' : ''}` : '',
-      stats.videoCount > 0 ? `${stats.videoCount} Video${stats.videoCount !== 1 ? 's' : ''}` : '',
-      stats.audioCount > 0 ? `${stats.audioCount} Aufnahme${stats.audioCount !== 1 ? 'n' : ''}` : '',
+      stats.photoCount > 0 ? fmt(stats.photoCount, t.archiveExport.photo, t.archiveExport.photos) : '',
+      stats.videoCount > 0 ? fmt(stats.videoCount, t.archiveExport.video, t.archiveExport.videos) : '',
+      stats.audioCount > 0 ? fmt(stats.audioCount, t.archiveExport.recording, t.archiveExport.recordings) : '',
     ].filter(Boolean).join(' · ')
 
     return (
       <div className="arc-outer">
         <div className="arc-card arc-card--ready">
           <div className="arc-done-icon" aria-hidden="true">✓</div>
-          <h3 className="arc-title">Erinnerungen gesichert!</h3>
+          <h3 className="arc-title">{t.archiveExport.saved}</h3>
           <p className="arc-desc arc-desc--subtle">
             {mediaLine && <span>{mediaLine} · </span>}
             {fmtBytes(stats.totalBytes)}
           </p>
           <div className="arc-actions">
             <button className="btn btn--primary arc-action-btn" onClick={handleSave}>
-              💾 Auf Gerät sichern
+              {t.archiveExport.saveToDevice}
             </button>
             {canShare && (
               <button className="btn btn--outline arc-action-btn" onClick={handleShare}>
-                📤 Teilen
+                {t.archiveExport.share}
               </button>
             )}
           </div>
@@ -164,7 +162,7 @@ export function ArchiveExportCard({ data, safeName, onBackupRecorded }: Props) {
             className="arc-reset"
             onClick={() => { setPhase('idle'); setZipBlob(null); setStats(null) }}
           >
-            Erneut sichern
+            {t.archiveExport.saveAgain}
           </button>
         </div>
       </div>
@@ -177,7 +175,7 @@ export function ArchiveExportCard({ data, safeName, onBackupRecorded }: Props) {
         <div className="arc-card">
           <p className="arc-error">{errMsg}</p>
           <button className="btn btn--ghost" onClick={() => setPhase('idle')}>
-            Erneut versuchen
+            {t.archiveExport.retry}
           </button>
         </div>
       </div>

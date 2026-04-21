@@ -1,4 +1,6 @@
 import { CATEGORIES } from '../data/categories'
+import { getCategoriesForLocale } from '../data/categories'
+import { useTranslation } from '../locales'
 import { CategoryCard } from '../components/CategoryCard'
 import { HeroLogo } from '../components/Logo'
 import type { Friend, FriendAnswer, CustomQuestion } from '../types'
@@ -22,8 +24,11 @@ export function HomeView({
   onSelectCategory,
   onOpenFaq,
 }: Props) {
-  const totalQuestions = CATEGORIES.reduce((s, c) => s + c.questions.length, 0)
-  const totalAnswered = CATEGORIES.reduce(
+  const { t, locale } = useTranslation()
+  const categories = getCategoriesForLocale(locale)
+  void CATEGORIES
+  const totalQuestions = categories.reduce((s, c) => s + c.questions.length, 0)
+  const totalAnswered = categories.reduce(
     (s, c) =>
       s + Math.round((getCategoryProgress(c.id, c.questions.length) / 100) * c.questions.length),
     0,
@@ -40,19 +45,19 @@ export function HomeView({
           type="button"
           className="home-faq-btn"
           onClick={onOpenFaq}
-          aria-label="Hilfe & FAQ"
-          title="Hilfe & FAQ"
+          aria-label={t.home.faqAriaLabel}
+          title={t.home.faqAriaLabel}
         >
           ?
         </button>
         <HeroLogo />
-        <h1 className="sr-only">Deine persönliche Lebensgeschichte</h1>
+        <h1 className="sr-only">{t.home.appTitle}</h1>
         {profileName && (
-          <p className="home-greeting">Hallo, {profileName}</p>
+          <p className="home-greeting">{t.home.greeting.replace('{name}', profileName)}</p>
         )}
         {overallProgress > 0 && (
           <div className="home-overall">
-            <span>{overallProgress}% deiner Geschichte erzählt</span>
+            <span>{t.home.progress.replace('{pct}', String(overallProgress))}</span>
             <div className="home-overall-bar">
               <div className="home-overall-fill" style={{ width: `${overallProgress}%` }} />
             </div>
@@ -61,7 +66,7 @@ export function HomeView({
       </header>
 
       <section className="categories-grid">
-        {CATEGORIES.map(cat => (
+        {categories.map(cat => (
           <CategoryCard
             key={cat.id}
             category={cat}
@@ -69,19 +74,16 @@ export function HomeView({
             onClick={() => onSelectCategory(cat.id)}
           />
         ))}
-        {/* Custom questions as a special category card */}
         <button
           type="button"
           className="category-card category-card--custom"
           onClick={() => onSelectCategory('custom')}
         >
-          <img src="/categories/custom-preview.svg" className="category-card__image" alt="Eigene Erinnerungen – benutzerdefinierte Kategorie" />
+          <img src="/categories/custom-preview.svg" className="category-card__image" alt={t.home.customCatImgAlt} />
           <div className="category-card__body">
-            <h3 className="category-card__title">Eigene Erinnerung</h3>
+            <h3 className="category-card__title">{t.home.customCatTitle}</h3>
             <p className="category-card__desc">
-              {customQuestions.length > 0
-                ? 'Deine Erinnerungen – teile sie und lass Liebste deine Geschichte ergänzen'
-                : 'Was hat dich geprägt? Halte es fest – und lade Liebste ein, deine Geschichte zu bereichern'}
+              {customQuestions.length > 0 ? t.home.customCatDesc : t.home.customCatDescEmpty}
             </p>
           </div>
         </button>

@@ -21,6 +21,7 @@ Alle funktionalen und nicht-funktionalen Anforderungen des Projekts.
 | [REQ-011](./REQ-011-archive-export.md) | Erinnerungs-Archiv (ZIP + Share Sheet) | Export | Medium | ✔️ COMPLETED |
 | [REQ-012](./REQ-012-video-attachments.md) | Video-Anhänge | Medien | Medium | ✔️ COMPLETED |
 | [REQ-013](./REQ-013-archive-import.md) | Erinnerungs-Archiv-Import (ZIP + JSON) | Import | Medium | ✔️ COMPLETED |
+| [REQ-014](./REQ-014-release-notes.md) | Release Notes / „Was ist neu?" | UX | Low | ✔️ COMPLETED |
 
 ---
 

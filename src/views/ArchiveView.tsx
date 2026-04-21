@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
-import { CATEGORIES } from '../data/categories'
-import { FRIEND_QUESTIONS } from '../data/friendQuestions'
+import { getCategoriesForLocale } from '../data/categories'
+import { getFriendQuestionsForLocale } from '../data/friendQuestions'
 import { ImageAttachment } from '../components/ImageAttachment'
 import { VideoAttachment } from '../components/VideoAttachment'
 import { AudioPlayer } from '../components/AudioPlayer'
@@ -8,6 +8,7 @@ import { MediaCapture } from '../components/MediaCapture'
 import { useImageStore } from '../hooks/useImageStore'
 import { addAudio, removeAudio } from '../hooks/useAudioStore'
 import { addVideo, removeVideo } from '../hooks/useVideoStore'
+import { useTranslation } from '../locales'
 import type { Answer, FriendAnswer, Friend, CustomQuestion } from '../types'
 
 interface Props {
@@ -21,7 +22,7 @@ interface Props {
   onSetVideos: (questionId: string, categoryId: string, videoIds: string[]) => void
   onSetAudio: (questionId: string, categoryId: string, audioId: string | undefined, audioTranscribedAt: string | undefined, audioTranscript?: string) => void
   onDeleteAnswer: (questionId: string) => void
-  onDeleteEntry: (questionId: string) => void   // removes custom Q + its answer
+  onDeleteEntry: (questionId: string) => void
   onBack: () => void
 }
 
@@ -39,16 +40,17 @@ export function ArchiveView({
   onDeleteEntry,
   onBack,
 }: Props) {
+  const { t, locale } = useTranslation()
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editValue, setEditValue] = useState('')
   const { cache, loadImages, addImage, removeImage } = useImageStore()
 
   const friendQuestionsMap = useMemo(() => {
-    return Object.fromEntries(FRIEND_QUESTIONS.map(q => [
+    return Object.fromEntries(getFriendQuestionsForLocale(locale).map(q => [
       q.id,
       q.text.replace(/\{name\}/g, profileName || 'dir')
     ]))
-  }, [profileName])
+  }, [profileName, locale])
 
   const friendAnswersByFriendId = useMemo(() => {
     return friendAnswers.reduce((acc, a) => {
@@ -61,7 +63,6 @@ export function ArchiveView({
     }, {} as Record<string, FriendAnswer[]>)
   }, [friendAnswers])
 
-  // Pre-load all images (owner answers + friend answers)
   useEffect(() => {
     const ownerIds  = Object.values(answers).flatMap(a => a.imageIds ?? [])
     const friendIds = friendAnswers.flatMap(a => a.imageIds ?? [])
@@ -136,12 +137,12 @@ export function ArchiveView({
   // ── Delete handlers ──────────────────────────────────────
 
   function handleDeleteAnswer(questionId: string) {
-    if (!window.confirm('Diese Antwort wirklich löschen?')) return
+    if (!window.confirm(t.archiveView.confirmDeleteAnswer)) return
     onDeleteAnswer(questionId)
   }
 
   function handleDeleteEntry(questionId: string) {
-    if (!window.confirm('Diesen Eintrag wirklich löschen?')) return
+    if (!window.confirm(t.archiveView.confirmDeleteEntry)) return
     onDeleteEntry(questionId)
   }
 
@@ -160,7 +161,7 @@ export function ArchiveView({
 
   function displayDate(answer: Answer): string {
     const raw = answer.eventDate ?? answer.createdAt
-    return new Date(raw).toLocaleDateString('de-DE', {
+    return new Date(raw).toLocaleDateString(locale === 'en' ? 'en-GB' : 'de-DE', {
       day: 'numeric', month: 'long', year: 'numeric',
     })
   }
@@ -171,13 +172,14 @@ export function ArchiveView({
 
   // ── Derived lists ────────────────────────────────────────
 
-  const categoriesWithAnswers = CATEGORIES.filter(cat =>
+  const categories = getCategoriesForLocale(locale)
+  const categoriesWithAnswers = categories.filter(cat =>
     cat.questions.some(q => hasContent(q.id)),
   )
   const customWithAnswers = customQuestions.filter(q => hasContent(q.id))
   const friendsWithAnswers = friends.filter(f => {
-    const answers = friendAnswersByFriendId[f.id]
-    return answers && answers.length > 0
+    const fa = friendAnswersByFriendId[f.id]
+    return fa && fa.length > 0
   })
   const hasAnything =
     categoriesWithAnswers.length > 0 ||
@@ -218,13 +220,13 @@ export function ArchiveView({
             className="btn btn--primary btn--sm"
             onClick={() => commitEdit(questionId, categoryId)}
           >
-            Speichern
+            {t.archiveView.save}
           </button>
           <button
             className="btn btn--ghost btn--sm"
             onClick={() => setEditingId(null)}
           >
-            Abbrechen
+            {t.archiveView.cancel}
           </button>
         </div>
       </div>
@@ -235,18 +237,16 @@ export function ArchiveView({
 
   return (
     <div className="archive-view">
-      <h1 className="sr-only">Lebensarchiv</h1>
+      <h1 className="sr-only">{t.archiveView.pageTitle}</h1>
       <div className="archive-topbar">
         <button className="btn btn--ghost btn--sm no-print" onClick={onBack}>
-          ← Zurück
+          {t.global.back}
         </button>
-        <h2 className="archive-title">📖 Mein Vermächtnis</h2>
+        <h2 className="archive-title">{t.archiveView.title}</h2>
       </div>
 
       {!hasAnything && (
-        <p className="archive-empty">
-          Noch keine Antworten gespeichert. Starte mit einer Kategorie!
-        </p>
+        <p className="archive-empty">{t.archiveView.empty}</p>
       )}
 
       {/* ── Own answers grouped by category ── */}
@@ -287,7 +287,7 @@ export function ArchiveView({
                         <span className="archive-entry__date">
                           {displayDate(answers[q.id])}
                           {wasEdited(answers[q.id]) && (
-                            <span className="archive-entry__edited"> · bearbeitet</span>
+                            <span className="archive-entry__edited"> · {t.archiveView.edited}</span>
                           )}
                         </span>
                         <div className="archive-entry__actions no-print">
@@ -295,8 +295,8 @@ export function ArchiveView({
                             <button
                               className="archive-entry__delete-btn"
                               onClick={() => handleDeleteAudio(q.id, cat.id, answers[q.id].audioId!)}
-                              aria-label="Aufnahme löschen"
-                              title="Aufnahme löschen"
+                              aria-label={t.archiveView.deleteAudioAriaLabel}
+                              title={t.archiveView.deleteAudioAriaLabel}
                             >
                               🎙✕
                             </button>
@@ -304,14 +304,14 @@ export function ArchiveView({
                           <button
                             className="archive-entry__edit-btn"
                             onClick={() => startEdit(q.id, answers[q.id].value)}
-                            aria-label="Antwort bearbeiten"
+                            aria-label={t.archiveView.editAnswerAriaLabel}
                           >
                             ✏️
                           </button>
                           <button
                             className="archive-entry__delete-btn"
                             onClick={() => handleDeleteAnswer(q.id)}
-                            aria-label="Antwort löschen"
+                            aria-label={t.archiveView.deleteAnswerAriaLabel}
                           >
                             🗑
                           </button>
@@ -327,7 +327,7 @@ export function ArchiveView({
       {/* ── Custom & imported entries ── */}
       {customWithAnswers.length > 0 && (
         <section className="archive-section">
-          <h3 className="archive-section-title">✏️ Eigene Fragen &amp; Erinnerungen</h3>
+          <h3 className="archive-section-title">{t.archiveView.customSectionTitle}</h3>
           {customWithAnswers.map(q => {
             const answer = answers[q.id]
             const src = answer.importSource
@@ -366,7 +366,7 @@ export function ArchiveView({
                         <span className="archive-entry__date">
                           {displayDate(answer)}
                           {wasEdited(answer) && (
-                            <span className="archive-entry__edited"> · bearbeitet</span>
+                            <span className="archive-entry__edited"> · {t.archiveView.edited}</span>
                           )}
                         </span>
                         <div className="archive-entry__actions no-print">
@@ -374,8 +374,8 @@ export function ArchiveView({
                             <button
                               className="archive-entry__delete-btn"
                               onClick={() => handleDeleteAudio(q.id, 'custom', answer.audioId!)}
-                              aria-label="Aufnahme löschen"
-                              title="Aufnahme löschen"
+                              aria-label={t.archiveView.deleteAudioAriaLabel}
+                              title={t.archiveView.deleteAudioAriaLabel}
                             >
                               🎙✕
                             </button>
@@ -383,14 +383,14 @@ export function ArchiveView({
                           <button
                             className="archive-entry__edit-btn"
                             onClick={() => startEdit(q.id, answer.value)}
-                            aria-label="Eintrag bearbeiten"
+                            aria-label={t.archiveView.editAnswerAriaLabel}
                           >
                             ✏️
                           </button>
                           <button
                             className="archive-entry__delete-btn"
                             onClick={() => handleDeleteEntry(q.id)}
-                            aria-label="Eintrag löschen"
+                            aria-label={t.archiveView.deleteAnswerAriaLabel}
                           >
                             🗑
                           </button>
@@ -408,7 +408,7 @@ export function ArchiveView({
       {friendsWithAnswers.length > 0 && (
         <section className="archive-section archive-section--friends">
           <h3 className="archive-section-title archive-section-title--friends">
-            👥 Was Freunde über mich sagen
+            {t.archiveView.friendsSectionTitle}
           </h3>
           {friendsWithAnswers.map(friend => {
             const thisAnswers = friendAnswersByFriendId[friend.id] || []
@@ -417,7 +417,7 @@ export function ArchiveView({
                 <div className="friend-contribution__header">
                   <span className="friend-contribution__name">{friend.name}</span>
                   <span className="friend-contribution__count">
-                    {thisAnswers.length} Antworten
+                    {thisAnswers.length} {t.profile.answersLabel}
                   </span>
                 </div>
                 {thisAnswers.map(a => {
@@ -425,7 +425,7 @@ export function ArchiveView({
                   const questionText =
                     a.questionText ??
                     resolvedText ??
-                    'Frage nicht mehr verfügbar'
+                    t.archiveView.questionNotAvailable
                   return (
                     <div key={a.id} className="archive-entry archive-entry--friend">
                       <p className="archive-entry__question">{questionText}</p>
@@ -445,7 +445,7 @@ export function ArchiveView({
                       )}
                       {a.audioId && <AudioPlayer audioId={a.audioId} />}
                       <span className="archive-entry__date">
-                        {new Date(a.createdAt).toLocaleDateString('de-DE')}
+                        {new Date(a.createdAt).toLocaleDateString(locale === 'en' ? 'en-GB' : 'de-DE')}
                       </span>
                     </div>
                   )

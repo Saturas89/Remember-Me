@@ -1,4 +1,5 @@
 import './Logo.css'
+import { useTranslation } from '../locales'
 import type { InstallState } from '../hooks/useInstallPrompt'
 
 interface Props {
@@ -26,20 +27,16 @@ const ShareIcon = () => (
 )
 
 export function InstallBanner({ state, onInstall, onDismiss }: Props) {
+  const { t } = useTranslation()
   if (state.type !== 'android' && state.type !== 'ios') return null
 
   return (
     <>
-      {/* Backdrop */}
       <div className="install-overlay" onClick={onDismiss} aria-hidden="true" />
-
-      {/* Modal */}
-      <div className="install-modal" role="dialog" aria-modal="true" aria-label="App installieren">
-        <button className="install-modal__close" onClick={onDismiss} aria-label="Schließen">
+      <div className="install-modal" role="dialog" aria-modal="true" aria-label={t.install.ariaLabel}>
+        <button className="install-modal__close" onClick={onDismiss} aria-label={t.install.ariaClose}>
           ✕
         </button>
-
-        {/* Branding */}
         <div className="install-modal__brand">
           <HeartIcon />
           <span className="install-modal__app-name">Remember Me</span>
@@ -47,16 +44,14 @@ export function InstallBanner({ state, onInstall, onDismiss }: Props) {
 
         {state.type === 'android' && (
           <>
-            <h2 className="install-modal__title">Zum Startbildschirm hinzufügen</h2>
-            <p className="install-modal__desc">
-              Installiere Remember Me als App – immer griffbereit, auch ohne Internetverbindung.
-            </p>
+            <h2 className="install-modal__title">{t.install.androidTitle}</h2>
+            <p className="install-modal__desc">{t.install.androidDesc}</p>
             <div className="install-modal__actions">
               <button className="btn btn--primary" onClick={onInstall}>
-                Jetzt installieren
+                {t.install.installNow}
               </button>
               <button className="btn btn--ghost" onClick={onDismiss}>
-                Nicht jetzt
+                {t.install.notNow}
               </button>
             </div>
           </>
@@ -64,36 +59,27 @@ export function InstallBanner({ state, onInstall, onDismiss }: Props) {
 
         {state.type === 'ios' && (
           <>
-            <h2 className="install-modal__title">Zum Startbildschirm hinzufügen</h2>
-            <p className="install-modal__desc">
-              Öffne Remember Me als App direkt vom Homescreen – auch offline verfügbar.
-            </p>
-
-            {/* Step-by-step iOS instructions */}
+            <h2 className="install-modal__title">{t.install.iosTitle}</h2>
+            <p className="install-modal__desc">{t.install.iosDesc}</p>
             <ol className="install-modal__steps">
               <li>
-                Tippe auf das Teilen-Symbol{' '}
-                <span className="install-modal__share-badge">
-                  <ShareIcon />
-                </span>{' '}
-                in der Menüleiste
+                {t.locale === 'de' ? 'Tippe auf das Teilen-Symbol' : 'Tap the Share icon'}{' '}
+                <span className="install-modal__share-badge"><ShareIcon /></span>{' '}
+                {t.install.step1}
               </li>
               <li>
-                Wähle <strong>„Zum Home-Bildschirm"</strong>
+                {t.locale === 'de' ? 'Wähle' : 'Select'} <strong>{t.install.step2}</strong>
               </li>
               <li>
-                Tippe auf <strong>„Hinzufügen"</strong>
+                {t.locale === 'de' ? 'Tippe auf' : 'Tap'} <strong>{t.install.step3}</strong>
               </li>
             </ol>
-
-            {/* Arrow pointing down to iOS toolbar */}
             <div className="install-modal__arrow-hint" aria-hidden="true">
               <span>↓</span>
-              <span className="install-modal__arrow-label">Menüleiste</span>
+              <span className="install-modal__arrow-label">{t.install.menuHint}</span>
             </div>
-
             <button className="btn btn--ghost" onClick={onDismiss} style={{ marginTop: '0.5rem' }}>
-              Verstanden
+              {t.install.understand}
             </button>
           </>
         )}
