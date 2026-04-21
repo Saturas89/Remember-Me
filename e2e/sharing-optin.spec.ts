@@ -71,15 +71,18 @@ test.describe('Online sharing – opt-in contract', () => {
     const chunkRequests: string[] = []
     page.on('request', req => {
       const url = req.url()
-      if (/supabase/i.test(url) && /\.(js|mjs)(\?|$)/.test(url)) {
+      // Match both the lazy sharingService-*.js chunk name and any stray
+      // supabase-*.js filename (defensive).
+      if (/(supabase|sharingService)/i.test(url) && /\.(js|mjs)(\?|$)/.test(url)) {
         chunkRequests.push(url)
       }
     })
     await completeOnboarding(page, 'Anna')
     await openFriendsTab(page)
-    // Visit Archive + Home too — still no supabase chunk should load.
+    // Poke a couple more tabs to surface any lazy import. Tab label comes
+    // from the German locale (t.nav.archive === 'Vermächtnis').
     const nav = page.getByRole('navigation', { name: 'Hauptnavigation' })
-    await nav.getByRole('button', { name: 'Archiv', exact: true }).click()
+    await nav.getByRole('button', { name: 'Vermächtnis', exact: true }).click()
     await page.waitForTimeout(300)
     expect(chunkRequests).toEqual([])
   })
