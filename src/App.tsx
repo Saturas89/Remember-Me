@@ -6,9 +6,11 @@ import {
   isSecureInviteHash,
   isAnswerHash,
   isMemoryShareHash,
+  isContactHash,
   parseSecureInviteFromHash,
   parseAnswerFromHash,
   parseMemoryShareFromHash,
+  parseContactFromHash,
   generatePlainInviteUrl,
   generateSecureInviteUrl,
 } from './utils/secureLink'
@@ -24,6 +26,19 @@ import { FaqView } from './views/FaqView'
 import { OnboardingView } from './views/OnboardingView'
 import { SharedMemoryView } from './views/SharedMemoryView'
 import { FeatureView } from './views/FeatureView'
+import { OnlineSharingIntroView } from './views/OnlineSharingIntroView'
+import { OnlineSharingHubView } from './views/OnlineSharingHubView'
+import { ContactHandshakeView } from './views/ContactHandshakeView'
+import { useOnlineSync } from './hooks/useOnlineSync'
+
+/** True at build time when VITE_SUPABASE_URL + VITE_SUPABASE_ANON_KEY are set.
+ *  Kept inline here (instead of reusing utils/supabaseClient's helper) so the
+ *  main bundle does NOT statically import @supabase/supabase-js – that module
+ *  is only reached via dynamic import() from useOnlineSync once the user has
+ *  opted in. */
+const ONLINE_SHARING_CONFIGURED = Boolean(
+  import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY,
+)
 import { SEOHead } from './components/SEOHead'
 import { InstallBanner } from './components/InstallBanner'
 import { UpdateBanner } from './components/UpdateBanner'
@@ -34,7 +49,7 @@ import { useServiceWorker } from './hooks/useServiceWorker'
 import { useReminder } from './hooks/useReminder'
 import { exportAsMarkdown, exportAsEnrichedJSON, downloadFile } from './utils/export'
 import { importFile } from './utils/archiveImport'
-import type { Category, InviteData, AnswerExport, MemorySharePayload } from './types'
+import type { Category, InviteData, AnswerExport, MemorySharePayload, ContactHandshake } from './types'
 import './App.css'
 
 type View =
@@ -47,11 +62,15 @@ type View =
   | { name: 'custom-questions' }
   | { name: 'import' }
   | { name: 'faq'; from: 'profile' | 'home' }
+  | { name: 'online-intro' }
+  | { name: 'online-hub' }
 
 type MainTab = 'home' | 'friends' | 'archive' | 'feature' | 'profile'
 
 // Detect URL type synchronously to show a loading state before async parse
 const needsAsyncParse = isSecureInviteHash() || isAnswerHash() || isMemoryShareHash()
+// #contact/ is parsed synchronously (no crypto, no compression)
+const initialContactHandshake = isContactHash() ? parseContactFromHash() : null
 
 // ── Pathname ↔ View mapping (for Vercel Analytics page tracking) ──────────
 function pathToView(pathname: string): View {
@@ -95,10 +114,12 @@ export default function App() {
     friends,
     friendAnswers,
     customQuestions,
+    onlineSharing,
     saveAnswer,
     setAnswerImages,
     setAnswerVideos,
     saveProfile,
+    addFriend,
     removeFriend,
     importFriendAnswers,
     importFriendAnswerZipData,
@@ -109,12 +130,28 @@ export default function App() {
     deleteAnswer,
     setAnswerAudio,
     restoreBackup,
+    enableOnlineSharing,
+    disableOnlineSharing,
+    setOnlineSharing,
+    removeOnlineFriends,
     getAnswer,
     getAnswerImageIds,
     getAnswerVideoIds,
     getAnswerAudioId,
     getCategoryProgress,
   } = useAnswers()
+
+  // Pending contact handshake (from URL hash). Parsed synchronously at module
+  // load, then held here until the user explicitly accepts in the UI.
+  const [pendingContact, setPendingContact] = useState<ContactHandshake | null>(
+    initialContactHandshake,
+  )
+
+  // Online-sync is a no-op unless the user has opted in. The hook internally
+  // dynamic-imports the Supabase client module only when enabled === true.
+  const onlineSync = useOnlineSync(onlineSharing, (deviceId, publicKey) => {
+    setOnlineSharing({ deviceId, publicKey })
+  })
 
   // Resolve secure invite / answer-import / memory-share URL asynchronously on first mount
   useEffect(() => {
@@ -222,6 +259,30 @@ export default function App() {
 
   if (sharedMemory) {
     return <SharedMemoryView payload={sharedMemory} />
+  }
+
+  if (pendingContact) {
+    return (
+      <ContactHandshakeView
+        handshake={pendingContact}
+        profileName={profile?.name ?? ''}
+        myDeviceId={onlineSync.deviceId}
+        myPublicKey={onlineSync.publicKeyB64}
+        enabled={Boolean(onlineSharing?.enabled)}
+        onEnable={() => enableOnlineSharing()}
+        onAcceptContact={h => {
+          addFriend(h.displayName || 'Kontakt', undefined, {
+            deviceId: h.deviceId,
+            publicKey: h.publicKey,
+            linkedAt: new Date().toISOString(),
+          })
+        }}
+        onDismiss={() => {
+          setPendingContact(null)
+          history.replaceState({}, '', '/friends')
+        }}
+      />
+    )
   }
 
   // First-time open: show onboarding before anything else
@@ -332,6 +393,39 @@ export default function App() {
           onRemoveFriend={removeFriend}
           onImportZip={handleImportFriendZip}
           onBack={() => goTo({ name: 'home' })}
+          onOpenOnlineSharing={() => goTo({ name: onlineSharing?.enabled ? 'online-hub' : 'online-intro' })}
+          onlineSharingEnabled={Boolean(onlineSharing?.enabled)}
+          onlineSharingConfigured={ONLINE_SHARING_CONFIGURED}
+        />
+      )}
+
+      {view.name === 'online-intro' && (
+        <OnlineSharingIntroView
+          configured={ONLINE_SHARING_CONFIGURED}
+          onActivate={() => {
+            enableOnlineSharing()
+            goTo({ name: 'online-hub' })
+          }}
+          onBack={() => goTo({ name: 'friends' })}
+        />
+      )}
+
+      {view.name === 'online-hub' && (
+        <OnlineSharingHubView
+          profileName={profile?.name ?? ''}
+          friends={friends}
+          answers={answers}
+          sync={onlineSync}
+          onBack={() => goTo({ name: 'friends' })}
+          onDeactivate={async () => {
+            const svc = onlineSync.service
+            if (svc) {
+              try { await svc.deactivateOnlineSharing() } catch (e) { console.error(e) }
+            }
+            removeOnlineFriends()
+            disableOnlineSharing()
+            goTo({ name: 'friends' })
+          }}
         />
       )}
 

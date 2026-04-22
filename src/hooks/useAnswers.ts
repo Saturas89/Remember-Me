@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react'
 import { BACKUP_TYPE } from '../utils/export'
-import type { Profile, AppState, Answer, Friend, FriendAnswer, AnswerExport, CustomQuestion, FriendAnswerZipPayload } from '../types'
+import type { Profile, AppState, Answer, Friend, FriendAnswer, AnswerExport, CustomQuestion, FriendAnswerZipPayload, OnlineSharingState } from '../types'
 
 const STORAGE_KEY = 'remember-me-state'
 
@@ -19,6 +19,7 @@ async function loadStateAsync(): Promise<AppState> {
             friends: parsed.friends ?? [],
             friendAnswers: parsed.friendAnswers ?? [],
             customQuestions: parsed.customQuestions ?? [],
+            onlineSharing: parsed.onlineSharing, // undefined unless opted in
           })
           return
         }
@@ -180,13 +181,35 @@ export function useAnswers() {
 
   // ── Friends ──────────────────────────────────────────────
 
-  const addFriend = useCallback((name: string, id?: string): Friend => {
+  const addFriend = useCallback((
+    name: string,
+    id?: string,
+    online?: Friend['online'],
+  ): Friend => {
     const friend: Friend = {
       id: id ?? `friend-${Date.now()}-${crypto.randomUUID()}`,
       name: name.trim(),
       addedAt: new Date().toISOString(),
+      ...(online ? { online } : {}),
     }
     setState(prev => {
+      // If a friend with the same online.deviceId already exists, update in
+      // place rather than duplicating – contact handshakes can be re-opened.
+      if (online) {
+        const existing = prev.friends.find(f => f.online?.deviceId === online.deviceId)
+        if (existing) {
+          const next: AppState = {
+            ...prev,
+            friends: prev.friends.map(f =>
+              f.online?.deviceId === online.deviceId
+                ? { ...f, name: friend.name, online: { ...f.online, ...online } }
+                : f,
+            ),
+          }
+          saveState(next)
+          return next
+        }
+      }
       const next: AppState = { ...prev, friends: [...prev.friends, friend] }
       saveState(next)
       return next
@@ -400,6 +423,52 @@ export function useAnswers() {
     setState(fresh)
   }, [])
 
+  // ── Online sharing opt-in ────────────────────────────────────
+  //
+  // Persistence only. Actually talking to Supabase happens in a lazy-loaded
+  // module that is only imported when onlineSharing.enabled === true. See
+  // useOnlineSync / supabaseClient.
+
+  const setOnlineSharing = useCallback((patch: Partial<OnlineSharingState> | undefined) => {
+    setState(prev => {
+      const next: AppState = {
+        ...prev,
+        onlineSharing: patch
+          ? { ...(prev.onlineSharing ?? { enabled: false }), ...patch }
+          : undefined,
+      }
+      saveState(next)
+      return next
+    })
+  }, [])
+
+  const enableOnlineSharing = useCallback(() => {
+    setOnlineSharing({ enabled: true, activatedAt: new Date().toISOString() })
+  }, [setOnlineSharing])
+
+  const disableOnlineSharing = useCallback(() => {
+    // Clears the whole block so no stale deviceId/publicKey remains. Caller
+    // is responsible for asking the server to delete the corresponding rows
+    // + for clearing the local device-key IndexedDB.
+    setOnlineSharing(undefined)
+  }, [setOnlineSharing])
+
+  // Remove all friends that were linked online (leaves offline-only friends
+  // and their answers untouched). Used when the user deactivates sharing.
+  const removeOnlineFriends = useCallback(() => {
+    setState(prev => {
+      const onlineIds = new Set(prev.friends.filter(f => f.online).map(f => f.id))
+      if (onlineIds.size === 0) return prev
+      const next: AppState = {
+        ...prev,
+        friends: prev.friends.filter(f => !onlineIds.has(f.id)),
+        friendAnswers: prev.friendAnswers.filter(a => !onlineIds.has(a.friendId)),
+      }
+      saveState(next)
+      return next
+    })
+  }, [])
+
   /** Restore a full backup created by exportAsBackup() */
   const restoreBackup = useCallback((json: string): { ok: boolean; error?: string } => {
     try {
@@ -479,6 +548,7 @@ export function useAnswers() {
     friends: state.friends,
     friendAnswers: state.friendAnswers,
     customQuestions: state.customQuestions,
+    onlineSharing: state.onlineSharing,
     saveAnswer,
     setAnswerImages,
     setAnswerVideos,
@@ -495,6 +565,10 @@ export function useAnswers() {
     importSocialMediaEntries,
     clearAll,
     restoreBackup,
+    enableOnlineSharing,
+    disableOnlineSharing,
+    setOnlineSharing,
+    removeOnlineFriends,
     getAnswer,
     getAnswerImageIds,
     getAnswerVideoIds,

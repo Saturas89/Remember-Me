@@ -56,6 +56,15 @@ export interface Friend {
   id: string
   name: string
   addedAt: string
+  /** Online-sharing contact handshake (optional). Present when the friend was
+   *  linked via a #contact/ invite so we can end-to-end-encrypt memories to them.
+   *  Absent for friends that only use the URL/ZIP fallback flow – those still work
+   *  without any server contact. */
+  online?: {
+    deviceId: string      // opaque UUID, same as Supabase devices.id
+    publicKey: string     // ECDH P-256 SPKI as base64url
+    linkedAt: string
+  }
 }
 
 export interface FriendAnswer {
@@ -116,6 +125,80 @@ export interface AppState {
   friends: Friend[]
   friendAnswers: FriendAnswer[]
   customQuestions: CustomQuestion[]
+  /** Undefined until the user explicitly opts in to online sharing.
+   *  Absent ⇒ no Supabase module is ever loaded, no network requests are made. */
+  onlineSharing?: OnlineSharingState
+}
+
+export interface OnlineSharingState {
+  enabled: boolean
+  activatedAt?: string
+  /** Opaque device UUID registered on the sync server. */
+  deviceId?: string
+  /** ECDH public key (SPKI base64url). Server also has this – needed for other
+   *  devices to encrypt memories to us. */
+  publicKey?: string
+}
+
+// ── Online sharing payload schemas ──────────────────────────────────────────
+//
+// Everything in these structures is encrypted client-side before it touches
+// the server. The plaintext forms below are what lives on the user's device
+// after successful decryption.
+
+/** The plaintext body of a shared memory, before AES-GCM encryption. */
+export interface ShareBody {
+  $type: 'remember-me-share'
+  version: 1
+  questionId?: string
+  questionText: string
+  value: string
+  imageCount: number
+  createdAt: string
+  ownerName: string
+}
+
+/** A shared memory that arrived from another device (post-decryption). */
+export interface SharedMemory {
+  shareId: string
+  ownerDeviceId: string
+  ownerName: string
+  questionId?: string
+  questionText: string
+  value: string
+  imageIds: string[]        // IndexedDB IDs after local media download
+  createdAt: string
+  updatedAt: string
+}
+
+/** The plaintext body of an annotation ("Ergänzung"). */
+export interface AnnotationBody {
+  $type: 'remember-me-annotation'
+  version: 1
+  text: string
+  imageCount: number
+  authorName: string
+  createdAt: string
+}
+
+/** An annotation on a shared memory (post-decryption). */
+export interface Annotation {
+  annotationId: string
+  shareId: string
+  authorDeviceId: string
+  authorName: string
+  text: string
+  imageIds: string[]
+  createdAt: string
+}
+
+/** Payload of a #contact/ handshake URL – how two devices link up. */
+export interface ContactHandshake {
+  $type: 'remember-me-contact'
+  version: 1
+  deviceId: string
+  publicKey: string    // base64url SPKI
+  displayName: string
 }
 
 /** A shareable bundle of custom questions */
