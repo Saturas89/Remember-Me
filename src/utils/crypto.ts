@@ -18,7 +18,7 @@ export function toB64u(data: Uint8Array): string {
   return btoa(str).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '')
 }
 
-export function fromB64u(str: string): Uint8Array {
+export function fromB64u(str: string): Uint8Array<ArrayBuffer> {
   const pad = (4 - (str.length % 4)) % 4
   const padded = str.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat(pad)
   const raw = atob(padded)
@@ -91,7 +91,7 @@ export async function deriveWrappingKey(
 // 32 random bytes. Stays as raw bytes (never a CryptoKey) so it can be wrapped
 // per recipient without the non-extractable constraint getting in the way.
 
-export function generateContentKeyBytes(): Uint8Array {
+export function generateContentKeyBytes(): Uint8Array<ArrayBuffer> {
   return crypto.getRandomValues(new Uint8Array(32))
 }
 
@@ -131,7 +131,7 @@ export async function encryptWithContentKey(
 export async function decryptWithContentKey(
   blob: EncryptedBlob,
   contentKey: Uint8Array,
-): Promise<Uint8Array> {
+): Promise<Uint8Array<ArrayBuffer>> {
   const key = await importAesGcm(contentKey)
   return new Uint8Array(
     await crypto.subtle.decrypt(
@@ -167,7 +167,7 @@ export async function wrapContentKey(
 export async function unwrapContentKey(
   wrapped: WrappedKey,
   wrappingKey: CryptoKey,
-): Promise<Uint8Array> {
+): Promise<Uint8Array<ArrayBuffer>> {
   const iv = fromB64u(wrapped.iv)
   const ct = fromB64u(wrapped.ciphertext)
   return new Uint8Array(
