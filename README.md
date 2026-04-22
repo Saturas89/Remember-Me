@@ -1,56 +1,43 @@
-# Remember Me
+# Projekt-Template
 
-*Digitale Erinnerung + persönliche Biografie + kontrolliertes Vermächtnis*
+Dieser Branch ist ein **projekt-agnostisches Startset**: er enthält nur unsere wiederverwendbaren Arbeitsweisen (CI-Pipeline, Agenten-Prompts, Git-Workflow, Doku-Struktur) und **keinen produktspezifischen Code**. Neue Projekte werden auf Basis dieses Branches gestartet.
 
-**Remember Me** ist eine Progressive Web App (PWA), mit der Menschen ihre Lebensgeschichte, Erinnerungen, Werte und persönliche Informationen spielerisch für die Nachwelt festhalten.
+## Was hier drin ist
 
-## Wie es funktioniert
+| Bereich | Datei(en) | Zweck |
+|---------|-----------|-------|
+| Git- & PR-Workflow | [`CLAUDE.md`](./CLAUDE.md) | Regeln für Claude-Sessions: immer PR, nie direkt auf `main`, CI-Polling-Rezept |
+| CI-Pipeline | [`.github/workflows/e2e.yml`](./.github/workflows/e2e.yml) | Playwright-Matrix (5 Browser-Projekte) auf jedem PR |
+| Parallel-Generation | [`.github/workflows/parallel-generation.yml`](./.github/workflows/parallel-generation.yml) | Triggert bei `docs/requirements/REQ-*.md`-Push zwei isolierte Claude-Agents (Impl + Test) parallel |
+| Agenten-Prompts | [`.github/prompts/impl-agent.md`](./.github/prompts/impl-agent.md), [`.github/prompts/test-agent.md`](./.github/prompts/test-agent.md) | Black-Box-Isolation: Impl kennt Tests nicht, Test kennt Code nicht |
+| Coding-Vorgaben | [`docs/guides/CONTRIBUTING.md`](./docs/guides/CONTRIBUTING.md) | Branch-Strategie, Commit-Konventionen, Code-Stil |
+| Doku-Struktur | [`docs/requirements/README.md`](./docs/requirements/README.md), [`docs/modules/README.md`](./docs/modules/README.md) | Vorlagen für REQ-Specs (MoSCoW) und Architektur-Übersicht |
+| Dependency-Updates | [`renovate.json`](./renovate.json) | Wöchentliche Renovate-PRs, Gruppierung nach Ökosystem |
+| Node-Version | [`.nvmrc`](./.nvmrc) | Einheitliche Node-Version für alle Umgebungen |
 
-1. **Kategorien wählen** – Kindheit, Familie, Beruf, Werte, Erinnerungen, Vermächtnis
-2. **Fragen beantworten** – Geführte Fragen im Quiz-Format (Text, Auswahl, Skala, Foto, Audio, Video)
-3. **Speichern & teilen** – Lokal gespeichert, exportierbar als PDF, Markdown, JSON oder ZIP-Archiv
+## Was hier bewusst **nicht** drin ist
 
-## Features
+- Kein `src/`, kein `package.json`, keine Build-/Runtime-Configs — die sind projektspezifisch.
+- Keine Requirements/Specs — nur die Vorlagen dafür.
+- Keine Assets (Logos, Icons, Manifeste).
 
-- 6 Lebenskategorien mit 50+ Fragen + eigene Fragen erstellen
-- 4 Themes (Nacht, Hell, Sepia, Ozean)
-- Foto-, Audio- und Video-Anhänge zu Antworten
-- Freunde einladen (Share-Link-Flow, Web Share API)
-- Export: PDF, Markdown, JSON, Backup, ZIP-Archiv mit allen Medien
-- Vollständig offline-fähig (PWA, Service Worker)
-- Installierbar auf iOS & Android
-- **Optional:** Online-Teilen mit E2E-Verschlüsselung (strikt opt-in, Standard aus)
+## Ein neues Projekt auf dieser Basis starten
 
-## Privacy by default
+1. Neues Repo auf GitHub anlegen.
+2. Inhalt dieses Branches in das neue Repo kopieren (`git clone`, dann `cp -r` ohne `.git` ins neue Repo, oder `git archive` / Fork).
+3. Projektgerüst initialisieren (`npm init`, Framework-Scaffolding etc.). Tooling-Configs (Vite/Playwright/Vitest/tsconfig) und `package.json` entstehen dabei neu.
+4. Playwright + Vitest installieren, damit die CI-Workflows grün laufen (Pipeline erwartet `npm ci`, `npx playwright test`, `npm test`).
+5. Sekrets setzen, falls der Parallel-Generation-Workflow genutzt werden soll: `CLAUDE_CODE_OAUTH_TOKEN` im Repo-Secret.
+6. Erste Spec unter `docs/requirements/REQ-001-<slug>.md` ablegen und pushen — der Parallel-Generation-Workflow startet dann automatisch.
+7. `CLAUDE.md`, `impl-agent.md`, `test-agent.md` bei Bedarf an den konkreten Tech-Stack anpassen (Framework-Namen, Testbefehle, Stil-Hinweise). Die **Isolations-Regeln** (Agent sieht Gegenseite nicht) sollten bleiben.
 
-Remember Me arbeitet standardmäßig **komplett offline**. Keine Accounts,
-keine Server-Kommunikation, keine Tracker. Wer eigene Erinnerungen
-online mit bestimmten Kontakten teilen möchte, kann das optionale
-Online-Teilen aktivieren – es ist Ende-zu-Ende-verschlüsselt (ECDH P-256
-+ AES-256-GCM, Zero-Knowledge-Server). Details:
-[`docs/DATA_STORAGE.md`](./docs/DATA_STORAGE.md).
+## Arbeitsablauf (TL;DR)
 
-## Tech Stack
-
-| Schicht        | Technologie                                                      |
-|----------------|------------------------------------------------------------------|
-| Framework      | React 19 + TypeScript                                            |
-| Build          | Vite 6 + vite-plugin-pwa                                         |
-| Persistenz     | localStorage + IndexedDB (Bilder, Audio, Video)                  |
-| Crypto         | Web Crypto API (ECDH P-256, HKDF-SHA256, AES-256-GCM)            |
-| Online-Backend (optional) | Supabase (anonymous auth, Postgres mit RLS, Storage) |
-| Deployment     | Vercel                                                           |
-| Tests          | Vitest (Unit), Playwright (E2E, 5-Browser-Matrix in CI)          |
-
-## Entwicklung
-
-```bash
-npm install
-npm run dev      # http://localhost:5173
-npm run build
-npm run test
 ```
-
-## Dokumentation
-
-Vollständige Specs und Architektur unter [`/docs`](./docs/INDEX.md).
+Spec schreiben  →  push  →  Parallel-Generation-Workflow
+                              ├─ Impl-Agent (nur Code)
+                              └─ Test-Agent (nur Tests, aus Spec)
+                           →  gemeinsamer Commit auf Feature-Branch
+                           →  Auto-PR gegen main
+                           →  E2E-Matrix (5 Browser) entscheidet grün/rot
+```

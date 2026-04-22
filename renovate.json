@@ -12,34 +12,13 @@
   "rangeStrategy": "bump",
   "packageRules": [
     {
-      "description": "React ecosystem – group together, require manual review",
-      "matchPackageNames": [
-        "react",
-        "react-dom",
-        "@types/react",
-        "@types/react-dom"
-      ],
-      "groupName": "React",
-      "automerge": false
-    },
-    {
-      "description": "Vite ecosystem – group together",
-      "matchPackageNames": [
-        "vite",
-        "@vitejs/plugin-react",
-        "vite-plugin-pwa"
-      ],
-      "groupName": "Vite",
-      "automerge": false
-    },
-    {
-      "description": "Playwright – keep all packages in sync",
-      "matchPackageNames": ["@playwright/test"],
+      "description": "Playwright – von der CI-Matrix genutzt; manuelle Review bei Major-Bumps",
+      "matchPackageNames": ["@playwright/test", "playwright"],
       "groupName": "Playwright",
       "automerge": false
     },
     {
-      "description": "Vitest + Testing Library – group together",
+      "description": "Vitest + Testing Library – gemeinsam aktualisieren",
       "matchPackageNames": [
         "vitest",
         "@testing-library/dom",
@@ -50,21 +29,12 @@
       "automerge": false
     },
     {
-      "description": "Vercel SDKs – group together",
-      "matchPackageNames": [
-        "@vercel/analytics",
-        "@vercel/speed-insights"
-      ],
-      "groupName": "Vercel",
-      "automerge": false
-    },
-    {
-      "description": "TypeScript – require manual review for major bumps",
+      "description": "TypeScript – manuelle Review bei Major-Bumps",
       "matchPackageNames": ["typescript"],
       "automerge": false
     },
     {
-      "description": "Automerge patch and minor updates for devDependencies",
+      "description": "Patch und Minor Bumps auf devDependencies automerge",
       "matchDepTypes": ["devDependencies"],
       "matchUpdateTypes": ["patch", "minor"],
       "automerge": true,
@@ -72,7 +42,7 @@
       "platformAutomerge": true
     },
     {
-      "description": "Never automerge major updates",
+      "description": "Major-Updates niemals automerge",
       "matchUpdateTypes": ["major"],
       "automerge": false
     }

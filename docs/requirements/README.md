@@ -1,76 +1,78 @@
-# Anforderungen – Remember Me
+# Anforderungen
 
-Alle funktionalen und nicht-funktionalen Anforderungen des Projekts.
+Alle funktionalen und nicht-funktionalen Anforderungen des Projekts. Jede Datei unter `REQ-0XX-<slug>.md` beschreibt ein abgeschlossenes Feature oder Querschnittsthema und wird von der Parallel-Generation-Pipeline (`.github/workflows/parallel-generation.yml`) aufgegriffen, sobald sie auf einem Feature-Branch gepusht wird.
 
 ---
 
-## 📑 Anforderungen
+## 📑 Übersichtstabelle (Vorlage)
+
+Pro Projekt hier eine Tabelle aller REQs pflegen. Leer zu Beginn:
 
 | ID | Titel | Modul | Priorität | Status |
 |----|-------|-------|-----------|--------|
-| [REQ-001](./REQ-001-pwa-foundation-clean.md) | PWA Foundation & Responsive Design | Core | High | ✔️ COMPLETED |
-| [REQ-002](./REQ-002-question-engine.md) | Frage-Engine & Fragenkatalog | Questions | High | ✔️ COMPLETED |
-| [REQ-003](./REQ-003-story-storage.md) | Lebensarchiv & Datenspeicherung | Data | High | ✔️ COMPLETED |
-| [REQ-004](./REQ-004-export-sharing.md) | Export & Teilen | Export | Medium | ✔️ COMPLETED |
-| [REQ-005](./REQ-005-ci-cd-pipeline.md) | CI/CD Pipeline | DevOps | Low | ✔️ COMPLETED |
-| REQ-006 | KI-lesbarer Datenexport | Export | Medium | ✔️ COMPLETED |
-| REQ-007 | Medienanhänge (Fotos) | Data | Medium | ✔️ COMPLETED |
-| REQ-008 | E2EE-Sync (opt-in) | Core | Low | 🟢 DRAFT |
-| [REQ-009](./REQ-009-audio-recording.md) | Audio-Aufnahme & Transkription | Data | Medium | ✔️ COMPLETED |
-| [REQ-010](./REQ-010-faq.md) | Hilfe & FAQ | UX | Low | ✔️ COMPLETED |
-| [REQ-011](./REQ-011-archive-export.md) | Erinnerungs-Archiv (ZIP + Share Sheet) | Export | Medium | ✔️ COMPLETED |
-| [REQ-012](./REQ-012-video-attachments.md) | Video-Anhänge | Medien | Medium | ✔️ COMPLETED |
-| [REQ-013](./REQ-013-archive-import.md) | Erinnerungs-Archiv-Import (ZIP + JSON) | Import | Medium | ✔️ COMPLETED |
-| [REQ-014](./REQ-014-release-notes.md) | Release Notes / „Was ist neu?" | UX | Low | ✔️ COMPLETED |
+| _(noch keine Anforderungen)_ | | | | |
 
 ---
 
-## 🎯 MoSCoW Priorisierung
+## 🎯 MoSCoW-Priorisierung
 
-### MUST – Abgeschlossen ✔️
-- [x] Frage-Flow mit Kategorien und spielerischer Führung
-- [x] Antworten lokal speichern (kein Datenverlust beim Schließen)
-- [x] Offline-Nutzung (Service Worker, Workbox)
-- [x] Lebensarchiv ansehen (alle gespeicherten Antworten)
-- [x] PWA installierbar auf iOS & Android
+Neue Anforderungen werden nach MoSCoW priorisiert:
 
-### SHOULD – Abgeschlossen ✔️
-- [x] Fortschrittsanzeige pro Kategorie und gesamt
-- [x] Antworten nachträglich bearbeiten (Inline-Edit im Archiv)
-- [x] Export als PDF / druckbares Dokument (`window.print()` + `@media print`)
-- [x] Responsive Design (Mobile-first, 1-/2-Spalten-Grid)
-- [x] Freunde einladen, Fragen beantworten und Antworten automatisch per Share-Link importieren
-- [x] Eigene Fragen erstellen und teilen
+### MUST
+Kern-Funktionalität ohne die das Produkt seinen Zweck nicht erfüllt.
 
-### COULD – Geplant 📋 / Umgesetzt ✔️
-- [x] KI-lesbarer Export (Markdown + Enriched JSON) → REQ-006, v1.4.0
-- [x] Fotos zu Antworten hinzufügen → REQ-007, v1.5.0
-- [x] Audio-Aufnahme & Transkription → REQ-009
-- [x] Video-Anhänge → REQ-012
-- [x] Hilfe & FAQ (Datenschutz, Import, Export) → REQ-010
-- [x] Erinnerungs-Archiv ZIP-Export + Share Sheet (inkl. Fotos, Audio & Video) → REQ-011
-- [x] Erinnerungs-Archiv-Import (ZIP + JSON) → REQ-013
-- [ ] Push Notifications als Erinnerung
-- [ ] Mehrsprachigkeit (DE / EN)
-- [ ] Optionaler E2EE-Sync (Privater Sync) → REQ-008
+### SHOULD
+Wichtige, aber nicht blockierende Ergänzungen zum Kern.
 
-### WON'T – Bewusst ausgeschlossen
-- Eigenes Backend / Server in v1.x
-- Social-Media-Funktionen
-- Algorithmus-basierte Fragen-Empfehlungen
+### COULD
+Nice-to-have — wenn Zeit bleibt.
+
+### WON'T (diese Iteration)
+Bewusst ausgeschlossen — begründen, damit die Entscheidung später nachvollziehbar ist.
+
+---
+
+## 🧾 Spec-Vorlage
+
+Neue Specs folgen dieser Gliederung:
+
+```md
+# REQ-0XX – <Titel>
+
+**Status:** 🟢 DRAFT · **Priorität:** MUST | SHOULD | COULD · **Modul:** <Modul>
+
+## 1. Ziel / User Story
+Worum geht es, wer profitiert, wodurch ist Erfolg messbar?
+
+## 2. Akzeptanzkriterien
+- [ ] Jedes Kriterium so formuliert, dass ein Test es direkt prüfen kann.
+- [ ] Selektoren/IDs (falls UI) eindeutig aus dem Wording ableitbar.
+
+## 3. Nicht-Ziele
+Was explizit **nicht** Teil dieser Spec ist.
+
+## 4. Datenmodell / API (falls relevant)
+Felder, Typen, Versionierung, Rückwärtskompatibilität.
+
+## 5. UI / UX (falls relevant)
+Skizze der Flows, Texte, erwartetes Verhalten auf Fehlern.
+
+## 6. Tests
+Welche Testarten (Unit, Component, E2E), welche Edge-Cases.
+
+## 7. Offene Fragen
+Gezielt adressieren, bevor die Parallel-Generation startet — sonst weichen die beiden Agents bei Ambiguität auseinander.
+```
 
 ---
 
 ## 🔒 Globales Prinzip: Rückwärtskompatibilität
 
-**Jedes Update muss abwärtskompatibel sein.** Benutzerdaten dürfen durch ein App-Update niemals verloren gehen oder unlesbar werden.
+Jedes Update persistierter Nutzerdaten muss abwärtskompatibel sein:
 
-Dieses Prinzip gilt für alle REQs, die Daten speichern oder exportieren:
-
-- Neue Felder in `localStorage` / IndexedDB sind immer **optional** und haben Defaults.
+- Neue Felder in `localStorage` / IndexedDB / DB-Schema sind immer **optional** und haben Defaults.
 - Bestehende Feldnamen und Speicherschlüssel werden **nicht umbenannt oder entfernt**.
-- Das Backup-Format (`$type: "remember-me-backup"`, `version: N`) erhält bei strukturellen Änderungen eine neue Versionsnummer; der Import-Handler befüllt fehlende Felder mit Defaults.
-- Detaillierte Regeln und die verbotenen Änderungstypen: → **[REQ-003, Abschnitt 4a](./REQ-003-story-storage.md#4a-rückwärtskompatibilität-breaking-change-verbot)**
+- Backup-/Import-Formate erhalten bei strukturellen Änderungen eine neue Versionsnummer; der Import-Handler füllt fehlende Felder mit Defaults.
 
 ---
 
