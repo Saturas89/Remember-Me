@@ -8,7 +8,7 @@ function toB64u(data: Uint8Array): string {
   return btoa(str).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '')
 }
 
-function fromB64u(str: string): Uint8Array {
+function fromB64u(str: string): Uint8Array<ArrayBuffer> {
   const pad = (4 - (str.length % 4)) % 4
   const padded = str.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat(pad)
   const raw = atob(padded)
@@ -66,7 +66,7 @@ function canUseSecureCrypto(): boolean {
 // ── Compression ───────────────────────────────────────────────────────────────
 
 /** Read all chunks from a ReadableStream into a single Uint8Array. */
-async function readAllChunks(readable: ReadableStream<Uint8Array>): Promise<Uint8Array> {
+async function readAllChunks(readable: ReadableStream<Uint8Array<ArrayBuffer>>): Promise<Uint8Array<ArrayBuffer>> {
   const reader = readable.getReader()
   const chunks: Uint8Array[] = []
   let total = 0
@@ -86,7 +86,7 @@ async function readAllChunks(readable: ReadableStream<Uint8Array>): Promise<Uint
   return out
 }
 
-async function compress(text: string): Promise<Uint8Array> {
+async function compress(text: string): Promise<Uint8Array<ArrayBuffer>> {
   const stream = new CompressionStream('deflate-raw')
   const writer = stream.writable.getWriter()
   await writer.write(new TextEncoder().encode(text))
@@ -94,7 +94,7 @@ async function compress(text: string): Promise<Uint8Array> {
   return readAllChunks(stream.readable)
 }
 
-async function decompress(data: Uint8Array): Promise<string> {
+async function decompress(data: Uint8Array<ArrayBuffer>): Promise<string> {
   const stream = new DecompressionStream('deflate-raw')
   const writer = stream.writable.getWriter()
   await writer.write(data)
@@ -116,7 +116,7 @@ async function strToKey(str: string): Promise<CryptoKey> {
   return crypto.subtle.importKey('raw', fromB64u(str), { name: 'AES-GCM' }, false, ['decrypt'])
 }
 
-async function encryptBytes(data: Uint8Array, key: CryptoKey): Promise<Uint8Array> {
+async function encryptBytes(data: Uint8Array<ArrayBuffer>, key: CryptoKey): Promise<Uint8Array<ArrayBuffer>> {
   const iv = crypto.getRandomValues(new Uint8Array(12))
   const ciphertext = new Uint8Array(
     await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, data),
@@ -127,7 +127,7 @@ async function encryptBytes(data: Uint8Array, key: CryptoKey): Promise<Uint8Arra
   return out
 }
 
-async function decryptBytes(data: Uint8Array, key: CryptoKey): Promise<Uint8Array> {
+async function decryptBytes(data: Uint8Array<ArrayBuffer>, key: CryptoKey): Promise<Uint8Array<ArrayBuffer>> {
   return new Uint8Array(
     await crypto.subtle.decrypt({ name: 'AES-GCM', iv: data.slice(0, 12) }, key, data.slice(12)),
   )

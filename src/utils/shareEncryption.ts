@@ -54,7 +54,7 @@ export interface EncryptedImage {
 // online-sharing module to the existing invite-link code. When Vite chunks
 // the bundle, offline-only users never pull in this file.
 
-async function readAllChunks(readable: ReadableStream<Uint8Array>): Promise<Uint8Array> {
+async function readAllChunks(readable: ReadableStream<Uint8Array<ArrayBuffer>>): Promise<Uint8Array<ArrayBuffer>> {
   const reader = readable.getReader()
   const chunks: Uint8Array[] = []
   let total = 0
@@ -74,7 +74,7 @@ async function readAllChunks(readable: ReadableStream<Uint8Array>): Promise<Uint
   return out
 }
 
-async function compress(text: string): Promise<Uint8Array> {
+async function compress(text: string): Promise<Uint8Array<ArrayBuffer>> {
   if (typeof CompressionStream === 'undefined') {
     return new TextEncoder().encode(text)
   }
@@ -85,7 +85,7 @@ async function compress(text: string): Promise<Uint8Array> {
   return readAllChunks(stream.readable)
 }
 
-async function decompress(data: Uint8Array): Promise<string> {
+async function decompress(data: Uint8Array<ArrayBuffer>): Promise<string> {
   if (typeof DecompressionStream === 'undefined') {
     return new TextDecoder().decode(data)
   }

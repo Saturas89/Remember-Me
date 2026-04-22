@@ -19,7 +19,7 @@ function makeJsonFile(text: string, name = 'backup.json'): File {
   return new File([text], name, { type: 'application/json' })
 }
 
-function makeZipFile(content: Uint8Array, name = 'archive.zip'): File {
+function makeZipFile(content: Uint8Array<ArrayBuffer>, name = 'archive.zip'): File {
   return new File([content], name, { type: 'application/zip' })
 }
 
