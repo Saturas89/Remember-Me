@@ -8,32 +8,19 @@
 --
 -- Identity: anonymous Supabase auth. auth.uid() gives a stable UUID per
 -- device. The devices row is what clients reference in ACLs.
+--
+-- The script is safe to re-run: every CREATE is guarded with IF NOT EXISTS
+-- or preceded by a matching DROP IF EXISTS. Tables are created before any
+-- policy references them (policies reference other tables via EXISTS-joins,
+-- so all CREATE TABLE statements must happen before any CREATE POLICY).
 
--- ── Devices ──────────────────────────────────────────────────────────────────
+-- ── Phase 1: create all tables ──────────────────────────────────────────────
 
 create table if not exists public.devices (
   id         uuid primary key references auth.users (id) on delete cascade,
   public_key bytea not null,                       -- ECDH P-256 SPKI
   created_at timestamptz not null default now()
 );
-
-alter table public.devices enable row level security;
-
--- Any anonymous user can register their own device record (one per auth user).
-create policy "device-insert-self" on public.devices
-  for insert with check (id = auth.uid());
-
--- Any authenticated user can read devices (needed to fetch recipients'
--- public keys before encrypting). Public keys are not secret.
-create policy "device-select-any" on public.devices
-  for select using (auth.uid() is not null);
-
--- Users can only delete their own device (used by the "deactivate online
--- sharing" flow → cascades via FKs below).
-create policy "device-delete-self" on public.devices
-  for delete using (id = auth.uid());
-
--- ── Shares ───────────────────────────────────────────────────────────────────
 
 create table if not exists public.shares (
   id             uuid primary key default gen_random_uuid(),
@@ -45,13 +32,71 @@ create table if not exists public.shares (
   updated_at     timestamptz not null default now()
 );
 
-alter table public.shares enable row level security;
+create table if not exists public.share_recipients (
+  share_id     uuid not null references public.shares (id) on delete cascade,
+  recipient_id uuid not null references public.devices (id) on delete cascade,
+  primary key (share_id, recipient_id)
+);
 
--- Owner always sees their own shares.
+create table if not exists public.annotations (
+  id             uuid primary key default gen_random_uuid(),
+  share_id       uuid not null references public.shares (id) on delete cascade,
+  author_id      uuid not null references public.devices (id) on delete cascade,
+  ciphertext     bytea not null,
+  iv             bytea not null,
+  encrypted_keys jsonb not null,                  -- same audience as parent share
+  created_at     timestamptz not null default now()
+);
+
+create table if not exists public.share_media (
+  id           uuid primary key default gen_random_uuid(),
+  share_id     uuid not null references public.shares (id) on delete cascade,
+  storage_path text not null,                     -- e.g. share-media/{share_id}/{id}.bin
+  iv           bytea not null,
+  created_at   timestamptz not null default now()
+);
+
+-- ── Phase 2: enable row-level security ──────────────────────────────────────
+
+alter table public.devices          enable row level security;
+alter table public.shares           enable row level security;
+alter table public.share_recipients enable row level security;
+alter table public.annotations      enable row level security;
+alter table public.share_media      enable row level security;
+
+-- ── Phase 3: policies on public.* ───────────────────────────────────────────
+-- Guarded with DROP IF EXISTS so the script can be re-applied cleanly.
+
+-- Devices
+drop policy if exists "device-insert-self"  on public.devices;
+drop policy if exists "device-select-any"   on public.devices;
+drop policy if exists "device-delete-self"  on public.devices;
+
+create policy "device-insert-self" on public.devices
+  for insert with check (id = auth.uid());
+
+-- Any authenticated user can read devices (needed to fetch recipients' public
+-- keys before encrypting). Public keys are not secret.
+create policy "device-select-any" on public.devices
+  for select using (auth.uid() is not null);
+
+-- Users can only delete their own device (used by the "deactivate online
+-- sharing" flow → cascades via FKs below).
+create policy "device-delete-self" on public.devices
+  for delete using (id = auth.uid());
+
+-- Shares
+drop policy if exists "share-select-owner"     on public.shares;
+drop policy if exists "share-select-recipient" on public.shares;
+drop policy if exists "share-write-owner"      on public.shares;
+drop policy if exists "share-update-owner"     on public.shares;
+drop policy if exists "share-delete-owner"     on public.shares;
+
 create policy "share-select-owner" on public.shares
   for select using (owner_id = auth.uid());
 
--- Recipients see shares addressed to them.
+-- Recipients see shares addressed to them. References share_recipients, which
+-- now exists (created in Phase 1).
 create policy "share-select-recipient" on public.shares
   for select using (
     exists (
@@ -60,7 +105,6 @@ create policy "share-select-recipient" on public.shares
     )
   );
 
--- Only the owner writes.
 create policy "share-write-owner" on public.shares
   for insert with check (owner_id = auth.uid());
 create policy "share-update-owner" on public.shares
@@ -68,15 +112,10 @@ create policy "share-update-owner" on public.shares
 create policy "share-delete-owner" on public.shares
   for delete using (owner_id = auth.uid());
 
--- ── Share recipients (ACL) ───────────────────────────────────────────────────
-
-create table if not exists public.share_recipients (
-  share_id     uuid not null references public.shares (id) on delete cascade,
-  recipient_id uuid not null references public.devices (id) on delete cascade,
-  primary key (share_id, recipient_id)
-);
-
-alter table public.share_recipients enable row level security;
+-- Share recipients (ACL)
+drop policy if exists "recipient-select-self-or-owner" on public.share_recipients;
+drop policy if exists "recipient-write-owner"          on public.share_recipients;
+drop policy if exists "recipient-delete-owner"         on public.share_recipients;
 
 create policy "recipient-select-self-or-owner" on public.share_recipients
   for select using (
@@ -93,22 +132,13 @@ create policy "recipient-delete-owner" on public.share_recipients
     exists (select 1 from public.shares s where s.id = share_id and s.owner_id = auth.uid())
   );
 
--- ── Annotations (Ergänzungen) ───────────────────────────────────────────────
-
-create table if not exists public.annotations (
-  id             uuid primary key default gen_random_uuid(),
-  share_id       uuid not null references public.shares (id) on delete cascade,
-  author_id      uuid not null references public.devices (id) on delete cascade,
-  ciphertext     bytea not null,
-  iv             bytea not null,
-  encrypted_keys jsonb not null,                  -- same audience as parent share
-  created_at     timestamptz not null default now()
-);
-
-alter table public.annotations enable row level security;
+-- Annotations (Ergänzungen)
+drop policy if exists "annotation-select-audience" on public.annotations;
+drop policy if exists "annotation-insert-audience" on public.annotations;
+drop policy if exists "annotation-delete-author"   on public.annotations;
 
 -- Audience for reading an annotation = owner of parent share + all recipients
--- of parent share. Encoded as: exists relationship to the shares policy.
+-- of parent share.
 create policy "annotation-select-audience" on public.annotations
   for select using (
     exists (
@@ -148,17 +178,10 @@ create policy "annotation-insert-audience" on public.annotations
 create policy "annotation-delete-author" on public.annotations
   for delete using (author_id = auth.uid());
 
--- ── Media (image ciphertext lives in Storage, metadata here) ────────────────
-
-create table if not exists public.share_media (
-  id           uuid primary key default gen_random_uuid(),
-  share_id     uuid not null references public.shares (id) on delete cascade,
-  storage_path text not null,                     -- e.g. share-media/{share_id}/{id}.bin
-  iv           bytea not null,
-  created_at   timestamptz not null default now()
-);
-
-alter table public.share_media enable row level security;
+-- Share media (image metadata; ciphertext bytes live in storage.objects)
+drop policy if exists "media-select-audience" on public.share_media;
+drop policy if exists "media-write-owner"     on public.share_media;
+drop policy if exists "media-delete-owner"    on public.share_media;
 
 create policy "media-select-audience" on public.share_media
   for select using (
@@ -191,18 +214,22 @@ create policy "media-delete-owner" on public.share_media
     )
   );
 
--- ── Storage bucket (private) ────────────────────────────────────────────────
+-- ── Phase 4: storage bucket + object policies ───────────────────────────────
 --
--- Create the bucket if it doesn't exist; set it private so reads require a
--- signed URL or RLS policy. Clients upload already-encrypted bytes only.
+-- Create the bucket if it doesn't exist; private so reads require a signed
+-- URL or an RLS-allowed authenticated request. Clients upload already-
+-- encrypted bytes only.
 
 insert into storage.buckets (id, name, public)
 values ('share-media', 'share-media', false)
 on conflict (id) do nothing;
 
--- Owner can upload objects whose path starts with their share-id; recipients
--- (and owner) can read. Path convention: {share_id}/{media_id}.bin
--- We enforce share membership via the path prefix and a join with shares.
+-- Path convention: {share_id}/{media_id}.bin
+-- Share membership is enforced via the path prefix + a join with shares.
+
+drop policy if exists "storage-share-media-read"   on storage.objects;
+drop policy if exists "storage-share-media-write"  on storage.objects;
+drop policy if exists "storage-share-media-delete" on storage.objects;
 
 create policy "storage-share-media-read" on storage.objects
   for select using (
@@ -240,7 +267,7 @@ create policy "storage-share-media-delete" on storage.objects
     )
   );
 
--- ── Indexes ──────────────────────────────────────────────────────────────────
+-- ── Phase 5: indexes ────────────────────────────────────────────────────────
 
 create index if not exists shares_owner_idx           on public.shares (owner_id, created_at desc);
 create index if not exists share_recipients_recip_idx on public.share_recipients (recipient_id);
