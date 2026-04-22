@@ -1,0 +1,80 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "timezone": "Europe/Berlin",
+  "schedule": ["every monday"],
+  "prHourlyLimit": 3,
+  "prConcurrentLimit": 6,
+  "dependencyDashboard": true,
+  "dependencyDashboardTitle": "Renovate – Dependency Dashboard",
+  "labels": ["dependencies"],
+  "commitMessagePrefix": "chore(deps):",
+  "rangeStrategy": "bump",
+  "packageRules": [
+    {
+      "description": "React ecosystem – group together, require manual review",
+      "matchPackageNames": [
+        "react",
+        "react-dom",
+        "@types/react",
+        "@types/react-dom"
+      ],
+      "groupName": "React",
+      "automerge": false
+    },
+    {
+      "description": "Vite ecosystem – group together",
+      "matchPackageNames": [
+        "vite",
+        "@vitejs/plugin-react",
+        "vite-plugin-pwa"
+      ],
+      "groupName": "Vite",
+      "automerge": false
+    },
+    {
+      "description": "Playwright – keep all packages in sync",
+      "matchPackageNames": ["@playwright/test"],
+      "groupName": "Playwright",
+      "automerge": false
+    },
+    {
+      "description": "Vitest + Testing Library – group together",
+      "matchPackageNames": [
+        "vitest",
+        "@testing-library/dom",
+        "@testing-library/react",
+        "jsdom"
+      ],
+      "groupName": "Testing",
+      "automerge": false
+    },
+    {
+      "description": "Vercel SDKs – group together",
+      "matchPackageNames": [
+        "@vercel/analytics",
+        "@vercel/speed-insights"
+      ],
+      "groupName": "Vercel",
+      "automerge": false
+    },
+    {
+      "description": "TypeScript – require manual review for major bumps",
+      "matchPackageNames": ["typescript"],
+      "automerge": false
+    },
+    {
+      "description": "Automerge patch and minor updates for devDependencies",
+      "matchDepTypes": ["devDependencies"],
+      "matchUpdateTypes": ["patch", "minor"],
+      "automerge": true,
+      "automergeType": "pr",
+      "platformAutomerge": true
+    },
+    {
+      "description": "Never automerge major updates",
+      "matchUpdateTypes": ["major"],
+      "automerge": false
+    }
+  ]
+}
