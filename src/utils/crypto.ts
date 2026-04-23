@@ -10,22 +10,9 @@
 //                       used to encrypt the content-key bytes with a fresh IV.
 //   • Payload encrypt:  AES-GCM-256 over compressed JSON (or raw image bytes).
 
-// ── Base64URL (RFC 4648 §5) ──────────────────────────────────────────────────
-
-export function toB64u(data: Uint8Array): string {
-  let str = ''
-  for (const byte of data) str += String.fromCharCode(byte)
-  return btoa(str).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '')
-}
-
-export function fromB64u(str: string): Uint8Array<ArrayBuffer> {
-  const pad = (4 - (str.length % 4)) % 4
-  const padded = str.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat(pad)
-  const raw = atob(padded)
-  const out = new Uint8Array(raw.length)
-  for (let i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i)
-  return out
-}
+// Re-exported so existing imports (`./crypto`) keep working.
+export { toB64u, fromB64u } from './base64url'
+import { toB64u, fromB64u } from './base64url'
 
 // ── Feature detection ────────────────────────────────────────────────────────
 

@@ -1,21 +1,11 @@
 import type { InviteData, AnswerExport, MemorySharePayload, ContactHandshake } from '../types'
-
-// ── Base64-URL helpers ────────────────────────────────────────────────────────
-
-function toB64u(data: Uint8Array): string {
-  let str = ''
-  for (const byte of data) str += String.fromCharCode(byte)
-  return btoa(str).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '')
-}
-
-function fromB64u(str: string): Uint8Array<ArrayBuffer> {
-  const pad = (4 - (str.length % 4)) % 4
-  const padded = str.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat(pad)
-  const raw = atob(padded)
-  const out = new Uint8Array(raw.length)
-  for (let i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i)
-  return out
-}
+import { toB64u, fromB64u } from './base64url'
+import {
+  validateInviteData,
+  validateAnswerExport,
+  validateMemorySharePayload,
+  validateContactHandshake,
+} from './payloadGuards'
 
 // ── Plain Base64 fallback (no crypto required) ────────────────────────────────
 
@@ -25,7 +15,7 @@ function encodeInvitePlain(data: InviteData): string {
 
 function decodeInvitePlain(str: string): InviteData | null {
   try {
-    return JSON.parse(decodeURIComponent(atob(str))) as InviteData
+    return validateInviteData(JSON.parse(decodeURIComponent(atob(str))))
   } catch {
     return null
   }
@@ -47,7 +37,7 @@ function decodeAnswerPlain(encoded: string): AnswerExport | null {
   try {
     const pad = (4 - (encoded.length % 4)) % 4
     const b64 = encoded.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat(pad)
-    return JSON.parse(decodeURIComponent(atob(b64))) as AnswerExport
+    return validateAnswerExport(JSON.parse(decodeURIComponent(atob(b64))))
   } catch {
     return null
   }
@@ -196,7 +186,7 @@ export async function parseSecureInviteFromHash(): Promise<InviteData | null> {
     try {
       const key = await strToKey(m[2])
       const plain = await decompress(await decryptBytes(fromB64u(m[1]), key))
-      return JSON.parse(plain) as InviteData
+      return validateInviteData(JSON.parse(plain))
     } catch {
       return null
     }
@@ -259,7 +249,7 @@ export async function parseAnswerFromUrl(input: string): Promise<AnswerExport | 
   const m = hash.match(/^#ma\/([A-Za-z0-9_-]+)/)
   if (m) {
     try {
-      return JSON.parse(await decompress(fromB64u(m[1]))) as AnswerExport
+      return validateAnswerExport(JSON.parse(await decompress(fromB64u(m[1]))))
     } catch {
       return null
     }
@@ -280,7 +270,7 @@ export async function parseAnswerFromHash(): Promise<AnswerExport | null> {
   const m = h.match(/^#ma\/([A-Za-z0-9_-]+)$/)
   if (m) {
     try {
-      return JSON.parse(await decompress(fromB64u(m[1]))) as AnswerExport
+      return validateAnswerExport(JSON.parse(await decompress(fromB64u(m[1]))))
     } catch {
       return null
     }
@@ -334,7 +324,7 @@ export async function parseMemoryShareFromHash(): Promise<MemorySharePayload | n
   const m = h.match(/^#ms\/([A-Za-z0-9_-]+)$/)
   if (m) {
     try {
-      return JSON.parse(await decompress(fromB64u(m[1]))) as MemorySharePayload
+      return validateMemorySharePayload(JSON.parse(await decompress(fromB64u(m[1]))))
     } catch {
       return null
     }
@@ -343,7 +333,7 @@ export async function parseMemoryShareFromHash(): Promise<MemorySharePayload | n
   const mPlain = h.match(/^#ms-plain\/(.+)$/)
   if (mPlain) {
     try {
-      return JSON.parse(decodeURIComponent(atob(mPlain[1]))) as MemorySharePayload
+      return validateMemorySharePayload(JSON.parse(decodeURIComponent(atob(mPlain[1]))))
     } catch {
       return null
     }
@@ -378,10 +368,7 @@ export function parseContactFromHash(): ContactHandshake | null {
   if (!m) return null
   try {
     const json = new TextDecoder().decode(fromB64u(m[1]))
-    const parsed = JSON.parse(json) as ContactHandshake
-    if (parsed.$type !== 'remember-me-contact') return null
-    if (!parsed.deviceId || !parsed.publicKey) return null
-    return parsed
+    return validateContactHandshake(JSON.parse(json))
   } catch {
     return null
   }
