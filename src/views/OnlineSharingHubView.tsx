@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from 'react'
 import { generateContactUrl, shareOrCopy } from '../utils/secureLink'
+import { CATEGORIES } from '../data/categories'
 import type {
   Friend,
   Answer,
@@ -11,6 +12,14 @@ import type {
 } from '../types'
 import type { OnlineSyncAPI } from '../hooks/useOnlineSync'
 import type { Recipient } from '../utils/shareEncryption'
+
+function resolveQuestionText(questionId: string): string {
+  for (const cat of CATEGORIES) {
+    const q = cat.questions.find(q => q.id === questionId)
+    if (q) return q.text
+  }
+  return questionId
+}
 
 interface Props {
   profileName: string
@@ -322,7 +331,7 @@ function ShareTab({
         $type: 'remember-me-share',
         version: 1,
         questionId: ans.questionId,
-        questionText: ans.questionId,
+        questionText: resolveQuestionText(ans.questionId),
         value: ans.value,
         imageCount: 0,
         createdAt: ans.createdAt,

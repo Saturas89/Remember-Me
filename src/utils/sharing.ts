@@ -1,4 +1,5 @@
 import type { AnswerExport, QuestionPack } from '../types'
+import { validateAnswerExport } from './payloadGuards'
 
 /** Encode an answer export as a Base64 text code for manual fallback sharing */
 export function encodeAnswerExport(data: AnswerExport): string {
@@ -8,7 +9,7 @@ export function encodeAnswerExport(data: AnswerExport): string {
 /** Decode a Base64 answer export code; returns null on any error */
 export function decodeAnswerExport(code: string): AnswerExport | null {
   try {
-    return JSON.parse(decodeURIComponent(atob(code.trim()))) as AnswerExport
+    return validateAnswerExport(JSON.parse(decodeURIComponent(atob(code.trim()))))
   } catch {
     return null
   }

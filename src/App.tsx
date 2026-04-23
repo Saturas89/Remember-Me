@@ -230,8 +230,11 @@ export default function App() {
     const result = await importFile(file)
     if (result.ok && result.friendAnswerPayload) {
       importFriendAnswerZipData(result.friendAnswerPayload)
+      return
     }
-    // Errors are silently dropped here; the caller can be extended with toasts if needed
+    // Log so failures are at least diagnosable in the browser console; the UI
+    // layer can be wired to a toast later without changing this call-site.
+    console.error('[App] friend ZIP import failed:', result.error ?? 'unknown error')
   }
 
   const [view, setView] = useState<View>(() =>
