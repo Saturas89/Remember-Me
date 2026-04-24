@@ -23,10 +23,9 @@ function decodeInvitePlain(str: string): InviteData | null {
 
 // ── Plain answer encoding (URL-safe, no compression) ─────────────────────────
 //
-// Standard btoa() produces chars (+, /, =) that messaging apps (WhatsApp,
-// iMessage, …) can corrupt when they re-encode URL fragments. We use
-// base64url (RFC 4648 §5) – the same alphabet already used for #ma/ –
-// so the payload survives sharing unchanged.
+// Standard btoa() produces chars (+, /, =) that are special in query strings.
+// We use base64url (RFC 4648 §5) so the value can be placed in a ?ma-plain=
+// query parameter without percent-encoding.
 
 function encodeAnswerPlain(data: AnswerExport): string {
   return btoa(encodeURIComponent(JSON.stringify(data)))
@@ -123,32 +122,25 @@ async function decryptBytes(data: Uint8Array<ArrayBuffer>, key: CryptoKey): Prom
   )
 }
 
-// ── App base URL ──────────────────────────────────────────────────────────────
-
-function appBase(): string {
-  return window.location.origin + window.location.pathname
-}
-
 // ── Public API ────────────────────────────────────────────────────────────────
 
 /**
  * Synchronously generate a plain (unencrypted) invite URL.
  *
- * The payload is just `btoa(encodeURIComponent(JSON))` – no crypto, no
- * compression, no await. Useful as a never-blocking fallback for UI that
- * needs a URL immediately (e.g. a share button that must be ready on first
- * paint). Functionally equivalent to the plain path of
- * `generateSecureInviteUrl`.
+ * The payload is `btoa(encodeURIComponent(JSON))` percent-encoded for the
+ * query string. No crypto, no compression, no await. Useful as a
+ * never-blocking fallback for UI that needs a URL immediately.
+ * Functionally equivalent to the plain path of `generateSecureInviteUrl`.
  */
 export function generatePlainInviteUrl(data: InviteData): string {
-  return `${appBase()}#invite/${encodeInvitePlain(data)}`
+  return `${window.location.origin}/?invite=${encodeURIComponent(encodeInvitePlain(data))}`
 }
 
 /**
  * Generate an invite URL.
  *
- * Tries AES-256-GCM + deflate-raw first (#mi/ format).
- * Automatically falls back to plain Base64 (#invite/ format) when
+ * Tries AES-256-GCM + deflate-raw first (?mi= format).
+ * Automatically falls back to plain Base64 (?invite= format) when
  * crypto.subtle or CompressionStream are unavailable (e.g. plain HTTP).
  */
 export async function generateSecureInviteUrl(data: InviteData): Promise<string> {
@@ -156,7 +148,7 @@ export async function generateSecureInviteUrl(data: InviteData): Promise<string>
     try {
       const key = await newKey()
       const encrypted = await encryptBytes(await compress(JSON.stringify(data)), key)
-      return `${appBase()}#mi/${toB64u(encrypted)}:${await keyToStr(key)}`
+      return `${window.location.origin}/?mi=${toB64u(encrypted)}:${await keyToStr(key)}`
     } catch {
       // Fall through to plain encoding
     }
@@ -166,35 +158,39 @@ export async function generateSecureInviteUrl(data: InviteData): Promise<string>
 
 /**
  * Detect synchronously whether the current URL is any kind of invite.
- * Covers both the encrypted #mi/ format and the plain #invite/ fallback.
+ * Covers both the encrypted ?mi= format and the plain ?invite= fallback.
  */
 export function isSecureInviteHash(): boolean {
-  const h = window.location.hash
-  return /^#mi\/[A-Za-z0-9_-]+:[A-Za-z0-9_-]+$/.test(h) || /^#invite\/.+$/.test(h)
+  const p = new URLSearchParams(window.location.search)
+  return p.has('mi') || p.has('invite')
 }
 
 /**
- * Parse an invite from the current URL hash.
- * Handles both the encrypted #mi/ format and the plain #invite/ fallback.
+ * Parse an invite from the current URL query string.
+ * Handles both the encrypted ?mi= format and the plain ?invite= fallback.
  */
 export async function parseSecureInviteFromHash(): Promise<InviteData | null> {
-  const h = window.location.hash
+  const p = new URLSearchParams(window.location.search)
 
-  // Encrypted path
-  const m = h.match(/^#mi\/([A-Za-z0-9_-]+):([A-Za-z0-9_-]+)$/)
-  if (m) {
-    try {
-      const key = await strToKey(m[2])
-      const plain = await decompress(await decryptBytes(fromB64u(m[1]), key))
-      return validateInviteData(JSON.parse(plain))
-    } catch {
-      return null
+  // Encrypted path: ?mi=[token]:[key]
+  const mi = p.get('mi')
+  if (mi) {
+    const sep = mi.lastIndexOf(':')
+    if (sep > 0) {
+      try {
+        const key = await strToKey(mi.slice(sep + 1))
+        const plain = await decompress(await decryptBytes(fromB64u(mi.slice(0, sep)), key))
+        return validateInviteData(JSON.parse(plain))
+      } catch {
+        return null
+      }
     }
+    return null
   }
 
-  // Plain Base64 fallback
-  const mPlain = h.match(/^#invite\/(.+)$/)
-  if (mPlain) return decodeInvitePlain(mPlain[1])
+  // Plain Base64 fallback: ?invite=[token]
+  const inv = p.get('invite')
+  if (inv) return decodeInvitePlain(inv)
 
   return null
 }
@@ -204,101 +200,106 @@ export async function parseSecureInviteFromHash(): Promise<InviteData | null> {
  *
  * Use this when the URL must be available immediately inside a click handler –
  * any await before navigator.share() breaks Safari's user-gesture context.
- * The result is functionally equivalent to the #ma-plain/ fallback path of
+ * The result is functionally equivalent to the ?ma-plain= fallback path of
  * generateAnswerUrl().
  */
 export function generatePlainAnswerUrl(data: AnswerExport): string {
-  return `${appBase()}#ma-plain/${encodeAnswerPlain(data)}`
+  return `${window.location.origin}/?ma-plain=${encodeAnswerPlain(data)}`
 }
 
 /**
  * Generate a compressed answer URL to share back with the inviter.
- * Falls back to plain Base64 when CompressionStream is unavailable.
+ * Falls back to plain base64url when CompressionStream is unavailable.
  *
- * Format: {origin}#ma/{base64url(compressed-json)}
- *      or {origin}#ma-plain/{base64}
+ * Format: {origin}/?ma={base64url(compressed-json)}
+ *      or {origin}/?ma-plain={base64url}
  */
 export async function generateAnswerUrl(data: AnswerExport): Promise<string> {
   if (typeof CompressionStream !== 'undefined') {
     try {
       const compressed = await compress(JSON.stringify(data))
-      return `${appBase()}#ma/${toB64u(compressed)}`
+      return `${window.location.origin}/?ma=${toB64u(compressed)}`
     } catch {
       // fall through
     }
   }
-  return `${appBase()}#ma-plain/${encodeAnswerPlain(data)}`
+  return `${window.location.origin}/?ma-plain=${encodeAnswerPlain(data)}`
 }
 
 /** Detect synchronously whether the current URL is an answer-import URL. */
 export function isAnswerHash(): boolean {
-  const h = window.location.hash
-  return /^#ma\/[A-Za-z0-9_-]+$/.test(h) || /^#ma-plain\/.+$/.test(h)
+  const p = new URLSearchParams(window.location.search)
+  return p.has('ma') || p.has('ma-plain')
 }
 
 /**
  * Parse an answer export from an arbitrary string – either a full URL
- * (e.g. "https://example.com/#ma/xyz") or a bare hash fragment ("#ma/xyz").
+ * (e.g. "https://example.com/?ma=xyz") or a bare query string ("?ma=xyz").
  * Useful for the manual-import text field where the user may paste either form.
  */
 export async function parseAnswerFromUrl(input: string): Promise<AnswerExport | null> {
-  const match = input.match(/#(ma(?:-plain)?\/\S+)/)
-  if (!match) return null
-  const hash = '#' + match[1]
+  let search: string
+  try {
+    search = new URL(input).search
+  } catch {
+    search = input.startsWith('?') ? input : ''
+  }
+  if (!search) return null
+  const p = new URLSearchParams(search)
 
-  const m = hash.match(/^#ma\/([A-Za-z0-9_-]+)/)
-  if (m) {
+  const ma = p.get('ma')
+  if (ma) {
     try {
-      return validateAnswerExport(JSON.parse(await decompress(fromB64u(m[1]))))
+      return validateAnswerExport(JSON.parse(await decompress(fromB64u(ma))))
     } catch {
       return null
     }
   }
 
-  const mPlain = hash.match(/^#ma-plain\/(.+)/)
-  if (mPlain) return decodeAnswerPlain(mPlain[1])
+  const maPlain = p.get('ma-plain')
+  if (maPlain) return decodeAnswerPlain(maPlain)
 
   return null
 }
 
 /**
- * Parse an answer export from the current URL hash.
+ * Parse an answer export from the current URL query string.
  */
 export async function parseAnswerFromHash(): Promise<AnswerExport | null> {
-  const h = window.location.hash
+  const p = new URLSearchParams(window.location.search)
 
-  const m = h.match(/^#ma\/([A-Za-z0-9_-]+)$/)
-  if (m) {
+  const ma = p.get('ma')
+  if (ma) {
     try {
-      return validateAnswerExport(JSON.parse(await decompress(fromB64u(m[1]))))
+      return validateAnswerExport(JSON.parse(await decompress(fromB64u(ma))))
     } catch {
       return null
     }
   }
 
-  const mPlain = h.match(/^#ma-plain\/(.+)$/)
-  if (mPlain) return decodeAnswerPlain(mPlain[1])
+  const maPlain = p.get('ma-plain')
+  if (maPlain) return decodeAnswerPlain(maPlain)
 
   return null
 }
 
-// ── Memory share URLs (#ms/) ──────────────────────────────────────────────────
+// ── Memory share URLs ─────────────────────────────────────────────────────────
 
 /**
  * Generate a URL containing a compressed memory-share payload.
- * Format: {origin}#ms/{base64url(compressed-json)}
- *      or {origin}#ms-plain/{base64} as fallback.
+ * Format: {origin}/?ms={base64url(compressed-json)}
+ *      or {origin}/?ms-plain={percent-encoded-base64} as fallback.
  */
 export async function generateMemoryShareUrl(payload: MemorySharePayload): Promise<string> {
   if (typeof CompressionStream !== 'undefined') {
     try {
       const compressed = await compress(JSON.stringify(payload))
-      return `${appBase()}#ms/${toB64u(compressed)}`
+      return `${window.location.origin}/?ms=${toB64u(compressed)}`
     } catch {
       // fall through
     }
   }
-  return `${appBase()}#ms-plain/${btoa(encodeURIComponent(JSON.stringify(payload)))}`
+  return `${window.location.origin}/?ms-plain=${encodeURIComponent(btoa(encodeURIComponent(JSON.stringify(payload))))}`
 }
 
 /**
@@ -308,32 +309,32 @@ export async function generateMemoryShareUrl(payload: MemorySharePayload): Promi
  * browser's user-gesture context and prevents the share sheet from opening.
  */
 export function generateMemoryShareUrlSync(payload: MemorySharePayload): string {
-  return `${appBase()}#ms-plain/${btoa(encodeURIComponent(JSON.stringify(payload)))}`
+  return `${window.location.origin}/?ms-plain=${encodeURIComponent(btoa(encodeURIComponent(JSON.stringify(payload))))}`
 }
 
 /** Synchronously detect whether the current URL is a memory-share link. */
 export function isMemoryShareHash(): boolean {
-  const h = window.location.hash
-  return /^#ms\/[A-Za-z0-9_-]+$/.test(h) || /^#ms-plain\/.+$/.test(h)
+  const p = new URLSearchParams(window.location.search)
+  return p.has('ms') || p.has('ms-plain')
 }
 
-/** Parse a memory-share payload from the current URL hash. */
+/** Parse a memory-share payload from the current URL query string. */
 export async function parseMemoryShareFromHash(): Promise<MemorySharePayload | null> {
-  const h = window.location.hash
+  const p = new URLSearchParams(window.location.search)
 
-  const m = h.match(/^#ms\/([A-Za-z0-9_-]+)$/)
-  if (m) {
+  const ms = p.get('ms')
+  if (ms) {
     try {
-      return validateMemorySharePayload(JSON.parse(await decompress(fromB64u(m[1]))))
+      return validateMemorySharePayload(JSON.parse(await decompress(fromB64u(ms))))
     } catch {
       return null
     }
   }
 
-  const mPlain = h.match(/^#ms-plain\/(.+)$/)
-  if (mPlain) {
+  const msPlain = p.get('ms-plain')
+  if (msPlain) {
     try {
-      return validateMemorySharePayload(JSON.parse(decodeURIComponent(atob(mPlain[1]))))
+      return validateMemorySharePayload(JSON.parse(decodeURIComponent(atob(msPlain))))
     } catch {
       return null
     }
@@ -342,13 +343,13 @@ export async function parseMemoryShareFromHash(): Promise<MemorySharePayload | n
   return null
 }
 
-// ── Contact handshake URLs (#contact/) ───────────────────────────────────────
+// ── Contact handshake URLs ────────────────────────────────────────────────────
 //
 // Used only by the opt-in online-sharing feature. Encodes the sender's opaque
 // device-id + ECDH public key + display name so the recipient can save them
 // as an online-linked Friend and start E2E-encrypting memories to them.
 //
-// Format: {origin}#contact/{base64url(JSON(ContactHandshake))}
+// Format: {origin}/?contact={base64url(JSON(ContactHandshake))}
 //
 // The handshake is itself plaintext (the public key and device-id are not
 // secrets — they're meant to be shared). All *content* that later gets
@@ -356,18 +357,18 @@ export async function parseMemoryShareFromHash(): Promise<MemorySharePayload | n
 // that is wrapped per recipient using ECDH(private, public).
 
 export function generateContactUrl(data: ContactHandshake): string {
-  return `${appBase()}#contact/${toB64u(new TextEncoder().encode(JSON.stringify(data)))}`
+  return `${window.location.origin}/?contact=${toB64u(new TextEncoder().encode(JSON.stringify(data)))}`
 }
 
 export function isContactHash(): boolean {
-  return /^#contact\/[A-Za-z0-9_-]+$/.test(window.location.hash)
+  return new URLSearchParams(window.location.search).has('contact')
 }
 
 export function parseContactFromHash(): ContactHandshake | null {
-  const m = window.location.hash.match(/^#contact\/([A-Za-z0-9_-]+)$/)
-  if (!m) return null
+  const token = new URLSearchParams(window.location.search).get('contact')
+  if (!token) return null
   try {
-    const json = new TextDecoder().decode(fromB64u(m[1]))
+    const json = new TextDecoder().decode(fromB64u(token))
     return validateContactHandshake(JSON.parse(json))
   } catch {
     return null

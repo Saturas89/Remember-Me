@@ -18,34 +18,37 @@ import type { InviteData, AnswerExport } from '../types'
 
 // ── Minimal window / location polyfill ───────────────────────────────────────
 
-function setHash(hash: string) {
-  ;(globalThis as unknown as { window: { location: { hash: string; origin: string; pathname: string } } }).window = {
-    location: { hash, origin: 'https://example.com', pathname: '/' },
+function setLocation({ hash = '', search = '' }: { hash?: string; search?: string }) {
+  ;(globalThis as unknown as { window: { location: { hash: string; search: string; origin: string; pathname: string } } }).window = {
+    location: { hash, search, origin: 'https://example.com', pathname: '/' },
   }
 }
 
-beforeEach(() => setHash(''))
+function setHash(hash: string) { setLocation({ hash }) }
+function setSearch(search: string) { setLocation({ search }) }
+
+beforeEach(() => setLocation({}))
 
 // ── isSecureInviteHash ────────────────────────────────────────────────────────
 
 describe('isSecureInviteHash', () => {
-  it('returns true for a well-formed #mi/ hash', () => {
-    setHash('#mi/abc123_-:keyABC123_-')
+  it('returns true for a well-formed ?mi= param', () => {
+    setSearch('?mi=abc123_-:keyABC123_-')
     expect(isSecureInviteHash()).toBe(true)
   })
 
-  it('returns true for the plain #invite/ fallback format', () => {
-    setHash('#invite/someb64data')
+  it('returns true for the plain ?invite= fallback format', () => {
+    setSearch('?invite=someb64data')
     expect(isSecureInviteHash()).toBe(true)
   })
 
-  it('returns false for an answer hash', () => {
-    setHash('#ma/abc123')
+  it('returns false for an answer param', () => {
+    setSearch('?ma=abc123')
     expect(isSecureInviteHash()).toBe(false)
   })
 
-  it('returns false for an empty hash', () => {
-    setHash('')
+  it('returns false for an empty search', () => {
+    setSearch('')
     expect(isSecureInviteHash()).toBe(false)
   })
 })
@@ -53,18 +56,23 @@ describe('isSecureInviteHash', () => {
 // ── isAnswerHash ──────────────────────────────────────────────────────────────
 
 describe('isAnswerHash', () => {
-  it('returns true for a well-formed #ma/ hash', () => {
-    setHash('#ma/abc123_-')
+  it('returns true for a well-formed ?ma= param', () => {
+    setSearch('?ma=abc123_-')
     expect(isAnswerHash()).toBe(true)
   })
 
-  it('returns false for an invite hash', () => {
-    setHash('#mi/abc:key')
+  it('returns true for a ?ma-plain= param', () => {
+    setSearch('?ma-plain=abc123_-')
+    expect(isAnswerHash()).toBe(true)
+  })
+
+  it('returns false for an invite param', () => {
+    setSearch('?mi=abc:key')
     expect(isAnswerHash()).toBe(false)
   })
 
-  it('returns false for an empty hash', () => {
-    setHash('')
+  it('returns false for an empty search', () => {
+    setSearch('')
     expect(isAnswerHash()).toBe(false)
   })
 })
@@ -78,11 +86,9 @@ describe('generateSecureInviteUrl / parseSecureInviteFromHash', () => {
     topicId: 'friendship',
   }
 
-  it('round-trips InviteData through URL + hash parse', async () => {
+  it('round-trips InviteData through URL + query parse', async () => {
     const url = await generateSecureInviteUrl(invite)
-    // Extract the fragment from the generated URL and set it as the mock hash
-    const hash = '#' + url.split('#')[1]
-    setHash(hash)
+    setSearch('?' + url.split('?')[1])
     const parsed = await parseSecureInviteFromHash()
     expect(parsed).toEqual(invite)
   })
@@ -90,14 +96,14 @@ describe('generateSecureInviteUrl / parseSecureInviteFromHash', () => {
   it('round-trips InviteData without optional topicId', async () => {
     const minimal: InviteData = { profileName: 'Max', friendId: 'f-456' }
     const url = await generateSecureInviteUrl(minimal)
-    setHash('#' + url.split('#')[1])
+    setSearch('?' + url.split('?')[1])
     expect(await parseSecureInviteFromHash()).toEqual(minimal)
   })
 
   it('round-trips umlauts in profileName', async () => {
     const umlaut: InviteData = { profileName: 'Ünä-Müller', friendId: 'f-789' }
     const url = await generateSecureInviteUrl(umlaut)
-    setHash('#' + url.split('#')[1])
+    setSearch('?' + url.split('?')[1])
     expect(await parseSecureInviteFromHash()).toEqual(umlaut)
   })
 
@@ -107,29 +113,29 @@ describe('generateSecureInviteUrl / parseSecureInviteFromHash', () => {
     expect(url1).not.toBe(url2)
   })
 
-  it('URL contains the #mi/ prefix', async () => {
+  it('URL contains the ?mi= param', async () => {
     const url = await generateSecureInviteUrl(invite)
-    expect(url).toContain('#mi/')
+    expect(url).toContain('?mi=')
   })
 
-  it('returns null when hash is empty', async () => {
-    setHash('')
+  it('returns null when search is empty', async () => {
+    setSearch('')
     expect(await parseSecureInviteFromHash()).toBeNull()
   })
 
-  it('parses an #invite/ plain-Base64 fallback URL', async () => {
+  it('parses a ?invite= plain-Base64 fallback URL', async () => {
     // Simulate what generateSecureInviteUrl produces when crypto is unavailable
-    const encoded = btoa(encodeURIComponent(JSON.stringify(invite)))
-    setHash(`#invite/${encoded}`)
+    const encoded = encodeURIComponent(btoa(encodeURIComponent(JSON.stringify(invite))))
+    setSearch(`?invite=${encoded}`)
     expect(await parseSecureInviteFromHash()).toEqual(invite)
   })
 
   it('returns null when ciphertext is tampered with', async () => {
     const url = await generateSecureInviteUrl(invite)
-    const parts = url.split('#mi/')
-    // Flip a few characters in the payload to corrupt the ciphertext
-    const corrupted = parts[1].slice(0, -4) + 'XXXX'
-    setHash(`#mi/${corrupted}`)
+    const miValue = new URLSearchParams(url.split('?')[1]).get('mi')!
+    // Flip a few characters at the end to corrupt the ciphertext
+    const corrupted = miValue.slice(0, -4) + 'XXXX'
+    setSearch(`?mi=${corrupted}`)
     expect(await parseSecureInviteFromHash()).toBeNull()
   })
 })
@@ -146,31 +152,31 @@ describe('generateAnswerUrl / parseAnswerFromHash', () => {
     ],
   }
 
-  it('round-trips AnswerExport through URL + hash parse', async () => {
+  it('round-trips AnswerExport through URL + query parse', async () => {
     const url = await generateAnswerUrl(answers)
-    setHash('#' + url.split('#')[1])
+    setSearch('?' + url.split('?')[1])
     expect(await parseAnswerFromHash()).toEqual(answers)
   })
 
   it('round-trips an empty answers list', async () => {
     const empty: AnswerExport = { friendId: 'f-x', friendName: 'Test', answers: [] }
     const url = await generateAnswerUrl(empty)
-    setHash('#' + url.split('#')[1])
+    setSearch('?' + url.split('?')[1])
     expect(await parseAnswerFromHash()).toEqual(empty)
   })
 
-  it('URL contains the #ma/ prefix', async () => {
+  it('URL contains the ?ma= param', async () => {
     const url = await generateAnswerUrl(answers)
-    expect(url).toContain('#ma/')
+    expect(url).toContain('?ma=')
   })
 
-  it('returns null when hash is empty', async () => {
-    setHash('')
+  it('returns null when search is empty', async () => {
+    setSearch('')
     expect(await parseAnswerFromHash()).toBeNull()
   })
 
   it('returns null when payload is corrupted', async () => {
-    setHash('#ma/!!!notvalidbase64url!!!')
+    setSearch('?ma=!!!notvalidbase64url!!!')
     expect(await parseAnswerFromHash()).toBeNull()
   })
 })
@@ -189,23 +195,22 @@ describe('parseAnswerFromUrl', () => {
     expect(await parseAnswerFromUrl(url)).toEqual(answers)
   })
 
-  it('round-trips via bare hash string', async () => {
+  it('round-trips via bare query string', async () => {
     const url = await generateAnswerUrl(answers)
-    const hash = '#' + url.split('#')[1]
-    expect(await parseAnswerFromUrl(hash)).toEqual(answers)
+    const search = '?' + url.split('?')[1]
+    expect(await parseAnswerFromUrl(search)).toEqual(answers)
   })
 
   it('round-trips via generatePlainAnswerUrl (URL-safe base64url)', async () => {
-    setHash('')
     const url = generatePlainAnswerUrl(answers)
-    expect(url).toContain('#ma-plain/')
-    const fragment = url.split('#ma-plain/')[1]
-    expect(fragment).toMatch(/^[A-Za-z0-9_-]+$/)
+    expect(url).toContain('?ma-plain=')
+    const value = new URLSearchParams(url.split('?')[1]).get('ma-plain')!
+    expect(value).toMatch(/^[A-Za-z0-9_-]+$/)
     expect(await parseAnswerFromUrl(url)).toEqual(answers)
   })
 
   it('returns null for an invite URL', async () => {
-    expect(await parseAnswerFromUrl('https://example.com/#mi/abc:key')).toBeNull()
+    expect(await parseAnswerFromUrl('https://example.com/?mi=abc:key')).toBeNull()
   })
 
   it('returns null for an empty string', async () => {
@@ -213,6 +218,6 @@ describe('parseAnswerFromUrl', () => {
   })
 
   it('returns null for corrupted payload', async () => {
-    expect(await parseAnswerFromUrl('#ma/!!!bad!!!')).toBeNull()
+    expect(await parseAnswerFromUrl('?ma=!!!bad!!!')).toBeNull()
   })
 })
