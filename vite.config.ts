@@ -4,6 +4,21 @@ import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
+  // Vercels Supabase-Integration setzt Env-Vars als `SUPABASE_URL` /
+  // `SUPABASE_ANON_KEY` (ohne Vite-Prefix). Vite exposed nur `VITE_*` ins
+  // Client-Bundle – für Fremd-Namen nutzen wir eine explizite Allowlist
+  // per `define`, anstatt den `envPrefix` zu erweitern. Letzteres würde
+  // auch gefährliche Vars wie `SUPABASE_SERVICE_ROLE_KEY` ins Browser-
+  // Bundle ziehen; die Allowlist hier betrifft gezielt nur die zwei
+  // ohnehin öffentlichen Werte.
+  define: {
+    'import.meta.env.VITE_SUPABASE_URL': JSON.stringify(
+      process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL ?? ''
+    ),
+    'import.meta.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(
+      process.env.VITE_SUPABASE_ANON_KEY ?? process.env.SUPABASE_ANON_KEY ?? ''
+    ),
+  },
   plugins: [
     react(),
     VitePWA({

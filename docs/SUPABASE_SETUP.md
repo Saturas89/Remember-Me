@@ -54,15 +54,28 @@ sicherstellen:
 
 ## 4. ENV-Variablen setzen
 
-In der Anwendung (Vercel-Dashboard oder `.env.local`):
+**Option A – Vercels Supabase-Integration** (empfohlen für Vercel-Deployments):
+Im Projekt-Dashboard → *Storage → Supabase → Connect Project* klicken. Vercel
+legt automatisch `SUPABASE_URL` und `SUPABASE_ANON_KEY` (ohne `VITE_`-Prefix)
+an. Der Build in `vite.config.ts` übernimmt diese via Fallback direkt – du
+musst nichts umbenennen.
+
+**Option B – manuell**, lokal oder bei anderen Hostern:
 
 ```
 VITE_SUPABASE_URL=https://xxxx.supabase.co
 VITE_SUPABASE_ANON_KEY=eyJhbGciOi…   # „anon/public" Key aus Supabase-Dashboard
 ```
 
-Ohne diese Variablen blendet die App den Online-Teilen-Einstieg automatisch
-aus – der Offline-Flow funktioniert davon völlig unabhängig.
+Die `VITE_`-Variante hat Vorrang; wenn nur `SUPABASE_URL` / `SUPABASE_ANON_KEY`
+gesetzt sind, greift der Fallback. Ohne beide Variablen blendet die App den
+Online-Teilen-Einstieg automatisch aus – der Offline-Flow funktioniert davon
+völlig unabhängig.
+
+> **Sicherheit:** Die Whitelist in `vite.config.ts` lässt bewusst nur die zwei
+> öffentlichen Keys (`_URL`, `_ANON_KEY`) ins Client-Bundle. Niemals
+> `SUPABASE_SERVICE_ROLE_KEY` oder `SUPABASE_JWT_SECRET` dort eintragen – sie
+> dürfen den Server nie verlassen.
 
 ## 5. Verifizieren
 
