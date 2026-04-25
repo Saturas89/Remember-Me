@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { FriendCard } from '../components/FriendCard'
 import { useTranslation } from '../locales'
+import { generateShareCard } from '../utils/shareCard'
 import type { Friend, FriendAnswer } from '../types'
 
 interface Props {
@@ -35,14 +36,20 @@ export function FriendsView({
   const [isSharing, setIsSharing] = useState(false)
   const [shareStatus, setShareStatus] = useState<'idle' | 'copied' | 'error'>('idle')
   const zipInputRef = useRef<HTMLInputElement>(null)
-  const logoBlobRef = useRef<Blob | null>(null)
+  const shareCardRef = useRef<File | null>(null)
 
   useEffect(() => {
+    const name = profileName.trim()
+    const title = name ? `${name} lädt ein` : 'Einladung zu Remember Me'
     fetch('/pwa-192x192.png')
       .then(r => r.blob())
-      .then(b => { logoBlobRef.current = b })
+      .then(b => generateShareCard(b, {
+        title,
+        subtitle: 'Erzähl mir deine Erinnerung – ohne App, ohne Account.',
+      }))
+      .then(f => { shareCardRef.current = f })
       .catch(() => {})
-  }, [])
+  }, [profileName])
 
   useEffect(() => {
     if (shareStatus === 'idle') return
@@ -65,12 +72,11 @@ export function FriendsView({
     const title = name ? `${name}s Lebensarchiv` : 'Mein Lebensarchiv'
     setIsSharing(true)
 
-    const blob = logoBlobRef.current
-    if (blob && typeof navigator.share === 'function') {
-      const logoFile = new File([blob], 'remember-me.png', { type: 'image/png' })
-      if (navigator.canShare?.({ files: [logoFile] })) {
+    const card = shareCardRef.current
+    if (card && typeof navigator.share === 'function') {
+      if (navigator.canShare?.({ files: [card] })) {
         navigator
-          .share({ files: [logoFile], title, text })
+          .share({ files: [card], title, text })
           .then(() => setIsSharing(false))
           .catch(err => {
             setIsSharing(false)

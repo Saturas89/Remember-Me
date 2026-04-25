@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { decodeQuestionPack } from '../utils/sharing'
 import { generateMemoryShareUrlSync } from '../utils/secureLink'
+import { generateShareCard } from '../utils/shareCard'
 import { useImageStore } from '../hooks/useImageStore'
 import { addAudio, removeAudio } from '../hooks/useAudioStore'
 import { addVideo, removeVideo } from '../hooks/useVideoStore'
@@ -55,12 +56,26 @@ export function CustomQuestionsView({
   const [importMsg, setImportMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const [isSharing, setIsSharing] = useState(false)
   const [shareStatus, setShareStatus] = useState<'idle' | 'copied' | 'error'>('idle')
+  const shareCardRef = useRef<File | null>(null)
 
   useEffect(() => {
     if (shareStatus === 'idle') return
     const timer = setTimeout(() => setShareStatus('idle'), 2500)
     return () => clearTimeout(timer)
   }, [shareStatus])
+
+  useEffect(() => {
+    if (customQuestions.length === 0) { shareCardRef.current = null; return }
+    const name = profileName.trim()
+    fetch('/pwa-192x192.png')
+      .then(r => r.blob())
+      .then(b => generateShareCard(b, {
+        title: name ? `${name}s Erinnerungen` : 'Meine Erinnerungen',
+        items: customQuestions.map(q => q.text),
+      }))
+      .then(f => { shareCardRef.current = f })
+      .catch(() => {})
+  }, [customQuestions, profileName])
 
   function handleAdd() {
     if (!newText.trim()) return
@@ -94,13 +109,33 @@ export function CustomQuestionsView({
       setShareStatus('error')
       return
     }
-    const shareData = { title: 'Meine Erinnerungen', url }
+    const name = profileName.trim()
+    const title = name ? `${name}s Erinnerungen` : 'Meine Erinnerungen'
+    const text = `${title}\n\n${url}`
 
     setIsSharing(true)
 
+    const card = shareCardRef.current
+    if (card && typeof navigator.share === 'function') {
+      if (navigator.canShare?.({ files: [card] })) {
+        navigator
+          .share({ files: [card], title, text })
+          .then(() => setIsSharing(false))
+          .catch(err => {
+            setIsSharing(false)
+            if ((err as Error).name !== 'AbortError') {
+              navigator.clipboard?.writeText(url)
+                .then(() => setShareStatus('copied'))
+                .catch(() => setShareStatus('error'))
+            }
+          })
+        return
+      }
+    }
+
     if (typeof navigator.share === 'function') {
       navigator
-        .share(shareData)
+        .share({ title, url })
         .then(() => setIsSharing(false))
         .catch(err => {
           setIsSharing(false)

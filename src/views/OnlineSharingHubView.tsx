@@ -1,5 +1,6 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { generateContactUrl, shareOrCopy } from '../utils/secureLink'
+import { generateShareCard } from '../utils/shareCard'
 import { CATEGORIES } from '../data/categories'
 import type {
   Friend,
@@ -32,12 +33,70 @@ interface Props {
 
 type Tab = 'feed' | 'share' | 'contacts' | 'settings'
 
+// ── Shared hook: contact link share logic ────────────────────────────────────
+// Used by both OnboardingScreen and ContactsTab to avoid duplication.
+
+function useContactShare(profileName: string, sync: OnlineSyncAPI) {
+  const shareCardRef = useRef<File | null>(null)
+  const [copied, setCopied] = useState(false)
+
+  const handshake: ContactHandshake | null = useMemo(() => {
+    if (!sync.deviceId || !sync.publicKeyB64) return null
+    return {
+      $type: 'remember-me-contact',
+      version: 1,
+      deviceId: sync.deviceId,
+      publicKey: sync.publicKeyB64,
+      displayName: profileName,
+    }
+  }, [sync.deviceId, sync.publicKeyB64, profileName])
+
+  const url = handshake ? generateContactUrl(handshake) : ''
+
+  useEffect(() => {
+    if (!profileName) return
+    fetch('/pwa-192x192.png')
+      .then(r => r.blob())
+      .then(b => generateShareCard(b, {
+        title: `${profileName} lädt ein`,
+        subtitle: 'Teile Erinnerungen sicher & privat – ohne Account.',
+      }))
+      .then(f => { shareCardRef.current = f })
+      .catch(() => {})
+  }, [profileName])
+
+  const share = useCallback(async () => {
+    if (!url) return
+    const card = shareCardRef.current
+    if (card && typeof navigator.share === 'function' && navigator.canShare?.({ files: [card] })) {
+      const text = `${profileName} möchte Remember-Me-Erinnerungen mit dir teilen. Öffne diesen Link, um dich zu verknüpfen:\n\n${url}`
+      try {
+        await navigator.share({ files: [card], title: 'Remember Me – Online-Kontakt', text })
+        return
+      } catch (e) {
+        if ((e as Error).name === 'AbortError') return
+      }
+    }
+    const sent = await shareOrCopy({
+      title: 'Remember Me – Online-Kontakt',
+      text: `${profileName} möchte Remember-Me-Erinnerungen mit dir teilen. Öffne diesen Link, um dich zu verknüpfen:`,
+      url,
+    })
+    if (!sent) {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }
+  }, [url, profileName])
+
+  return { url, share, copied }
+}
+
 /**
- * The post-opt-in control surface for online sharing. Four tabs:
- *   • Feed        – Erinnerungen, die andere mit mir geteilt haben
- *   • Teilen      – eigene Erinnerung an Kontakte senden
- *   • Kontakte    – Invite-Link erstellen, gelinkte Kontakte sehen
- *   • Einstellungen – Feature deaktivieren + Server-Daten löschen
+ * The post-opt-in control surface for online sharing.
+ *
+ * Flow:
+ *  • 0 contacts → OnboardingScreen (single focused invite CTA)
+ *  • ≥1 contacts → Four-tab hub: Feed · Teilen · Einladen · Einstellungen
  */
 export function OnlineSharingHubView({
   profileName,
@@ -49,6 +108,7 @@ export function OnlineSharingHubView({
 }: Props) {
   const [tab, setTab] = useState<Tab>('feed')
   const onlineFriends = useMemo(() => friends.filter(f => f.online), [friends])
+  const hasContacts = onlineFriends.length > 0
 
   return (
     <div className="friends-view">
@@ -71,50 +131,63 @@ export function OnlineSharingHubView({
         </section>
       )}
 
-      <nav className="online-tabs" role="tablist">
-        <TabButton active={tab === 'feed'} onClick={() => setTab('feed')}>
-          Feed {sync.memories.length > 0 && <span className="online-tab-badge">{sync.memories.length}</span>}
-        </TabButton>
-        <TabButton active={tab === 'share'} onClick={() => setTab('share')}>
-          Teilen
-        </TabButton>
-        <TabButton active={tab === 'contacts'} onClick={() => setTab('contacts')}>
-          Kontakte
-        </TabButton>
-        <TabButton active={tab === 'settings'} onClick={() => setTab('settings')}>
-          Einstellungen
-        </TabButton>
-      </nav>
-
-      {tab === 'feed' && (
-        <FeedTab
-          memories={sync.memories}
-          annotations={sync.annotations}
+      {sync.ready && !hasContacts && (
+        <OnboardingScreen
           profileName={profileName}
           sync={sync}
-          onlineFriends={onlineFriends}
+          onDeactivate={onDeactivate}
         />
       )}
 
-      {tab === 'share' && (
-        <ShareTab
-          answers={answers}
-          onlineFriends={onlineFriends}
-          profileName={profileName}
-          sync={sync}
-        />
-      )}
+      {sync.ready && hasContacts && (
+        <>
+          <nav className="online-tabs" role="tablist">
+            <TabButton active={tab === 'feed'} onClick={() => setTab('feed')}>
+              Feed {sync.memories.length > 0 && (
+                <span className="online-tab-badge">{sync.memories.length}</span>
+              )}
+            </TabButton>
+            <TabButton active={tab === 'share'} onClick={() => setTab('share')}>
+              Teilen
+            </TabButton>
+            <TabButton active={tab === 'contacts'} onClick={() => setTab('contacts')}>
+              Einladen
+            </TabButton>
+            <TabButton active={tab === 'settings'} onClick={() => setTab('settings')}>
+              Einstellungen
+            </TabButton>
+          </nav>
 
-      {tab === 'contacts' && (
-        <ContactsTab
-          profileName={profileName}
-          sync={sync}
-          onlineFriends={onlineFriends}
-        />
-      )}
-
-      {tab === 'settings' && (
-        <SettingsTab onDeactivate={onDeactivate} />
+          {tab === 'feed' && (
+            <FeedTab
+              memories={sync.memories}
+              annotations={sync.annotations}
+              profileName={profileName}
+              sync={sync}
+              onlineFriends={onlineFriends}
+              onGoToShare={() => setTab('share')}
+              onGoToInvite={() => setTab('contacts')}
+            />
+          )}
+          {tab === 'share' && (
+            <ShareTab
+              answers={answers}
+              onlineFriends={onlineFriends}
+              profileName={profileName}
+              sync={sync}
+            />
+          )}
+          {tab === 'contacts' && (
+            <ContactsTab
+              profileName={profileName}
+              sync={sync}
+              onlineFriends={onlineFriends}
+            />
+          )}
+          {tab === 'settings' && (
+            <SettingsTab onDeactivate={onDeactivate} />
+          )}
+        </>
       )}
     </div>
   )
@@ -141,6 +214,54 @@ function TabButton({
   )
 }
 
+// ── Onboarding (0 contacts) ──────────────────────────────────────────────────
+
+function OnboardingScreen({
+  profileName,
+  sync,
+  onDeactivate,
+}: {
+  profileName: string
+  sync: OnlineSyncAPI
+  onDeactivate: () => void
+}) {
+  const { url, share, copied } = useContactShare(profileName, sync)
+  const [showSettings, setShowSettings] = useState(false)
+
+  return (
+    <section className="friends-section online-onboarding">
+      <div className="online-onboarding__icon">🔗</div>
+
+      <h3 className="friends-section-title">Jemanden einladen</h3>
+
+      <p className="friends-hint">
+        Schick diesen Link an jemanden, dem du vertraust. Sobald die Person
+        ihn öffnet, seid ihr verknüpft und könnt gegenseitig Erinnerungen
+        sicher miteinander teilen.
+      </p>
+
+      <button className="share-cta-btn" onClick={share} disabled={!url}>
+        {copied ? 'In die Zwischenablage kopiert ✓' : '📤 Verbindungslink teilen'}
+      </button>
+
+      <ul className="online-onboarding__steps">
+        <li>Du teilst deinen Link</li>
+        <li>Die Person öffnet ihn – fertig, ihr seid verknüpft</li>
+        <li>Jetzt könnt ihr gegenseitig Erinnerungen teilen</li>
+      </ul>
+
+      <button
+        className="btn btn--ghost btn--sm online-onboarding__settings-btn"
+        onClick={() => setShowSettings(s => !s)}
+      >
+        {showSettings ? 'Einstellungen schließen' : 'Einstellungen'}
+      </button>
+
+      {showSettings && <SettingsTab onDeactivate={onDeactivate} />}
+    </section>
+  )
+}
+
 // ── Feed ────────────────────────────────────────────────────────────────────
 
 function FeedTab({
@@ -149,21 +270,32 @@ function FeedTab({
   profileName,
   sync,
   onlineFriends,
+  onGoToShare,
+  onGoToInvite,
 }: {
   memories: SharedMemory[]
   annotations: Annotation[]
   profileName: string
   sync: OnlineSyncAPI
   onlineFriends: Friend[]
+  onGoToShare: () => void
+  onGoToInvite: () => void
 }) {
   if (memories.length === 0) {
     return (
       <section className="friends-section">
         <p className="friends-hint">
-          Hier erscheinen Erinnerungen, die andere mit dir geteilt haben.
-          Teile deinen Verbindungslink im Tab „Kontakte", damit jemand dich
-          als Empfänger hinzufügen kann.
+          Noch keine Erinnerungen von deinen Kontakten eingegangen. Teile
+          selbst eine – oder lade weitere Personen ein.
         </p>
+        <div className="online-empty-actions">
+          <button className="share-cta-btn" onClick={onGoToShare}>
+            Erinnerung teilen →
+          </button>
+          <button className="btn btn--ghost btn--sm" onClick={onGoToInvite}>
+            Weiteren Kontakt einladen
+          </button>
+        </div>
       </section>
     )
   }
@@ -204,7 +336,6 @@ function SharedMemoryCard({
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
 
   const audience = useMemo<Recipient[]>(() => {
-    // Audience = share owner + other online friends (so the owner + others see the annotation)
     const seen = new Set<string>()
     const out: Recipient[] = []
     for (const f of onlineFriends) {
@@ -360,18 +491,6 @@ function ShareTab({
     )
   }
 
-  if (onlineFriends.length === 0) {
-    return (
-      <section className="friends-section">
-        <p className="friends-hint">
-          Du hast noch keine Online-Kontakte. Erstelle im Tab „Kontakte"
-          einen Einladungs-Link und lass dir einen zurückschicken, bevor du
-          teilen kannst.
-        </p>
-      </section>
-    )
-  }
-
   return (
     <section className="friends-section">
       <label className="online-field">
@@ -418,7 +537,7 @@ function ShareTab({
   )
 }
 
-// ── Contacts ────────────────────────────────────────────────────────────────
+// ── Contacts / Einladen ──────────────────────────────────────────────────────
 
 function ContactsTab({
   profileName,
@@ -429,33 +548,7 @@ function ContactsTab({
   sync: OnlineSyncAPI
   onlineFriends: Friend[]
 }) {
-  const [copied, setCopied] = useState(false)
-
-  const handshake: ContactHandshake | null = useMemo(() => {
-    if (!sync.deviceId || !sync.publicKeyB64) return null
-    return {
-      $type: 'remember-me-contact',
-      version: 1,
-      deviceId: sync.deviceId,
-      publicKey: sync.publicKeyB64,
-      displayName: profileName,
-    }
-  }, [sync.deviceId, sync.publicKeyB64, profileName])
-
-  const url = handshake ? generateContactUrl(handshake) : ''
-
-  const share = async () => {
-    if (!url) return
-    const sent = await shareOrCopy({
-      title: 'Remember Me – Online-Kontakt',
-      text: `${profileName} möchte Remember-Me-Erinnerungen mit dir teilen. Öffne diesen Link, um dich zu verknüpfen:`,
-      url,
-    })
-    if (!sent) {
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    }
-  }
+  const { url, share, copied } = useContactShare(profileName, sync)
 
   return (
     <section className="friends-section">

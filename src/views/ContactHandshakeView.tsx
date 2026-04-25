@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { generateContactUrl, shareOrCopy } from '../utils/secureLink'
+import { generateShareCard } from '../utils/shareCard'
 import type { ContactHandshake } from '../types'
 
 interface Props {
@@ -35,6 +36,7 @@ export function ContactHandshakeView({
 }: Props) {
   const [accepted, setAccepted] = useState(false)
   const [copied, setCopied] = useState(false)
+  const shareCardRef = useRef<File | null>(null)
 
   const myLink = useMemo(() => {
     if (!myDeviceId || !myPublicKey) return ''
@@ -48,6 +50,18 @@ export function ContactHandshakeView({
     return generateContactUrl(mine)
   }, [myDeviceId, myPublicKey, profileName])
 
+  useEffect(() => {
+    if (!myLink || !profileName) return
+    fetch('/pwa-192x192.png')
+      .then(r => r.blob())
+      .then(b => generateShareCard(b, {
+        title: `${profileName} lädt ein`,
+        subtitle: 'Teile Erinnerungen sicher & privat – ohne Account.',
+      }))
+      .then(f => { shareCardRef.current = f })
+      .catch(() => {})
+  }, [myLink, profileName])
+
   // Auto-accept once online sharing is ready (the user already consented by
   // clicking "Aktivieren" in the intro). This is idempotent.
   useEffect(() => {
@@ -59,6 +73,16 @@ export function ContactHandshakeView({
 
   const shareBack = async () => {
     if (!myLink) return
+    const card = shareCardRef.current
+    if (card && typeof navigator.share === 'function' && navigator.canShare?.({ files: [card] })) {
+      const text = `${profileName} möchte sich mit dir verknüpfen. Öffne diesen Link:\n\n${myLink}`
+      try {
+        await navigator.share({ files: [card], title: 'Remember Me – Online-Kontakt', text })
+        return
+      } catch (e) {
+        if ((e as Error).name === 'AbortError') return
+      }
+    }
     const sent = await shareOrCopy({
       title: 'Remember Me – Online-Kontakt',
       text: `${profileName} möchte sich mit dir verknüpfen. Öffne diesen Link:`,

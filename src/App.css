@@ -4448,3 +4448,80 @@ details[open] .faq-item__chevron {
   outline: none;
   border-color: var(--accent);
 }
+
+/* ── Online sharing: onboarding screen ─────────────────────────────────────── */
+
+.online-onboarding {
+  text-align: center;
+  padding-top: 1.5rem;
+}
+
+.online-onboarding__icon {
+  font-size: 3rem;
+  line-height: 1;
+  margin-bottom: 0.75rem;
+}
+
+.online-onboarding .share-cta-btn {
+  margin: 0.25rem auto 0;
+}
+
+.online-onboarding__steps {
+  list-style: none;
+  padding: 0;
+  margin: 1.5rem 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  text-align: left;
+  max-width: 320px;
+  margin-inline: auto;
+}
+
+.online-onboarding__steps li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.online-onboarding__steps li::before {
+  content: counter(step);
+  counter-increment: step;
+  min-width: 1.4rem;
+  height: 1.4rem;
+  border-radius: 50%;
+  background: var(--accent-tinted, rgba(0,0,0,0.06));
+  color: var(--accent);
+  font-size: 0.78rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 0.05rem;
+}
+
+.online-onboarding__steps {
+  counter-reset: step;
+}
+
+.online-onboarding__settings-btn {
+  margin-top: 2.5rem;
+  opacity: 0.6;
+}
+
+.online-onboarding__settings-btn:hover {
+  opacity: 1;
+}
+
+/* ── Online sharing: feed empty-state actions ───────────────────────────────── */
+
+.online-empty-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  align-items: flex-start;
+}

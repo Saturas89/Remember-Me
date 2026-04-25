@@ -13,6 +13,9 @@ const { SHARE_URL } = vi.hoisted(() => ({ SHARE_URL: 'https://example.com/#ms/te
 vi.mock('../utils/secureLink', () => ({
   generateMemoryShareUrlSync: vi.fn().mockReturnValue(SHARE_URL),
 }))
+vi.mock('../utils/shareCard', () => ({
+  generateShareCard: vi.fn().mockResolvedValue(null),
+}))
 vi.mock('../hooks/useImageStore', () => ({
   useImageStore: () => ({ cache: {}, loadImages: vi.fn(), addImage: vi.fn(), removeImage: vi.fn() }),
 }))
@@ -146,7 +149,7 @@ describe('CustomQuestionsView – Erinnerungen teilen', () => {
       const { container } = render(<CustomQuestionsView {...makeProps()} />)
       await act(async () => { fireEvent.click(getShareBtn(container)!) })
       expect(shareFn).toHaveBeenCalledWith({
-        title: 'Meine Erinnerungen',
+        title: 'Annas Erinnerungen',
         url: SHARE_URL,
       })
     })
