@@ -24,7 +24,6 @@ function setLocation({ hash = '', search = '' }: { hash?: string; search?: strin
   }
 }
 
-function setHash(hash: string) { setLocation({ hash }) }
 function setSearch(search: string) { setLocation({ search }) }
 
 beforeEach(() => setLocation({}))
