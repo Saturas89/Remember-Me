@@ -24,15 +24,14 @@ test.describe('Remember Me – Features Tab', () => {
     await completeOnboarding(page)
   })
 
-  test('shows the five planned feature banners', async ({ page }) => {
+  test('shows the four planned feature banners', async ({ page }) => {
     await openFeaturesTab(page)
     const banners = page.locator('.feature-img-btn')
-    await expect(banners).toHaveCount(5)
+    await expect(banners).toHaveCount(4)
     for (const title of [
       'Automatische Lebensgeschichte',
       'Lebenszeitlinie',
       'Privater Sync',
-      'Familienmodus',
       'Import bestehender Erinnerungen',
     ]) {
       await expect(page.getByRole('button', { name: title })).toBeVisible()
@@ -50,7 +49,7 @@ test.describe('Remember Me – Features Tab', () => {
 
     await page.getByRole('button', { name: /Zurück/ }).click()
 
-    await expect(page.locator('.feature-img-btn')).toHaveCount(5)
+    await expect(page.locator('.feature-img-btn')).toHaveCount(4)
     await expect(page).toHaveURL(/\/feature(\/)?$/)
   })
 
@@ -63,15 +62,15 @@ test.describe('Remember Me – Features Tab', () => {
 
   test('falls back to the banner list for unknown feature slugs', async ({ page }) => {
     await page.goto('/feature/does-not-exist')
-    await expect(page.locator('.feature-img-btn')).toHaveCount(5)
+    await expect(page.locator('.feature-img-btn')).toHaveCount(4)
   })
 
   test('browser back navigation returns from detail to list', async ({ page }) => {
     await openFeaturesTab(page)
-    await page.getByRole('button', { name: 'Familienmodus' }).click()
-    await expect(page.getByRole('heading', { name: 'Familienmodus' })).toBeVisible()
+    await page.getByRole('button', { name: 'Privater Sync' }).click()
+    await expect(page.getByRole('heading', { name: 'Privater Sync' })).toBeVisible()
 
     await page.goBack()
-    await expect(page.locator('.feature-img-btn')).toHaveCount(5)
+    await expect(page.locator('.feature-img-btn')).toHaveCount(4)
   })
 })

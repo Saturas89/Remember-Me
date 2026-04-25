@@ -522,6 +522,5 @@ Wenn im Hintergrund eine neue Version der App als Service Worker bereit steht, e
 | — | **Geplante Features** | — |
 | **TBD** | Lebenszeitlinie – chronologische visuelle Ansicht | Geplant |
 | **TBD** | Privater Sync – E2EE-Synchronisation zwischen Geräten | Geplant |
-| **TBD** | Familienmodus – gemeinsames Familienarchiv | Geplant |
 | **TBD** | Import bestehender Erinnerungen (Social Media, Clouds) | Geplant |
 | **TBD** | Automatische Lebensgeschichte – KI-generierte Biografie | Geplant |

@@ -24,14 +24,6 @@ export const FEATURES_DE = [
     status: 'In Entwicklung',
   },
   {
-    id: 'familienmodus',
-    title: 'Familienmodus',
-    subtitle: 'Erinnerungen gemeinsam sammeln',
-    img: '/features/familienmodus.jpg',
-    description: 'Erleben Sie gemeinsame Momente aus allen Blickwinkeln. Jedes Familienmitglied kann seine eigenen Geschichten und Fotos beitragen und so das Familienalbum bereichern.',
-    status: 'Geplant',
-  },
-  {
     id: 'import-erinnerungen',
     title: 'Import bestehender Erinnerungen',
     subtitle: 'Alles an einem Ort',

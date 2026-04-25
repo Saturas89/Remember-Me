@@ -79,7 +79,6 @@ Teilen / Exportieren (PDF, Freunde einladen, KI-Export)
 - [ ] Mehrsprachigkeit (DE / EN)
 - [ ] **Lebenszeitlinie** – chronologische Ansicht aller Erlebnisse und Fotos auf einer visuellen Timeline, filterbar nach Jahr und Kategorie; optional ungefähres Alter pro Eintrag (z. B. „ca. 8 Jahre alt"), wird automatisch aus Geburtsjahr vorgeschlagen (REQ-006)
 - [ ] **Privater Sync** – Optionaler E2EE-Sync (Web Crypto API, verschlüsselte Synchronisation zwischen Geräten, opt-in)
-- [ ] **Familienmodus** – Mehrere Familienmitglieder können eigene Geschichten und Fotos beitragen und so ein gemeinsames Familienarchiv aufbauen
 - [ ] **Import bestehender Erinnerungen** – Erinnerungen und Fotos aus sozialen Netzwerken (Facebook, Instagram), Clouds und lokalen Ordnern importieren, mit optionaler eigener Beschreibung (REQ-007)
 - [ ] **Automatische Lebensgeschichte** – aus den gespeicherten Antworten per KI eine fertige, lesbare Lebensgeschichte in verschiedenen Stilen und Sprachen generieren, vorschau- und exportierbar (REQ-008)
 
@@ -168,7 +167,6 @@ Update-Banner: `src/components/UpdateBanner.tsx` – Toast bei verfügbarem SW-U
 | approxAge | Ungefähres Lebensalter zum Zeitpunkt eines Erlebnisses, für die Zeitlinie |
 | Lebenszeitlinie | Chronologische visuelle Ansicht aller Einträge und Fotos; mit optionalem ca. Alter (geplant) |
 | Privater Sync | Verschlüsselte Synchronisation zwischen Geräten (geplant) |
-| Familienmodus | Mehrere Familienmitglieder tragen zum gemeinsamen Archiv bei (geplant) |
 | Import Erinnerungen | Import aus sozialen Netzwerken, Clouds, lokalen Ordnern (geplant) |
 | Biografie-Generator | KI-gestützte Umwandlung der Antworten in eine fertige Lebensgeschichte (geplant) |
 
