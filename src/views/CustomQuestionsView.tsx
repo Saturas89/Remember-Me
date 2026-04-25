@@ -135,7 +135,7 @@ export function CustomQuestionsView({
 
     if (typeof navigator.share === 'function') {
       navigator
-        .share({ title, text })
+        .share({ title, url })
         .then(() => setIsSharing(false))
         .catch(err => {
           setIsSharing(false)
