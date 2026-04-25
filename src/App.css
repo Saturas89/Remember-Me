@@ -4145,6 +4145,22 @@ details[open] .faq-item__chevron {
 }
 
 /* ── Online Sharing – Intro / Hub ──────────────────────── */
+.friends-details {
+  margin-bottom: 0.75rem;
+}
+
+.friends-details__summary {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  user-select: none;
+  margin-bottom: 0.5rem;
+}
+
+.friends-details[open] .friends-details__summary {
+  margin-bottom: 0.75rem;
+}
+
 .online-data-table {
   width: 100%;
   border-collapse: collapse;

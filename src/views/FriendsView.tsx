@@ -139,18 +139,18 @@ export function FriendsView({
 
       {onlineSharingConfigured && onOpenOnlineSharing && (
         <section className="friends-section">
-          <h3 className="friends-section-title">Online teilen</h3>
+          <h3 className="friends-section-title">Erinnerungen direkt teilen</h3>
           <p className="friends-hint">
-            Teile einzelne Erinnerungen verschlüsselt mit ausgewählten
-            Personen. <strong>Optional</strong> – der Einladungs-Link oben
-            funktioniert weiterhin komplett offline.
+            Teile ausgewählte Erinnerungen direkt mit einzelnen Personen – sie
+            sehen nur das, was du bewusst freigibst. <strong>Optional</strong>{' '}
+            und zusätzlich zum Einladungslink oben.
           </p>
           <button
             className="btn btn--ghost btn--sm"
             onClick={onOpenOnlineSharing}
             data-testid="open-online-sharing"
           >
-            {onlineSharingEnabled ? 'Geteilte Erinnerungen öffnen' : 'Online-Teilen einrichten'}
+            {onlineSharingEnabled ? 'Geteilte Erinnerungen öffnen' : 'Einrichten'}
           </button>
         </section>
       )}

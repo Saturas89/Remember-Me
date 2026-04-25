@@ -161,8 +161,8 @@ function FeedTab({
       <section className="friends-section">
         <p className="friends-hint">
           Hier erscheinen Erinnerungen, die andere mit dir geteilt haben.
-          Teile selbst deinen #contact/-Link, damit Kontakte dich als
-          Empfänger hinzufügen können.
+          Teile deinen Verbindungslink im Tab „Kontakte", damit jemand dich
+          als Empfänger hinzufügen kann.
         </p>
       </section>
     )
@@ -459,27 +459,26 @@ function ContactsTab({
 
   return (
     <section className="friends-section">
-      <h3 className="friends-section-title">Dein Einladungs-Link</h3>
+      <h3 className="friends-section-title">Dein Verbindungslink</h3>
       <p className="friends-hint">
-        Gib diesen Link an Personen, mit denen du online Erinnerungen teilen
-        willst. Nachdem sie den Link geöffnet haben, bekommst du auch ihren
-        Link zurück — dann könnt ihr gegenseitig teilen.
+        Schicke diesen Link an jemanden, den du verbinden möchtest. Sobald
+        er oder sie ihn öffnet, seid ihr verknüpft – und könnt gegenseitig
+        Erinnerungen teilen.
       </p>
       <button className="share-cta-btn" onClick={share} disabled={!url}>
-        {copied ? 'In die Zwischenablage kopiert ✓' : 'Einladungs-Link teilen'}
+        {copied ? 'In die Zwischenablage kopiert ✓' : 'Verbindungslink teilen'}
       </button>
 
       <h3 className="friends-section-title" style={{ marginTop: '1.5rem' }}>
-        Verknüpfte Kontakte
+        Verbundene Kontakte
       </h3>
       {onlineFriends.length === 0 ? (
-        <p className="friends-hint">Noch keine Online-Kontakte.</p>
+        <p className="friends-hint">Noch niemand verknüpft. Teile deinen Verbindungslink, um loszulegen.</p>
       ) : (
         <ul className="online-contact-list">
           {onlineFriends.map(f => (
             <li key={f.id}>
               <strong>{f.name}</strong>
-              <code>{f.online?.deviceId.slice(0, 8)}…</code>
             </li>
           ))}
         </ul>
@@ -495,11 +494,11 @@ function SettingsTab({ onDeactivate }: { onDeactivate: () => void }) {
 
   return (
     <section className="friends-section">
-      <h3 className="friends-section-title">Online-Teilen deaktivieren</h3>
+      <h3 className="friends-section-title">Direktes Teilen deaktivieren</h3>
       <p className="friends-hint">
-        Löscht alle deine geteilten Erinnerungen, Ergänzungen und Medien
-        vom Server, meldet dein Gerät ab und entfernt deinen Private Key
-        lokal. Deine eigenen Offline-Antworten bleiben unberührt.
+        Löscht alle deine geteilten Erinnerungen vom Server und trennt die
+        Verbindung zu deinen Kontakten. Deine eigenen Antworten und Fotos
+        auf diesem Gerät bleiben vollständig erhalten.
       </p>
       {!confirming ? (
         <button
