@@ -1,7 +1,7 @@
 // @vitest-environment node
 //
-// Covers the #contact/ handshake parser/generator added for the optional
-// online-sharing feature. Does not touch the existing #mi/, #ma/, #ms/ paths.
+// Covers the ?contact= handshake parser/generator added for the optional
+// online-sharing feature. Does not touch the existing ?mi/, ?ma/, ?ms/ paths.
 
 import { describe, it, expect, beforeEach } from 'vitest'
 import {
@@ -11,13 +11,15 @@ import {
 } from './secureLink'
 import type { ContactHandshake } from '../types'
 
-function setHash(hash: string) {
-  ;(globalThis as unknown as { window: { location: { hash: string; origin: string; pathname: string } } }).window = {
-    location: { hash, origin: 'https://example.com', pathname: '/' },
+function setLocation({ hash = '', search = '' }: { hash?: string; search?: string }) {
+  ;(globalThis as unknown as { window: { location: { hash: string; search: string; origin: string; pathname: string } } }).window = {
+    location: { hash, search, origin: 'https://example.com', pathname: '/' },
   }
 }
 
-beforeEach(() => setHash(''))
+function setSearch(search: string) { setLocation({ search }) }
+
+beforeEach(() => setLocation({}))
 
 describe('contact handshake URL', () => {
   const handshake: ContactHandshake = {
@@ -28,39 +30,46 @@ describe('contact handshake URL', () => {
     displayName: 'Oma Gerda',
   }
 
-  it('round-trips via hash', () => {
+  it('round-trips via query param', () => {
     const url = generateContactUrl(handshake)
-    expect(url.startsWith('https://example.com/#contact/')).toBe(true)
-    setHash(url.substring(url.indexOf('#')))
+    expect(url.startsWith('https://example.com/?contact=')).toBe(true)
+    setSearch('?' + url.split('?')[1])
     expect(isContactHash()).toBe(true)
     expect(parseContactFromHash()).toEqual(handshake)
   })
 
-  it('isContactHash ignores other hash types', () => {
-    setHash('#mi/abc:def')
+  it('isContactHash ignores other query params', () => {
+    setSearch('?mi=abc:def')
     expect(isContactHash()).toBe(false)
-    setHash('#ma/abc')
+    setSearch('?ma=abc')
     expect(isContactHash()).toBe(false)
-    setHash('#ms/abc')
+    setSearch('?ms=abc')
+    expect(isContactHash()).toBe(false)
+    setSearch('')
     expect(isContactHash()).toBe(false)
   })
 
+  it('parseContactFromHash returns null when no contact param', () => {
+    setSearch('')
+    expect(parseContactFromHash()).toBeNull()
+  })
+
   it('parseContactFromHash rejects malformed payload', () => {
-    setHash('#contact/not-valid-base64-!!!')
+    setSearch('?contact=not-valid-base64-!!!')
     expect(parseContactFromHash()).toBeNull()
   })
 
   it('parseContactFromHash rejects wrong $type', () => {
     const bad = JSON.stringify({ $type: 'something-else', deviceId: 'x', publicKey: 'y' })
     const b64 = btoa(bad).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '')
-    setHash(`#contact/${b64}`)
+    setSearch(`?contact=${b64}`)
     expect(parseContactFromHash()).toBeNull()
   })
 
   it('parseContactFromHash rejects missing fields', () => {
     const bad = JSON.stringify({ $type: 'remember-me-contact', version: 1 })
     const b64 = btoa(bad).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '')
-    setHash(`#contact/${b64}`)
+    setSearch(`?contact=${b64}`)
     expect(parseContactFromHash()).toBeNull()
   })
 })

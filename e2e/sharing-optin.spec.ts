@@ -52,7 +52,7 @@ test.describe('Online sharing – opt-in contract', () => {
     await expect.poll(() => offending.length).toBe(0)
   })
 
-  test('invite link generation works offline (existing #mi/ flow unaffected)', async ({ page }) => {
+  test('invite link generation works offline (existing ?mi= flow unaffected)', async ({ page }) => {
     await completeOnboarding(page, 'Anna')
     await openFriendsTab(page)
     await expect(page.locator('.share-cta-btn').first()).toBeVisible()

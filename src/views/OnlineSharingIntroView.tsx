@@ -19,92 +19,92 @@ export function OnlineSharingIntroView({ configured, onActivate, onBack }: Props
     <div className="friends-view">
       <div className="quiz-topbar">
         <button className="btn btn--ghost btn--sm" onClick={onBack}>Zurück</button>
-        <h2 className="archive-title">Online teilen</h2>
+        <h2 className="archive-title">Erinnerungen direkt teilen</h2>
       </div>
 
       <section className="friends-section">
         <h3 className="friends-section-title">Was ist das?</h3>
         <p className="friends-hint">
-          Du kannst einzelne Erinnerungen online mit ausgewählten Personen
+          Du kannst einzelne Erinnerungen direkt mit ausgewählten Personen
           teilen – Familie, enge Freunde, Kolleg:innen. Sie sehen die
-          Erinnerung in ihrem eigenen Remember Me und können eigene
-          Ergänzungen dazuschreiben (deine ursprüngliche Erinnerung bleibt
-          unverändert).
+          Erinnerung in ihrem eigenen Remember Me und können ihre Gedanken
+          ergänzen. Deine Erinnerung bleibt dabei unverändert.
         </p>
         <p className="friends-hint">
-          <strong>Das Feature ist komplett optional.</strong> Wenn du es
-          nicht aktivierst, arbeitet Remember Me wie bisher 100 % offline auf
-          deinem Gerät. Der bestehende Einladungs-Link für Freunde
-          funktioniert weiterhin ohne Internet.
+          <strong>Komplett optional.</strong> Ohne Aktivierung bleibt
+          Remember Me vollständig offline auf deinem Gerät – dein
+          Einladungslink für Antworten funktioniert wie gewohnt weiter.
         </p>
       </section>
 
       <section className="friends-section">
-        <h3 className="friends-section-title">Was wird wo gespeichert?</h3>
-        <table className="online-data-table" role="table">
-          <thead>
-            <tr>
-              <th>Was</th>
-              <th>Wo</th>
-              <th>Form</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>Profilname, alle Antworten, Bilder</td>
-              <td>Nur auf deinem Gerät</td>
-              <td>Klartext lokal</td>
-            </tr>
-            <tr>
-              <td>Geteilte Erinnerungen (Text + Bilder)</td>
-              <td>Supabase (EU)</td>
-              <td>Ciphertext (AES-256-GCM)</td>
-            </tr>
-            <tr>
-              <td>Empfänger einer Erinnerung</td>
-              <td>Supabase</td>
-              <td>Opake Geräte-IDs, keine Namen</td>
-            </tr>
-            <tr>
-              <td>Zeitstempel der Freigabe</td>
-              <td>Supabase</td>
-              <td>Klartext (Metadaten)</td>
-            </tr>
-            <tr>
-              <td>Dein Private Key</td>
-              <td>Nur auf deinem Gerät</td>
-              <td>IndexedDB, nicht exportierbar</td>
-            </tr>
-            <tr>
-              <td>Dein Public Key + anonyme Geräte-ID</td>
-              <td>Supabase</td>
-              <td>Klartext (nötig für ECDH)</td>
-            </tr>
-          </tbody>
-        </table>
+        <h3 className="friends-section-title">Datenschutz auf einen Blick</h3>
         <p className="friends-hint">
-          <strong>Ende-zu-Ende-verschlüsselt:</strong> Der Server kann deine
-          Inhalte nicht entschlüsseln – die Schlüssel dafür liegen nur auf
-          den Geräten der Beteiligten.
+          Deine Antworten, Fotos und Aufnahmen bleiben immer nur auf deinem
+          Gerät. Was du aktiv mit jemandem teilst, wird verschlüsselt
+          gespeichert – nur du und die andere Person können es lesen.
         </p>
+        <details className="friends-details">
+          <summary className="friends-details__summary">Technische Details</summary>
+          <table className="online-data-table" role="table">
+            <thead>
+              <tr>
+                <th>Was</th>
+                <th>Wo</th>
+                <th>Form</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Profilname, alle Antworten, Bilder</td>
+                <td>Nur auf deinem Gerät</td>
+                <td>Klartext lokal</td>
+              </tr>
+              <tr>
+                <td>Geteilte Erinnerungen (Text + Bilder)</td>
+                <td>Server (EU)</td>
+                <td>Ende-zu-Ende-verschlüsselt (AES-256-GCM)</td>
+              </tr>
+              <tr>
+                <td>Empfänger einer Erinnerung</td>
+                <td>Server</td>
+                <td>Anonyme Geräte-IDs, keine Namen</td>
+              </tr>
+              <tr>
+                <td>Zeitstempel der Freigabe</td>
+                <td>Server</td>
+                <td>Unverschlüsselt (Metadaten)</td>
+              </tr>
+              <tr>
+                <td>Verschlüsselungsschlüssel</td>
+                <td>Nur auf deinem Gerät</td>
+                <td>Lokal gesichert, nicht exportierbar</td>
+              </tr>
+              <tr>
+                <td>Öffentlicher Schlüssel + Geräte-ID</td>
+                <td>Server</td>
+                <td>Wird für die Verschlüsselung benötigt (ECDH)</td>
+              </tr>
+            </tbody>
+          </table>
+        </details>
       </section>
 
       <section className="friends-section">
         <h3 className="friends-section-title">Was passiert beim Deaktivieren?</h3>
         <p className="friends-hint">
-          Ein Klick auf „Online-Teilen deaktivieren" löscht alle deine
-          geteilten Erinnerungen, Ergänzungen und Medien vom Server, meldet
-          dein Gerät ab und entfernt deinen Private Key lokal. Deine eigenen
-          Offline-Antworten bleiben unberührt.
+          Alle geteilten Erinnerungen werden vom Server gelöscht und die
+          Verbindung zu deinen Kontakten getrennt. Deine eigenen Antworten
+          und Fotos auf diesem Gerät bleiben vollständig erhalten.
         </p>
       </section>
 
       {!configured && (
         <section className="friends-section">
           <p className="friends-hint friends-hint--warn">
-            Diese Installation ist nicht für Online-Sharing konfiguriert.
-            Frag die Person, die Remember Me für dich gehostet hat, ob das
-            Feature zur Verfügung steht.
+            Diese Installation unterstützt das direkte Teilen noch nicht.
+            Frag die Person, die Remember Me für dich betreibt, ob das
+            Feature verfügbar ist.
           </p>
         </section>
       )}
@@ -117,8 +117,8 @@ export function OnlineSharingIntroView({ configured, onActivate, onBack }: Props
             onChange={e => setConfirmed(e.target.checked)}
           />
           <span>
-            Ich habe verstanden, welche Daten bei Aktivierung in
-            verschlüsselter Form an den Server gehen.
+            Ich habe verstanden, dass meine geteilten Erinnerungen
+            verschlüsselt gespeichert werden.
           </span>
         </label>
 
@@ -127,7 +127,7 @@ export function OnlineSharingIntroView({ configured, onActivate, onBack }: Props
           disabled={!confirmed || !configured}
           onClick={onActivate}
         >
-          Online-Teilen aktivieren
+          Aktivieren
         </button>
       </section>
     </div>

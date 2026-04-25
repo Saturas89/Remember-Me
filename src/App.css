@@ -963,6 +963,30 @@
 
 .friends-list           { display: flex; flex-direction: column; gap: 0.75rem; }
 
+.friends-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.75rem;
+}
+
+.friends-tag {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  background: var(--surface-raised);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+}
+
+.friends-tag--accent {
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 30%, transparent);
+}
+
 .friends-hint {
   font-size: 0.85rem;
   color: var(--text-muted);
@@ -4145,6 +4169,22 @@ details[open] .faq-item__chevron {
 }
 
 /* ── Online Sharing – Intro / Hub ──────────────────────── */
+.friends-details {
+  margin-bottom: 0.75rem;
+}
+
+.friends-details__summary {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  user-select: none;
+  margin-bottom: 0.5rem;
+}
+
+.friends-details[open] .friends-details__summary {
+  margin-bottom: 0.75rem;
+}
+
 .online-data-table {
   width: 100%;
   border-collapse: collapse;

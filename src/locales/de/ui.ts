@@ -188,7 +188,7 @@ export const UI_DE = {
     topbarTitle: 'Erinnerung einsammeln',
     inviteLinkHeading: 'Dein Einladungslink',
     inviteHintNoName: 'Tipp: Gib deinen Namen auf der Startseite ein, damit die Einladung personalisiert ist.',
-    inviteHint: 'Lade Freunde und Familie ein, ihre Erinnerungen an dich festzuhalten. Teile den Link beliebig oft – jede Person gibt ihren Namen ein, wählt eine Kategorie und schickt dir die Antworten zurück. Sie werden automatisch in deinem persönlichen Lebensarchiv gespeichert.',
+    inviteHint: 'Du teilst den Link – dein Gegenüber klickt darauf, tippt seine Erinnerungen ein und schickt sie dir zurück. Ganz ohne App oder Account. Du kannst den Link beliebig oft und an beliebig viele Personen schicken.',
     opening: 'Wird geöffnet…',
     messageCopied: '✓ Nachricht kopiert!',
     copyRetry: '⚠ Nochmal versuchen',
