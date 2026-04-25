@@ -113,6 +113,11 @@ export function FriendsView({
 
       <section className="friends-section">
         <h3 className="friends-section-title">{t.friends.inviteLinkHeading}</h3>
+        <div className="friends-tags">
+          <span className="friends-tag">Einmalig</span>
+          <span className="friends-tag">Kein Account nötig</span>
+          <span className="friends-tag">Offline</span>
+        </div>
         {!profileName && (
           <p className="friends-hint friends-hint--warn">{t.friends.inviteHintNoName}</p>
         )}
@@ -140,10 +145,16 @@ export function FriendsView({
       {onlineSharingConfigured && onOpenOnlineSharing && (
         <section className="friends-section">
           <h3 className="friends-section-title">Erinnerungen direkt teilen</h3>
+          <div className="friends-tags">
+            <span className="friends-tag friends-tag--accent">Dauerhaft</span>
+            <span className="friends-tag friends-tag--accent">Gegenseitig</span>
+            <span className="friends-tag friends-tag--accent">Verschlüsselt</span>
+          </div>
           <p className="friends-hint">
-            Teile ausgewählte Erinnerungen direkt mit einzelnen Personen – sie
-            sehen nur das, was du bewusst freigibst. <strong>Optional</strong>{' '}
-            und zusätzlich zum Einladungslink oben.
+            Ihr tauscht je einmal einen Verbindungslink aus – danach könnt ihr
+            euch gegenseitig ausgewählte Erinnerungen zuschicken, die nur ihr
+            beide lesen könnt. Anders als beim Einladungslink bleibt die
+            Verbindung bestehen.
           </p>
           <button
             className="btn btn--ghost btn--sm"

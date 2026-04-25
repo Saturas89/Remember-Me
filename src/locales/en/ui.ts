@@ -188,7 +188,7 @@ export const UI_EN = {
     topbarTitle: 'Collect memories',
     inviteLinkHeading: 'Your invite link',
     inviteHintNoName: 'Tip: Enter your name on the home screen so the invitation is personalised.',
-    inviteHint: 'Invite friends and family to capture their memories of you. Share the link as many times as you like – each person enters their name, picks a category and sends you the answers. They are automatically saved in your personal life archive.',
+    inviteHint: 'Share the link – the other person clicks it, types their memories and sends them back to you. No app or account needed. You can send the link to as many people as you like, as often as you like.',
     opening: 'Opening…',
     messageCopied: '✓ Message copied!',
     copyRetry: '⚠ Try again',
