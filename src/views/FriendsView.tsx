@@ -150,7 +150,7 @@ export function FriendsView({
 
       {onlineSharingConfigured && onOpenOnlineSharing && (
         <section className="friends-section">
-          <h3 className="friends-section-title">Erinnerungen direkt teilen</h3>
+          <h3 className="friends-section-title">Familienmodus</h3>
           <div className="friends-tags">
             <span className="friends-tag friends-tag--accent">Dauerhaft</span>
             <span className="friends-tag friends-tag--accent">Gegenseitig</span>
