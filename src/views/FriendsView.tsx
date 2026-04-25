@@ -157,7 +157,7 @@ export function FriendsView({
             Verbindung bestehen.
           </p>
           <button
-            className="btn btn--ghost btn--sm"
+            className="share-cta-btn"
             onClick={onOpenOnlineSharing}
             data-testid="open-online-sharing"
           >
