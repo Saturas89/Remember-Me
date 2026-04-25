@@ -19,7 +19,15 @@ export function OnlineSharingIntroView({ configured, onActivate, onBack }: Props
     <div className="friends-view">
       <div className="quiz-topbar">
         <button className="btn btn--ghost btn--sm" onClick={onBack}>Zurück</button>
-        <h2 className="archive-title">Erinnerungen direkt teilen</h2>
+        <h2 className="archive-title">Familienmodus</h2>
+      </div>
+
+      <div className="feature-detail__hero">
+        <img
+          src="/features/familienmodus.jpg"
+          alt="Familienmodus"
+          className="feature-detail__hero-img"
+        />
       </div>
 
       <section className="friends-section">

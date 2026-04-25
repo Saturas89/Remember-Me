@@ -24,14 +24,6 @@ export const FEATURES_EN = [
     status: 'In development',
   },
   {
-    id: 'familienmodus',
-    title: 'Family Mode',
-    subtitle: 'Collect memories together',
-    img: '/features/familienmodus.jpg',
-    description: 'Experience shared moments from every perspective. Each family member can contribute their own stories and photos, enriching the family album.',
-    status: 'Planned',
-  },
-  {
     id: 'import-erinnerungen',
     title: 'Import existing memories',
     subtitle: 'Everything in one place',

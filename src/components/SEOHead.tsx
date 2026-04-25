@@ -33,7 +33,7 @@ const SEO_META: Record<string, SEOMeta> = {
   },
   feature: {
     title: 'Was kommt als Nächstes – Remember Me',
-    description: 'Entdecke geplante Features: Lebenszeitlinie, privater Sync, Familienmodus und mehr.',
+    description: 'Entdecke geplante Features: Lebenszeitlinie, privater Sync und mehr.',
     canonical: 'https://rememberme.dad/feature',
   },
   faq: {
