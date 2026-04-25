@@ -1,5 +1,6 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { generateContactUrl, shareOrCopy } from '../utils/secureLink'
+import { generateShareCard } from '../utils/shareCard'
 import { CATEGORIES } from '../data/categories'
 import type {
   Friend,
@@ -430,6 +431,7 @@ function ContactsTab({
   onlineFriends: Friend[]
 }) {
   const [copied, setCopied] = useState(false)
+  const shareCardRef = useRef<File | null>(null)
 
   const handshake: ContactHandshake | null = useMemo(() => {
     if (!sync.deviceId || !sync.publicKeyB64) return null
@@ -444,8 +446,30 @@ function ContactsTab({
 
   const url = handshake ? generateContactUrl(handshake) : ''
 
+  useEffect(() => {
+    if (!profileName) return
+    fetch('/pwa-192x192.png')
+      .then(r => r.blob())
+      .then(b => generateShareCard(b, {
+        title: `${profileName} lädt ein`,
+        subtitle: 'Teile Erinnerungen sicher & privat – ohne Account.',
+      }))
+      .then(f => { shareCardRef.current = f })
+      .catch(() => {})
+  }, [profileName])
+
   const share = async () => {
     if (!url) return
+    const card = shareCardRef.current
+    if (card && typeof navigator.share === 'function' && navigator.canShare?.({ files: [card] })) {
+      const text = `${profileName} möchte Remember-Me-Erinnerungen mit dir teilen. Öffne diesen Link, um dich zu verknüpfen:\n\n${url}`
+      try {
+        await navigator.share({ files: [card], title: 'Remember Me – Online-Kontakt', text })
+        return
+      } catch (e) {
+        if ((e as Error).name === 'AbortError') return
+      }
+    }
     const sent = await shareOrCopy({
       title: 'Remember Me – Online-Kontakt',
       text: `${profileName} möchte Remember-Me-Erinnerungen mit dir teilen. Öffne diesen Link, um dich zu verknüpfen:`,
