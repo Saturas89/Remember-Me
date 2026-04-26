@@ -23,6 +23,18 @@ export function isOnlineSharingConfigured(): boolean {
   return readConfig() !== null
 }
 
+// Supabase uses fetch() without a built-in timeout; on flaky mobile
+// connections requests can hang indefinitely. We cap each individual
+// request at 20 s so callers get a real rejection they can surface.
+export const SUPABASE_FETCH_TIMEOUT_MS = 20_000
+
+export function fetchWithTimeout(url: RequestInfo | URL, options: RequestInit = {}): Promise<Response> {
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), SUPABASE_FETCH_TIMEOUT_MS)
+  return fetch(url, { ...options, signal: controller.signal })
+    .finally(() => clearTimeout(timer))
+}
+
 let _client: SupabaseClient | null = null
 
 export function getSupabaseClient(): SupabaseClient {
@@ -36,6 +48,7 @@ export function getSupabaseClient(): SupabaseClient {
       persistSession: true,
       autoRefreshToken: true,
     },
+    global: { fetch: fetchWithTimeout },
   })
   return _client
 }
