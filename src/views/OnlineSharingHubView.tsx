@@ -469,7 +469,16 @@ function ShareTab({
         ownerName: profileName,
       }
 
-      await sync.service.shareMemory({ body, recipients, images: [] })
+      const TIMEOUT_MS = 30_000
+      await Promise.race([
+        sync.service.shareMemory({ body, recipients, images: [] }),
+        new Promise<never>((_, reject) =>
+          setTimeout(
+            () => reject(new Error('Zeitüberschreitung – bitte Internetverbindung prüfen und erneut versuchen')),
+            TIMEOUT_MS,
+          )
+        ),
+      ])
       setStatus('sent')
       setTimeout(() => setStatus('idle'), 2000)
       setSelectedFriends(new Set())
@@ -521,13 +530,13 @@ function ShareTab({
 
       <button
         className="share-cta-btn"
-        disabled={!selectedQ || selectedFriends.size === 0 || status === 'sending'}
+        disabled={!selectedQ || selectedFriends.size === 0 || status === 'sending' || !sync.service}
         onClick={send}
       >
         {status === 'sending' ? 'Verschlüssele & sende …'
           : status === 'sent' ? 'Gesendet ✓'
           : status === 'error' ? 'Fehler – erneut versuchen'
-          : 'Erinnerung verschlüsselt teilen'}
+          : 'Verschlüssele & sende'}
       </button>
 
       {status === 'error' && errorMsg && (
