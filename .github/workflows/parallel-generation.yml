@@ -157,6 +157,14 @@ jobs:
           SPEC_FILE: ${{ needs.prepare.outputs.spec_file }}
           SPEC_SLUG: ${{ needs.prepare.outputs.spec_slug }}
           HEAD:      ${{ needs.prepare.outputs.feature_branch }}
+          PR_BODY: |
+            Parallel-generiert aus `docs/requirements/${{ needs.prepare.outputs.spec_file }}`.
+
+            Zwei unabhängige Claude-Code-Sessions haben parallel gegen dieselbe Spec gearbeitet:
+            - **Implementation-Agent** hat Produktionscode unter `src/` geschrieben (ohne `*.test.*`).
+            - **Test-Agent** hat Tests unter `src/**/*.test.*` und `e2e/` geschrieben, **ohne den Produktionscode zu sehen** — reine Black-Box-Verifikation aus der Spec.
+
+            Die bestehende E2E-Matrix (5 Browser) läuft auf diesem PR. Grün = beide Spec-Interpretationen passen zusammen.
         run: |
           existing=$(gh pr list --head "$HEAD" --base main --state open --json number --jq '.[0].number // empty')
           if [ -n "$existing" ]; then
@@ -167,10 +175,4 @@ jobs:
             --base main \
             --head "$HEAD" \
             --title "feat($SPEC_SLUG): parallel impl + tests" \
-            --body "Parallel-generiert aus \`docs/requirements/$SPEC_FILE\`.
-
-Zwei unabhängige Claude-Code-Sessions haben parallel gegen dieselbe Spec gearbeitet:
-- **Implementation-Agent** hat Produktionscode unter \`src/\` geschrieben (ohne \`*.test.*\`).
-- **Test-Agent** hat Tests unter \`src/**/*.test.*\` und \`e2e/\` geschrieben, **ohne den Produktionscode zu sehen** — reine Black-Box-Verifikation aus der Spec.
-
-Die bestehende E2E-Matrix (5 Browser) läuft auf diesem PR. Grün = beide Spec-Interpretationen passen zusammen."
+            --body "$PR_BODY"
