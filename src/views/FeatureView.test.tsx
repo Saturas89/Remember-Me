@@ -15,9 +15,9 @@ describe('FeatureView – Banner-Liste', () => {
     window.history.pushState({}, '', '/feature')
   })
 
-  it('zeigt genau 5 Feature-Banner', () => {
+  it('zeigt genau 4 Feature-Banner', () => {
     render(<FeatureView />)
-    expect(screen.getAllByRole('button')).toHaveLength(5)
+    expect(screen.getAllByRole('button')).toHaveLength(4)
   })
 
   it('öffnet die Detailseite beim Antippen eines Banners', () => {
@@ -30,7 +30,7 @@ describe('FeatureView – Banner-Liste', () => {
     render(<FeatureView />)
     fireEvent.click(screen.getAllByRole('button')[0])
     fireEvent.click(screen.getByText('← Zurück'))
-    expect(screen.getAllByRole('button')).toHaveLength(5)
+    expect(screen.getAllByRole('button')).toHaveLength(4)
   })
 })
 
@@ -64,6 +64,6 @@ describe('FeatureView – URL-Routing', () => {
   it('zeigt die Liste wenn die URL kein bekanntes Feature enthält', () => {
     window.history.pushState({}, '', '/feature/unbekannt')
     render(<FeatureView />)
-    expect(screen.getAllByRole('button')).toHaveLength(5)
+    expect(screen.getAllByRole('button')).toHaveLength(4)
   })
 })
