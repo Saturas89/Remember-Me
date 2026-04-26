@@ -15,13 +15,14 @@ Alle funktionalen und nicht-funktionalen Anforderungen des Projekts.
 | [REQ-005](./REQ-005-ci-cd-pipeline.md) | CI/CD Pipeline | DevOps | Low | ✔️ COMPLETED |
 | REQ-006 | KI-lesbarer Datenexport | Export | Medium | ✔️ COMPLETED |
 | REQ-007 | Medienanhänge (Fotos) | Data | Medium | ✔️ COMPLETED |
-| REQ-008 | E2EE-Sync (opt-in) | Core | Low | 🟢 DRAFT |
+| [REQ-008](./REQ-008-biography-generator.md) | Biografie erzeugen | Biography | High | 🟡 PLANNED |
 | [REQ-009](./REQ-009-audio-recording.md) | Audio-Aufnahme & Transkription | Data | Medium | ✔️ COMPLETED |
 | [REQ-010](./REQ-010-faq.md) | Hilfe & FAQ | UX | Low | ✔️ COMPLETED |
 | [REQ-011](./REQ-011-archive-export.md) | Erinnerungs-Archiv (ZIP + Share Sheet) | Export | Medium | ✔️ COMPLETED |
 | [REQ-012](./REQ-012-video-attachments.md) | Video-Anhänge | Medien | Medium | ✔️ COMPLETED |
 | [REQ-013](./REQ-013-archive-import.md) | Erinnerungs-Archiv-Import (ZIP + JSON) | Import | Medium | ✔️ COMPLETED |
 | [REQ-014](./REQ-014-release-notes.md) | Release Notes / „Was ist neu?" | UX | Low | ✔️ COMPLETED |
+| [REQ-015](./REQ-015-familienmodus.md) | Familienmodus (E2EE Online-Teilen) | Sharing | Medium | ✔️ COMPLETED |
 
 ---
 
@@ -52,7 +53,8 @@ Alle funktionalen und nicht-funktionalen Anforderungen des Projekts.
 - [x] Erinnerungs-Archiv-Import (ZIP + JSON) → REQ-013
 - [ ] Push Notifications als Erinnerung
 - [ ] Mehrsprachigkeit (DE / EN)
-- [ ] Optionaler E2EE-Sync (Privater Sync) → REQ-008
+- [ ] Biografie erzeugen (KI-Ghostwriter aus Antworten) → REQ-008
+- [x] Familienmodus: Ende-zu-Ende-verschlüsseltes Online-Teilen → REQ-015
 
 ### WON'T – Bewusst ausgeschlossen
 - Eigenes Backend / Server in v1.x
@@ -79,6 +81,7 @@ Dieses Prinzip gilt für alle REQs, die Daten speichern oder exportieren:
 | Symbol | Status | Bedeutung |
 |--------|--------|-----------|
 | 🟢 | DRAFT | In Planung / Konzept |
+| 🟡 | PLANNED | Konzept ausgearbeitet, noch nicht implementiert |
 | 🟡 | REVIEW | Zur Überprüfung bereit |
 | ✅ | APPROVED | Genehmigt, noch nicht implementiert |
 | 🔵 | IN PROGRESS | Teilweise implementiert |
