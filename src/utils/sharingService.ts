@@ -52,7 +52,7 @@ export async function bootstrapSession(): Promise<Session> {
   // upsert overwrite – every client update brings a fresh private key too.
   const { error } = await supabase
     .from('devices')
-    .upsert({ id: deviceId, public_key: fromB64u(publicKeyB64) })
+    .upsert({ id: deviceId, public_key: toBytea(fromB64u(publicKeyB64)) })
   if (error) throw error
 
   _session = { deviceId, publicKeyB64, keyPair }
@@ -120,8 +120,8 @@ export async function shareMemory(input: ShareMemoryInput): Promise<{ shareId: s
     .from('shares')
     .insert({
       owner_id: session.deviceId,
-      ciphertext: fromB64u(envelope.ciphertext),
-      iv: fromB64u(envelope.iv),
+      ciphertext: toBytea(fromB64u(envelope.ciphertext)),
+      iv: toBytea(fromB64u(envelope.iv)),
       encrypted_keys: envelope.encryptedKeys,
     })
     .select('id')
@@ -168,7 +168,7 @@ export async function shareMemory(input: ShareMemoryInput): Promise<{ shareId: s
           id: mediaId,
           share_id: shareId,
           storage_path: path,
-          iv: enc.iv,
+          iv: toBytea(enc.iv),
         })
       if (mediaErr) throw mediaErr
     }
@@ -329,8 +329,8 @@ export async function addAnnotation(input: AddAnnotationInput): Promise<{ annota
     .insert({
       share_id: input.shareId,
       author_id: session.deviceId,
-      ciphertext: fromB64u(envelope.ciphertext),
-      iv: fromB64u(envelope.iv),
+      ciphertext: toBytea(fromB64u(envelope.ciphertext)),
+      iv: toBytea(fromB64u(envelope.iv)),
       encrypted_keys: envelope.encryptedKeys,
     })
     .select('id')
@@ -362,6 +362,14 @@ export async function deactivateOnlineSharing(): Promise<void> {
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
+
+// PostgREST expects bytea columns as "\xHEX" strings in JSON payloads.
+// JSON.stringify(Uint8Array) produces {"0":1,...} which PostgreSQL rejects.
+function toBytea(bytes: Uint8Array): string {
+  let hex = '\\x'
+  for (const b of bytes) hex += b.toString(16).padStart(2, '0')
+  return hex
+}
 
 function coerceBytes(val: unknown): Uint8Array {
   if (val instanceof Uint8Array) return val
