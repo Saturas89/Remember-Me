@@ -88,8 +88,8 @@ function getShareBtn(container: HTMLElement) {
 }
 
 function selectMemory(container: HTMLElement) {
-  const select = container.querySelector<HTMLSelectElement>('select')!
-  fireEvent.change(select, { target: { value: ANSWER.id } })
+  const radio = container.querySelector<HTMLInputElement>(`input[type="radio"][value="${ANSWER.id}"]`)!
+  fireEvent.click(radio)
 }
 
 function checkFriend(container: HTMLElement) {
@@ -198,9 +198,9 @@ describe('ShareTab – Sende-Flow', () => {
     await act(async () => { fireEvent.click(getShareBtn(container)!) })
 
     await waitFor(() =>
-      expect(getShareBtn(container)!.textContent?.trim()).toBe('Fehler – erneut versuchen'),
+      expect(container.textContent).toContain('Netzwerkfehler'),
     )
-    expect(container.textContent).toContain('Netzwerkfehler')
+    expect(getShareBtn(container)!.textContent?.trim()).toBe('Verschlüssele & sende')
   })
 })
 
@@ -225,7 +225,7 @@ describe('ShareTab – Timeout nach 30 Sekunden', () => {
 
     await act(async () => { vi.advanceTimersByTime(30_000) })
 
-    expect(getShareBtn(container)!.textContent?.trim()).toBe('Fehler – erneut versuchen')
+    expect(getShareBtn(container)!.textContent?.trim()).toBe('Verschlüssele & sende')
     expect(container.textContent).toContain('Zeitüberschreitung')
   })
 

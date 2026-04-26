@@ -4525,3 +4525,176 @@ details[open] .faq-item__chevron {
   margin-top: 1rem;
   align-items: flex-start;
 }
+
+/* ── Share tab redesign ─────────────────────────────────────────────────────── */
+
+.share-tab__label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  margin-bottom: 0.6rem;
+  display: block;
+}
+
+/* Memory option cards */
+.share-memory-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.share-memory-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  text-align: left;
+  width: 100%;
+}
+
+.share-memory-option:hover {
+  border-color: var(--border-focus);
+}
+
+.share-memory-option--selected {
+  border-color: var(--accent);
+  background: var(--accent-tinted);
+}
+
+.share-memory-option__indicator {
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  flex-shrink: 0;
+  margin-top: 0.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.share-memory-option--selected .share-memory-option__indicator {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+
+.share-memory-option--selected .share-memory-option__indicator::after {
+  content: '';
+  width: 0.38rem;
+  height: 0.38rem;
+  border-radius: 50%;
+  background: #fff;
+}
+
+.share-memory-option__content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.share-memory-option__question {
+  font-size: 0.73rem;
+  color: var(--text-faint);
+  line-height: 1.3;
+  display: block;
+}
+
+.share-memory-option__value {
+  font-size: 0.9rem;
+  color: var(--text);
+  line-height: 1.45;
+  display: block;
+  word-break: break-word;
+}
+
+/* Recipient chips */
+.share-recipient-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin-bottom: 1.75rem;
+}
+
+.share-recipient-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.7rem 0.85rem;
+  min-width: 4.5rem;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.share-recipient-chip:hover {
+  border-color: var(--border-focus);
+}
+
+.share-recipient-chip--selected {
+  border-color: var(--accent);
+  background: var(--accent-tinted);
+}
+
+.share-recipient-avatar {
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 50%;
+  background: var(--surface-raised);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--text);
+  transition: background 0.15s, color 0.15s;
+}
+
+.share-recipient-chip--selected .share-recipient-avatar {
+  background: var(--accent);
+  color: #fff;
+}
+
+.share-recipient-name {
+  font-size: 0.78rem;
+  color: var(--text);
+  font-weight: 500;
+  text-align: center;
+  max-width: 5rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Send area */
+.share-tab__actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.share-tab__error {
+  font-size: 0.85rem;
+  color: var(--warn);
+  background: var(--warn-bg);
+  border-radius: 8px;
+  padding: 0.65rem 0.9rem;
+  width: 100%;
+  max-width: 22rem;
+  text-align: center;
+  line-height: 1.5;
+}

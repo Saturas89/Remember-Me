@@ -493,8 +493,7 @@ function ShareTab({
     return (
       <section className="friends-section">
         <p className="friends-hint">
-          Du hast noch keine Antworten gespeichert. Beantworte erst eine
-          Frage im Quiz; sie kann dann hier geteilt werden.
+          Beantworte erst eine Frage im Quiz – sie kann dann hier geteilt werden.
         </p>
       </section>
     )
@@ -502,46 +501,65 @@ function ShareTab({
 
   return (
     <section className="friends-section">
-      <label className="online-field">
-        Welche Erinnerung?
-        <select value={selectedQ} onChange={e => setSelectedQ(e.target.value)}>
-          <option value="">— auswählen —</option>
-          {options.map(a => (
-            <option key={a.id} value={a.id}>
-              {(a.value || '').slice(0, 60)}
-            </option>
-          ))}
-        </select>
-      </label>
+      <span className="share-tab__label">Welche Erinnerung teilen?</span>
+      <div className="share-memory-list" role="radiogroup" aria-label="Erinnerung auswählen">
+        {options.map(a => (
+          <label
+            key={a.id}
+            className={`share-memory-option${selectedQ === a.id ? ' share-memory-option--selected' : ''}`}
+          >
+            <input
+              type="radio"
+              name="share-memory"
+              value={a.id}
+              checked={selectedQ === a.id}
+              onChange={() => setSelectedQ(a.id)}
+              className="sr-only"
+            />
+            <span className="share-memory-option__indicator" aria-hidden="true" />
+            <span className="share-memory-option__content">
+              <span className="share-memory-option__question">{resolveQuestionText(a.questionId)}</span>
+              <span className="share-memory-option__value">{a.value}</span>
+            </span>
+          </label>
+        ))}
+      </div>
 
-      <fieldset className="online-field">
-        <legend>An wen?</legend>
+      <span className="share-tab__label">An wen?</span>
+      <div className="share-recipient-list" role="group" aria-label="Empfänger auswählen">
         {onlineFriends.map(f => (
-          <label key={f.id} className="online-recipient">
+          <label
+            key={f.id}
+            className={`share-recipient-chip${selectedFriends.has(f.id) ? ' share-recipient-chip--selected' : ''}`}
+          >
             <input
               type="checkbox"
               checked={selectedFriends.has(f.id)}
               onChange={() => toggle(f.id)}
+              className="sr-only"
             />
-            <span>{f.name}</span>
+            <span className="share-recipient-avatar" aria-hidden="true">
+              {f.name.charAt(0).toUpperCase()}
+            </span>
+            <span className="share-recipient-name">{f.name}</span>
           </label>
         ))}
-      </fieldset>
+      </div>
 
-      <button
-        className="share-cta-btn"
-        disabled={!selectedQ || selectedFriends.size === 0 || status === 'sending' || !sync.service}
-        onClick={send}
-      >
-        {status === 'sending' ? 'Verschlüssele & sende …'
-          : status === 'sent' ? 'Gesendet ✓'
-          : status === 'error' ? 'Fehler – erneut versuchen'
-          : 'Verschlüssele & sende'}
-      </button>
-
-      {status === 'error' && errorMsg && (
-        <p className="friends-hint friends-hint--warn">{errorMsg}</p>
-      )}
+      <div className="share-tab__actions">
+        <button
+          className={`share-cta-btn${status === 'sent' ? ' share-cta-btn--success' : ''}`}
+          disabled={!selectedQ || selectedFriends.size === 0 || status === 'sending' || !sync.service}
+          onClick={send}
+        >
+          {status === 'sending' ? 'Verschlüssele & sende …'
+            : status === 'sent' ? 'Gesendet ✓'
+            : 'Verschlüssele & sende'}
+        </button>
+        {status === 'error' && errorMsg && (
+          <p className="share-tab__error" role="alert">{errorMsg}</p>
+        )}
+      </div>
     </section>
   )
 }
