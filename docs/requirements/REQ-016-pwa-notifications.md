@@ -2,7 +2,7 @@
 
 **Status:** 🟡 PLANNED
 **ID:** REQ-016
-**Version:** 0.2.1
+**Version:** 0.2.2
 **Letzte Aktualisierung:** 2026-04-27
 **Modul:** Engagement
 **Priorität:** Medium
@@ -199,10 +199,12 @@ export function WelcomeBackBanner(props: WelcomeBackBannerProps): JSX.Element | 
 
 DOM-Vertrag: Wurzelelement hat Klasse `update-banner welcome-back-banner` und `data-testid="welcome-back-banner"`. CTA-Button hat `data-testid="welcome-back-continue"`.
 
-### 7a.4 `src/hooks/useReminder.ts` (Erweiterung)
+### 7a.4 `src/hooks/useReminder.ts` (Erweiterung des bestehenden Hooks)
+
+Der Hook hat **bestehende Konsumenten** in `src/App.tsx` und `src/components/ReminderBanner.tsx`, die nicht angepasst werden dürfen. Der Vertrag ist daher eine **Superset-Erweiterung** des Original-Returns:
 
 ```ts
-export interface ReminderState {
+export interface ReminderInternalState {
   permission: 'none' | 'enabled' | 'dismissed'
   backoffStage: 0 | 1 | 2 | 3
   lastShownAt?: number
@@ -210,16 +212,22 @@ export interface ReminderState {
 }
 
 export interface UseReminderReturn {
-  state: ReminderState
-  enable: () => Promise<void>     // Permission-Prompt + scheduling
-  disable: () => void
-  reschedule: () => Promise<void> // bei visibilitychange/answer
+  // === Bestehende Methoden (UNVERÄNDERT — werden von App.tsx/ReminderBanner.tsx genutzt) ===
+  showPrompt: boolean              // true wenn Permission-Prompt sichtbar sein soll
+  requestPermission: () => Promise<void>
+  dismissPrompt: () => void
+  isEnabled: boolean
+
+  // === Neu für REQ-016 ===
+  state: ReminderInternalState
+  reschedule: () => Promise<void>  // bei visibilitychange / neuer Antwort aufgerufen
+  disable: () => void              // explizites Off-Schalten via Settings-Toggle
 }
 
 export function useReminder(): UseReminderReturn
 ```
 
-Beim Mount: `localStorage.removeItem('rm-reminder-pref')` (genau einmal pro Browser-Lifetime, idempotent).
+`requestPermission` ist die einzige Aktivierungs-Methode (keine zusätzliche `enable()`). Beim Mount: `localStorage.removeItem('rm-reminder-pref')` (genau einmal pro Browser-Lifetime, idempotent).
 
 ### 7a.5 ProfileView (Settings-Sektion)
 
