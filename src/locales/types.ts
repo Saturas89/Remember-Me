@@ -166,6 +166,12 @@ export interface Translations {
     step3: string
     menuHint: string
     understand: string
+    /** "Tippe auf das Teilen-Symbol" / "Tap the Share icon" – iOS step 1 prefix. */
+    iosStep1TapShareIcon: string
+    /** "Wähle" / "Select" – iOS step 2 verb prefix. */
+    iosStep2SelectVerb: string
+    /** "Tippe auf" / "Tap" – iOS step 3 verb prefix. */
+    iosStep3TapVerb: string
   }
 
   update: {
@@ -204,6 +210,14 @@ export interface Translations {
     attachmentsHint: string
     openGift: string
     shareMessage: string
+    /** Tags above the invite-link description. */
+    tagOneTime: string
+    tagNoAccount: string
+    tagOffline: string
+    /** Share-card metadata for the offline invite link. */
+    inviteShareCardTitleWithName: string
+    inviteShareCardTitleFallback: string
+    inviteShareCardSubtitle: string
     /** Familienmodus opt-in section in the friends view. */
     familienmodusHeading: string
     familienmodusHint: string
@@ -258,6 +272,9 @@ export interface Translations {
     title: string
     /** Share-card subtitle reused for both contact-handshake and onboarding. */
     shareCardSubtitle: string
+    /** "{name} lädt ein" / "{name} invites you" – share-card title used by
+     *  ContactHandshakeView and OnlineSharingHubView. Uses {name}. */
+    shareCardTitleWithName: string
     /** "{name} möchte Remember-Me-Erinnerungen mit dir teilen…" – uses {name}. */
     shareInviteText: string
     /** "{name} möchte sich mit dir verknüpfen. Öffne diesen Link:" – uses {name}. */
@@ -469,6 +486,86 @@ export interface Translations {
     hell: string
     sepia: string
     ozean: string
+    /** ARIA label for the theme switcher group. */
+    chooseAriaLabel: string
+  }
+
+  seo: {
+    /** Per-route page title and meta description. Keys must match the
+     *  `viewName` argument passed to the SEOHead component. */
+    home: { title: string; description: string }
+    archive: { title: string; description: string }
+    friends: { title: string; description: string }
+    profile: { title: string; description: string }
+    feature: { title: string; description: string }
+    faq: { title: string; description: string }
+  }
+
+  errorBoundary: {
+    heading: string
+    body: string
+    reloadButton: string
+  }
+
+  logo: {
+    /** Tagline shown under the logo on the hero / header. */
+    tagline: string
+  }
+
+  media: {
+    /** MediaCapture toolbar / hint copy. */
+    introHint: string
+    waitingMicrophone: string
+    stopRecording: string
+    cancelRecording: string
+    cancelRecordingAria: string
+    transcriptionLabel: string
+    noTranscriptionHint: string
+    noTranscriptionHintInBrowser: string
+    whichTextLabel: string
+    chooseNewTranscription: string
+    chooseKeepText: string
+    saveAudioFileLabel: string
+    confirmAccept: string
+    retryRecord: string
+    discardRecord: string
+    replaceRecording: string
+    replaceRecordingAlt: string
+    deleteRecording: string
+    /** Toolbar buttons in MediaCapture. */
+    toolbarAriaLabel: string
+    photoLabel: string
+    photoTooltipAdd: string
+    photoTooltipMax: string
+    photoAriaAdd: string
+    photoAriaCount: string
+    videoLabel: string
+    videoTooltipAdd: string
+    videoTooltipMax: string
+    videoAriaAdd: string
+    videoAriaCount: string
+    audioLabel: string
+    audioWaitLabel: string
+    audioStartTitle: string
+    audioStartAria: string
+    audioExistingTitle: string
+    audioExistingAria: string
+    /** AudioRecorder standalone-button. */
+    audioRecordButton: string
+    audioWaitButton: string
+    /** VideoAttachment lightbox + thumb buttons. */
+    videoPlayAria: string
+    videoRemoveAria: string
+    videoLightboxCloseAria: string
+    videoAddButton: string
+    /** ImageAttachment ARIA labels + image-lightbox texts. */
+    imageZoomAria: string
+    imageLoadingAria: string
+    imageRemoveAria: string
+    imageLightboxAria: string
+    imageLightboxCloseAria: string
+    /** AudioPlayer fallback when blob can't be loaded. */
+    audioUnavailable: string
   }
 
   categories: Category[]

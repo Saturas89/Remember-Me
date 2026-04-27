@@ -3,6 +3,7 @@ import { useAudioRecorder } from '../hooks/useAudioRecorder'
 import { ImageAttachment } from './ImageAttachment'
 import { VideoAttachment } from './VideoAttachment'
 import { AudioPlayer } from './AudioPlayer'
+import { useTranslation } from '../locales'
 
 const MAX_IMAGES = 5
 const MAX_VIDEOS = 3
@@ -35,6 +36,8 @@ export function MediaCapture({
   onAddVideo, onRemoveVideo,
   onSaveAudio, onRemoveAudio,
 }: Props) {
+  const { t } = useTranslation()
+  const m = t.media
   const photoTrigger = useRef<HTMLInputElement>(null)
   const videoTrigger = useRef<HTMLInputElement>(null)
   const rec = useAudioRecorder()
@@ -66,9 +69,7 @@ export function MediaCapture({
     <div className="media-capture">
       {/* Hint – visible only before any media is attached */}
       {!hasAnyMedia && (
-        <p className="media-capture__hint">
-          Damit dieser Moment nie verblasst – ergänze ihn mit Fotos, einem Video oder erzähl ihn mit deiner eigenen Stimme.
-        </p>
+        <p className="media-capture__hint">{m.introHint}</p>
       )}
 
       {/* Thumbnail strip – shown when content exists; components always rendered so triggerRefs stay in DOM */}
@@ -100,7 +101,7 @@ export function MediaCapture({
       {rec.state === 'requesting' && (
         <div className="audio-panel audio-panel--requesting">
           <span className="audio-panel__spinner" aria-hidden="true" />
-          <span>Warte auf Mikrofon…</span>
+          <span>{m.waitingMicrophone}</span>
         </div>
       )}
 
@@ -116,9 +117,9 @@ export function MediaCapture({
             <span className="audio-rec-time" aria-live="polite">{fmtDur(rec.duration)}</span>
             <div className="audio-panel__actions">
               <button type="button" className="btn btn--primary btn--sm" onClick={rec.stop}>
-                ⏹ Stopp
+                {m.stopRecording}
               </button>
-              <button type="button" className="btn btn--ghost btn--sm" onClick={rec.cancel} aria-label="Abbrechen">
+              <button type="button" className="btn btn--ghost btn--sm" onClick={rec.cancel} aria-label={m.cancelRecordingAria}>
                 ✕
               </button>
             </div>
@@ -136,24 +137,22 @@ export function MediaCapture({
           )}
           {rec.transcript ? (
             <div className="audio-rec-transcript">
-              <p className="audio-rec-transcript__label">Transkription</p>
+              <p className="audio-rec-transcript__label">{m.transcriptionLabel}</p>
               <p className="audio-rec-transcript__text">{rec.transcript}</p>
             </div>
           ) : !rec.hasTranscription && (
-            <p className="audio-rec-no-transcript">
-              💡 Keine automatische Transkription verfügbar – du kannst den Text oben manuell eintippen.
-            </p>
+            <p className="audio-rec-no-transcript">{m.noTranscriptionHint}</p>
           )}
           {hasTextConflict && (
             <div className="audio-text-choice">
-              <p className="audio-text-choice__label">Welchen Text übernehmen?</p>
+              <p className="audio-text-choice__label">{m.whichTextLabel}</p>
               <div className="audio-text-choice__options">
                 <button
                   type="button"
                   className={`audio-text-choice__btn${textChoice === 'new' ? ' audio-text-choice__btn--selected' : ''}`}
                   onClick={() => setTextChoice('new')}
                 >
-                  <span>🆕 Neue Transkription</span>
+                  <span>{m.chooseNewTranscription}</span>
                   <span className="audio-text-choice__preview">{rec.transcript.length > 60 ? `${rec.transcript.substring(0, 60)}…` : rec.transcript}</span>
                 </button>
                 <button
@@ -161,7 +160,7 @@ export function MediaCapture({
                   className={`audio-text-choice__btn${textChoice === 'keep' ? ' audio-text-choice__btn--selected' : ''}`}
                   onClick={() => setTextChoice('keep')}
                 >
-                  <span>💾 Bisherigen Text behalten</span>
+                  <span>{m.chooseKeepText}</span>
                   <span className="audio-text-choice__preview">{currentValue!.length > 60 ? `${currentValue!.substring(0, 60)}…` : currentValue}</span>
                 </button>
               </div>
@@ -173,17 +172,17 @@ export function MediaCapture({
               checked={saveAudioFile}
               onChange={e => setSaveAudioFile(e.target.checked)}
             />
-            <span>🗂 Aufnahme als Audio-Datei speichern</span>
+            <span>{m.saveAudioFileLabel}</span>
           </label>
           <div className="audio-rec-actions">
             <button type="button" className="btn btn--primary btn--sm" onClick={handleAudioConfirm}>
-              ✓ Übernehmen
+              {m.confirmAccept}
             </button>
             <button type="button" className="btn btn--ghost btn--sm" onClick={rec.reset}>
-              ↺ Neu aufnehmen
+              {m.retryRecord}
             </button>
             <button type="button" className="btn btn--ghost btn--sm" onClick={rec.cancel}>
-              ✕ Verwerfen
+              {m.discardRecord}
             </button>
           </div>
         </div>
@@ -198,32 +197,32 @@ export function MediaCapture({
               className="btn btn--ghost btn--sm"
               onClick={rec.start}
             >
-              🔄 Ersetzen
+              {m.replaceRecording}
             </button>
             <button
               type="button"
               className="btn btn--ghost btn--sm audio-rec-delete"
               onClick={onRemoveAudio}
             >
-              🗑 Löschen
+              {m.deleteRecording}
             </button>
           </div>
         </div>
       )}
 
       {/* ── Unified media toolbar ───────────────────────────── */}
-      <div className="media-toolbar" role="group" aria-label="Medien hinzufügen">
+      <div className="media-toolbar" role="group" aria-label={m.toolbarAriaLabel}>
         {/* Photo */}
         <button
           type="button"
           className={`media-toolbar__btn${imageIds.length > 0 ? ' media-toolbar__btn--has' : ''}`}
           onClick={() => photoTrigger.current?.click()}
           disabled={imageIds.length >= MAX_IMAGES}
-          title={imageIds.length >= MAX_IMAGES ? 'Maximum erreicht (5)' : 'Foto hinzufügen'}
-          aria-label={`Foto hinzufügen${imageIds.length > 0 ? `, ${imageIds.length} vorhanden` : ''}`}
+          title={imageIds.length >= MAX_IMAGES ? m.photoTooltipMax : m.photoTooltipAdd}
+          aria-label={`${m.photoAriaAdd}${imageIds.length > 0 ? `, ${m.photoAriaCount.replace('{n}', String(imageIds.length))}` : ''}`}
         >
           <span className="media-toolbar__icon" aria-hidden="true">📷</span>
-          <span className="media-toolbar__label">Foto</span>
+          <span className="media-toolbar__label">{m.photoLabel}</span>
           {imageIds.length > 0 && (
             <span className="media-toolbar__badge" aria-hidden="true">{imageIds.length}</span>
           )}
@@ -235,11 +234,11 @@ export function MediaCapture({
           className={`media-toolbar__btn${videoIds.length > 0 ? ' media-toolbar__btn--has' : ''}`}
           onClick={() => videoTrigger.current?.click()}
           disabled={videoIds.length >= MAX_VIDEOS}
-          title={videoIds.length >= MAX_VIDEOS ? 'Maximum erreicht (3)' : 'Video hinzufügen'}
-          aria-label={`Video hinzufügen${videoIds.length > 0 ? `, ${videoIds.length} vorhanden` : ''}`}
+          title={videoIds.length >= MAX_VIDEOS ? m.videoTooltipMax : m.videoTooltipAdd}
+          aria-label={`${m.videoAriaAdd}${videoIds.length > 0 ? `, ${m.videoAriaCount.replace('{n}', String(videoIds.length))}` : ''}`}
         >
           <span className="media-toolbar__icon" aria-hidden="true">🎬</span>
-          <span className="media-toolbar__label">Video</span>
+          <span className="media-toolbar__label">{m.videoLabel}</span>
           {videoIds.length > 0 && (
             <span className="media-toolbar__badge" aria-hidden="true">{videoIds.length}</span>
           )}
@@ -255,14 +254,14 @@ export function MediaCapture({
           ].filter(Boolean).join(' ')}
           onClick={() => { if (rec.state === 'idle' && !audioId) rec.start() }}
           disabled={rec.state === 'requesting' || rec.state === 'recording' || rec.state === 'preview' || !!audioId}
-          title={audioId ? 'Aufnahme vorhanden' : 'Sprachaufnahme starten'}
-          aria-label={audioId ? 'Sprachaufnahme vorhanden' : 'Sprachaufnahme starten'}
+          title={audioId ? m.audioExistingTitle : m.audioStartTitle}
+          aria-label={audioId ? m.audioExistingAria : m.audioStartAria}
         >
           <span className="media-toolbar__icon" aria-hidden="true">
             {rec.state === 'recording' ? '🔴' : '🎙'}
           </span>
           <span className="media-toolbar__label">
-            {rec.state === 'requesting' ? 'Warte…' : 'Aufnahme'}
+            {rec.state === 'requesting' ? m.audioWaitLabel : m.audioLabel}
           </span>
           {hasAudio && rec.state === 'idle' && (
             <span className="media-toolbar__badge" aria-hidden="true">✓</span>

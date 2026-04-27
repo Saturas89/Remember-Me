@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { getAudioBlob } from '../hooks/useAudioStore'
+import { useTranslation } from '../locales'
 
 interface Props {
   audioId: string
@@ -16,6 +17,7 @@ function fmt(secs: number): string {
 const WAVEFORM = [40,62,80,55,90,70,45,85,60,75,50,92,65,82,40,70,88,55,92,60,74,48,82,65,52,94,70,42,86,60]
 
 export function AudioPlayer({ audioId }: Props) {
+  const { t } = useTranslation()
   const [url,         setUrl]         = useState<string | null>(null)
   const [loading,     setLoading]     = useState(false)
   const [error,       setError]       = useState(false)
@@ -74,7 +76,7 @@ export function AudioPlayer({ audioId }: Props) {
     audioRef.current.currentTime = pct * duration
   }
 
-  if (error) return <p className="audio-player__error">Audiodatei nicht verfügbar.</p>
+  if (error) return <p className="audio-player__error">{t.media.audioUnavailable}</p>
 
   const pct = duration > 0 ? (currentTime / duration) * 100 : 0
 

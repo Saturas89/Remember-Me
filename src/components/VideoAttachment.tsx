@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { getVideoBlob } from '../hooks/useVideoStore'
+import { useTranslation } from '../locales'
 
 const MAX_VIDEOS = 3
 
@@ -15,6 +16,7 @@ function VideoThumb({
   onPlay: () => void
   readOnly?: boolean
 }) {
+  const { t } = useTranslation()
   const [thumbUrl, setThumbUrl] = useState<string | null>(null)
 
   useEffect(() => {
@@ -38,7 +40,7 @@ function VideoThumb({
         type="button"
         className="video-thumb__play"
         onClick={onPlay}
-        aria-label="Video abspielen"
+        aria-label={t.media.videoPlayAria}
       >
         ▶
       </button>
@@ -47,7 +49,7 @@ function VideoThumb({
           type="button"
           className="video-thumb__remove"
           onClick={onRemove}
-          aria-label="Video entfernen"
+          aria-label={t.media.videoRemoveAria}
         >
           ✕
         </button>
@@ -58,6 +60,7 @@ function VideoThumb({
 
 // ── Lightbox – creates its own fresh object URL ───────────────
 function VideoLightbox({ id, onClose }: { id: string; onClose: () => void }) {
+  const { t } = useTranslation()
   const [url, setUrl] = useState<string | null>(null)
 
   useEffect(() => {
@@ -77,7 +80,7 @@ function VideoLightbox({ id, onClose }: { id: string; onClose: () => void }) {
         type="button"
         className="video-lightbox__close"
         onClick={onClose}
-        aria-label="Schließen"
+        aria-label={t.media.videoLightboxCloseAria}
       >
         ✕
       </button>
@@ -108,6 +111,7 @@ interface Props {
 }
 
 export function VideoAttachment({ videoIds, readOnly = false, onAdd, onRemove, triggerRef, noAddButton }: Props) {
+  const { t } = useTranslation()
   const inputRef = useRef<HTMLInputElement>(null)
 
   // Expose internal file input to parent toolbar
@@ -152,7 +156,7 @@ export function VideoAttachment({ videoIds, readOnly = false, onAdd, onRemove, t
               className="video-attachment__add"
               onClick={() => inputRef.current?.click()}
             >
-              🎬 Video hinzufügen
+              {t.media.videoAddButton}
             </button>
           )}
           <input

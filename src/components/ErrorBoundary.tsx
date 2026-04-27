@@ -1,4 +1,7 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react'
+import { UI_DE } from '../locales/de/ui'
+import { UI_EN } from '../locales/en/ui'
+import { STORAGE_KEY } from '../locales/detectLocale'
 
 interface Props {
   children: ReactNode
@@ -13,8 +16,11 @@ interface State {
  * swaps the mounted tree for an empty `<div id="root">` and leaves the user
  * staring at a blank page with nothing actionable.
  *
- * This boundary renders a plain-HTML fallback (no translations, no routing)
- * so it works even if the error originated inside those subsystems.
+ * The fallback intentionally avoids React hooks and the I18n provider –
+ * either of those could be the very thing that crashed. We resolve the
+ * locale by reading localStorage directly and pull translations from the
+ * statically-imported UI bundles so the fallback works even if context /
+ * routing / state subsystems are broken.
  */
 export class ErrorBoundary extends Component<Props, State> {
   state: State = { error: null }
@@ -31,8 +37,22 @@ export class ErrorBoundary extends Component<Props, State> {
     window.location.reload()
   }
 
+  private resolveLocale(): 'de' | 'en' {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY)
+      if (stored === 'de' || stored === 'en') return stored
+    } catch { /* noop */ }
+    try {
+      const code = navigator.language?.split('-')[0]?.toLowerCase()
+      if (code === 'en') return 'en'
+    } catch { /* noop */ }
+    return 'de'
+  }
+
   render(): ReactNode {
     if (!this.state.error) return this.props.children
+
+    const e = (this.resolveLocale() === 'en' ? UI_EN : UI_DE).errorBoundary
 
     return (
       <div
@@ -46,12 +66,9 @@ export class ErrorBoundary extends Component<Props, State> {
         }}
       >
         <h1 style={{ fontSize: '1.25rem', marginBottom: '0.75rem' }}>
-          Da ist etwas schiefgelaufen.
+          {e.heading}
         </h1>
-        <p style={{ marginBottom: '1.25rem' }}>
-          Remember Me konnte die Seite nicht anzeigen. Deine gespeicherten
-          Erinnerungen sind sicher – sie liegen nur auf deinem Gerät.
-        </p>
+        <p style={{ marginBottom: '1.25rem' }}>{e.body}</p>
         <button
           type="button"
           onClick={this.handleReload}
@@ -65,7 +82,7 @@ export class ErrorBoundary extends Component<Props, State> {
             cursor: 'pointer',
           }}
         >
-          Seite neu laden
+          {e.reloadButton}
         </button>
       </div>
     )

@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import { useTranslation } from '../locales'
 
 const MAX_IMAGES = 5
 
@@ -15,6 +16,8 @@ interface Props {
 }
 
 export function ImageAttachment({ imageIds, cache, onLoad, onAdd, onRemove, triggerRef, noAddButton }: Props) {
+  const { t } = useTranslation()
+  const m = t.media
   const [lightbox, setLightbox] = useState<string | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
   // stable join string to avoid re-running effect on every render
@@ -44,20 +47,20 @@ export function ImageAttachment({ imageIds, cache, onLoad, onAdd, onRemove, trig
             onClick={() => cache[id] && setLightbox(cache[id])}
             role="button"
             tabIndex={0}
-            aria-label="Bild vergrößern"
+            aria-label={m.imageZoomAria}
             onKeyDown={e => e.key === 'Enter' && cache[id] && setLightbox(cache[id])}
           >
             {cache[id] ? (
               <img src={cache[id]} alt="" className="img-thumb__img" />
             ) : (
-              <div className="img-thumb__skeleton" aria-label="Bild wird geladen" />
+              <div className="img-thumb__skeleton" aria-label={m.imageLoadingAria} />
             )}
             {onRemove && (
               <button
                 type="button"
                 className="img-thumb__del"
                 onClick={e => { e.stopPropagation(); onRemove(id) }}
-                aria-label="Bild entfernen"
+                aria-label={m.imageRemoveAria}
               >
                 ✕
               </button>
@@ -70,10 +73,10 @@ export function ImageAttachment({ imageIds, cache, onLoad, onAdd, onRemove, trig
             type="button"
             className="img-add-btn"
             onClick={() => fileRef.current?.click()}
-            aria-label="Foto hinzufügen"
+            aria-label={m.photoAriaAdd}
           >
             <span>📷</span>
-            <span className="img-add-btn__label">Foto</span>
+            <span className="img-add-btn__label">{m.photoLabel}</span>
           </button>
         )}
 
@@ -96,10 +99,10 @@ export function ImageAttachment({ imageIds, cache, onLoad, onAdd, onRemove, trig
           onClick={() => setLightbox(null)}
           role="dialog"
           aria-modal="true"
-          aria-label="Bild in voller Größe"
+          aria-label={m.imageLightboxAria}
         >
           <img src={lightbox} alt="" />
-          <button className="img-lightbox__close" aria-label="Schließen">✕</button>
+          <button className="img-lightbox__close" aria-label={m.imageLightboxCloseAria}>✕</button>
         </div>
       )}
     </>

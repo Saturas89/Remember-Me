@@ -1,52 +1,31 @@
 import { useEffect } from 'react'
+import { useTranslation } from '../locales'
+import type { Translations } from '../locales/types'
 
 interface SEOHeadProps {
   viewName: string
 }
 
-interface SEOMeta {
-  title: string
-  description: string
-  canonical: string
+type SeoView = keyof Translations['seo']
+
+const CANONICAL: Record<SeoView, string> = {
+  home: 'https://rememberme.dad/',
+  archive: 'https://rememberme.dad/archive',
+  friends: 'https://rememberme.dad/friends',
+  profile: 'https://rememberme.dad/profile',
+  feature: 'https://rememberme.dad/feature',
+  faq: 'https://rememberme.dad/',
 }
 
-const SEO_META: Record<string, SEOMeta> = {
-  home: {
-    title: 'Remember Me',
-    description: 'Halte deine Lebensgeschichte für Kinder und Enkel fest – privat, sicher, auf deinem Gerät.',
-    canonical: 'https://rememberme.dad/',
-  },
-  archive: {
-    title: 'Lebensarchiv – Remember Me',
-    description: 'Alle deine Erinnerungen auf einen Blick – dein persönliches Lebensarchiv.',
-    canonical: 'https://rememberme.dad/archive',
-  },
-  friends: {
-    title: 'Freunde einladen – Remember Me',
-    description: 'Lade Freunde und Familie ein, deine Geschichte aus ihrer Perspektive zu ergänzen.',
-    canonical: 'https://rememberme.dad/friends',
-  },
-  profile: {
-    title: 'Profil & Einstellungen – Remember Me',
-    description: 'Verwalte dein Profil, exportiere deine Erinnerungen und passe die App an.',
-    canonical: 'https://rememberme.dad/profile',
-  },
-  feature: {
-    title: 'Was kommt als Nächstes – Remember Me',
-    description: 'Entdecke geplante Features: Lebenszeitlinie, privater Sync und mehr.',
-    canonical: 'https://rememberme.dad/feature',
-  },
-  faq: {
-    title: 'Hilfe & FAQ – Remember Me',
-    description: 'Antworten zu Datenschutz, Import, Export und der Funktionsweise von Remember Me.',
-    canonical: 'https://rememberme.dad/',
-  },
+function isSeoView(name: string, seo: Translations['seo']): name is SeoView {
+  return name in seo
 }
-
-const DEFAULT_META = SEO_META.home
 
 export function SEOHead({ viewName }: SEOHeadProps) {
-  const meta = SEO_META[viewName] ?? DEFAULT_META
+  const { t } = useTranslation()
+
+  const view: SeoView = isSeoView(viewName, t.seo) ? viewName : 'home'
+  const meta = { ...t.seo[view], canonical: CANONICAL[view] }
 
   useEffect(() => {
     document.title = meta.title
