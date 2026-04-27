@@ -102,7 +102,7 @@ test.describe('Familienmodus – Erinnerung teilen, empfangen, ergänzen (FR-15.
     expect(recipients).toContain(bobId.deviceId)
 
     await reopenFamilyHub(bob)
-    await bob.getByRole('tab', { name: 'Feed', exact: true }).click()
+    await bob.getByRole('tab', { name: /^Feed\b/ }).click()
     await expect(bob.getByText('Ich bin in Cuxhaven am Meer aufgewachsen.')).toBeVisible({ timeout: 15_000 })
     await expect(bob.locator('.shared-memory-card')).toContainText('Alice')
 
