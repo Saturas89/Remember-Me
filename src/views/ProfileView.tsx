@@ -75,7 +75,7 @@ export function ProfileView({
 }: Props) {
   const { t, locale, setLocale } = useTranslation()
   const { theme, setTheme } = useTheme()
-  const { requestPermission, disable, isEnabled } = useReminder()
+  const { state: reminderState, requestPermission, disable, isEnabled } = useReminder()
   const { streak } = useStreak()
   const [lastBackup, setLastBackup] = useState<Date | null>(() => getLastBackupDate())
   const [name, setName] = useState(profile?.name ?? '')
@@ -165,10 +165,9 @@ export function ProfileView({
     }
   }
 
-  const hasNotificationApi = typeof window !== 'undefined' && typeof Notification !== 'undefined'
-  const currentPermission = hasNotificationApi ? Notification.permission : 'default'
+  const currentPermission = typeof window !== 'undefined' ? Notification.permission : 'default'
   const isIOS = typeof window !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream
-  const supportsShowTrigger = hasNotificationApi && Notification.prototype != null && 'showTrigger' in Notification.prototype
+  const supportsShowTrigger = typeof window !== 'undefined' && 'Notification' in window && 'showTrigger' in Notification.prototype
 
   return (
     <div className="profile-view">

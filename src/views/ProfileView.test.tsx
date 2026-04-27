@@ -2,8 +2,6 @@ import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest'
 import { render, cleanup, screen, fireEvent } from '@testing-library/react'
 import { ProfileView } from './ProfileView'
 import type { Answer } from '../types'
-import { useReminder } from '../hooks/useReminder'
-import { useStreak } from '../hooks/useStreak'
 
 // Mock hooks
 vi.mock('../hooks/useReminder', () => ({
@@ -168,6 +166,9 @@ describe('ProfileView – TreeProgressLogo', () => {
 })
 
 describe('ProfileView – Reminder Settings (REQ-016)', () => {
+  const { useReminder } = await import('../hooks/useReminder')
+  const { useStreak } = await import('../hooks/useStreak')
+  
   let mockUseReminder: any
   let mockUseStreak: any
 
