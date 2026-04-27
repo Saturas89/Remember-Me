@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { useAudioRecorder } from '../hooks/useAudioRecorder'
 import { AudioPlayer } from './AudioPlayer'
+import { useTranslation } from '../locales'
 
 interface Props {
   /** If set, shows the saved audio player + replace / delete actions */
@@ -22,6 +23,8 @@ function fmtDur(secs: number): string {
 }
 
 export function AudioRecorder({ existingAudioId, existingValue, onSave, onRemove }: Props) {
+  const { t } = useTranslation()
+  const m = t.media
   const rec          = useAudioRecorder()
   const savingRef    = useRef(false)
   const [saveAudioFile, setSaveAudioFile] = useState(false)
@@ -61,10 +64,10 @@ export function AudioRecorder({ existingAudioId, existingValue, onSave, onRemove
         )}
         <div className="audio-rec-actions">
           <button type="button" className="btn btn--primary btn--sm" onClick={rec.stop}>
-            ⏹ Stop
+            {m.stopRecording}
           </button>
           <button type="button" className="btn btn--ghost btn--sm" onClick={rec.cancel}>
-            ✕ Abbrechen
+            {m.cancelRecording}
           </button>
         </div>
       </div>
@@ -84,25 +87,22 @@ export function AudioRecorder({ existingAudioId, existingValue, onSave, onRemove
         )}
         {rec.transcript ? (
           <div className="audio-rec-transcript">
-            <p className="audio-rec-transcript__label">Transkription</p>
+            <p className="audio-rec-transcript__label">{m.transcriptionLabel}</p>
             <p className="audio-rec-transcript__text">{rec.transcript}</p>
           </div>
         ) : !rec.hasTranscription && (
-          <p className="audio-rec-no-transcript">
-            💡 Automatische Transkription ist in diesem Browser nicht verfügbar –
-            du kannst den Text oben manuell eintippen.
-          </p>
+          <p className="audio-rec-no-transcript">{m.noTranscriptionHintInBrowser}</p>
         )}
         {hasTextConflict && (
           <div className="audio-text-choice">
-            <p className="audio-text-choice__label">Welchen Text übernehmen?</p>
+            <p className="audio-text-choice__label">{m.whichTextLabel}</p>
             <div className="audio-text-choice__options">
               <button
                 type="button"
                 className={`audio-text-choice__btn${textChoice === 'new' ? ' audio-text-choice__btn--selected' : ''}`}
                 onClick={() => setTextChoice('new')}
               >
-                <span>🆕 Neue Transkription</span>
+                <span>{m.chooseNewTranscription}</span>
                 <span className="audio-text-choice__preview">{rec.transcript.length > 60 ? `${rec.transcript.substring(0, 60)}…` : rec.transcript}</span>
               </button>
               <button
@@ -110,7 +110,7 @@ export function AudioRecorder({ existingAudioId, existingValue, onSave, onRemove
                 className={`audio-text-choice__btn${textChoice === 'keep' ? ' audio-text-choice__btn--selected' : ''}`}
                 onClick={() => setTextChoice('keep')}
               >
-                <span>💾 Bisherigen Text behalten</span>
+                <span>{m.chooseKeepText}</span>
                 <span className="audio-text-choice__preview">{existingValue!.length > 60 ? `${existingValue!.substring(0, 60)}…` : existingValue}</span>
               </button>
             </div>
@@ -122,17 +122,17 @@ export function AudioRecorder({ existingAudioId, existingValue, onSave, onRemove
             checked={saveAudioFile}
             onChange={e => setSaveAudioFile(e.target.checked)}
           />
-          <span>🗂 Aufnahme als Audio-Datei speichern</span>
+          <span>{m.saveAudioFileLabel}</span>
         </label>
         <div className="audio-rec-actions">
           <button type="button" className="btn btn--primary btn--sm" onClick={handleConfirm}>
-            ✓ Übernehmen
+            {m.confirmAccept}
           </button>
           <button type="button" className="btn btn--ghost btn--sm" onClick={rec.reset}>
-            ↺ Neu aufnehmen
+            {m.retryRecord}
           </button>
           <button type="button" className="btn btn--ghost btn--sm" onClick={rec.cancel}>
-            ✕ Verwerfen
+            {m.discardRecord}
           </button>
         </div>
       </div>
@@ -154,7 +154,7 @@ export function AudioRecorder({ existingAudioId, existingValue, onSave, onRemove
               onClick={rec.start}
               disabled={rec.state === 'requesting'}
             >
-              🔄 Aufnahme ersetzen
+              {m.replaceRecordingAlt}
             </button>
             {onRemove && (
               <button
@@ -162,7 +162,7 @@ export function AudioRecorder({ existingAudioId, existingValue, onSave, onRemove
                 className="btn btn--ghost btn--sm audio-rec-delete"
                 onClick={onRemove}
               >
-                🗑 Löschen
+                {m.deleteRecording}
               </button>
             )}
           </div>
@@ -174,7 +174,7 @@ export function AudioRecorder({ existingAudioId, existingValue, onSave, onRemove
           onClick={rec.start}
           disabled={rec.state === 'requesting'}
         >
-          {rec.state === 'requesting' ? '⏳ Warte auf Mikrofon…' : '🎙 Aufnehmen'}
+          {rec.state === 'requesting' ? m.audioWaitButton : m.audioRecordButton}
         </button>
       )}
     </div>

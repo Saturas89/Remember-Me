@@ -58,12 +58,12 @@ export function ContactHandshakeView({
     fetch('/pwa-192x192.png')
       .then(r => r.blob())
       .then(b => generateShareCard(b, {
-        title: `${profileName} lädt ein`,
+        title: c.shareCardTitleWithName.replace('{name}', profileName),
         subtitle: c.shareCardSubtitle,
       }))
       .then(f => { shareCardRef.current = f })
       .catch(() => {})
-  }, [myLink, profileName, c.shareCardSubtitle])
+  }, [myLink, profileName, c.shareCardTitleWithName, c.shareCardSubtitle])
 
   // Auto-accept once online sharing is ready (the user already consented by
   // clicking "Aktivieren" in the intro). This is idempotent.

@@ -1,5 +1,6 @@
 import { THEMES } from '../hooks/useTheme'
 import type { ThemeId } from '../hooks/useTheme'
+import { useTranslation } from '../locales'
 
 interface Props {
   current: ThemeId
@@ -7,17 +8,18 @@ interface Props {
 }
 
 export function ThemeSwitcher({ current, onChange }: Props) {
+  const { t } = useTranslation()
   return (
-    <div className="theme-switcher" role="group" aria-label="Theme wählen">
-      {THEMES.map(t => (
+    <div className="theme-switcher" role="group" aria-label={t.themes.chooseAriaLabel}>
+      {THEMES.map(theme => (
         <button
-          key={t.id}
-          className={`theme-btn ${current === t.id ? 'theme-btn--active' : ''}`}
-          onClick={() => onChange(t.id)}
-          title={t.label}
-          aria-pressed={current === t.id}
+          key={theme.id}
+          className={`theme-btn ${current === theme.id ? 'theme-btn--active' : ''}`}
+          onClick={() => onChange(theme.id)}
+          title={theme.label}
+          aria-pressed={current === theme.id}
         >
-          {t.emoji}
+          {theme.emoji}
         </button>
       ))}
     </div>

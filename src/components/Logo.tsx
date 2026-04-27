@@ -1,4 +1,5 @@
 import './Logo.css'
+import { useTranslation } from '../locales'
 
 // ── Theme gradient map ────────────────────────────────
 const GRADIENTS: Record<string, [string, string]> = {
@@ -23,6 +24,7 @@ function AppLogo({ size }: { size: number }) {
 
 // ── HeroLogo – large centred version for HomeView / Onboarding ──
 export function HeroLogo() {
+  const { t } = useTranslation()
   return (
     <div className="hero-logo" aria-label="Remember Me">
       <div className="hero-logo__heart-wrap" style={{
@@ -30,7 +32,7 @@ export function HeroLogo() {
       }}>
         <AppLogo size={140} />
       </div>
-      <p className="hero-logo__tagline">Erzähl deine Geschichte</p>
+      <p className="hero-logo__tagline">{t.logo.tagline}</p>
       <p className="hero-logo__name">
         <span className="hero-logo__name-remember">Remember</span>
         <span className="hero-logo__name-me">Me</span>
@@ -47,12 +49,13 @@ interface LogoProps {
 const SIZE_PX: Record<string, number> = { sm: 36, md: 48, lg: 64 }
 
 export function Logo({ size = 'md' }: LogoProps) {
+  const { t } = useTranslation()
   const px = SIZE_PX[size]
   return (
     <div className={`logo logo--${size}`} aria-label="Remember Me">
       <AppLogo size={px} />
       <div className="logo__wordmark">
-        <span className="logo__tagline">Erzähl deine Geschichte</span>
+        <span className="logo__tagline">{t.logo.tagline}</span>
         <span className="logo__name">
           <span className="logo__name-grad">Remember</span>
           <span className="logo__name-grad">Me</span>

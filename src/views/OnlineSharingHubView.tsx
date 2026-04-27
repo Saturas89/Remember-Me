@@ -60,12 +60,12 @@ function useContactShare(profileName: string, sync: OnlineSyncAPI, c: Translatio
     fetch('/pwa-192x192.png')
       .then(r => r.blob())
       .then(b => generateShareCard(b, {
-        title: `${profileName} lädt ein`,
+        title: c.shareCardTitleWithName.replace('{name}', profileName),
         subtitle: c.shareCardSubtitle,
       }))
       .then(f => { shareCardRef.current = f })
       .catch(() => {})
-  }, [profileName, c.shareCardSubtitle])
+  }, [profileName, c.shareCardTitleWithName, c.shareCardSubtitle])
 
   const share = useCallback(async () => {
     if (!url) return

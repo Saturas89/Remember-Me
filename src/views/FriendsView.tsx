@@ -40,16 +40,18 @@ export function FriendsView({
 
   useEffect(() => {
     const name = profileName.trim()
-    const title = name ? `${name} lädt ein` : 'Einladung zu Remember Me'
+    const title = name
+      ? t.friends.inviteShareCardTitleWithName.replace('{name}', name)
+      : t.friends.inviteShareCardTitleFallback
     fetch('/pwa-192x192.png')
       .then(r => r.blob())
       .then(b => generateShareCard(b, {
         title,
-        subtitle: 'Erzähl mir deine Erinnerung – ohne App, ohne Account.',
+        subtitle: t.friends.inviteShareCardSubtitle,
       }))
       .then(f => { shareCardRef.current = f })
       .catch(() => {})
-  }, [profileName])
+  }, [profileName, t.friends.inviteShareCardTitleWithName, t.friends.inviteShareCardTitleFallback, t.friends.inviteShareCardSubtitle])
 
   useEffect(() => {
     if (shareStatus === 'idle') return
@@ -120,9 +122,9 @@ export function FriendsView({
       <section className="friends-section">
         <h3 className="friends-section-title">{t.friends.inviteLinkHeading}</h3>
         <div className="friends-tags">
-          <span className="friends-tag">Einmalig</span>
-          <span className="friends-tag">Kein Account nötig</span>
-          <span className="friends-tag">Offline</span>
+          <span className="friends-tag">{t.friends.tagOneTime}</span>
+          <span className="friends-tag">{t.friends.tagNoAccount}</span>
+          <span className="friends-tag">{t.friends.tagOffline}</span>
         </div>
         {!profileName && (
           <p className="friends-hint friends-hint--warn">{t.friends.inviteHintNoName}</p>

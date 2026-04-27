@@ -63,15 +63,15 @@ export function InstallBanner({ state, onInstall, onDismiss }: Props) {
             <p className="install-modal__desc">{t.install.iosDesc}</p>
             <ol className="install-modal__steps">
               <li>
-                {t.locale === 'de' ? 'Tippe auf das Teilen-Symbol' : 'Tap the Share icon'}{' '}
+                {t.install.iosStep1TapShareIcon}{' '}
                 <span className="install-modal__share-badge"><ShareIcon /></span>{' '}
                 {t.install.step1}
               </li>
               <li>
-                {t.locale === 'de' ? 'Wähle' : 'Select'} <strong>{t.install.step2}</strong>
+                {t.install.iosStep2SelectVerb} <strong>{t.install.step2}</strong>
               </li>
               <li>
-                {t.locale === 'de' ? 'Tippe auf' : 'Tap'} <strong>{t.install.step3}</strong>
+                {t.install.iosStep3TapVerb} <strong>{t.install.step3}</strong>
               </li>
             </ol>
             <div className="install-modal__arrow-hint" aria-hidden="true">
