@@ -1,11 +1,6 @@
 name: Parallel Spec-Driven Generation
 
 on:
-  push:
-    branches-ignore:
-      - main
-    paths:
-      - 'docs/requirements/REQ-*.md'
   workflow_dispatch:
     inputs:
       spec_file:
@@ -32,37 +27,11 @@ jobs:
 
       - id: vars
         env:
-          EVENT_NAME:    ${{ github.event_name }}
           DISPATCH_SPEC: ${{ github.event.inputs.spec_file }}
           REF_NAME:      ${{ github.ref_name }}
-          PUSH_BEFORE:   ${{ github.event.before }}
-          PUSH_AFTER:    ${{ github.sha }}
         run: |
           set -euxo pipefail
-          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
-            SPEC_FILE="$DISPATCH_SPEC"
-          else
-            ZERO="0000000000000000000000000000000000000000"
-            if [ -z "${PUSH_BEFORE:-}" ] || [ "$PUSH_BEFORE" = "$ZERO" ]; then
-              git fetch --no-tags --prune --depth=1 origin main || true
-              if git rev-parse --verify --quiet origin/main >/dev/null; then
-                RANGE="origin/main..$PUSH_AFTER"
-              else
-                RANGE="$PUSH_AFTER"
-              fi
-            else
-              RANGE="$PUSH_BEFORE..$PUSH_AFTER"
-            fi
-            CHANGED=$(git log --name-only --pretty=format: "$RANGE" 2>/dev/null | sort -u || true)
-            echo "Changed files in $RANGE:"
-            printf '%s\n' "$CHANGED"
-            SPEC_FILE=$(printf '%s\n' "$CHANGED" | grep -E '^docs/requirements/REQ-.*\.md$' | head -n1 || true)
-            if [ -z "$SPEC_FILE" ]; then
-              echo "Push triggered by path filter but no docs/requirements/REQ-*.md in range $RANGE — aborting." >&2
-              exit 1
-            fi
-            SPEC_FILE="$(basename "$SPEC_FILE")"
-          fi
+          SPEC_FILE="$(basename "$DISPATCH_SPEC")"
           BRANCH="$REF_NAME"
           if [ ! -f "docs/requirements/$SPEC_FILE" ]; then
             echo "Spec file docs/requirements/$SPEC_FILE not found on branch $BRANCH" >&2
