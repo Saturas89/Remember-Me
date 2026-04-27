@@ -33,6 +33,17 @@ Wenn die Spec einen Abschnitt "API-Vertrag" enthält (typisch Section 7a oder ä
 
 Hintergrund: der Test-Agent schreibt Tests gegen exakt diese Symbole. Jede Abweichung erzeugt Black-Box-Drift, die im CI-Run sichtbar wird. Falls eine Anforderung nur über ein zusätzliches Symbol erfüllbar wäre, ist das ein Spec-Bug — markiere die Stelle in deinem Output als Spec-Lücke statt zu raten.
 
+## i18n-Strings (Source of Truth: `src/locales`)
+
+Alle nutzersichtbaren Texte gehören in `src/locales/de/ui.ts` und `src/locales/en/ui.ts` (beide Sprachen, identische Key-Struktur). Komponenten konsumieren via `useTranslation()` aus `'../locales'`. **Keine String-Literale im JSX** außer für nicht-übersetzbare Inhalte (Emojis, technische Codes, Markennamen).
+
+Korrespondenz mit dem Test-Agent:
+
+- Der Test-Agent **darf keine i18n-String-Literale prüfen** und hat zwei Wege Texte zu testen: (1) `data-testid` auf dem Element, (2) Import von `de` aus `src/locales/de/ui` und Match gegen `de.path.to.key`.
+- **Implikation für dich:** Setze `data-testid` auf **alle Elemente mit nutzersichtbarem Text**, die zu Akzeptanzkriterien zählen — nicht nur auf Container, sondern auch auf Title (`<h2>`), Body-Text (`<p>`), CTAs (`<button>`). Beispiel: `<h2 data-testid="welcome-back-title">{t.reminder.welcomeBack.title}</h2>`.
+- Die testid-Werte leitest du logisch aus dem Spec-Wording ab; der Test-Agent macht dieselbe Ableitung.
+- Wenn die Spec einen konkreten Text zeigt (z. B. „Wir erinnern dich nach 3, 10 und 24 Tagen"), ist das **illustrativ**. Du legst die exakte Formulierung in der Locale-Datei fest. Der Test-Agent wird die Locale-Datei zur Laufzeit auflösen.
+
 ## Output
 
 Schreibe den Produktionscode. Beschreibe am Ende knapp, welche Dateien du erstellt/geändert hast und welche `data-testid`-Werte du gesetzt hast (für Traceability).
