@@ -184,27 +184,6 @@ export const UI_DE = {
     desc: 'Wir erinnern dich nach 2 Tagen daran, dein Vermächtnis weiterzuschreiben.',
     allow: 'Erlauben',
     dismiss: 'Benachrichtigung schließen',
-    settings: {
-      title: 'Erinnerungen',
-      toggleLabel: 'Benachrichtigungen aktiv',
-      cadenceExplanation: 'Wir erinnern dich nach 3, 10 und 24 Tagen Pause — danach Ruhe.',
-      quietHours: 'Stille Stunden: 22:00 bis 8:00 Uhr',
-      streakLabel: 'Streak',
-      streakCurrent: 'Aktuell',
-      streakLongest: 'Längste',
-      iosFallbackHint: 'Auf iOS funktionieren Erinnerungen aktuell nur in der App',
-      permissionDeniedHint: 'In den Browser-/OS-Einstellungen aktivierbar',
-    },
-    welcomeBack: {
-      title: 'Willkommen zurück!',
-      bodyDays: 'Du warst {days} Tage weg. Schön, dich wieder zu sehen!',
-      continueCta: 'Weitermachen',
-      dismiss: 'Schließen',
-    },
-    milestone: {
-      bodyAnswered: 'Du hast {count} Fragen beantwortet - ein wichtiger Schritt für dein Vermächtnis!',
-      bodyCategoryDone: 'Kategorie "{category}" abgeschlossen! Ein weiterer Meilenstein erreicht.',
-    },
   },
 
   friends: {
