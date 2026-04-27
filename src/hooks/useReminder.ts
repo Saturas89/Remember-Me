@@ -19,8 +19,6 @@ export interface ReminderInternalState {
   lastVariantIdx?: number
 }
 
-type LegacyReminderState = 'none' | 'prompting' | 'enabled' | 'dismissed'
-
 function loadReminderState(): ReminderInternalState {
   try {
     const raw = localStorage.getItem(REMINDER_STATE_KEY)
@@ -48,12 +46,6 @@ function saveReminderState(state: ReminderInternalState): void {
   } catch (err) {
     console.error('remember-me: failed to persist reminder state', err)
   }
-}
-
-function isInQuietHours(): boolean {
-  const now = new Date()
-  const hours = now.getHours()
-  return hours >= 22 || hours < 8
 }
 
 function adjustForQuietHours(timestamp: number): number {

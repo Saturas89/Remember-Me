@@ -1,3 +1,4 @@
+import type { JSX } from 'react'
 import { useTranslation } from '../locales'
 
 export interface WelcomeBackBannerProps {
