@@ -47,7 +47,10 @@ test.describe('Familienmodus – Kontakt-Handshake (FR-15.5 – FR-15.9)', () =>
     // Bob opens Alice's contact link → handshake auto-accepts on his side.
     await bob.goto(contactPath('Alice', aliceId.deviceId, aliceId.publicKey))
     await expect(bob.getByRole('heading', { name: 'Kontakt verknüpfen' })).toBeVisible()
-    await expect(bob.getByText(/Alice/)).toBeVisible()
+    // The handshake screen mentions Alice's name twice (heading-line + the
+    // post-accept "wurde in deiner Kontaktliste gespeichert" hint), so we
+    // anchor on the first occurrence.
+    await expect(bob.getByText(/Alice/).first()).toBeVisible()
     await expect(bob.getByRole('button', { name: /Meinen Link zurück senden/ })).toBeVisible()
 
     const bobsAlice = await readOnlineFriends(bob)

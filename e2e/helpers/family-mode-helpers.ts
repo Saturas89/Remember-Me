@@ -57,15 +57,21 @@ export async function openFamilyHub(page: Page) {
 }
 
 /**
- * For tests that already activated online sharing in an earlier step and
- * are re-entering the hub from `/friends` after a full reload (e.g. after
- * the recipient has to refresh to pick up new shares). Skips the consent
- * screen and waits for `sync.ready` so the four-tab nav is rendered.
+ * For tests that already activated online sharing AND already linked at
+ * least one contact (so the four-tab nav is what we expect to see).
+ * Re-enters the hub from `/friends` after a full reload (e.g. after the
+ * recipient has to refresh to pick up new shares).
+ *
+ * Crucially this waits for both `sync.ready` (no "Verbinde mit Server …"
+ * placeholder) AND the four-tab `tablist` itself, since the tab nav only
+ * renders once `hasContacts` *and* `sync.ready` are both true – there is a
+ * race window in which one of the two flips first.
  */
 export async function reopenFamilyHub(page: Page) {
   await page.goto('/friends')
   await page.getByTestId('open-online-sharing').click()
   await waitForHubReady(page)
+  await expect(page.getByRole('tablist')).toBeVisible({ timeout: 10_000 })
 }
 
 async function waitForHubReady(page: Page) {
