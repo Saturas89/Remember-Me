@@ -184,6 +184,27 @@ export const UI_EN = {
     desc: 'We\'ll remind you after 2 days to continue writing your legacy.',
     allow: 'Allow',
     dismiss: 'Dismiss notification',
+    settings: {
+      title: 'Reminders',
+      toggleLabel: 'Notifications active',
+      cadenceExplanation: 'We remind you after 3, 10 and 24 days of inactivity — then rest.',
+      quietHours: 'Quiet hours: 10:00 PM – 8:00 AM (notifications shifted to 8:00 AM)',
+      streakLabel: 'Streak',
+      streakCurrent: 'Current',
+      streakLongest: 'Longest',
+      iosFallbackHint: 'On iOS, reminders currently only work within the app.',
+      permissionDeniedHint: 'Notifications can be enabled in browser/OS settings.',
+    },
+    welcomeBack: {
+      title: 'Welcome back!',
+      bodyDays: 'You were away for {days} days. Time to continue your story.',
+      continueCta: 'Continue',
+      dismiss: 'Dismiss',
+    },
+    milestone: {
+      bodyAnswered: 'You have answered {count} questions!',
+      bodyCategoryDone: 'You have answered all questions in "{category}"!',
+    },
   },
 
   friends: {

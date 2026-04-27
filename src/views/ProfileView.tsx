@@ -5,6 +5,8 @@ import { ArchiveExportCard } from '../components/ArchiveExportCard'
 import { getLastBackupDate, backupAgeLabel, backupAgeStatus } from '../utils/backupStatus'
 import { importFile } from '../utils/archiveImport'
 import { useTranslation } from '../locales'
+import { useReminder } from '../hooks/useReminder'
+import { useStreak } from '../hooks/useStreak'
 import type { Locale } from '../locales'
 import type { Profile, Answer } from '../types'
 import type { ExportData } from '../utils/export'
@@ -73,6 +75,8 @@ export function ProfileView({
 }: Props) {
   const { t, locale, setLocale } = useTranslation()
   const { theme, setTheme } = useTheme()
+  const { state: reminderState, requestPermission, disable, isEnabled } = useReminder()
+  const { streak } = useStreak()
   const [lastBackup, setLastBackup] = useState<Date | null>(() => getLastBackupDate())
   const [name, setName] = useState(profile?.name ?? '')
   const [birthYear, setBirthYear] = useState(
@@ -153,6 +157,18 @@ export function ProfileView({
     if (restore.ok) setTimeout(() => setImportStatus(null), 5000)
   }
 
+  function handleReminderToggle() {
+    if (isEnabled) {
+      disable()
+    } else {
+      requestPermission()
+    }
+  }
+
+  const currentPermission = typeof window !== 'undefined' ? Notification.permission : 'default'
+  const isIOS = typeof window !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream
+  const supportsShowTrigger = typeof window !== 'undefined' && 'Notification' in window && 'showTrigger' in Notification.prototype
+
   return (
     <div className="profile-view">
       <h1 className="sr-only">{t.profile.pageTitle}</h1>
@@ -224,6 +240,63 @@ export function ProfileView({
             />
           </div>
         </div>
+      </section>
+
+      <section className="profile-card" data-testid="reminder-settings">
+        <h2 className="profile-card__heading">{t.reminder.settings.title}</h2>
+        
+        {currentPermission === 'denied' ? (
+          <div className="reminder-settings-disabled">
+            <p className="reminder-settings__hint">
+              {t.reminder.settings.permissionDeniedHint}
+            </p>
+          </div>
+        ) : isIOS && !supportsShowTrigger ? (
+          <div className="reminder-settings-disabled">
+            <p className="reminder-settings__hint">
+              {t.reminder.settings.iosFallbackHint}
+            </p>
+          </div>
+        ) : (
+          <div className="reminder-settings">
+            <div className="reminder-toggle">
+              <input
+                type="checkbox"
+                id="reminder-checkbox"
+                data-testid="reminder-toggle"
+                checked={isEnabled}
+                onChange={handleReminderToggle}
+              />
+              <label htmlFor="reminder-checkbox">
+                {t.reminder.settings.toggleLabel}
+              </label>
+            </div>
+            
+            <p className="reminder-settings__cadence">
+              {t.reminder.settings.cadenceExplanation}
+            </p>
+            
+            <p className="reminder-settings__quiet-hours">
+              {t.reminder.settings.quietHours}
+            </p>
+          </div>
+        )}
+        
+        {streak && (
+          <div className="streak-display">
+            <h3 className="streak-display__heading">{t.reminder.settings.streakLabel}</h3>
+            <div className="streak-stats">
+              <div className="streak-stat">
+                <span className="streak-stat__value">{streak.current}</span>
+                <span className="streak-stat__label">{t.reminder.settings.streakCurrent}</span>
+              </div>
+              <div className="streak-stat">
+                <span className="streak-stat__value">{streak.longest}</span>
+                <span className="streak-stat__label">{t.reminder.settings.streakLongest}</span>
+              </div>
+            </div>
+          </div>
+        )}
       </section>
 
       <section className="profile-card">
