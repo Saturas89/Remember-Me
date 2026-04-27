@@ -132,6 +132,7 @@ jobs:
         run: |
           git config user.name  "claude-agent-${{ matrix.role }}"
           git config user.email "claude-${{ matrix.role }}@users.noreply.github.com"
+          rm -f output.txt
           git add -A
           if git diff --cached --quiet; then
             echo "No changes produced by ${{ matrix.role }} agent"
