@@ -193,6 +193,27 @@ export interface Translations {
     desc: string
     allow: string
     dismiss: string
+    settings: {
+      title: string                  // "Erinnerungen" / "Reminders"
+      toggleLabel: string
+      cadenceExplanation: string
+      quietHours: string
+      streakLabel: string            // "Streak" / "Streak"
+      streakCurrent: string          // "Aktuell" / "Current"
+      streakLongest: string          // "Längste" / "Longest"
+      iosFallbackHint: string
+      permissionDeniedHint: string
+    }
+    welcomeBack: {
+      title: string                  // "Willkommen zurück" / "Welcome back"
+      bodyDays: string               // mit {days} Platzhalter
+      continueCta: string            // "Weitermachen" / "Continue"
+      dismiss: string                // "Schließen" / "Dismiss"
+    }
+    milestone: {
+      bodyAnswered: string           // mit {count}
+      bodyCategoryDone: string       // mit {category}
+    }
   }
 
   friends: {
