@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from '../locales'
 
 interface Props {
   /** True when VITE_SUPABASE_URL + VITE_SUPABASE_ANON_KEY are set. */
@@ -13,85 +14,76 @@ interface Props {
  * online traffic — explaining clearly what goes where is the whole point.
  */
 export function OnlineSharingIntroView({ configured, onActivate, onBack }: Props) {
+  const { t } = useTranslation()
+  const i = t.onlineSharingIntro
   const [confirmed, setConfirmed] = useState(false)
 
   return (
     <div className="friends-view">
       <div className="quiz-topbar">
-        <button className="btn btn--ghost btn--sm" onClick={onBack}>Zurück</button>
-        <h2 className="archive-title">Familienmodus</h2>
+        <button className="btn btn--ghost btn--sm" onClick={onBack}>{i.back}</button>
+        <h2 className="archive-title">{i.title}</h2>
       </div>
 
       <div className="feature-detail__hero">
         <img
           src="/features/familienmodus.jpg"
-          alt="Familienmodus"
+          alt={i.heroAlt}
           className="feature-detail__hero-img"
         />
       </div>
 
       <section className="friends-section">
-        <h3 className="friends-section-title">Was ist das?</h3>
+        <h3 className="friends-section-title">{i.whatHeading}</h3>
+        <p className="friends-hint">{i.whatBody1}</p>
         <p className="friends-hint">
-          Du kannst einzelne Erinnerungen direkt mit ausgewählten Personen
-          teilen – Familie, enge Freunde, Kolleg:innen. Sie sehen die
-          Erinnerung in ihrem eigenen Remember Me und können ihre Gedanken
-          ergänzen. Deine Erinnerung bleibt dabei unverändert.
-        </p>
-        <p className="friends-hint">
-          <strong>Komplett optional.</strong> Ohne Aktivierung bleibt
-          Remember Me vollständig offline auf deinem Gerät – dein
-          Einladungslink für Antworten funktioniert wie gewohnt weiter.
+          <strong>{i.whatBody2Strong}</strong>{i.whatBody2Rest}
         </p>
       </section>
 
       <section className="friends-section">
-        <h3 className="friends-section-title">Datenschutz auf einen Blick</h3>
-        <p className="friends-hint">
-          Deine Antworten, Fotos und Aufnahmen bleiben immer nur auf deinem
-          Gerät. Was du aktiv mit jemandem teilst, wird verschlüsselt
-          gespeichert – nur du und die andere Person können es lesen.
-        </p>
+        <h3 className="friends-section-title">{i.privacyHeading}</h3>
+        <p className="friends-hint">{i.privacyBody}</p>
         <details className="friends-details">
-          <summary className="friends-details__summary">Technische Details</summary>
+          <summary className="friends-details__summary">{i.privacyDetailsSummary}</summary>
           <table className="online-data-table" role="table">
             <thead>
               <tr>
-                <th>Was</th>
-                <th>Wo</th>
-                <th>Form</th>
+                <th>{i.tableWhat}</th>
+                <th>{i.tableWhere}</th>
+                <th>{i.tableForm}</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td>Profilname, alle Antworten, Bilder</td>
-                <td>Nur auf deinem Gerät</td>
-                <td>Klartext lokal</td>
+                <td>{i.row1What}</td>
+                <td>{i.row1Where}</td>
+                <td>{i.row1Form}</td>
               </tr>
               <tr>
-                <td>Geteilte Erinnerungen (Text + Bilder)</td>
-                <td>Server (EU)</td>
-                <td>Ende-zu-Ende-verschlüsselt (AES-256-GCM)</td>
+                <td>{i.row2What}</td>
+                <td>{i.row2Where}</td>
+                <td>{i.row2Form}</td>
               </tr>
               <tr>
-                <td>Empfänger einer Erinnerung</td>
-                <td>Server</td>
-                <td>Anonyme Geräte-IDs, keine Namen</td>
+                <td>{i.row3What}</td>
+                <td>{i.row3Where}</td>
+                <td>{i.row3Form}</td>
               </tr>
               <tr>
-                <td>Zeitstempel der Freigabe</td>
-                <td>Server</td>
-                <td>Unverschlüsselt (Metadaten)</td>
+                <td>{i.row4What}</td>
+                <td>{i.row4Where}</td>
+                <td>{i.row4Form}</td>
               </tr>
               <tr>
-                <td>Verschlüsselungsschlüssel</td>
-                <td>Nur auf deinem Gerät</td>
-                <td>Lokal gesichert, nicht exportierbar</td>
+                <td>{i.row5What}</td>
+                <td>{i.row5Where}</td>
+                <td>{i.row5Form}</td>
               </tr>
               <tr>
-                <td>Öffentlicher Schlüssel + Geräte-ID</td>
-                <td>Server</td>
-                <td>Wird für die Verschlüsselung benötigt (ECDH)</td>
+                <td>{i.row6What}</td>
+                <td>{i.row6Where}</td>
+                <td>{i.row6Form}</td>
               </tr>
             </tbody>
           </table>
@@ -99,21 +91,13 @@ export function OnlineSharingIntroView({ configured, onActivate, onBack }: Props
       </section>
 
       <section className="friends-section">
-        <h3 className="friends-section-title">Was passiert beim Deaktivieren?</h3>
-        <p className="friends-hint">
-          Alle geteilten Erinnerungen werden vom Server gelöscht und die
-          Verbindung zu deinen Kontakten getrennt. Deine eigenen Antworten
-          und Fotos auf diesem Gerät bleiben vollständig erhalten.
-        </p>
+        <h3 className="friends-section-title">{i.deactivateHeading}</h3>
+        <p className="friends-hint">{i.deactivateBody}</p>
       </section>
 
       {!configured && (
         <section className="friends-section">
-          <p className="friends-hint friends-hint--warn">
-            Diese Installation unterstützt das direkte Teilen noch nicht.
-            Frag die Person, die Remember Me für dich betreibt, ob das
-            Feature verfügbar ist.
-          </p>
+          <p className="friends-hint friends-hint--warn">{i.notConfiguredWarning}</p>
         </section>
       )}
 
@@ -124,10 +108,7 @@ export function OnlineSharingIntroView({ configured, onActivate, onBack }: Props
             checked={confirmed}
             onChange={e => setConfirmed(e.target.checked)}
           />
-          <span>
-            Ich habe verstanden, dass meine geteilten Erinnerungen
-            verschlüsselt gespeichert werden.
-          </span>
+          <span>{i.consentLabel}</span>
         </label>
 
         <button
@@ -135,7 +116,7 @@ export function OnlineSharingIntroView({ configured, onActivate, onBack }: Props
           disabled={!confirmed || !configured}
           onClick={onActivate}
         >
-          Aktivieren
+          {i.activateButton}
         </button>
       </section>
     </div>
