@@ -3,6 +3,14 @@ import { defineConfig, devices } from '@playwright/test'
 const PORT = 4173
 const BASE_URL = `http://localhost:${PORT}`
 
+// Build the preview bundle with fake Supabase config so the Familienmodus UI
+// is reachable in E2E. Real network traffic to this host is blocked by every
+// test fixture: e2e/sharing-optin.spec.ts asserts that opted-out users never
+// produce a request, and e2e/family-mode.spec.ts intercepts every call with
+// an in-memory mock (e2e/helpers/supabase-mock.ts).
+const SUPABASE_E2E_URL = 'http://supabase.e2e.local'
+const SUPABASE_E2E_ANON_KEY = 'e2e-anon-key'
+
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: true,
@@ -32,5 +40,13 @@ export default defineConfig({
     url: BASE_URL,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
+    env: {
+      VITE_SUPABASE_URL: SUPABASE_E2E_URL,
+      VITE_SUPABASE_ANON_KEY: SUPABASE_E2E_ANON_KEY,
+    },
   },
 })
+
+// Re-exported for tests that need to point fixtures at the same fake host.
+export const E2E_SUPABASE_URL = SUPABASE_E2E_URL
+export const E2E_SUPABASE_ANON_KEY = SUPABASE_E2E_ANON_KEY

@@ -59,12 +59,19 @@ test.describe('Online sharing – opt-in contract', () => {
     await expect(page.locator('.share-cta-btn').first()).toContainText(/Link teilen/)
   })
 
-  test('online-sharing CTA is hidden when backend is not configured', async ({ page }) => {
-    // Default dev build: neither VITE_SUPABASE_URL nor VITE_SUPABASE_ANON_KEY
-    // are set (see .env.example), so the CTA section does not render at all.
+  test('online-sharing CTA is rendered – but does not trigger any network', async ({ page }) => {
+    // The preview build in playwright.config.ts ships with fake VITE_SUPABASE_*
+    // values so the family-mode flow can be exercised end-to-end. The CTA is
+    // therefore visible, but a user who never clicks it still produces zero
+    // Supabase traffic (verified by the network spy). The opposite scenario –
+    // missing config hiding the CTA – is covered by unit tests of FriendsView.
+    const offending = attachNetworkSpy(page)
     await completeOnboarding(page, 'Anna')
     await openFriendsTab(page)
-    await expect(page.getByTestId('open-online-sharing')).toHaveCount(0)
+    await expect(page.getByTestId('open-online-sharing')).toBeVisible()
+    await expect(page.getByTestId('open-online-sharing')).toHaveText(/Einrichten/)
+    await page.waitForTimeout(500)
+    await expect.poll(() => offending.length).toBe(0)
   })
 
   test('first load never loads @supabase/supabase-js chunk', async ({ page }) => {
