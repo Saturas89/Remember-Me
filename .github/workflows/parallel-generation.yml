@@ -124,9 +124,9 @@ jobs:
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           prompt_file: ${{ steps.prompt.outputs.prompt_file }}
-          claude_args: >-
-            --allowedTools "Read,Glob,Grep,Edit,Write,Bash(npm test:*),Bash(npx vitest:*),Bash(npx playwright:*)"
-            --max-turns 40
+          allowed_tools: "Read,Glob,Grep,Edit,Write,Bash(npm test:*),Bash(npx vitest:*),Bash(npx playwright:*)"
+          max_turns: "40"
+          timeout_minutes: "25"
 
       - name: Rebase & push disjoint changes
         run: |
