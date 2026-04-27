@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { generateContactUrl, shareOrCopy } from '../utils/secureLink'
 import { generateShareCard } from '../utils/shareCard'
+import { useTranslation } from '../locales'
 import type { ContactHandshake } from '../types'
 
 interface Props {
@@ -34,6 +35,8 @@ export function ContactHandshakeView({
   onAcceptContact,
   onDismiss,
 }: Props) {
+  const { t } = useTranslation()
+  const c = t.contactHandshake
   const [accepted, setAccepted] = useState(false)
   const [copied, setCopied] = useState(false)
   const shareCardRef = useRef<File | null>(null)
@@ -56,11 +59,11 @@ export function ContactHandshakeView({
       .then(r => r.blob())
       .then(b => generateShareCard(b, {
         title: `${profileName} lädt ein`,
-        subtitle: 'Teile Erinnerungen sicher & privat – ohne Account.',
+        subtitle: c.shareCardSubtitle,
       }))
       .then(f => { shareCardRef.current = f })
       .catch(() => {})
-  }, [myLink, profileName])
+  }, [myLink, profileName, c.shareCardSubtitle])
 
   // Auto-accept once online sharing is ready (the user already consented by
   // clicking "Aktivieren" in the intro). This is idempotent.
@@ -75,17 +78,17 @@ export function ContactHandshakeView({
     if (!myLink) return
     const card = shareCardRef.current
     if (card && typeof navigator.share === 'function' && navigator.canShare?.({ files: [card] })) {
-      const text = `${profileName} möchte sich mit dir verknüpfen. Öffne diesen Link:\n\n${myLink}`
+      const text = `${c.shareBackText.replace('{name}', profileName)}\n\n${myLink}`
       try {
-        await navigator.share({ files: [card], title: 'Remember Me – Online-Kontakt', text })
+        await navigator.share({ files: [card], title: c.shareSheetTitle, text })
         return
       } catch (e) {
         if ((e as Error).name === 'AbortError') return
       }
     }
     const sent = await shareOrCopy({
-      title: 'Remember Me – Online-Kontakt',
-      text: `${profileName} möchte sich mit dir verknüpfen. Öffne diesen Link:`,
+      title: c.shareSheetTitle,
+      text: c.shareBackText.replace('{name}', profileName),
       url: myLink,
     })
     if (!sent) {
@@ -97,50 +100,42 @@ export function ContactHandshakeView({
   return (
     <div className="friends-view">
       <div className="quiz-topbar">
-        <button className="btn btn--ghost btn--sm" onClick={onDismiss}>Abbrechen</button>
-        <h2 className="archive-title">Kontakt verknüpfen</h2>
+        <button className="btn btn--ghost btn--sm" onClick={onDismiss}>{c.cancel}</button>
+        <h2 className="archive-title">{c.title}</h2>
       </div>
 
       <section className="friends-section">
         <p className="friends-hint">
-          <strong>{handshake.displayName || 'Jemand'}</strong> möchte sich mit
-          dir für Online-Erinnerungen verknüpfen.
+          <strong>{handshake.displayName || c.introTextDefaultName}</strong>{c.introTextSuffix}
         </p>
 
         {!enabled && (
           <>
-            <p className="friends-hint">
-              Dafür musst du Online-Teilen in Remember Me einmalig aktivieren.
-              Deine bestehenden Antworten bleiben weiterhin nur auf deinem
-              Gerät.
-            </p>
+            <p className="friends-hint">{c.notEnabledHint}</p>
             <button className="share-cta-btn" onClick={onEnable}>
-              Online-Teilen einrichten
+              {c.enableButton}
             </button>
           </>
         )}
 
         {enabled && !myDeviceId && (
-          <p className="friends-hint">Verbinde mit Server …</p>
+          <p className="friends-hint">{c.connecting}</p>
         )}
 
         {enabled && myDeviceId && (
           <>
             <p className="friends-hint">
-              {handshake.displayName || 'Der Kontakt'} wurde in deiner
-              Kontaktliste gespeichert (verschlüsselter Public-Key + Geräte-ID).
-              Damit ihr euch gegenseitig Erinnerungen schicken könnt, schicke
-              jetzt auch deinen Link zurück:
+              {c.savedHint.replace('{name}', handshake.displayName || c.savedHintDefaultName)}
             </p>
             <button className="share-cta-btn" onClick={shareBack}>
-              {copied ? 'Link kopiert ✓' : 'Meinen Link zurück senden'}
+              {copied ? c.shareBackCopied : c.shareBackButton}
             </button>
             <button
               className="btn btn--ghost btn--sm"
               style={{ marginTop: '0.75rem' }}
               onClick={onDismiss}
             >
-              Fertig
+              {c.doneButton}
             </button>
           </>
         )}

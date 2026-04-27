@@ -2,6 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { generateContactUrl, shareOrCopy } from '../utils/secureLink'
 import { generateShareCard } from '../utils/shareCard'
 import { CATEGORIES } from '../data/categories'
+import { useTranslation } from '../locales'
+import type { Translations } from '../locales/types'
 import type {
   Friend,
   Answer,
@@ -36,7 +38,7 @@ type Tab = 'feed' | 'share' | 'contacts' | 'settings'
 // ── Shared hook: contact link share logic ────────────────────────────────────
 // Used by both OnboardingScreen and ContactsTab to avoid duplication.
 
-function useContactShare(profileName: string, sync: OnlineSyncAPI) {
+function useContactShare(profileName: string, sync: OnlineSyncAPI, c: Translations['contactHandshake']) {
   const shareCardRef = useRef<File | null>(null)
   const [copied, setCopied] = useState(false)
 
@@ -59,34 +61,35 @@ function useContactShare(profileName: string, sync: OnlineSyncAPI) {
       .then(r => r.blob())
       .then(b => generateShareCard(b, {
         title: `${profileName} lädt ein`,
-        subtitle: 'Teile Erinnerungen sicher & privat – ohne Account.',
+        subtitle: c.shareCardSubtitle,
       }))
       .then(f => { shareCardRef.current = f })
       .catch(() => {})
-  }, [profileName])
+  }, [profileName, c.shareCardSubtitle])
 
   const share = useCallback(async () => {
     if (!url) return
+    const inviteText = c.shareInviteText.replace('{name}', profileName)
     const card = shareCardRef.current
     if (card && typeof navigator.share === 'function' && navigator.canShare?.({ files: [card] })) {
-      const text = `${profileName} möchte Remember-Me-Erinnerungen mit dir teilen. Öffne diesen Link, um dich zu verknüpfen:\n\n${url}`
+      const text = `${inviteText}\n\n${url}`
       try {
-        await navigator.share({ files: [card], title: 'Remember Me – Online-Kontakt', text })
+        await navigator.share({ files: [card], title: c.shareSheetTitle, text })
         return
       } catch (e) {
         if ((e as Error).name === 'AbortError') return
       }
     }
     const sent = await shareOrCopy({
-      title: 'Remember Me – Online-Kontakt',
-      text: `${profileName} möchte Remember-Me-Erinnerungen mit dir teilen. Öffne diesen Link, um dich zu verknüpfen:`,
+      title: c.shareSheetTitle,
+      text: inviteText,
       url,
     })
     if (!sent) {
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     }
-  }, [url, profileName])
+  }, [url, profileName, c.shareInviteText, c.shareSheetTitle])
 
   return { url, share, copied }
 }
@@ -106,6 +109,8 @@ export function OnlineSharingHubView({
   onBack,
   onDeactivate,
 }: Props) {
+  const { t } = useTranslation()
+  const h = t.onlineSharingHub
   const [tab, setTab] = useState<Tab>('feed')
   const onlineFriends = useMemo(() => friends.filter(f => f.online), [friends])
   const hasContacts = onlineFriends.length > 0
@@ -113,21 +118,21 @@ export function OnlineSharingHubView({
   return (
     <div className="friends-view">
       <div className="quiz-topbar">
-        <button className="btn btn--ghost btn--sm" onClick={onBack}>Zurück</button>
-        <h2 className="archive-title">Online teilen</h2>
+        <button className="btn btn--ghost btn--sm" onClick={onBack}>{h.back}</button>
+        <h2 className="archive-title">{h.title}</h2>
       </div>
 
       {sync.error && (
         <section className="friends-section">
           <p className="friends-hint friends-hint--warn">
-            Sync-Fehler: {sync.error}
+            {h.syncErrorPrefix}{sync.error}
           </p>
         </section>
       )}
 
       {!sync.ready && !sync.error && (
         <section className="friends-section">
-          <p className="friends-hint">Verbinde mit Server …</p>
+          <p className="friends-hint">{h.connecting}</p>
         </section>
       )}
 
@@ -143,18 +148,18 @@ export function OnlineSharingHubView({
         <>
           <nav className="online-tabs" role="tablist">
             <TabButton active={tab === 'feed'} onClick={() => setTab('feed')}>
-              Feed {sync.memories.length > 0 && (
+              {h.tabs.feed} {sync.memories.length > 0 && (
                 <span className="online-tab-badge">{sync.memories.length}</span>
               )}
             </TabButton>
             <TabButton active={tab === 'share'} onClick={() => setTab('share')}>
-              Teilen
+              {h.tabs.share}
             </TabButton>
             <TabButton active={tab === 'contacts'} onClick={() => setTab('contacts')}>
-              Einladen
+              {h.tabs.contacts}
             </TabButton>
             <TabButton active={tab === 'settings'} onClick={() => setTab('settings')}>
-              Einstellungen
+              {h.tabs.settings}
             </TabButton>
           </nav>
 
@@ -225,36 +230,34 @@ function OnboardingScreen({
   sync: OnlineSyncAPI
   onDeactivate: () => void
 }) {
-  const { url, share, copied } = useContactShare(profileName, sync)
+  const { t } = useTranslation()
+  const o = t.onlineSharingHub.onboarding
+  const { url, share, copied } = useContactShare(profileName, sync, t.contactHandshake)
   const [showSettings, setShowSettings] = useState(false)
 
   return (
     <section className="friends-section online-onboarding">
       <div className="online-onboarding__icon">🔗</div>
 
-      <h3 className="friends-section-title">Jemanden einladen</h3>
+      <h3 className="friends-section-title">{o.heading}</h3>
 
-      <p className="friends-hint">
-        Schick diesen Link an jemanden, dem du vertraust. Sobald die Person
-        ihn öffnet, seid ihr verknüpft und könnt gegenseitig Erinnerungen
-        sicher miteinander teilen.
-      </p>
+      <p className="friends-hint">{o.hint}</p>
 
       <button className="share-cta-btn" onClick={share} disabled={!url}>
-        {copied ? 'In die Zwischenablage kopiert ✓' : '📤 Verbindungslink teilen'}
+        {copied ? o.copied : o.shareCta}
       </button>
 
       <ul className="online-onboarding__steps">
-        <li>Du teilst deinen Link</li>
-        <li>Die Person öffnet ihn – fertig, ihr seid verknüpft</li>
-        <li>Jetzt könnt ihr gegenseitig Erinnerungen teilen</li>
+        <li>{o.step1}</li>
+        <li>{o.step2}</li>
+        <li>{o.step3}</li>
       </ul>
 
       <button
         className="btn btn--ghost btn--sm online-onboarding__settings-btn"
         onClick={() => setShowSettings(s => !s)}
       >
-        {showSettings ? 'Einstellungen schließen' : 'Einstellungen'}
+        {showSettings ? o.settingsClose : o.settingsOpen}
       </button>
 
       {showSettings && <SettingsTab onDeactivate={onDeactivate} />}
@@ -281,19 +284,19 @@ function FeedTab({
   onGoToShare: () => void
   onGoToInvite: () => void
 }) {
+  const { t } = useTranslation()
+  const e = t.onlineSharingHub.feedEmpty
+
   if (memories.length === 0) {
     return (
       <section className="friends-section">
-        <p className="friends-hint">
-          Noch keine Erinnerungen von deinen Kontakten eingegangen. Teile
-          selbst eine – oder lade weitere Personen ein.
-        </p>
+        <p className="friends-hint">{e.hint}</p>
         <div className="online-empty-actions">
           <button className="share-cta-btn" onClick={onGoToShare}>
-            Erinnerung teilen →
+            {e.shareCta}
           </button>
           <button className="btn btn--ghost btn--sm" onClick={onGoToInvite}>
-            Weiteren Kontakt einladen
+            {e.inviteCta}
           </button>
         </div>
       </section>
@@ -332,6 +335,8 @@ function SharedMemoryCard({
   sync: OnlineSyncAPI
   onlineFriends: Friend[]
 }) {
+  const { t, locale } = useTranslation()
+  const a = t.onlineSharingHub.annotation
   const [draft, setDraft] = useState('')
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
 
@@ -380,7 +385,7 @@ function SharedMemoryCard({
       <header>
         <strong>{memory.ownerName}</strong>
         <span className="shared-memory-date">
-          {new Date(memory.createdAt).toLocaleDateString('de-DE')}
+          {new Date(memory.createdAt).toLocaleDateString(locale === 'en' ? 'en-GB' : 'de-DE')}
         </span>
       </header>
       <p className="shared-memory-question">{memory.questionText}</p>
@@ -388,9 +393,9 @@ function SharedMemoryCard({
 
       {annotations.length > 0 && (
         <ul className="shared-memory-annotations">
-          {annotations.map(a => (
-            <li key={a.annotationId}>
-              <strong>{a.authorName}</strong>: {a.text}
+          {annotations.map(ann => (
+            <li key={ann.annotationId}>
+              <strong>{ann.authorName}</strong>: {ann.text}
             </li>
           ))}
         </ul>
@@ -398,12 +403,12 @@ function SharedMemoryCard({
 
       <div className="shared-memory-compose">
         <label>
-          Ergänzung hinzufügen
+          {a.label}
           <textarea
             value={draft}
             onChange={e => setDraft(e.target.value)}
             rows={3}
-            placeholder="Deine Erinnerung dazu …"
+            placeholder={a.placeholder}
           />
         </label>
         <button
@@ -411,10 +416,10 @@ function SharedMemoryCard({
           onClick={submit}
           disabled={status === 'sending' || !draft.trim()}
         >
-          {status === 'sending' ? 'Sende …'
-            : status === 'sent' ? 'Gesendet ✓'
-            : status === 'error' ? 'Fehler – erneut versuchen'
-            : 'Ergänzung senden'}
+          {status === 'sending' ? a.sending
+            : status === 'sent' ? a.sent
+            : status === 'error' ? a.error
+            : a.sendButton}
         </button>
       </div>
     </article>
@@ -434,6 +439,8 @@ function ShareTab({
   profileName: string
   sync: OnlineSyncAPI
 }) {
+  const { t } = useTranslation()
+  const s = t.onlineSharingHub.share
   const options = Object.values(answers).filter(a => a.value.trim().length > 0)
   const [selectedQ, setSelectedQ] = useState<string>('')
   const [selectedFriends, setSelectedFriends] = useState<Set<string>>(new Set())
@@ -474,7 +481,7 @@ function ShareTab({
         sync.service.shareMemory({ body, recipients, images: [] }),
         new Promise<never>((_, reject) =>
           setTimeout(
-            () => reject(new Error('Zeitüberschreitung – bitte Internetverbindung prüfen und erneut versuchen')),
+            () => reject(new Error(s.timeoutMessage)),
             TIMEOUT_MS,
           )
         ),
@@ -484,25 +491,23 @@ function ShareTab({
       setSelectedFriends(new Set())
     } catch (err) {
       console.error(err)
-      setErrorMsg((err as Error).message ?? 'unbekannter Fehler')
+      setErrorMsg((err as Error).message ?? s.unknownError)
       setStatus('error')
     }
-  }, [selectedQ, selectedFriends, sync.service, answers, onlineFriends, profileName])
+  }, [selectedQ, selectedFriends, sync.service, answers, onlineFriends, profileName, s.timeoutMessage, s.unknownError])
 
   if (options.length === 0) {
     return (
       <section className="friends-section">
-        <p className="friends-hint">
-          Beantworte erst eine Frage im Quiz – sie kann dann hier geteilt werden.
-        </p>
+        <p className="friends-hint">{s.needsAnswerHint}</p>
       </section>
     )
   }
 
   return (
     <section className="friends-section">
-      <span className="share-tab__label">Welche Erinnerung teilen?</span>
-      <div className="share-memory-list" role="radiogroup" aria-label="Erinnerung auswählen">
+      <span className="share-tab__label">{s.whichMemoryLabel}</span>
+      <div className="share-memory-list" role="radiogroup" aria-label={s.memoryListAriaLabel}>
         {options.map(a => (
           <label
             key={a.id}
@@ -525,8 +530,8 @@ function ShareTab({
         ))}
       </div>
 
-      <span className="share-tab__label">An wen?</span>
-      <div className="share-recipient-list" role="group" aria-label="Empfänger auswählen">
+      <span className="share-tab__label">{s.whichRecipientLabel}</span>
+      <div className="share-recipient-list" role="group" aria-label={s.recipientListAriaLabel}>
         {onlineFriends.map(f => (
           <label
             key={f.id}
@@ -552,9 +557,9 @@ function ShareTab({
           disabled={!selectedQ || selectedFriends.size === 0 || status === 'sending' || !sync.service}
           onClick={send}
         >
-          {status === 'sending' ? 'Verschlüssele & sende …'
-            : status === 'sent' ? 'Gesendet ✓'
-            : 'Verschlüssele & sende'}
+          {status === 'sending' ? s.sendingButton
+            : status === 'sent' ? s.sentButton
+            : s.sendButton}
         </button>
         {status === 'error' && errorMsg && (
           <p className="share-tab__error" role="alert">{errorMsg}</p>
@@ -575,25 +580,23 @@ function ContactsTab({
   sync: OnlineSyncAPI
   onlineFriends: Friend[]
 }) {
-  const { url, share, copied } = useContactShare(profileName, sync)
+  const { t } = useTranslation()
+  const c = t.onlineSharingHub.contacts
+  const { url, share, copied } = useContactShare(profileName, sync, t.contactHandshake)
 
   return (
     <section className="friends-section">
-      <h3 className="friends-section-title">Dein Verbindungslink</h3>
-      <p className="friends-hint">
-        Schicke diesen Link an jemanden, den du verbinden möchtest. Sobald
-        er oder sie ihn öffnet, seid ihr verknüpft – und könnt gegenseitig
-        Erinnerungen teilen.
-      </p>
+      <h3 className="friends-section-title">{c.linkHeading}</h3>
+      <p className="friends-hint">{c.linkHint}</p>
       <button className="share-cta-btn" onClick={share} disabled={!url}>
-        {copied ? 'In die Zwischenablage kopiert ✓' : 'Verbindungslink teilen'}
+        {copied ? c.copied : c.shareLinkButton}
       </button>
 
       <h3 className="friends-section-title" style={{ marginTop: '1.5rem' }}>
-        Verbundene Kontakte
+        {c.contactsHeading}
       </h3>
       {onlineFriends.length === 0 ? (
-        <p className="friends-hint">Noch niemand verknüpft. Teile deinen Verbindungslink, um loszulegen.</p>
+        <p className="friends-hint">{c.noContactsHint}</p>
       ) : (
         <ul className="online-contact-list">
           {onlineFriends.map(f => (
@@ -610,37 +613,35 @@ function ContactsTab({
 // ── Settings / Deactivate ───────────────────────────────────────────────────
 
 function SettingsTab({ onDeactivate }: { onDeactivate: () => void }) {
+  const { t } = useTranslation()
+  const s = t.onlineSharingHub.settings
   const [confirming, setConfirming] = useState(false)
 
   return (
     <section className="friends-section">
-      <h3 className="friends-section-title">Direktes Teilen deaktivieren</h3>
-      <p className="friends-hint">
-        Löscht alle deine geteilten Erinnerungen vom Server und trennt die
-        Verbindung zu deinen Kontakten. Deine eigenen Antworten und Fotos
-        auf diesem Gerät bleiben vollständig erhalten.
-      </p>
+      <h3 className="friends-section-title">{s.heading}</h3>
+      <p className="friends-hint">{s.hint}</p>
       {!confirming ? (
         <button
           className="btn btn--ghost btn--sm"
           onClick={() => setConfirming(true)}
         >
-          Deaktivieren
+          {s.deactivateButton}
         </button>
       ) : (
         <div className="online-confirm">
-          <p><strong>Wirklich deaktivieren?</strong> Das kann nicht rückgängig gemacht werden — kontaktierte Personen können deine bisher geteilten Erinnerungen nicht mehr sehen.</p>
+          <p><strong>{s.confirmStrong}</strong>{s.confirmRest}</p>
           <button
             className="share-cta-btn share-cta-btn--error"
             onClick={onDeactivate}
           >
-            Ja, alles löschen
+            {s.confirmYes}
           </button>
           <button
             className="btn btn--ghost btn--sm"
             onClick={() => setConfirming(false)}
           >
-            Abbrechen
+            {s.confirmNo}
           </button>
         </div>
       )}

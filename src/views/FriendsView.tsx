@@ -150,24 +150,19 @@ export function FriendsView({
 
       {onlineSharingConfigured && onOpenOnlineSharing && (
         <section className="friends-section">
-          <h3 className="friends-section-title">Familienmodus</h3>
+          <h3 className="friends-section-title">{t.friends.familienmodusHeading}</h3>
           <div className="friends-tags">
-            <span className="friends-tag friends-tag--accent">Dauerhaft</span>
-            <span className="friends-tag friends-tag--accent">Gegenseitig</span>
-            <span className="friends-tag friends-tag--accent">Verschlüsselt</span>
+            <span className="friends-tag friends-tag--accent">{t.friends.familienmodusTagPermanent}</span>
+            <span className="friends-tag friends-tag--accent">{t.friends.familienmodusTagMutual}</span>
+            <span className="friends-tag friends-tag--accent">{t.friends.familienmodusTagEncrypted}</span>
           </div>
-          <p className="friends-hint">
-            Ihr tauscht je einmal einen Verbindungslink aus – danach könnt ihr
-            euch gegenseitig ausgewählte Erinnerungen zuschicken, die nur ihr
-            beide lesen könnt. Anders als beim Einladungslink bleibt die
-            Verbindung bestehen.
-          </p>
+          <p className="friends-hint">{t.friends.familienmodusHint}</p>
           <button
             className="share-cta-btn"
             onClick={onOpenOnlineSharing}
             data-testid="open-online-sharing"
           >
-            {onlineSharingEnabled ? 'Geteilte Erinnerungen öffnen' : 'Einrichten'}
+            {onlineSharingEnabled ? t.friends.familienmodusCtaOpen : t.friends.familienmodusCtaSetup}
           </button>
         </section>
       )}

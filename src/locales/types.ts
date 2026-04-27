@@ -204,6 +204,151 @@ export interface Translations {
     attachmentsHint: string
     openGift: string
     shareMessage: string
+    /** Familienmodus opt-in section in the friends view. */
+    familienmodusHeading: string
+    familienmodusHint: string
+    familienmodusTagPermanent: string
+    familienmodusTagMutual: string
+    familienmodusTagEncrypted: string
+    familienmodusCtaSetup: string
+    familienmodusCtaOpen: string
+  }
+
+  onlineSharingIntro: {
+    back: string
+    title: string
+    heroAlt: string
+    whatHeading: string
+    whatBody1: string
+    whatBody2Strong: string
+    whatBody2Rest: string
+    privacyHeading: string
+    privacyBody: string
+    privacyDetailsSummary: string
+    tableWhat: string
+    tableWhere: string
+    tableForm: string
+    row1What: string
+    row1Where: string
+    row1Form: string
+    row2What: string
+    row2Where: string
+    row2Form: string
+    row3What: string
+    row3Where: string
+    row3Form: string
+    row4What: string
+    row4Where: string
+    row4Form: string
+    row5What: string
+    row5Where: string
+    row5Form: string
+    row6What: string
+    row6Where: string
+    row6Form: string
+    deactivateHeading: string
+    deactivateBody: string
+    notConfiguredWarning: string
+    consentLabel: string
+    activateButton: string
+  }
+
+  contactHandshake: {
+    cancel: string
+    title: string
+    /** Share-card subtitle reused for both contact-handshake and onboarding. */
+    shareCardSubtitle: string
+    /** "{name} möchte Remember-Me-Erinnerungen mit dir teilen…" – uses {name}. */
+    shareInviteText: string
+    /** "{name} möchte sich mit dir verknüpfen. Öffne diesen Link:" – uses {name}. */
+    shareBackText: string
+    shareSheetTitle: string
+    /** "möchte sich mit dir für Online-Erinnerungen verknüpfen." */
+    introTextSuffix: string
+    introTextDefaultName: string
+    notEnabledHint: string
+    enableButton: string
+    connecting: string
+    /** "{name} wurde in deiner Kontaktliste gespeichert …" – uses {name}. */
+    savedHint: string
+    savedHintDefaultName: string
+    shareBackButton: string
+    shareBackCopied: string
+    doneButton: string
+  }
+
+  onlineSharingHub: {
+    back: string
+    title: string
+    /** "Sync-Fehler: " prefix; concatenated with the raw error message. */
+    syncErrorPrefix: string
+    connecting: string
+
+    tabs: {
+      feed: string
+      share: string
+      contacts: string
+      settings: string
+    }
+
+    onboarding: {
+      heading: string
+      hint: string
+      shareCta: string
+      copied: string
+      step1: string
+      step2: string
+      step3: string
+      settingsOpen: string
+      settingsClose: string
+    }
+
+    feedEmpty: {
+      hint: string
+      shareCta: string
+      inviteCta: string
+    }
+
+    annotation: {
+      label: string
+      placeholder: string
+      sendButton: string
+      sending: string
+      sent: string
+      error: string
+    }
+
+    share: {
+      needsAnswerHint: string
+      whichMemoryLabel: string
+      memoryListAriaLabel: string
+      whichRecipientLabel: string
+      recipientListAriaLabel: string
+      sendButton: string
+      sendingButton: string
+      sentButton: string
+      timeoutMessage: string
+      unknownError: string
+    }
+
+    contacts: {
+      linkHeading: string
+      linkHint: string
+      shareLinkButton: string
+      copied: string
+      contactsHeading: string
+      noContactsHint: string
+    }
+
+    settings: {
+      heading: string
+      hint: string
+      deactivateButton: string
+      confirmStrong: string
+      confirmRest: string
+      confirmYes: string
+      confirmNo: string
+    }
   }
 
   archiveView: {
