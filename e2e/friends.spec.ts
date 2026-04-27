@@ -24,9 +24,11 @@ test.describe('Remember Me – Freunde-Einladung', () => {
     await completeOnboarding(page, 'Anna')
     await openFriendsTab(page)
 
-    const shareBtn = page.locator('.share-cta-btn')
+    // The Friends view contains two `.share-cta-btn` instances when the build
+    // has Supabase configured (the second is the Familienmodus opt-in CTA),
+    // so we scope the lookup to the invite section by accessible text.
+    const shareBtn = page.getByRole('button', { name: /Link teilen/ })
     await expect(shareBtn).toBeVisible()
-    await expect(shareBtn).toContainText(/Link teilen/)
     await expect(shareBtn).toBeEnabled()
 
     await expect(page.getByText(/Du teilst den Link/)).toBeVisible()
