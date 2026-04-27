@@ -25,7 +25,6 @@ jobs:
       feature_branch: ${{ steps.vars.outputs.branch }}
       spec_file:     ${{ steps.vars.outputs.spec_file }}
       spec_slug:     ${{ steps.vars.outputs.slug }}
-      spec_content:  ${{ steps.vars.outputs.content }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -37,21 +36,20 @@ jobs:
           DISPATCH_SPEC: ${{ github.event.inputs.spec_file }}
           REF_NAME: ${{ github.ref_name }}
         run: |
-          set -euo pipefail
+          set -euxo pipefail
           if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
             SPEC_FILE="$DISPATCH_SPEC"
-            BRANCH="$REF_NAME"
           else
             SPEC_FILE=$(jq -r \
-              '[.commits[] | (.added + .modified)[] | select(startswith("docs/requirements/REQ-") and endswith(".md"))][0] // ""' \
-              "$GITHUB_EVENT_PATH")
+              '[.commits[]? | ((.added // []) + (.modified // []))[] | select(startswith("docs/requirements/REQ-") and endswith(".md"))][0] // ""' \
+              "$GITHUB_EVENT_PATH" || true)
             if [ -z "$SPEC_FILE" ] || [ "$SPEC_FILE" = "null" ]; then
               echo "Push touched a REQ-*.md file (per path filter) but event payload lists none — aborting." >&2
               exit 1
             fi
             SPEC_FILE="$(basename "$SPEC_FILE")"
-            BRANCH="$REF_NAME"
           fi
+          BRANCH="$REF_NAME"
           if [ ! -f "docs/requirements/$SPEC_FILE" ]; then
             echo "Spec file docs/requirements/$SPEC_FILE not found on branch $BRANCH" >&2
             exit 1
@@ -60,12 +58,6 @@ jobs:
           echo "spec_file=$SPEC_FILE" >> "$GITHUB_OUTPUT"
           echo "slug=$SLUG"           >> "$GITHUB_OUTPUT"
           echo "branch=$BRANCH"       >> "$GITHUB_OUTPUT"
-          {
-            echo "content<<SPECEOF"
-            cat "docs/requirements/$SPEC_FILE"
-            echo
-            echo "SPECEOF"
-          } >> "$GITHUB_OUTPUT"
 
   generate:
     needs: prepare
@@ -91,14 +83,15 @@ jobs:
       - run: npm ci
 
       - name: Build role-specific prompt
-        id: prompt
         env:
-          SPEC_CONTENT: ${{ needs.prepare.outputs.spec_content }}
-          SPEC_SLUG:    ${{ needs.prepare.outputs.spec_slug }}
-          ROLE:         ${{ matrix.role }}
+          SPEC_FILE: ${{ needs.prepare.outputs.spec_file }}
+          SPEC_SLUG: ${{ needs.prepare.outputs.spec_slug }}
+          ROLE:      ${{ matrix.role }}
         run: |
+          set -euxo pipefail
+          DELIM="PROMPT_EOF_$(openssl rand -hex 16)"
           {
-            echo "text<<PEOF"
+            echo "AGENT_PROMPT<<${DELIM}"
             if [ "$ROLE" = "implementation" ]; then
               cat .github/prompts/impl-agent.md
             else
@@ -107,15 +100,15 @@ jobs:
             echo
             echo "## Spec: $SPEC_SLUG"
             echo
-            echo "$SPEC_CONTENT"
-            echo "PEOF"
-          } >> "$GITHUB_OUTPUT"
+            cat "docs/requirements/$SPEC_FILE"
+            echo "${DELIM}"
+          } >> "$GITHUB_ENV"
 
       - name: Run Claude Code agent (${{ matrix.role }})
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          prompt: ${{ steps.prompt.outputs.text }}
+          prompt: ${{ env.AGENT_PROMPT }}
           claude_args: >-
             --allowedTools "Read,Glob,Grep,Edit,Write,Bash(npm test:*),Bash(npx vitest:*),Bash(npx playwright:*)"
             --max-turns 40

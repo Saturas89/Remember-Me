@@ -2,7 +2,7 @@
 
 **Status:** 🟡 PLANNED
 **ID:** REQ-016
-**Version:** 0.1.1
+**Version:** 0.1.2
 **Letzte Aktualisierung:** 2026-04-27
 **Modul:** Engagement
 **Priorität:** Medium
