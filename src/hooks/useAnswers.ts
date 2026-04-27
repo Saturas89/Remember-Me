@@ -20,6 +20,7 @@ async function loadStateAsync(): Promise<AppState> {
             friendAnswers: parsed.friendAnswers ?? [],
             customQuestions: parsed.customQuestions ?? [],
             onlineSharing: parsed.onlineSharing, // undefined unless opted in
+            streak: parsed.streak, // optional streak tracking
           })
           return
         }
@@ -442,6 +443,14 @@ export function useAnswers() {
     })
   }, [])
 
+  const saveStreak = useCallback((streak: AppState['streak']) => {
+    setState(prev => {
+      const next: AppState = { ...prev, streak }
+      saveState(next)
+      return next
+    })
+  }, [])
+
   const enableOnlineSharing = useCallback(() => {
     setOnlineSharing({ enabled: true, activatedAt: new Date().toISOString() })
   }, [setOnlineSharing])
@@ -483,6 +492,7 @@ export function useAnswers() {
         friends: s.friends ?? [],
         friendAnswers: s.friendAnswers ?? [],
         customQuestions: s.customQuestions ?? [],
+        streak: s.streak, // optional
       }
       saveState(restored)
       setState(restored)
@@ -549,6 +559,7 @@ export function useAnswers() {
     friendAnswers: state.friendAnswers,
     customQuestions: state.customQuestions,
     onlineSharing: state.onlineSharing,
+    streak: state.streak,
     saveAnswer,
     setAnswerImages,
     setAnswerVideos,
@@ -569,6 +580,7 @@ export function useAnswers() {
     disableOnlineSharing,
     setOnlineSharing,
     removeOnlineFriends,
+    saveStreak,
     getAnswer,
     getAnswerImageIds,
     getAnswerVideoIds,
