@@ -1,3 +1,4 @@
+import type { JSX } from 'react'
 import { useTranslation } from '../locales'
 
 export interface WelcomeBackBannerProps {
@@ -9,7 +10,7 @@ export interface WelcomeBackBannerProps {
 
 export function WelcomeBackBanner(props: WelcomeBackBannerProps): JSX.Element | null {
   const { visible, daysAway, onContinue, onDismiss } = props
-  const t = useTranslation()
+  const { t } = useTranslation()
 
   if (!visible) return null
 

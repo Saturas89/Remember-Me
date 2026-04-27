@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, fireEvent, cleanup } from '@testing-library/react'
 import { ProfileView } from './ProfileView'
 import type { Answer } from '../types'
-import { de } from '../locales/de/ui'
+import { UI_DE as de } from '../locales/de/ui'
 
 // Mock the hooks
 const mockUseReminder = {
@@ -11,10 +11,10 @@ const mockUseReminder = {
   dismissPrompt: vi.fn(),
   isEnabled: false,
   state: {
-    permission: 'none' as const,
-    backoffStage: 0,
-    lastShownAt: undefined,
-    lastVariantIdx: undefined
+    permission: 'none' as 'none' | 'enabled' | 'dismissed',
+    backoffStage: 0 as 0 | 1 | 2 | 3,
+    lastShownAt: undefined as number | undefined,
+    lastVariantIdx: undefined as number | undefined
   },
   reschedule: vi.fn(),
   disable: vi.fn()

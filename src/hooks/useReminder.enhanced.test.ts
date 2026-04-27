@@ -145,8 +145,7 @@ describe('useReminder - Enhanced REQ-016 Features', () => {
 
   it('advances backoffStage based on time elapsed since lastShownAt', async () => {
     const threeDaysAgo = Date.now() - (3 * 24 * 60 * 60 * 1000)
-    const tenDaysAgo = Date.now() - (10 * 24 * 60 * 60 * 1000)
-    
+
     // Test progression from stage 0 to stage 1 after 3 days
     mockLocalStorage.getItem.mockReturnValue(JSON.stringify({
       permission: 'enabled',

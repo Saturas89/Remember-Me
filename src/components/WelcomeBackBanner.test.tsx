@@ -1,11 +1,11 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { WelcomeBackBanner } from './WelcomeBackBanner'
-import { de } from '../locales/de/ui'
+import { UI_DE as de } from '../locales/de/ui'
 
 // Mock the locale import
 vi.mock('../locales/de/ui', () => ({
-  de: {
+  UI_DE: {
     reminder: {
       welcomeBack: {
         title: 'Willkommen zurück!',

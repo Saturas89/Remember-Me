@@ -27,12 +27,6 @@ export interface UseReminderReturn {
   disable: () => void
 }
 
-function isQuietHour(): boolean {
-  const now = new Date()
-  const hour = now.getHours()
-  return hour >= 22 || hour < 8
-}
-
 function getNextScheduleTime(hoursFromNow: number): number {
   const targetTime = Date.now() + (hoursFromNow * 60 * 60 * 1000)
   const targetDate = new Date(targetTime)
