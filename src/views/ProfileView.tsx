@@ -5,6 +5,8 @@ import { ArchiveExportCard } from '../components/ArchiveExportCard'
 import { getLastBackupDate, backupAgeLabel, backupAgeStatus } from '../utils/backupStatus'
 import { importFile } from '../utils/archiveImport'
 import { useTranslation } from '../locales'
+import { useReminder } from '../hooks/useReminder'
+import { useStreak } from '../hooks/useStreak'
 import type { Locale } from '../locales'
 import type { Profile, Answer } from '../types'
 import type { ExportData } from '../utils/export'
@@ -73,6 +75,8 @@ export function ProfileView({
 }: Props) {
   const { t, locale, setLocale } = useTranslation()
   const { theme, setTheme } = useTheme()
+  const { state: reminderState, enable, disable } = useReminder()
+  const { streak } = useStreak()
   const [lastBackup, setLastBackup] = useState<Date | null>(() => getLastBackupDate())
   const [name, setName] = useState(profile?.name ?? '')
   const [birthYear, setBirthYear] = useState(
@@ -279,6 +283,57 @@ export function ProfileView({
               {locale === l && <span className="lang-card__check" aria-hidden="true">✓</span>}
             </button>
           ))}
+        </div>
+      </section>
+
+      <section className="profile-card" data-testid="reminder-settings">
+        <h2 className="profile-card__heading">{t.reminder.settings.title}</h2>
+        
+        {Notification.permission === 'denied' ? (
+          <div className="reminder-permission-denied">
+            <p>{t.reminder.settings.permissionDeniedHint}</p>
+          </div>
+        ) : (typeof window !== 'undefined' && 'Notification' in window && !('showTrigger' in Notification.prototype)) ? (
+          <div className="reminder-ios-fallback">
+            <p>{t.reminder.settings.iosFallbackHint}</p>
+          </div>
+        ) : (
+          <div className="reminder-toggle-row">
+            <label className="reminder-toggle-label">
+              <input
+                type="checkbox"
+                data-testid="reminder-toggle"
+                checked={reminderState.permission === 'enabled'}
+                onChange={(e) => {
+                  if (e.target.checked) {
+                    enable()
+                  } else {
+                    disable()
+                  }
+                }}
+              />
+              <span>{t.reminder.settings.toggleLabel}</span>
+            </label>
+          </div>
+        )}
+        
+        <div className="reminder-explanation">
+          <p>{t.reminder.settings.cadenceExplanation}</p>
+          <p className="reminder-quiet-hours">{t.reminder.settings.quietHours}</p>
+        </div>
+
+        <div className="streak-stats">
+          <h3>{t.reminder.settings.streakLabel}</h3>
+          <div className="streak-row">
+            <div className="streak-stat">
+              <span className="streak-value">{streak.current}</span>
+              <span className="streak-label">{t.reminder.settings.streakCurrent}</span>
+            </div>
+            <div className="streak-stat">
+              <span className="streak-value">{streak.longest}</span>
+              <span className="streak-label">{t.reminder.settings.streakLongest}</span>
+            </div>
+          </div>
         </div>
       </section>
 
