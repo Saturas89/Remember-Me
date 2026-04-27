@@ -2,7 +2,7 @@
 
 **Status:** 🟡 PLANNED
 **ID:** REQ-016
-**Version:** 0.1.7
+**Version:** 0.2.0
 **Letzte Aktualisierung:** 2026-04-27
 **Modul:** Engagement
 **Priorität:** Medium
@@ -127,6 +127,143 @@ src/data/reminderMessages.ts:
 | `src/utils/notificationContent.ts` | NEU – wählt Variante (mit `lastVariantIdx`-Rotation), optional mit nächster Frage-Titel |
 | `src/data/reminderMessages.ts` | NEU – Variantenpool de/en |
 | `src/locales/{de,en}/ui.ts` + `types.ts` | Erweitert: `reminder.settings.*`, `reminder.welcomeBack.*`, `reminder.streak.*`, `reminder.milestone.*` |
+
+---
+
+## 7a. API-Vertrag (verbindlich für Impl + Tests)
+
+Damit Implementation- und Test-Agent unabhängig voneinander auf identische Symbole zugreifen, fixiert dieser Abschnitt die exakten Exports und Signaturen. **Beide Agents müssen diese Verträge wörtlich umsetzen** — keine Aliase, keine Umbenennungen.
+
+### 7a.1 `src/hooks/useStreak.ts`
+
+```ts
+export interface StreakState {
+  current: number
+  longest: number
+  lastAnswerDate: string   // ISO 8601 (YYYY-MM-DD)
+}
+
+export interface UseStreakReturn {
+  streak: StreakState
+  totalAnswered: number
+  /**
+   * Aktualisiert Streak nach einer neuen Antwort.
+   * @param answeredAt  ISO-Datum (YYYY-MM-DD), default = heute lokal
+   * @param totalAnswered  neue Gesamtzahl beantworteter Fragen (für Meilenstein-Trigger)
+   */
+  recordAnswer: (answeredAt?: string, totalAnswered?: number) => void
+  /** Setzt current=0 wenn lastAnswerDate > 1 Tag her ist */
+  checkStreakReset: () => void
+}
+
+export function useStreak(): UseStreakReturn
+```
+
+`recordAnswer` ist die einzige öffentliche Mutator-Funktion. Falls intern eine zusätzliche Helper-Funktion existiert, wird sie nicht exportiert.
+
+### 7a.2 `src/utils/notificationContent.ts`
+
+```ts
+export interface NotificationContentOptions {
+  locale: 'de' | 'en'
+  questionTitle?: string         // wenn vorhanden, wird im Body verwendet
+  lastVariantIdx?: number        // ≥0; -1 oder undefined = "keine Vorgängervariante"
+}
+
+export interface NotificationContentResult {
+  title: string
+  body: string
+  variantIdx: number             // gewählter Pool-Index, für Persistierung
+}
+
+/**
+ * Wählt eine Variante aus REMINDER_MESSAGES[locale], rotiert deterministisch
+ * vorbei an lastVariantIdx (kein Wiederholen direkt hintereinander),
+ * setzt body = questionTitle wenn übergeben.
+ */
+export function getNotificationContent(opts: NotificationContentOptions): NotificationContentResult
+```
+
+### 7a.3 `src/components/WelcomeBackBanner.tsx`
+
+```tsx
+export interface WelcomeBackBannerProps {
+  visible: boolean
+  daysAway: number               // ≥3
+  onContinue: () => void         // Klick auf "Weitermachen"
+  onDismiss: () => void          // Klick auf ✕
+}
+
+export function WelcomeBackBanner(props: WelcomeBackBannerProps): JSX.Element | null
+```
+
+DOM-Vertrag: Wurzelelement hat Klasse `update-banner welcome-back-banner` und `data-testid="welcome-back-banner"`. CTA-Button hat `data-testid="welcome-back-continue"`.
+
+### 7a.4 `src/hooks/useReminder.ts` (Erweiterung)
+
+```ts
+export interface ReminderState {
+  permission: 'none' | 'enabled' | 'dismissed'
+  backoffStage: 0 | 1 | 2 | 3
+  lastShownAt?: number
+  lastVariantIdx?: number
+}
+
+export interface UseReminderReturn {
+  state: ReminderState
+  enable: () => Promise<void>     // Permission-Prompt + scheduling
+  disable: () => void
+  reschedule: () => Promise<void> // bei visibilitychange/answer
+}
+
+export function useReminder(): UseReminderReturn
+```
+
+Beim Mount: `localStorage.removeItem('rm-reminder-pref')` (genau einmal pro Browser-Lifetime, idempotent).
+
+### 7a.5 ProfileView (Settings-Sektion)
+
+ProfileView konsumiert `useStreak()` und `useReminder()` **direkt via Hook-Aufruf**, keine zusätzlichen Required-Props. Falls neue Props nötig sind, sind sie alle **optional** mit Default. Bestehende Tests (`ProfileView.test.tsx`) dürfen nicht durch Änderungen der Required-Prop-Signatur brechen.
+
+### 7a.6 `src/data/reminderMessages.ts`
+
+```ts
+export const REMINDER_MESSAGES: {
+  de: readonly string[]   // ≥8 Einträge
+  en: readonly string[]   // ≥8 Einträge
+}
+```
+
+### 7a.7 i18n-Schlüssel (`src/locales/types.ts`)
+
+```ts
+interface UITranslations {
+  // … bestehende Felder …
+  reminder: {
+    settings: {
+      title: string                  // "Erinnerungen" / "Reminders"
+      toggleLabel: string
+      cadenceExplanation: string
+      quietHours: string
+      streakLabel: string            // "Streak" / "Streak"
+      streakCurrent: string          // "Aktuell" / "Current"
+      streakLongest: string          // "Längste" / "Longest"
+      iosFallbackHint: string
+      permissionDeniedHint: string
+    }
+    welcomeBack: {
+      title: string                  // "Willkommen zurück" / "Welcome back"
+      bodyDays: string               // mit {days} Platzhalter
+      continueCta: string            // "Weitermachen" / "Continue"
+      dismiss: string                // "Schließen" / "Dismiss"
+    }
+    milestone: {
+      bodyAnswered: string           // mit {count}
+      bodyCategoryDone: string       // mit {category}
+    }
+  }
+}
+```
 
 ---
 

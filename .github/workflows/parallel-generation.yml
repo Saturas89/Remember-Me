@@ -175,13 +175,19 @@ jobs:
 
             Die bestehende E2E-Matrix (5 Browser) läuft auf diesem PR. Grün = beide Spec-Interpretationen passen zusammen.
         run: |
+          set -euxo pipefail
+          gh auth status || true
           existing=$(gh pr list --head "$HEAD" --base main --state open --json number --jq '.[0].number // empty')
           if [ -n "$existing" ]; then
             echo "PR #$existing already open for $HEAD — skipping."
             exit 0
           fi
-          gh pr create \
+          if ! gh pr create \
             --base main \
             --head "$HEAD" \
             --title "feat($SPEC_SLUG): parallel impl + tests" \
-            --body "$PR_BODY"
+            --body "$PR_BODY" 2>&1 | tee /tmp/pr-output.txt; then
+            echo "::warning::gh pr create failed. Falls Repo-Setting 'Allow GitHub Actions to create and approve pull requests' deaktiviert ist, PR manuell anlegen."
+            cat /tmp/pr-output.txt
+            exit 0
+          fi
