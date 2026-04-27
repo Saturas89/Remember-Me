@@ -32,19 +32,33 @@ jobs:
 
       - id: vars
         env:
-          EVENT_NAME: ${{ github.event_name }}
+          EVENT_NAME:    ${{ github.event_name }}
           DISPATCH_SPEC: ${{ github.event.inputs.spec_file }}
-          REF_NAME: ${{ github.ref_name }}
+          REF_NAME:      ${{ github.ref_name }}
+          PUSH_BEFORE:   ${{ github.event.before }}
+          PUSH_AFTER:    ${{ github.sha }}
         run: |
           set -euxo pipefail
           if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
             SPEC_FILE="$DISPATCH_SPEC"
           else
-            SPEC_FILE=$(jq -r \
-              '[.commits[]? | ((.added // []) + (.modified // []))[] | select(startswith("docs/requirements/REQ-") and endswith(".md"))][0] // ""' \
-              "$GITHUB_EVENT_PATH" || true)
-            if [ -z "$SPEC_FILE" ] || [ "$SPEC_FILE" = "null" ]; then
-              echo "Push touched a REQ-*.md file (per path filter) but event payload lists none — aborting." >&2
+            ZERO="0000000000000000000000000000000000000000"
+            if [ -z "${PUSH_BEFORE:-}" ] || [ "$PUSH_BEFORE" = "$ZERO" ]; then
+              git fetch --no-tags --prune --depth=1 origin main || true
+              if git rev-parse --verify --quiet origin/main >/dev/null; then
+                RANGE="origin/main..$PUSH_AFTER"
+              else
+                RANGE="$PUSH_AFTER"
+              fi
+            else
+              RANGE="$PUSH_BEFORE..$PUSH_AFTER"
+            fi
+            CHANGED=$(git log --name-only --pretty=format: "$RANGE" 2>/dev/null | sort -u || true)
+            echo "Changed files in $RANGE:"
+            printf '%s\n' "$CHANGED"
+            SPEC_FILE=$(printf '%s\n' "$CHANGED" | grep -E '^docs/requirements/REQ-.*\.md$' | head -n1 || true)
+            if [ -z "$SPEC_FILE" ]; then
+              echo "Push triggered by path filter but no docs/requirements/REQ-*.md in range $RANGE — aborting." >&2
               exit 1
             fi
             SPEC_FILE="$(basename "$SPEC_FILE")"
