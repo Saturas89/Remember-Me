@@ -5,8 +5,10 @@ import { ArchiveExportCard } from '../components/ArchiveExportCard'
 import { getLastBackupDate, backupAgeLabel, backupAgeStatus } from '../utils/backupStatus'
 import { importFile } from '../utils/archiveImport'
 import { useTranslation } from '../locales'
+import { useReminder } from '../hooks/useReminder'
+import { useStreak } from '../hooks/useStreak'
 import type { Locale } from '../locales'
-import type { Profile, Answer } from '../types'
+import type { Profile, Answer, AppState } from '../types'
 import type { ExportData } from '../utils/export'
 
 interface Props {
@@ -15,7 +17,9 @@ interface Props {
   friendCount: number
   exportData: ExportData
   safeName: string
+  appState: AppState
   onSave: (profile: Profile) => void
+  onUpdateAppState: (state: AppState) => void
   onBack: () => void
   onExportMarkdown: () => void
   onExportJson: () => void
@@ -66,8 +70,8 @@ function BackupStatusRow({ last }: { last: Date | null }) {
 
 export function ProfileView({
   profile, answers, friendCount,
-  exportData, safeName,
-  onSave, onBack,
+  exportData, safeName, appState,
+  onSave, onUpdateAppState, onBack,
   onExportMarkdown, onExportJson, onImportBackup,
   onOpenImport, onOpenFaq, onShowReleaseNotes,
 }: Props) {
@@ -81,6 +85,10 @@ export function ProfileView({
   const [importStatus, setImportStatus] = useState<{ ok: boolean; message: string } | null>(null)
   const [importProgress, setImportProgress] = useState<{ step: string; pct: number } | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Reminder and streak hooks
+  const reminder = useReminder(answers, profile?.name || '')
+  const streak = useStreak(appState, onUpdateAppState)
 
   const categories = getCategoriesForLocale(locale)
   const totalQuestions = categories.reduce((s, c) => s + c.questions.length, 0)
@@ -256,6 +264,51 @@ export function ProfileView({
               {theme === thm.id && <span className="theme-card__check" aria-hidden="true">✓</span>}
             </button>
           ))}
+        </div>
+      </section>
+
+      <section className="profile-card" data-testid="reminder-settings">
+        <h2 className="profile-card__heading">{t.reminder.settings.title}</h2>
+        {reminder.permissionStatus === 'denied' ? (
+          <div className="reminder-permission-denied">
+            <p>{t.reminder.settings.permissionDenied}</p>
+          </div>
+        ) : !reminder.hasNotificationSupport ? (
+          <div className="reminder-ios-hint">
+            <p>{t.reminder.settings.iosHint}</p>
+          </div>
+        ) : (
+          <div className="reminder-settings">
+            <div className="reminder-toggle-row">
+              <label className="reminder-toggle-label" htmlFor="reminder-toggle">
+                <input
+                  id="reminder-toggle"
+                  type="checkbox"
+                  className="reminder-toggle-checkbox"
+                  data-testid="reminder-toggle"
+                  checked={reminder.isEnabled}
+                  onChange={e => reminder.toggleReminder(e.target.checked)}
+                />
+                {t.reminder.settings.toggleLabel}
+              </label>
+            </div>
+            <p className="reminder-cadence-explanation">{t.reminder.settings.cadenceExplanation}</p>
+            <p className="reminder-silent-hours">{t.reminder.settings.silentHoursInfo}</p>
+          </div>
+        )}
+        
+        <div className="reminder-stats">
+          <h3 className="reminder-stats__heading">Streak</h3>
+          <div className="reminder-stats-grid">
+            <div className="reminder-stat">
+              <span className="reminder-stat__value">{streak.streak.current}</span>
+              <span className="reminder-stat__label">{t.reminder.settings.streakCurrent} {t.reminder.settings.streakDays}</span>
+            </div>
+            <div className="reminder-stat">
+              <span className="reminder-stat__value">{streak.streak.longest}</span>
+              <span className="reminder-stat__label">{t.reminder.settings.streakLongest} {t.reminder.settings.streakDays}</span>
+            </div>
+          </div>
         </div>
       </section>
 

@@ -128,6 +128,12 @@ export interface AppState {
   /** Undefined until the user explicitly opts in to online sharing.
    *  Absent ⇒ no Supabase module is ever loaded, no network requests are made. */
   onlineSharing?: OnlineSharingState
+  /** User engagement streak tracking (optional) */
+  streak?: {
+    current: number
+    longest: number
+    lastAnswerDate: string
+  }
 }
 
 export interface OnlineSharingState {
