@@ -6,6 +6,7 @@ import {
   injectOnlineFriend,
   openFamilyHub,
   readDeviceIdentity,
+  reopenFamilyHub,
   seedAnswer,
   spawnDevice,
 } from './helpers/family-mode-helpers'
@@ -26,8 +27,8 @@ import {
 test.describe('Familienmodus – Erinnerung teilen, empfangen, ergänzen (FR-15.10 – FR-15.21)', () => {
   test('Senden ist gesperrt, solange Empfänger oder Erinnerung fehlen', async ({ browser }) => {
     const state = createMockState()
-    const { ctx: aliceCtx, page: alice } = await spawnDevice(browser, state, 'alice')
-    const { ctx: bobCtx, page: bob } = await spawnDevice(browser, state, 'bob')
+    const { ctx: aliceCtx, page: alice } = await spawnDevice(browser, state)
+    const { ctx: bobCtx, page: bob } = await spawnDevice(browser, state)
 
     await completeOnboarding(alice, 'Alice')
     await openFamilyHub(alice)
@@ -43,8 +44,7 @@ test.describe('Familienmodus – Erinnerung teilen, empfangen, ergänzen (FR-15.
     await alice.goto(contactPath('Bob', bobId.deviceId, bobId.publicKey))
     await expect(alice.getByRole('heading', { name: 'Kontakt verknüpfen' })).toBeVisible()
 
-    await alice.goto('/friends')
-    await alice.getByTestId('open-online-sharing').click()
+    await reopenFamilyHub(alice)
     await alice.getByRole('tab', { name: 'Teilen', exact: true }).click()
 
     const send = alice.getByRole('button', { name: /Verschlüssele & sende/ })
@@ -65,8 +65,8 @@ test.describe('Familienmodus – Erinnerung teilen, empfangen, ergänzen (FR-15.
   test('Alice teilt Erinnerung mit Bob, Bob ergänzt sie zurück', async ({ browser }) => {
     test.setTimeout(60_000)
     const state = createMockState()
-    const { ctx: aliceCtx, page: alice } = await spawnDevice(browser, state, 'alice')
-    const { ctx: bobCtx, page: bob } = await spawnDevice(browser, state, 'bob')
+    const { ctx: aliceCtx, page: alice } = await spawnDevice(browser, state)
+    const { ctx: bobCtx, page: bob } = await spawnDevice(browser, state)
 
     await completeOnboarding(alice, 'Alice')
     await openFamilyHub(alice)
@@ -81,9 +81,7 @@ test.describe('Familienmodus – Erinnerung teilen, empfangen, ergänzen (FR-15.
     await injectOnlineFriend(alice, 'Bob', bobId.deviceId, bobId.publicKey)
     await injectOnlineFriend(bob, 'Alice', aliceId.deviceId, aliceId.publicKey)
 
-    await alice.goto('/friends')
-    await alice.getByTestId('open-online-sharing').click()
-    await expect(alice.getByRole('heading', { name: 'Online teilen' })).toBeVisible()
+    await reopenFamilyHub(alice)
     await alice.getByRole('tab', { name: 'Teilen', exact: true }).click()
 
     await alice.getByText('Ich bin in Cuxhaven am Meer aufgewachsen.').click()
@@ -103,9 +101,7 @@ test.describe('Familienmodus – Erinnerung teilen, empfangen, ergänzen (FR-15.
     expect(recipients).toContain(aliceId.deviceId)
     expect(recipients).toContain(bobId.deviceId)
 
-    await bob.goto('/friends')
-    await bob.getByTestId('open-online-sharing').click()
-    await expect(bob.getByRole('heading', { name: 'Online teilen' })).toBeVisible()
+    await reopenFamilyHub(bob)
     await bob.getByRole('tab', { name: 'Feed', exact: true }).click()
     await expect(bob.getByText('Ich bin in Cuxhaven am Meer aufgewachsen.')).toBeVisible({ timeout: 15_000 })
     await expect(bob.locator('.shared-memory-card')).toContainText('Alice')
@@ -117,9 +113,7 @@ test.describe('Familienmodus – Erinnerung teilen, empfangen, ergänzen (FR-15.
     expect(state.annotations).toHaveLength(1)
     expect(state.annotations[0].author_id).toBe(bobId.deviceId)
 
-    await alice.goto('/friends')
-    await alice.getByTestId('open-online-sharing').click()
-    await expect(alice.getByRole('heading', { name: 'Online teilen' })).toBeVisible()
+    await reopenFamilyHub(alice)
     await expect(alice.getByText('Ich erinnere mich noch an euer Reetdach!')).toBeVisible({ timeout: 15_000 })
     await expect(alice.locator('.shared-memory-annotations')).toContainText('Bob')
 

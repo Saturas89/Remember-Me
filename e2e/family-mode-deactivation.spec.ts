@@ -6,6 +6,7 @@ import {
   injectOnlineFriend,
   openFamilyHub,
   readDeviceIdentity,
+  reopenFamilyHub,
   spawnDevice,
 } from './helpers/family-mode-helpers'
 
@@ -18,8 +19,8 @@ import {
 test.describe('Familienmodus – Deaktivierung (FR-15.22 – FR-15.25)', () => {
   test('Deaktivieren löscht Server-Daten und lokale Online-Verknüpfungen', async ({ browser }) => {
     const state = createMockState()
-    const { ctx: aliceCtx, page: alice } = await spawnDevice(browser, state, 'alice')
-    const { ctx: bobCtx, page: bob } = await spawnDevice(browser, state, 'bob')
+    const { ctx: aliceCtx, page: alice } = await spawnDevice(browser, state)
+    const { ctx: bobCtx, page: bob } = await spawnDevice(browser, state)
 
     await completeOnboarding(alice, 'Alice')
     await openFamilyHub(alice)
@@ -38,9 +39,7 @@ test.describe('Familienmodus – Deaktivierung (FR-15.22 – FR-15.25)', () => {
     expect(state.devices.find(d => d.id === aliceId.deviceId)).toBeTruthy()
 
     // Open the hub and deactivate via the Einstellungen tab.
-    await alice.goto('/friends')
-    await alice.getByTestId('open-online-sharing').click()
-    await expect(alice.getByRole('heading', { name: 'Online teilen' })).toBeVisible()
+    await reopenFamilyHub(alice)
     await alice.getByRole('tab', { name: 'Einstellungen', exact: true }).click()
     await alice.getByRole('button', { name: 'Deaktivieren', exact: true }).click()
     await alice.getByRole('button', { name: /Ja, alles löschen/ }).click()

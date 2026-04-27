@@ -17,13 +17,11 @@ export async function dismissInstallPrompt(context: BrowserContext) {
 export async function spawnDevice(
   browser: Browser,
   state: MockState,
-  label = 'device',
 ): Promise<{ ctx: BrowserContext; page: Page }> {
   const ctx = await browser.newContext({ serviceWorkers: 'block' })
   await dismissInstallPrompt(ctx)
   await installSupabaseMock(ctx, state)
   const page = await ctx.newPage()
-  page.on('pageerror', e => console.log(`[${label} pageerror]`, e.message))
   return { ctx, page }
 }
 
@@ -55,6 +53,22 @@ export async function openFamilyHub(page: Page) {
     await page.getByRole('checkbox').check()
     await page.getByRole('button', { name: 'Aktivieren', exact: true }).click()
   }
+  await waitForHubReady(page)
+}
+
+/**
+ * For tests that already activated online sharing in an earlier step and
+ * are re-entering the hub from `/friends` after a full reload (e.g. after
+ * the recipient has to refresh to pick up new shares). Skips the consent
+ * screen and waits for `sync.ready` so the four-tab nav is rendered.
+ */
+export async function reopenFamilyHub(page: Page) {
+  await page.goto('/friends')
+  await page.getByTestId('open-online-sharing').click()
+  await waitForHubReady(page)
+}
+
+async function waitForHubReady(page: Page) {
   await expect(page.getByRole('heading', { name: 'Online teilen', exact: true })).toBeVisible({ timeout: 15_000 })
   await expect(page.getByText(/Verbinde mit Server …/)).toHaveCount(0, { timeout: 15_000 })
 }

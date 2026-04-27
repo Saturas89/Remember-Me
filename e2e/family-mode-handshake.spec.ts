@@ -33,8 +33,8 @@ test.describe('Familienmodus – Kontakt-Handshake (FR-15.5 – FR-15.9)', () =>
 
   test('Bidirektionale Verknüpfung zwischen zwei Geräten', async ({ browser }) => {
     const state = createMockState()
-    const { ctx: aliceCtx, page: alice } = await spawnDevice(browser, state, 'alice')
-    const { ctx: bobCtx, page: bob } = await spawnDevice(browser, state, 'bob')
+    const { ctx: aliceCtx, page: alice } = await spawnDevice(browser, state)
+    const { ctx: bobCtx, page: bob } = await spawnDevice(browser, state)
 
     await completeOnboarding(alice, 'Alice')
     await openFamilyHub(alice)
@@ -69,8 +69,8 @@ test.describe('Familienmodus – Kontakt-Handshake (FR-15.5 – FR-15.9)', () =>
 
   test('Handshake-Link ohne Opt-in bietet zuerst die Aktivierung an', async ({ browser }) => {
     const state = createMockState()
-    const { ctx: aliceCtx, page: alice } = await spawnDevice(browser, state, 'alice')
-    const { ctx: bobCtx, page: bob } = await spawnDevice(browser, state, 'bob')
+    const { ctx: aliceCtx, page: alice } = await spawnDevice(browser, state)
+    const { ctx: bobCtx, page: bob } = await spawnDevice(browser, state)
 
     await completeOnboarding(alice, 'Alice')
     await openFamilyHub(alice)
