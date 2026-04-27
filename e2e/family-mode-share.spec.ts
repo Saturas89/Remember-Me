@@ -13,17 +13,15 @@ import {
 // REQ-015 §4.3 – §4.5 Erinnerung teilen, empfangen, ergänzen
 // (FR-15.10 – FR-15.21).
 //
-// The full Alice→Bob send + Bob→Alice annotate roundtrip currently hangs
-// in the bundled Promise.race when driven through the React UI: the click
-// flips status='sending' but `shareMemory` never makes a network request,
-// so the 30 s in-app timeout is the only thing that ever resolves it. The
-// underlying crypto and supabase mock both work in isolation (the receive
-// side decrypts and renders correctly when a share is injected directly).
+// Two specs:
+//   • the share-tab guard rails (button enables only when both a memory and
+//     at least one recipient are picked),
+//   • the full Alice → Bob roundtrip: encrypt + upload, recipient fetches
+//     and decrypts, recipient adds an Ergänzung, sender receives it back.
 //
-// Until that hang is understood, this file covers what runs reliably:
-//   • Tab structure + button enable/disable rules driven by selection state.
-// The full send-roundtrip lives as `test.fixme` so it stays visible without
-// blocking CI.
+// The send-roundtrip uses `injectOnlineFriend` to skip the handshake reload
+// dance (covered exhaustively in family-mode-handshake.spec.ts) and stay
+// focused on the encryption / sync path.
 
 test.describe('Familienmodus – Erinnerung teilen, empfangen, ergänzen (FR-15.10 – FR-15.21)', () => {
   test('Senden ist gesperrt, solange Empfänger oder Erinnerung fehlen', async ({ browser }) => {
@@ -64,9 +62,8 @@ test.describe('Familienmodus – Erinnerung teilen, empfangen, ergänzen (FR-15.
     await bobCtx.close()
   })
 
-  // eslint-disable-next-line playwright/no-skipped-test
-  test.fixme('Alice teilt Erinnerung mit Bob, Bob ergänzt sie zurück', async ({ browser }) => {
-    test.setTimeout(90_000)
+  test('Alice teilt Erinnerung mit Bob, Bob ergänzt sie zurück', async ({ browser }) => {
+    test.setTimeout(60_000)
     const state = createMockState()
     const { ctx: aliceCtx, page: alice } = await spawnDevice(browser, state, 'alice')
     const { ctx: bobCtx, page: bob } = await spawnDevice(browser, state, 'bob')

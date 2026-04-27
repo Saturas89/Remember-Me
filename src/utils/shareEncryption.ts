@@ -54,35 +54,21 @@ export interface EncryptedImage {
 // online-sharing module to the existing invite-link code. When Vite chunks
 // the bundle, offline-only users never pull in this file.
 
-async function readAllChunks(readable: ReadableStream<Uint8Array<ArrayBuffer>>): Promise<Uint8Array<ArrayBuffer>> {
-  const reader = readable.getReader()
-  const chunks: Uint8Array[] = []
-  let total = 0
-  try {
-    while (true) {
-      const { done, value } = await reader.read()
-      if (done) break
-      chunks.push(value)
-      total += value.length
-    }
-  } finally {
-    reader.releaseLock()
-  }
-  const out = new Uint8Array(total)
-  let offset = 0
-  for (const chunk of chunks) { out.set(chunk, offset); offset += chunk.length }
-  return out
-}
-
+// Compress via the Blob → pipeThrough → Response pipeline. The earlier
+// manual `getWriter().write() → close() → readAllChunks()` form deadlocks
+// in some Chromium builds when the bundled module is invoked from a React
+// event handler: `close()` awaits backpressure resolution, which only
+// happens once the readable side is consumed – but the read happens
+// *after* close. Using Response.arrayBuffer over the piped stream lets the
+// browser interleave writing and reading internally.
 async function compress(text: string): Promise<Uint8Array<ArrayBuffer>> {
+  const bytes = new TextEncoder().encode(text)
   if (typeof CompressionStream === 'undefined') {
-    return new TextEncoder().encode(text)
+    return bytes
   }
-  const stream = new CompressionStream('deflate-raw')
-  const writer = stream.writable.getWriter()
-  await writer.write(new TextEncoder().encode(text))
-  await writer.close()
-  return readAllChunks(stream.readable)
+  const stream = new Blob([bytes]).stream().pipeThrough(new CompressionStream('deflate-raw'))
+  const buf = await new Response(stream).arrayBuffer()
+  return new Uint8Array(buf)
 }
 
 async function decompress(data: Uint8Array<ArrayBuffer>): Promise<string> {
@@ -90,11 +76,9 @@ async function decompress(data: Uint8Array<ArrayBuffer>): Promise<string> {
     return new TextDecoder().decode(data)
   }
   try {
-    const stream = new DecompressionStream('deflate-raw')
-    const writer = stream.writable.getWriter()
-    await writer.write(data)
-    await writer.close()
-    return new TextDecoder().decode(await readAllChunks(stream.readable))
+    const stream = new Blob([data]).stream().pipeThrough(new DecompressionStream('deflate-raw'))
+    const buf = await new Response(stream).arrayBuffer()
+    return new TextDecoder().decode(new Uint8Array(buf))
   } catch {
     // Payload wasn't compressed – treat as raw UTF-8 (forwards-compat fallback)
     return new TextDecoder().decode(data)
