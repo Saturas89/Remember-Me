@@ -28,8 +28,11 @@ test.describe('REQ-016 – Reminder Settings', () => {
     const reminderSettings = page.getByTestId('reminder-settings')
     await expect(reminderSettings).toBeVisible()
 
+    // Heading role to avoid substring collision (iosFallbackHint also enthält "Erinnerungen")
     await expect(
-      reminderSettings.getByText(de.reminder.settings.title),
+      reminderSettings.getByRole('heading', {
+        name: de.reminder.settings.title,
+      }),
     ).toBeVisible()
   })
 
@@ -61,13 +64,13 @@ test.describe('REQ-016 – Reminder Settings', () => {
 
     const settings = page.getByTestId('reminder-settings')
     await expect(
-      settings.getByText(de.reminder.settings.streakLabel),
+      settings.getByRole('heading', { name: de.reminder.settings.streakLabel }),
     ).toBeVisible()
     await expect(
-      settings.getByText(de.reminder.settings.streakCurrent),
+      settings.getByText(de.reminder.settings.streakCurrent, { exact: true }),
     ).toBeVisible()
     await expect(
-      settings.getByText(de.reminder.settings.streakLongest),
+      settings.getByText(de.reminder.settings.streakLongest, { exact: true }),
     ).toBeVisible()
   })
 
