@@ -25,7 +25,6 @@ jobs:
       feature_branch: ${{ steps.vars.outputs.branch }}
       spec_file:     ${{ steps.vars.outputs.spec_file }}
       spec_slug:     ${{ steps.vars.outputs.slug }}
-      spec_content:  ${{ steps.vars.outputs.content }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -33,25 +32,38 @@ jobs:
 
       - id: vars
         env:
-          EVENT_NAME: ${{ github.event_name }}
+          EVENT_NAME:    ${{ github.event_name }}
           DISPATCH_SPEC: ${{ github.event.inputs.spec_file }}
-          REF_NAME: ${{ github.ref_name }}
+          REF_NAME:      ${{ github.ref_name }}
+          PUSH_BEFORE:   ${{ github.event.before }}
+          PUSH_AFTER:    ${{ github.sha }}
         run: |
-          set -euo pipefail
+          set -euxo pipefail
           if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
-            SPEC_FILE="$DISPATCH_SPEC"
-            BRANCH="$REF_NAME"
+            SPEC_FILE="$(basename "$DISPATCH_SPEC")"
           else
-            SPEC_FILE=$(jq -r \
-              '[.commits[] | (.added + .modified)[] | select(startswith("docs/requirements/REQ-") and endswith(".md"))][0] // ""' \
-              "$GITHUB_EVENT_PATH")
-            if [ -z "$SPEC_FILE" ] || [ "$SPEC_FILE" = "null" ]; then
-              echo "Push touched a REQ-*.md file (per path filter) but event payload lists none — aborting." >&2
+            ZERO="0000000000000000000000000000000000000000"
+            if [ -z "${PUSH_BEFORE:-}" ] || [ "$PUSH_BEFORE" = "$ZERO" ]; then
+              git fetch --no-tags --prune --depth=1 origin main || true
+              if git rev-parse --verify --quiet origin/main >/dev/null; then
+                RANGE="origin/main..$PUSH_AFTER"
+              else
+                RANGE="$PUSH_AFTER"
+              fi
+            else
+              RANGE="$PUSH_BEFORE..$PUSH_AFTER"
+            fi
+            CHANGED=$(git log --name-only --pretty=format: "$RANGE" 2>/dev/null | sort -u || true)
+            echo "Changed files in $RANGE:"
+            printf '%s\n' "$CHANGED"
+            SPEC_FILE=$(printf '%s\n' "$CHANGED" | grep -E '^docs/requirements/REQ-.*\.md$' | head -n1 || true)
+            if [ -z "$SPEC_FILE" ]; then
+              echo "Path filter matched but no docs/requirements/REQ-*.md in range $RANGE — aborting." >&2
               exit 1
             fi
             SPEC_FILE="$(basename "$SPEC_FILE")"
-            BRANCH="$REF_NAME"
           fi
+          BRANCH="$REF_NAME"
           if [ ! -f "docs/requirements/$SPEC_FILE" ]; then
             echo "Spec file docs/requirements/$SPEC_FILE not found on branch $BRANCH" >&2
             exit 1
@@ -60,12 +72,6 @@ jobs:
           echo "spec_file=$SPEC_FILE" >> "$GITHUB_OUTPUT"
           echo "slug=$SLUG"           >> "$GITHUB_OUTPUT"
           echo "branch=$BRANCH"       >> "$GITHUB_OUTPUT"
-          {
-            echo "content<<SPECEOF"
-            cat "docs/requirements/$SPEC_FILE"
-            echo
-            echo "SPECEOF"
-          } >> "$GITHUB_OUTPUT"
 
   generate:
     needs: prepare
@@ -90,15 +96,16 @@ jobs:
           cache: npm
       - run: npm ci
 
-      - name: Build role-specific prompt
+      - name: Build role-specific prompt file
         id: prompt
         env:
-          SPEC_CONTENT: ${{ needs.prepare.outputs.spec_content }}
-          SPEC_SLUG:    ${{ needs.prepare.outputs.spec_slug }}
-          ROLE:         ${{ matrix.role }}
+          SPEC_FILE: ${{ needs.prepare.outputs.spec_file }}
+          SPEC_SLUG: ${{ needs.prepare.outputs.spec_slug }}
+          ROLE:      ${{ matrix.role }}
         run: |
+          set -euxo pipefail
+          PROMPT_FILE="$RUNNER_TEMP/prompt-$ROLE.md"
           {
-            echo "text<<PEOF"
             if [ "$ROLE" = "implementation" ]; then
               cat .github/prompts/impl-agent.md
             else
@@ -107,23 +114,25 @@ jobs:
             echo
             echo "## Spec: $SPEC_SLUG"
             echo
-            echo "$SPEC_CONTENT"
-            echo "PEOF"
-          } >> "$GITHUB_OUTPUT"
+            cat "docs/requirements/$SPEC_FILE"
+          } > "$PROMPT_FILE"
+          echo "prompt_file=$PROMPT_FILE" >> "$GITHUB_OUTPUT"
+          wc -c "$PROMPT_FILE"
 
       - name: Run Claude Code agent (${{ matrix.role }})
-        uses: anthropics/claude-code-action@v1
+        uses: anthropics/claude-code-base-action@v0.0.63
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          prompt: ${{ steps.prompt.outputs.text }}
-          claude_args: >-
-            --allowedTools "Read,Glob,Grep,Edit,Write,Bash(npm test:*),Bash(npx vitest:*),Bash(npx playwright:*)"
-            --max-turns 40
+          prompt_file: ${{ steps.prompt.outputs.prompt_file }}
+          allowed_tools: "Read,Glob,Grep,Edit,Write,Bash(npm test:*),Bash(npx vitest:*),Bash(npx playwright:*)"
+          max_turns: "40"
+          timeout_minutes: "25"
 
       - name: Rebase & push disjoint changes
         run: |
           git config user.name  "claude-agent-${{ matrix.role }}"
           git config user.email "claude-${{ matrix.role }}@users.noreply.github.com"
+          rm -f output.txt
           git add -A
           if git diff --cached --quiet; then
             echo "No changes produced by ${{ matrix.role }} agent"
@@ -166,13 +175,19 @@ jobs:
 
             Die bestehende E2E-Matrix (5 Browser) läuft auf diesem PR. Grün = beide Spec-Interpretationen passen zusammen.
         run: |
+          set -euxo pipefail
+          gh auth status || true
           existing=$(gh pr list --head "$HEAD" --base main --state open --json number --jq '.[0].number // empty')
           if [ -n "$existing" ]; then
             echo "PR #$existing already open for $HEAD — skipping."
             exit 0
           fi
-          gh pr create \
+          if ! gh pr create \
             --base main \
             --head "$HEAD" \
             --title "feat($SPEC_SLUG): parallel impl + tests" \
-            --body "$PR_BODY"
+            --body "$PR_BODY" 2>&1 | tee /tmp/pr-output.txt; then
+            echo "::warning::gh pr create failed. Falls Repo-Setting 'Allow GitHub Actions to create and approve pull requests' deaktiviert ist, PR manuell anlegen."
+            cat /tmp/pr-output.txt
+            exit 0
+          fi

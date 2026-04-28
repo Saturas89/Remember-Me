@@ -193,6 +193,27 @@ export interface Translations {
     desc: string
     allow: string
     dismiss: string
+    settings: {
+      title: string
+      toggleLabel: string
+      cadenceExplanation: string
+      quietHours: string
+      streakLabel: string
+      streakCurrent: string
+      streakLongest: string
+      iosFallbackHint: string
+      permissionDeniedHint: string
+    }
+    welcomeBack: {
+      title: string
+      bodyDays: string
+      continueCta: string
+      dismiss: string
+    }
+    milestone: {
+      bodyAnswered: string
+      bodyCategoryDone: string
+    }
   }
 
   friends: {
