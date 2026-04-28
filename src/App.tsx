@@ -43,8 +43,10 @@ import { SEOHead } from './components/SEOHead'
 import { InstallBanner } from './components/InstallBanner'
 import { UpdateBanner } from './components/UpdateBanner'
 import { ReleaseNotesModal } from './components/ReleaseNotesModal'
+import { ReminderBanner } from './components/ReminderBanner'
 import { BottomNav } from './components/BottomNav'
 import { useServiceWorker } from './hooks/useServiceWorker'
+import { useReminder } from './hooks/useReminder'
 import { exportAsMarkdown, exportAsEnrichedJSON, downloadFile } from './utils/export'
 import { importFile } from './utils/archiveImport'
 import type { Category, InviteData, AnswerExport, MemorySharePayload, ContactHandshake } from './types'
@@ -241,6 +243,7 @@ export default function App() {
   const [showReleaseNotes, setShowReleaseNotes] = useState(false)
   const { state: installState, visible: installVisible, triggerInstall, dismiss: dismissInstall } = useInstallPrompt()
   const { needRefresh, applyUpdate, dismiss: dismissUpdate } = useServiceWorker()
+  const { showPrompt: showReminderPrompt, requestPermission: enableReminder, dismissPrompt: dismissReminder } = useReminder()
 
   // Sync view with browser back/forward navigation
   useEffect(() => {
@@ -508,6 +511,13 @@ export default function App() {
 
       {installVisible && <InstallBanner state={installState} onInstall={triggerInstall} onDismiss={dismissInstall} />}
       {needRefresh && <UpdateBanner onUpdate={applyUpdate} onDismiss={dismissUpdate} onViewNotes={() => setShowReleaseNotes(true)} />}
+      {!installVisible && !needRefresh && showReminderPrompt && (
+        <ReminderBanner
+          visible={showReminderPrompt}
+          onEnable={enableReminder}
+          onDismiss={dismissReminder}
+        />
+      )}
       {showReleaseNotes && <ReleaseNotesModal onClose={() => setShowReleaseNotes(false)} />}
     </>
   )

@@ -188,6 +188,23 @@ export interface Translations {
     versionPrefix: string
   }
 
+  reminder: {
+    title: string
+    desc: string
+    allow: string
+    dismiss: string
+    welcomeBack: {
+      title: string
+      bodyDays: string
+      continueCta: string
+      dismiss: string
+    }
+    milestone: {
+      bodyAnswered: string
+      bodyCategoryDone: string
+    }
+  }
+
   friends: {
     pageTitle: string
     topbarTitle: string

@@ -179,6 +179,23 @@ export const UI_EN = {
     versionPrefix: 'Version',
   },
 
+  reminder: {
+    title: 'Enable reminders',
+    desc: 'We\'ll remind you after 2 days to continue writing your legacy.',
+    allow: 'Allow',
+    dismiss: 'Dismiss notification',
+    welcomeBack: {
+      title: 'Welcome back!',
+      bodyDays: 'You\'ve been away for {days} days. Time to continue your story.',
+      continueCta: 'Continue',
+      dismiss: 'Dismiss',
+    },
+    milestone: {
+      bodyAnswered: 'Congrats — {count} memories captured!',
+      bodyCategoryDone: 'Category "{category}" fully completed!',
+    },
+  },
+
   friends: {
     pageTitle: 'Invite friends',
     topbarTitle: 'Collect memories',
