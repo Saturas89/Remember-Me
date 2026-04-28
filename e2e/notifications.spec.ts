@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { de } from '../src/locales/de/ui'
+import { UI_DE as de } from '../src/locales/de/ui'
 
 test.describe('PWA Notifications (REQ-016)', () => {
   test.beforeEach(async ({ page }) => {
