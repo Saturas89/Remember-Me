@@ -1,26 +1,21 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
 import { useStreak } from './useStreak'
+import type { StreakState } from './useStreak'
 
-const mockLocalStorage = {
-  getItem: vi.fn(),
-  setItem: vi.fn(),
-  removeItem: vi.fn()
-}
+// Mock useAnswers — useStreak delegates state to it
+const mockSaveStreak = vi.fn()
+let mockStreak: StreakState | undefined
+let mockAnswers: Record<string, { value: string }> = {}
 
-Object.defineProperty(window, 'localStorage', {
-  value: mockLocalStorage
-})
-
-const mockNavigator = {
-  setAppBadge: vi.fn(),
-  clearAppBadge: vi.fn()
-}
-
-Object.defineProperty(window, 'navigator', {
-  value: mockNavigator,
-  writable: true
-})
+vi.mock('./useAnswers', () => ({
+  useAnswers: () => ({
+    isLoaded: true,
+    answers: mockAnswers,
+    streak: mockStreak,
+    saveStreak: mockSaveStreak,
+  }),
+}))
 
 describe('useStreak', () => {
   const todayISO = '2026-04-27'
@@ -28,179 +23,131 @@ describe('useStreak', () => {
   const threeDaysAgoISO = '2026-04-24'
 
   beforeEach(() => {
-    vi.clearAllMocks()
-    mockLocalStorage.getItem.mockReturnValue(null)
+    mockSaveStreak.mockReset()
+    mockStreak = undefined
+    mockAnswers = {}
     vi.useFakeTimers()
-    vi.setSystemTime(new Date('2026-04-27T10:00:00Z'))
+    // System time at noon local to avoid timezone date-shift surprises
+    vi.setSystemTime(new Date(`${todayISO}T12:00:00`))
   })
 
   afterEach(() => {
     vi.useRealTimers()
   })
 
-  it('returns initial streak state when no localStorage data', () => {
+  it('returns initial streak state when no stored streak exists', () => {
     const { result } = renderHook(() => useStreak())
-    
-    expect(result.current.streak).toEqual({
-      current: 0,
-      longest: 0,
-      lastAnswerDate: ''
-    })
+
+    expect(result.current.streak.current).toBe(0)
+    expect(result.current.streak.longest).toBe(0)
     expect(result.current.totalAnswered).toBe(0)
   })
 
-  it('loads existing streak from localStorage', () => {
-    const existingState = JSON.stringify({
-      streak: {
-        current: 5,
-        longest: 12,
-        lastAnswerDate: yesterdayISO
-      },
-      answered: 42
-    })
-    mockLocalStorage.getItem.mockReturnValue(existingState)
+  it('exposes existing stored streak', () => {
+    mockStreak = { current: 5, longest: 12, lastAnswerDate: yesterdayISO }
+    mockAnswers = {
+      a: { value: 'one' },
+      b: { value: 'two' },
+    }
 
     const { result } = renderHook(() => useStreak())
-    
+
     expect(result.current.streak).toEqual({
       current: 5,
       longest: 12,
-      lastAnswerDate: yesterdayISO
+      lastAnswerDate: yesterdayISO,
     })
-    expect(result.current.totalAnswered).toBe(42)
+    expect(result.current.totalAnswered).toBe(2)
   })
 
   it('increments current streak when answering on consecutive days', () => {
-    const existingState = JSON.stringify({
-      streak: {
-        current: 3,
-        longest: 5,
-        lastAnswerDate: yesterdayISO
-      },
-      answered: 10
-    })
-    mockLocalStorage.getItem.mockReturnValue(existingState)
+    mockStreak = { current: 3, longest: 5, lastAnswerDate: yesterdayISO }
 
     const { result } = renderHook(() => useStreak())
-    
+
     act(() => {
       result.current.recordAnswer(todayISO, 11)
     })
 
-    expect(result.current.streak.current).toBe(4)
-    expect(result.current.streak.longest).toBe(5)
-    expect(result.current.streak.lastAnswerDate).toBe(todayISO)
-    expect(result.current.totalAnswered).toBe(11)
+    expect(mockSaveStreak).toHaveBeenCalledWith(
+      expect.objectContaining({
+        current: 4,
+        longest: 5,
+        lastAnswerDate: todayISO,
+      }),
+    )
   })
 
   it('updates longest streak when current exceeds it', () => {
-    const existingState = JSON.stringify({
-      streak: {
-        current: 5,
-        longest: 5,
-        lastAnswerDate: yesterdayISO
-      },
-      answered: 20
-    })
-    mockLocalStorage.getItem.mockReturnValue(existingState)
+    mockStreak = { current: 5, longest: 5, lastAnswerDate: yesterdayISO }
 
     const { result } = renderHook(() => useStreak())
-    
+
     act(() => {
       result.current.recordAnswer(todayISO, 21)
     })
 
-    expect(result.current.streak.current).toBe(6)
-    expect(result.current.streak.longest).toBe(6)
+    expect(mockSaveStreak).toHaveBeenCalledWith(
+      expect.objectContaining({ current: 6, longest: 6 }),
+    )
   })
 
   it('resets current streak when gap > 1 day', () => {
-    const existingState = JSON.stringify({
-      streak: {
-        current: 5,
-        longest: 8,
-        lastAnswerDate: threeDaysAgoISO
-      },
-      answered: 15
-    })
-    mockLocalStorage.getItem.mockReturnValue(existingState)
+    mockStreak = { current: 5, longest: 8, lastAnswerDate: threeDaysAgoISO }
 
     const { result } = renderHook(() => useStreak())
-    
+
     act(() => {
       result.current.recordAnswer(todayISO, 16)
     })
 
-    expect(result.current.streak.current).toBe(1)
-    expect(result.current.streak.longest).toBe(8)
+    expect(mockSaveStreak).toHaveBeenCalledWith(
+      expect.objectContaining({ current: 1, longest: 8 }),
+    )
   })
 
   it('checkStreakReset resets current when lastAnswerDate > 1 day ago', () => {
-    const existingState = JSON.stringify({
-      streak: {
-        current: 7,
-        longest: 10,
-        lastAnswerDate: threeDaysAgoISO
-      },
-      answered: 25
-    })
-    mockLocalStorage.getItem.mockReturnValue(existingState)
+    mockStreak = { current: 7, longest: 10, lastAnswerDate: threeDaysAgoISO }
 
-    const { result } = renderHook(() => useStreak())
-    
-    act(() => {
-      result.current.checkStreakReset()
-    })
+    renderHook(() => useStreak())
 
-    expect(result.current.streak.current).toBe(0)
-    expect(result.current.streak.longest).toBe(10)
+    // useEffect on mount calls checkStreakReset → triggers saveStreak with current=0
+    expect(mockSaveStreak).toHaveBeenCalledWith(
+      expect.objectContaining({ current: 0, longest: 10 }),
+    )
   })
 
   it('does not reset streak when within 1 day', () => {
-    const existingState = JSON.stringify({
-      streak: {
-        current: 4,
-        longest: 6,
-        lastAnswerDate: yesterdayISO
-      },
-      answered: 12
-    })
-    mockLocalStorage.getItem.mockReturnValue(existingState)
+    mockStreak = { current: 4, longest: 6, lastAnswerDate: yesterdayISO }
 
-    const { result } = renderHook(() => useStreak())
-    
-    act(() => {
-      result.current.checkStreakReset()
-    })
+    renderHook(() => useStreak())
 
-    expect(result.current.streak.current).toBe(4)
+    expect(mockSaveStreak).not.toHaveBeenCalled()
   })
 
   it('uses today as default when recordAnswer called without date', () => {
     const { result } = renderHook(() => useStreak())
-    
+
     act(() => {
       result.current.recordAnswer(undefined, 1)
     })
 
-    expect(result.current.streak.lastAnswerDate).toBe(todayISO)
-    expect(result.current.streak.current).toBe(1)
+    expect(mockSaveStreak).toHaveBeenCalledWith(
+      expect.objectContaining({ lastAnswerDate: todayISO, current: 1 }),
+    )
   })
 
-  it('persists streak changes to localStorage', () => {
+  it('persists streak changes via saveStreak', () => {
     const { result } = renderHook(() => useStreak())
-    
+
     act(() => {
       result.current.recordAnswer(todayISO, 5)
     })
 
-    expect(mockLocalStorage.setItem).toHaveBeenCalledWith(
-      'remember-me-state',
-      expect.stringContaining('"current":1')
-    )
-    expect(mockLocalStorage.setItem).toHaveBeenCalledWith(
-      'remember-me-state',
-      expect.stringContaining(`"lastAnswerDate":"${todayISO}"`)
-    )
+    expect(mockSaveStreak).toHaveBeenCalled()
+    const calls = mockSaveStreak.mock.calls
+    const last = calls[calls.length - 1]?.[0] as StreakState
+    expect(last.current).toBe(1)
+    expect(last.lastAnswerDate).toBe(todayISO)
   })
 })

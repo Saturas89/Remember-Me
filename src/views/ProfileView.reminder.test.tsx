@@ -39,14 +39,20 @@ vi.mock('../hooks/useStreak', () => ({
   useStreak: () => mockUseStreak
 }))
 
-// Mock Notification API
-const mockNotification = {
-  permission: 'default' as NotificationPermission
-}
+// Mock Notification API — needs prototype.showTrigger so the supportsShowTrigger
+// guard in ProfileView renders the toggle (not the iOS fallback).
+const mockNotification = Object.assign(
+  function Notification() { /* noop */ },
+  {
+    permission: 'default' as NotificationPermission,
+    prototype: { showTrigger: undefined },
+  },
+)
 
 Object.defineProperty(window, 'Notification', {
   value: mockNotification,
-  configurable: true
+  configurable: true,
+  writable: true,
 })
 
 afterEach(() => {
@@ -81,6 +87,13 @@ describe('ProfileView - Reminder Settings (REQ-016)', () => {
     mockUseReminder.isEnabled = false
     mockUseReminder.state.permission = 'none'
     mockNotification.permission = 'default'
+    mockNotification.prototype = { showTrigger: undefined }
+    // Re-anchor the global to our mock — earlier tests may have replaced it
+    Object.defineProperty(window, 'Notification', {
+      value: mockNotification,
+      configurable: true,
+      writable: true,
+    })
   })
 
   it('renders reminder settings card with correct testid', () => {
@@ -230,13 +243,13 @@ describe('ProfileView - Reminder Settings (REQ-016)', () => {
     expect(currentElements.length).toBeGreaterThanOrEqual(2) // current + longest
   })
 
-  it('toggle is disabled when permission denied', () => {
+  it('shows permission-denied hint instead of toggle when denied (FR-16.11)', () => {
     mockNotification.permission = 'denied'
-    
+
     render(<ProfileView {...defaultProps} />)
-    
-    const toggle = screen.getByTestId('reminder-toggle') as HTMLInputElement
-    expect(toggle.disabled).toBe(true)
+
+    expect(screen.queryByTestId('reminder-toggle')).toBeNull()
+    expect(screen.getByText(de.reminder.settings.permissionDeniedHint)).not.toBeNull()
   })
 
   it('does not show toggle when showTrigger unavailable', () => {

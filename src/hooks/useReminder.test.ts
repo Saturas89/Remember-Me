@@ -2,6 +2,17 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { renderHook, act, waitFor } from '@testing-library/react'
 
 const REMINDER_PREF_KEY = 'rm-reminder-pref'
+const REMINDER_STATE_KEY = 'rm-reminder-state'
+
+function readPermission(): string | null {
+  const raw = localStorage.getItem(REMINDER_STATE_KEY)
+  if (!raw) return null
+  try {
+    return JSON.parse(raw).permission ?? null
+  } catch {
+    return null
+  }
+}
 
 function installNotification(
   permission: NotificationPermission,
@@ -60,8 +71,8 @@ describe('useReminder', () => {
     expect(result.current.showPrompt).toBe(true)
   })
 
-  it('restores "enabled" preference from localStorage', async () => {
-    localStorage.setItem(REMINDER_PREF_KEY, 'enabled')
+  it('restores "enabled" preference from rm-reminder-state', async () => {
+    localStorage.setItem(REMINDER_STATE_KEY, JSON.stringify({ permission: 'enabled', backoffStage: 0 }))
     installNotification('granted', async () => 'granted', true)
     const useReminder = await loadHook()
     const { result } = renderHook(() => useReminder())
@@ -70,7 +81,7 @@ describe('useReminder', () => {
   })
 
   it('restores "dismissed" preference and hides the prompt', async () => {
-    localStorage.setItem(REMINDER_PREF_KEY, 'dismissed')
+    localStorage.setItem(REMINDER_STATE_KEY, JSON.stringify({ permission: 'dismissed', backoffStage: 0 }))
     installNotification('default', async () => 'granted', true)
     const useReminder = await loadHook()
     const { result } = renderHook(() => useReminder())
@@ -78,12 +89,20 @@ describe('useReminder', () => {
     expect(result.current.isEnabled).toBe(false)
   })
 
+  it('deletes the legacy rm-reminder-pref key on mount (FR-16.13)', async () => {
+    localStorage.setItem(REMINDER_PREF_KEY, 'enabled')
+    installNotification('default', async () => 'granted', true)
+    const useReminder = await loadHook()
+    renderHook(() => useReminder())
+    expect(localStorage.getItem(REMINDER_PREF_KEY)).toBeNull()
+  })
+
   it('dismissPrompt stores the "dismissed" preference', async () => {
     installNotification('default', async () => 'granted', true)
     const useReminder = await loadHook()
     const { result } = renderHook(() => useReminder())
     act(() => result.current.dismissPrompt())
-    expect(localStorage.getItem(REMINDER_PREF_KEY)).toBe('dismissed')
+    expect(readPermission()).toBe('dismissed')
     expect(result.current.showPrompt).toBe(false)
   })
 
@@ -95,7 +114,7 @@ describe('useReminder', () => {
     await act(async () => { await result.current.requestPermission() })
     expect(req).toHaveBeenCalled()
     await waitFor(() => expect(result.current.isEnabled).toBe(true))
-    expect(localStorage.getItem(REMINDER_PREF_KEY)).toBe('enabled')
+    expect(readPermission()).toBe('enabled')
   })
 
   it('requestPermission switches to "dismissed" on denial', async () => {
@@ -104,7 +123,7 @@ describe('useReminder', () => {
     const useReminder = await loadHook()
     const { result } = renderHook(() => useReminder())
     await act(async () => { await result.current.requestPermission() })
-    expect(localStorage.getItem(REMINDER_PREF_KEY)).toBe('dismissed')
+    expect(readPermission()).toBe('dismissed')
     expect(result.current.isEnabled).toBe(false)
   })
 })

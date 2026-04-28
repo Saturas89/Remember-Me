@@ -25,7 +25,7 @@ export function getNotificationContent(opts: NotificationContentOptions): Notifi
   const body = questionTitle || messages[nextIdx]
   
   return {
-    title: locale === 'de' ? 'Zeit für Erinnerungen!' : 'Time for memories!',
+    title: 'Remember Me',
     body,
     variantIdx: nextIdx
   }

@@ -55,9 +55,9 @@ export function useStreak(): UseStreakReturn {
   const defaultStreak: StreakState = {
     current: 0,
     longest: 0,
-    lastAnswerDate: getLocalISODate()
+    lastAnswerDate: ''  // empty = no prior answer recorded
   }
-  
+
   const streak = storedStreak || defaultStreak
   const totalAnswered = Object.values(answers).filter(
     a => a.value.trim() !== '' || 
@@ -72,18 +72,23 @@ export function useStreak(): UseStreakReturn {
     
     const today = answeredAt || getLocalISODate()
     const currentStreak = streak
-    const daysSince = daysBetween(currentStreak.lastAnswerDate, today)
-    
+
     let newCurrent: number
-    if (daysSince === 0) {
-      // Same day, keep current streak
-      newCurrent = currentStreak.current
-    } else if (daysSince === 1) {
-      // Next day, increment streak
-      newCurrent = currentStreak.current + 1
-    } else {
-      // Gap > 1 day, reset to 1
+    if (!currentStreak.lastAnswerDate) {
+      // First answer ever
       newCurrent = 1
+    } else {
+      const daysSince = daysBetween(currentStreak.lastAnswerDate, today)
+      if (daysSince === 0) {
+        // Same day, keep current streak
+        newCurrent = currentStreak.current
+      } else if (daysSince === 1) {
+        // Next day, increment streak
+        newCurrent = currentStreak.current + 1
+      } else {
+        // Gap > 1 day, reset to 1
+        newCurrent = 1
+      }
     }
     
     const newLongest = Math.max(currentStreak.longest, newCurrent)

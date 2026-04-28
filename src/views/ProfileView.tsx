@@ -157,6 +157,10 @@ export function ProfileView({
     if (restore.ok) setTimeout(() => setImportStatus(null), 5000)
   }
 
+  const hasNotificationApi = typeof window !== 'undefined' && typeof Notification !== 'undefined'
+  const currentPermission = hasNotificationApi ? Notification.permission : 'default'
+  const supportsShowTrigger = hasNotificationApi && Notification.prototype != null && 'showTrigger' in Notification.prototype
+
   return (
     <div className="profile-view">
       <h1 className="sr-only">{t.profile.pageTitle}</h1>
@@ -266,11 +270,11 @@ export function ProfileView({
       <section className="profile-card" data-testid="reminder-settings">
         <h2 className="profile-card__heading">{t.reminder.settings.title}</h2>
         
-        {Notification.permission === 'denied' ? (
+        {currentPermission === 'denied' ? (
           <div className="reminder-permission-denied">
             <p>{t.reminder.settings.permissionDeniedHint}</p>
           </div>
-        ) : !('showTrigger' in Notification.prototype) ? (
+        ) : !supportsShowTrigger ? (
           <div className="reminder-ios-fallback">
             <p>{t.reminder.settings.iosFallbackHint}</p>
           </div>
@@ -299,22 +303,22 @@ export function ProfileView({
               <p>{t.reminder.settings.cadenceExplanation}</p>
               <p>{t.reminder.settings.quietHours}</p>
             </div>
+          </div>
+        )}
 
-            {streak && (
-              <div className="streak-stats">
-                <h3>{t.reminder.settings.streakLabel}</h3>
-                <div className="streak-numbers">
-                  <div className="streak-stat">
-                    <span className="streak-stat__value">{streak.current}</span>
-                    <span className="streak-stat__label">{t.reminder.settings.streakCurrent}</span>
-                  </div>
-                  <div className="streak-stat">
-                    <span className="streak-stat__value">{streak.longest}</span>
-                    <span className="streak-stat__label">{t.reminder.settings.streakLongest}</span>
-                  </div>
-                </div>
+        {streak && (
+          <div className="streak-stats">
+            <h3>{t.reminder.settings.streakLabel}</h3>
+            <div className="streak-numbers">
+              <div className="streak-stat">
+                <span className="streak-stat__value">{streak.current}</span>
+                <span className="streak-stat__label">{t.reminder.settings.streakCurrent}</span>
               </div>
-            )}
+              <div className="streak-stat">
+                <span className="streak-stat__value">{streak.longest}</span>
+                <span className="streak-stat__label">{t.reminder.settings.streakLongest}</span>
+              </div>
+            </div>
           </div>
         )}
       </section>
