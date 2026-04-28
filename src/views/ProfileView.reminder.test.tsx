@@ -243,16 +243,17 @@ describe('ProfileView - Reminder Settings (REQ-016)', () => {
     expect(currentElements.length).toBeGreaterThanOrEqual(2) // current + longest
   })
 
-  it('shows permission-denied hint instead of toggle when denied (FR-16.11)', () => {
+  it('disables toggle and shows permission-denied hint when denied (FR-16.11)', () => {
     mockNotification.permission = 'denied'
 
     render(<ProfileView {...defaultProps} />)
 
-    expect(screen.queryByTestId('reminder-toggle')).toBeNull()
+    const toggle = screen.getByTestId('reminder-toggle') as HTMLInputElement
+    expect(toggle.disabled).toBe(true)
     expect(screen.getByText(de.reminder.settings.permissionDeniedHint)).not.toBeNull()
   })
 
-  it('does not show toggle when showTrigger unavailable', () => {
+  it('disables toggle and shows iOS hint when showTrigger unavailable', () => {
     // Mock iOS environment
     Object.defineProperty(window, 'Notification', {
       value: {
@@ -261,11 +262,12 @@ describe('ProfileView - Reminder Settings (REQ-016)', () => {
       },
       configurable: true
     })
-    
+
     render(<ProfileView {...defaultProps} />)
-    
-    const toggle = screen.queryByTestId('reminder-toggle')
-    expect(toggle).toBeNull()
+
+    const toggle = screen.getByTestId('reminder-toggle') as HTMLInputElement
+    expect(toggle.disabled).toBe(true)
+    expect(screen.getByText(de.reminder.settings.iosFallbackHint)).not.toBeNull()
   })
 
   it('streak stats show meaningful values for active users', () => {

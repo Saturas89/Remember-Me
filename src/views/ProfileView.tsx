@@ -269,42 +269,44 @@ export function ProfileView({
 
       <section className="profile-card" data-testid="reminder-settings">
         <h2 className="profile-card__heading">{t.reminder.settings.title}</h2>
-        
-        {currentPermission === 'denied' ? (
-          <div className="reminder-permission-denied">
-            <p>{t.reminder.settings.permissionDeniedHint}</p>
+
+        <div className="reminder-settings">
+          <div className="profile-field-row">
+            <label className="profile-field-label" htmlFor="reminder-toggle">
+              {t.reminder.settings.toggleLabel}
+            </label>
+            <input
+              id="reminder-toggle"
+              type="checkbox"
+              checked={reminder.isEnabled}
+              disabled={currentPermission === 'denied' || !supportsShowTrigger}
+              onChange={(e) => {
+                if (e.target.checked) {
+                  reminder.requestPermission()
+                } else {
+                  reminder.disable()
+                }
+              }}
+              data-testid="reminder-toggle"
+            />
           </div>
-        ) : !supportsShowTrigger ? (
-          <div className="reminder-ios-fallback">
-            <p>{t.reminder.settings.iosFallbackHint}</p>
+
+          <div className="reminder-explanation">
+            <p>{t.reminder.settings.cadenceExplanation}</p>
+            <p>{t.reminder.settings.quietHours}</p>
           </div>
-        ) : (
-          <div className="reminder-settings">
-            <div className="profile-field-row">
-              <label className="profile-field-label" htmlFor="reminder-toggle">
-                {t.reminder.settings.toggleLabel}
-              </label>
-              <input
-                id="reminder-toggle"
-                type="checkbox"
-                checked={reminder.isEnabled}
-                onChange={(e) => {
-                  if (e.target.checked) {
-                    reminder.requestPermission()
-                  } else {
-                    reminder.disable()
-                  }
-                }}
-                data-testid="reminder-toggle"
-              />
+
+          {currentPermission === 'denied' && (
+            <div className="reminder-permission-denied">
+              <p>{t.reminder.settings.permissionDeniedHint}</p>
             </div>
-            
-            <div className="reminder-explanation">
-              <p>{t.reminder.settings.cadenceExplanation}</p>
-              <p>{t.reminder.settings.quietHours}</p>
+          )}
+          {currentPermission !== 'denied' && !supportsShowTrigger && (
+            <div className="reminder-ios-fallback">
+              <p>{t.reminder.settings.iosFallbackHint}</p>
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
         {streak && (
           <div className="streak-stats">
