@@ -75,7 +75,6 @@ Teilen / Exportieren (PDF, Freunde einladen, KI-Export)
 - [x] **Hilfe & FAQ** – Datenschutz, Import, Export, Offline-Nutzung erklärt; eigene FAQ-Ansicht (REQ-010)
 - [x] **Erinnerungs-Archiv ZIP-Export** – Komplettarchiv als ZIP inkl. Fotos, Audio & Video; Share Sheet Integration (REQ-011)
 - [x] **Erinnerungs-Archiv-Import** – Wiederherstellung aus ZIP oder JSON-Backup; Fotos, Videos, Audio werden mitimportiert (REQ-013)
-- [ ] **Engagement-Benachrichtigungen** – OS-Reminder mit Backoff-Cadence (3/10/24 Tage), iOS-Welcome-Back-Banner, Streak-Tracking & Meilenstein-Glückwünsche (REQ-016)
 - [ ] Mehrsprachigkeit (DE / EN)
 - [ ] **Lebenszeitlinie** – chronologische Ansicht aller Erlebnisse und Fotos auf einer visuellen Timeline, filterbar nach Jahr und Kategorie; optional ungefähres Alter pro Eintrag (z. B. „ca. 8 Jahre alt"), wird automatisch aus Geburtsjahr vorgeschlagen (REQ-006)
 - [ ] **Privater Sync** – Optionaler E2EE-Sync (Web Crypto API, verschlüsselte Synchronisation zwischen Geräten, opt-in)
@@ -169,7 +168,6 @@ Update-Banner: `src/components/UpdateBanner.tsx` – Toast bei verfügbarem SW-U
 | Privater Sync | Verschlüsselte Synchronisation zwischen Geräten (geplant) |
 | Import Erinnerungen | Import aus sozialen Netzwerken, Clouds, lokalen Ordnern (geplant) |
 | Biografie-Generator | KI-gestützte Umwandlung der Antworten in eine fertige Lebensgeschichte (geplant) |
-| Engagement-Benachrichtigungen | Reminder-System mit systemfester 3/10/24-Tage-Backoff-Cadence, Variantenpool, Welcome-Back-Banner als iOS-Fallback und Meilenstein-Glückwünschen (REQ-016, geplant) |
 
 ---
 
