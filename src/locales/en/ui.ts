@@ -179,34 +179,6 @@ export const UI_EN = {
     versionPrefix: 'Version',
   },
 
-  reminder: {
-    title: 'Enable reminders',
-    desc: 'We\'ll remind you after 2 days to continue writing your legacy.',
-    allow: 'Allow',
-    dismiss: 'Dismiss notification',
-    settings: {
-      title: 'Reminders',
-      toggleLabel: 'Notifications active',
-      cadenceExplanation: 'We\'ll remind you after 3, 10 and 24 days of inactivity — then we go quiet.',
-      quietHours: 'Quiet hours: no reminders sent between 22:00 and 08:00.',
-      streakLabel: 'Streak',
-      streakCurrent: 'Current',
-      streakLongest: 'Longest',
-      iosFallbackHint: 'On iOS reminders currently only work inside the app.',
-      permissionDeniedHint: 'Can be enabled in browser / OS settings.',
-    },
-    welcomeBack: {
-      title: 'Welcome back!',
-      bodyDays: 'You\'ve been away for {days} days. Time to continue your story.',
-      continueCta: 'Continue',
-      dismiss: 'Dismiss',
-    },
-    milestone: {
-      bodyAnswered: 'Congrats — {count} memories captured!',
-      bodyCategoryDone: 'Category "{category}" fully completed!',
-    },
-  },
-
   friends: {
     pageTitle: 'Invite friends',
     topbarTitle: 'Collect memories',
