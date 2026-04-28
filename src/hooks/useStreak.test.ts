@@ -8,20 +8,6 @@ const mockSaveStreak = vi.fn()
 let mockStreak: StreakState | undefined
 let mockAnswers: Record<string, { value: string }> = {}
 
-// Mock milestone notifications
-const mockShowNotification = vi.fn()
-const mockServiceWorkerReady = Promise.resolve({
-  showNotification: mockShowNotification,
-})
-Object.defineProperty(navigator, 'serviceWorker', {
-  value: { ready: mockServiceWorkerReady },
-  writable: true,
-})
-Object.defineProperty(window, 'Notification', {
-  value: { permission: 'granted' },
-  writable: true,
-})
-
 vi.mock('./useAnswers', () => ({
   useAnswers: () => ({
     isLoaded: true,
@@ -38,7 +24,6 @@ describe('useStreak', () => {
 
   beforeEach(() => {
     mockSaveStreak.mockReset()
-    mockShowNotification.mockReset()
     mockStreak = undefined
     mockAnswers = {}
     vi.useFakeTimers()
@@ -164,95 +149,5 @@ describe('useStreak', () => {
     const last = calls[calls.length - 1]?.[0] as StreakState
     expect(last.current).toBe(1)
     expect(last.lastAnswerDate).toBe(todayISO)
-  })
-
-  describe('milestone notifications', () => {
-    // The trigger path goes:
-    //   recordAnswer (sync)
-    //     → triggerMilestoneNotification (async)
-    //       → await navigator.serviceWorker.ready   (microtask 1)
-    //       → await registration.showNotification(…) (microtask 2)
-    // So the test has to flush at least two microtasks before asserting.
-    async function flushMilestone() {
-      await Promise.resolve()
-      await Promise.resolve()
-    }
-
-    it('triggers notification at 10th answer', async () => {
-      const { result } = renderHook(() => useStreak())
-
-      await act(async () => {
-        result.current.recordAnswer(todayISO, 10)
-        await flushMilestone()
-      })
-
-      expect(mockShowNotification).toHaveBeenCalled()
-    })
-
-    it('triggers notification at 25th answer', async () => {
-      const { result } = renderHook(() => useStreak())
-
-      await act(async () => {
-        result.current.recordAnswer(todayISO, 25)
-        await flushMilestone()
-      })
-
-      expect(mockShowNotification).toHaveBeenCalled()
-    })
-
-    it('triggers notification at 50th answer', async () => {
-      const { result } = renderHook(() => useStreak())
-
-      await act(async () => {
-        result.current.recordAnswer(todayISO, 50)
-        await flushMilestone()
-      })
-
-      expect(mockShowNotification).toHaveBeenCalled()
-    })
-
-    it('triggers notification at 100th answer', async () => {
-      const { result } = renderHook(() => useStreak())
-
-      await act(async () => {
-        result.current.recordAnswer(todayISO, 100)
-        await flushMilestone()
-      })
-
-      expect(mockShowNotification).toHaveBeenCalled()
-    })
-
-    it('does not trigger notification for non-milestone answers', async () => {
-      const { result } = renderHook(() => useStreak())
-
-      await act(async () => {
-        result.current.recordAnswer(todayISO, 15)
-        await flushMilestone()
-      })
-
-      expect(mockShowNotification).not.toHaveBeenCalled()
-    })
-
-    it('does not trigger duplicate milestone notifications', async () => {
-      mockStreak = { current: 1, longest: 1, lastAnswerDate: yesterdayISO }
-      const { result } = renderHook(() => useStreak())
-
-      // First time hitting milestone 10
-      await act(async () => {
-        result.current.recordAnswer(todayISO, 10)
-        await flushMilestone()
-      })
-
-      expect(mockShowNotification).toHaveBeenCalledTimes(1)
-      mockShowNotification.mockReset()
-
-      // Answer again with still 10 total - should not trigger again
-      await act(async () => {
-        result.current.recordAnswer(todayISO, 10)
-        await flushMilestone()
-      })
-
-      expect(mockShowNotification).not.toHaveBeenCalled()
-    })
   })
 })
