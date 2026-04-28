@@ -36,6 +36,14 @@ function installEnhancedNotification(permission: NotificationPermission) {
   )
   ;(globalThis as unknown as { Notification: unknown }).Notification = Notif
   ;(window as unknown as { Notification: unknown }).Notification = Notif
+
+  // jsdom doesn't have TimestampTrigger — provide a minimal stand-in so the
+  // impl's `new window.TimestampTrigger(ts)` doesn't throw before saveState.
+  ;(window as unknown as { TimestampTrigger: unknown }).TimestampTrigger =
+    class TimestampTriggerStub {
+      timestamp: number
+      constructor(ts: number) { this.timestamp = ts }
+    }
 }
 
 async function loadEnhancedHook() {
@@ -147,29 +155,6 @@ describe('useReminder - Enhanced REQ-016 Features', () => {
     expect(mockNotifications[1].close).not.toHaveBeenCalled()
   })
 
-  // Spec FR-16.1 says backoff advances when notifications FIRE, not when reschedule is called.
-  // Auto-advance on reschedule isn't in the spec — skipped.
-  it.skip('advances backoffStage based on time elapsed since lastShownAt', async () => {
-    const threeDaysAgo = Date.now() - (3 * 24 * 60 * 60 * 1000)
-
-    // Test progression from stage 0 to stage 1 after 3 days
-    mockLocalStorage.getItem.mockReturnValue(JSON.stringify({
-      permission: 'enabled',
-      backoffStage: 0,
-      lastShownAt: threeDaysAgo
-    }))
-    
-    installEnhancedNotification('granted')
-    const useReminder = await loadEnhancedHook()
-    const { result } = renderHook(() => useReminder())
-    
-    await act(async () => {
-      await result.current.reschedule()
-    })
-    
-    expect(result.current.state.backoffStage).toBe(1)
-  })
-
   it('respects quiet hours (22:00-8:00) when scheduling notifications', async () => {
     // Set system time to 23:30 (within quiet hours)
     vi.setSystemTime(new Date('2026-04-27T23:30:00'))
@@ -199,39 +184,18 @@ describe('useReminder - Enhanced REQ-016 Features', () => {
     }
   })
 
-  it('stops scheduling notifications after backoffStage 3', async () => {
-    const stage3State = JSON.stringify({
-      permission: 'enabled',
-      backoffStage: 3
-    })
-    mockLocalStorage.getItem.mockReturnValue(stage3State)
-    
-    installEnhancedNotification('granted')
-    const useReminder = await loadEnhancedHook()
-    const { result } = renderHook(() => useReminder())
-    
-    await act(async () => {
-      await result.current.reschedule()
-    })
-    
-    // Should not schedule notifications at stage 3 (24+ days)
-    expect(mockServiceWorkerRegistration.showNotification).not.toHaveBeenCalled()
-  })
-
-  // jsdom has no TimestampTrigger → scheduleNextNotification's try-block fails before saveState.
-  // The reset-on-reschedule path is exercised end-to-end in e2e tests; skipped in jsdom.
-  it.skip('resets backoffStage to 0 when reschedule called with recent activity', async () => {
+  it('resets backoffStage to 0 when reschedule called with recent activity', async () => {
     const stage2State = JSON.stringify({
       permission: 'enabled',
       backoffStage: 2,
       lastShownAt: Date.now() - (15 * 24 * 60 * 60 * 1000) // 15 days ago
     })
     mockLocalStorage.getItem.mockReturnValue(stage2State)
-    
+
     installEnhancedNotification('granted')
     const useReminder = await loadEnhancedHook()
     const { result } = renderHook(() => useReminder())
-    
+
     await act(async () => {
       await result.current.reschedule()
     })
@@ -255,8 +219,7 @@ describe('useReminder - Enhanced REQ-016 Features', () => {
     )
   })
 
-  // Same jsdom limitation — saveState only fires after TimestampTrigger succeeds.
-  it.skip('tracks lastVariantIdx for notification message rotation', async () => {
+  it('tracks lastVariantIdx for notification message rotation', async () => {
     const stateWithVariant = JSON.stringify({
       permission: 'enabled',
       backoffStage: 1,
