@@ -8,6 +8,20 @@ const mockSaveStreak = vi.fn()
 let mockStreak: StreakState | undefined
 let mockAnswers: Record<string, { value: string }> = {}
 
+// Mock milestone notifications
+const mockShowNotification = vi.fn()
+const mockServiceWorkerReady = Promise.resolve({
+  showNotification: mockShowNotification,
+})
+Object.defineProperty(navigator, 'serviceWorker', {
+  value: { ready: mockServiceWorkerReady },
+  writable: true,
+})
+Object.defineProperty(window, 'Notification', {
+  value: { permission: 'granted' },
+  writable: true,
+})
+
 vi.mock('./useAnswers', () => ({
   useAnswers: () => ({
     isLoaded: true,
@@ -24,6 +38,7 @@ describe('useStreak', () => {
 
   beforeEach(() => {
     mockSaveStreak.mockReset()
+    mockShowNotification.mockReset()
     mockStreak = undefined
     mockAnswers = {}
     vi.useFakeTimers()
@@ -149,5 +164,77 @@ describe('useStreak', () => {
     const last = calls[calls.length - 1]?.[0] as StreakState
     expect(last.current).toBe(1)
     expect(last.lastAnswerDate).toBe(todayISO)
+  })
+
+  describe('milestone notifications', () => {
+    it('triggers notification at 10th answer', () => {
+      const { result } = renderHook(() => useStreak())
+
+      act(() => {
+        result.current.recordAnswer(todayISO, 10)
+      })
+
+      expect(mockShowNotification).toHaveBeenCalled()
+    })
+
+    it('triggers notification at 25th answer', () => {
+      const { result } = renderHook(() => useStreak())
+
+      act(() => {
+        result.current.recordAnswer(todayISO, 25)
+      })
+
+      expect(mockShowNotification).toHaveBeenCalled()
+    })
+
+    it('triggers notification at 50th answer', () => {
+      const { result } = renderHook(() => useStreak())
+
+      act(() => {
+        result.current.recordAnswer(todayISO, 50)
+      })
+
+      expect(mockShowNotification).toHaveBeenCalled()
+    })
+
+    it('triggers notification at 100th answer', () => {
+      const { result } = renderHook(() => useStreak())
+
+      act(() => {
+        result.current.recordAnswer(todayISO, 100)
+      })
+
+      expect(mockShowNotification).toHaveBeenCalled()
+    })
+
+    it('does not trigger notification for non-milestone answers', () => {
+      const { result } = renderHook(() => useStreak())
+
+      act(() => {
+        result.current.recordAnswer(todayISO, 15)
+      })
+
+      expect(mockShowNotification).not.toHaveBeenCalled()
+    })
+
+    it('does not trigger duplicate milestone notifications', () => {
+      mockStreak = { current: 1, longest: 1, lastAnswerDate: yesterdayISO }
+      const { result } = renderHook(() => useStreak())
+
+      // First time hitting milestone 10
+      act(() => {
+        result.current.recordAnswer(todayISO, 10)
+      })
+
+      expect(mockShowNotification).toHaveBeenCalledTimes(1)
+      mockShowNotification.mockReset()
+
+      // Answer again with still 10 total - should not trigger again
+      act(() => {
+        result.current.recordAnswer(todayISO, 10)
+      })
+
+      expect(mockShowNotification).not.toHaveBeenCalled()
+    })
   })
 })
