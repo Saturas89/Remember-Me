@@ -4162,6 +4162,12 @@ details[open] .faq-item__chevron {
   .friend-contribution__count { color: #666; }
 }
 
+/* ── Reminder Banner ────────────────────────────────── */
+.reminder-banner {
+  /* Reuses .update-banner styles but can be specialized if needed */
+  z-index: 1000;
+}
+
 /* ── Online Sharing – Intro / Hub ──────────────────────── */
 .friends-details {
   margin-bottom: 0.75rem;

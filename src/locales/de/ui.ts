@@ -179,6 +179,23 @@ export const UI_DE = {
     versionPrefix: 'Version',
   },
 
+  reminder: {
+    title: 'Erinnerungen aktivieren',
+    desc: 'Wir erinnern dich nach 2 Tagen daran, dein Vermächtnis weiterzuschreiben.',
+    allow: 'Erlauben',
+    dismiss: 'Benachrichtigung schließen',
+    welcomeBack: {
+      title: 'Willkommen zurück!',
+      bodyDays: 'Du warst {days} Tage nicht da. Zeit, deine Geschichte weiterzuschreiben.',
+      continueCta: 'Weitermachen',
+      dismiss: 'Schließen',
+    },
+    milestone: {
+      bodyAnswered: 'Glückwunsch — {count} Antworten festgehalten!',
+      bodyCategoryDone: 'Kategorie „{category}" komplett ausgefüllt!',
+    },
+  },
+
   friends: {
     pageTitle: 'Freunde einladen',
     topbarTitle: 'Erinnerung einsammeln',
