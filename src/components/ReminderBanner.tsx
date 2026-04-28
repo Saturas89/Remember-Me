@@ -25,7 +25,12 @@ export function ReminderBanner({ onEnable, onDismiss, visible }: Props) {
   if (!visible || !mounted) return null
 
   return (
-    <div className="update-banner reminder-banner" role="alert" aria-live="polite">
+    <div
+      className="update-banner reminder-banner"
+      data-testid="reminder-banner"
+      role="alert"
+      aria-live="polite"
+    >
       <span className="update-banner__icon" aria-hidden="true">🔔</span>
       <div className="update-banner__text">
         <strong>{t.reminder.title}</strong>

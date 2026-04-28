@@ -132,7 +132,15 @@ test.describe('REQ-016 – Welcome-Back-Banner (FR-16.8)', () => {
 })
 
 test.describe('REQ-016 – Milestone Notifications (FR-16.7)', () => {
-  test('triggers milestone after 10th answer', async ({ page }) => {
+  // The auto-generated test agent assumed a `/family` route that opens a
+  // direct answer-textbox to fire the 10th/25th answer. The current app has
+  // no such route — `/family` falls through to HomeView, which has no
+  // textbox. Until a deterministic "answer the next question" e2e flow
+  // exists, these tests would just hang waiting for elements that never
+  // appear. Unit tests in src/hooks/useStreak.test.ts cover the milestone
+  // trigger semantics directly. See docs/testing-conventions.md for the
+  // policy on .fixme tests.
+  test.fixme('triggers milestone after 10th answer', async ({ page }) => {
     let notificationCalled = false
     
     // Mock Notification API and service worker
@@ -184,7 +192,7 @@ test.describe('REQ-016 – Milestone Notifications (FR-16.7)', () => {
     expect(notificationTriggered).toBe(true)
   })
 
-  test('triggers milestone at 25th answer', async ({ page }) => {
+  test.fixme('triggers milestone at 25th answer', async ({ page }) => {
     // Mock Notification API
     await page.addInitScript(() => {
       Object.defineProperty(window.Notification, 'permission', {
@@ -227,7 +235,7 @@ test.describe('REQ-016 – Milestone Notifications (FR-16.7)', () => {
     expect(milestone25Triggered).toBe(true)
   })
 
-  test('does not trigger milestone for non-milestone answers', async ({ page }) => {
+  test.fixme('does not trigger milestone for non-milestone answers', async ({ page }) => {
     // Mock Notification API
     await page.addInitScript(() => {
       Object.defineProperty(window.Notification, 'permission', {
@@ -336,7 +344,13 @@ test.describe('REQ-016 – ReminderBanner Permission Flow (FR-16.10)', () => {
 })
 
 test.describe('REQ-016 – Variantenpool (FR-16.3)', () => {
-  test('ensures different reminder messages on consecutive triggers', async ({ page }) => {
+  // The auto-generated test sets `window.__originalGetNotificationContent`
+  // and expects the impl to consult that override. The actual
+  // `getNotificationContent` in src/utils/notificationContent.ts has no such
+  // hook — variants are driven solely by `lastVariantIdx` from
+  // localStorage. Unit tests in src/utils/notificationContent.test.ts cover
+  // the rotation contract directly.
+  test.fixme('ensures different reminder messages on consecutive triggers', async ({ page }) => {
     const capturedVariants: number[] = []
     
     await page.addInitScript(() => {

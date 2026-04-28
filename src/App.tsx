@@ -261,9 +261,9 @@ export default function App() {
     const next = findNextQuestion()
     if (next) {
       if (next.categoryId === 'custom') {
-        setView({ name: 'custom-questions' })
+        goTo({ name: 'custom-questions' })
       } else {
-        setView({ name: 'quiz', categoryId: next.categoryId })
+        goTo({ name: 'quiz', categoryId: next.categoryId })
       }
     } else {
       // All questions answered, go to archive
