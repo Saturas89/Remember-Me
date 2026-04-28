@@ -44,11 +44,9 @@ import { InstallBanner } from './components/InstallBanner'
 import { UpdateBanner } from './components/UpdateBanner'
 import { ReleaseNotesModal } from './components/ReleaseNotesModal'
 import { ReminderBanner } from './components/ReminderBanner'
-import { WelcomeBackBanner } from './components/WelcomeBackBanner'
 import { BottomNav } from './components/BottomNav'
 import { useServiceWorker } from './hooks/useServiceWorker'
 import { useReminder } from './hooks/useReminder'
-import { useStreak } from './hooks/useStreak'
 import { exportAsMarkdown, exportAsEnrichedJSON, downloadFile } from './utils/export'
 import { importFile } from './utils/archiveImport'
 import type { Category, InviteData, AnswerExport, MemorySharePayload, ContactHandshake } from './types'
@@ -228,49 +226,6 @@ export default function App() {
     downloadFile(exportAsEnrichedJSON(exportData), `${safeName}.json`, 'application/json')
   }
 
-  // Enhanced answer saving with streak tracking
-  function handleSaveAnswer(questionId: string, categoryId: string, value: string) {
-    saveAnswer(questionId, categoryId, value)
-    // Record streak and update reminders
-    recordAnswer()
-    reschedule()
-  }
-
-  // Find next unanswered question across all categories
-  function findNextQuestion() {
-    const categories = CATEGORIES
-    for (const category of categories) {
-      for (const question of category.questions) {
-        if (!getAnswer(question.id)) {
-          return { categoryId: category.id, questionId: question.id }
-        }
-      }
-    }
-    // Check custom questions
-    for (const question of customQuestions) {
-      if (!getAnswer(question.id)) {
-        return { categoryId: 'custom', questionId: question.id }
-      }
-    }
-    return null
-  }
-
-  // Handle welcome back continue button
-  function handleWelcomeBackContinue() {
-    setShowWelcomeBack(false)
-    const next = findNextQuestion()
-    if (next) {
-      if (next.categoryId === 'custom') {
-        goTo({ name: 'custom-questions' })
-      } else {
-        goTo({ name: 'quiz', categoryId: next.categoryId })
-      }
-    } else {
-      // All questions answered, go to archive
-      goTo({ name: 'archive' })
-    }
-  }
-
   async function handleImportFriendZip(file: File) {
     const result = await importFile(file)
     if (result.ok && result.friendAnswerPayload) {
@@ -288,29 +243,7 @@ export default function App() {
   const [showReleaseNotes, setShowReleaseNotes] = useState(false)
   const { state: installState, visible: installVisible, triggerInstall, dismiss: dismissInstall } = useInstallPrompt()
   const { needRefresh, applyUpdate, dismiss: dismissUpdate } = useServiceWorker()
-  const { showPrompt: showReminderPrompt, requestPermission: enableReminder, dismissPrompt: dismissReminder, reschedule } = useReminder()
-  const { streak, recordAnswer, checkStreakReset } = useStreak()
-
-  // Welcome back banner state
-  const [showWelcomeBack, setShowWelcomeBack] = useState(false)
-  const [welcomeBackDays, setWelcomeBackDays] = useState(0)
-
-  // Check for welcome back scenario on load
-  useEffect(() => {
-    if (!isLoaded || !streak.lastAnswerDate) return
-
-    const today = new Date().toISOString().split('T')[0]
-    const lastAnswer = new Date(streak.lastAnswerDate + 'T00:00:00')
-    const todayDate = new Date(today + 'T00:00:00')
-    const daysDiff = Math.floor((todayDate.getTime() - lastAnswer.getTime()) / (24 * 60 * 60 * 1000))
-
-    if (daysDiff >= 3) {
-      setWelcomeBackDays(daysDiff)
-      setShowWelcomeBack(true)
-      // Also check for streak reset
-      checkStreakReset()
-    }
-  }, [isLoaded, streak.lastAnswerDate, checkStreakReset])
+  const { showPrompt: showReminderPrompt, requestPermission: enableReminder, dismissPrompt: dismissReminder } = useReminder()
 
   // Sync view with browser back/forward navigation
   useEffect(() => {
@@ -417,7 +350,7 @@ export default function App() {
           getAnswerImageIds={getAnswerImageIds}
           getAnswerVideoIds={getAnswerVideoIds}
           getAnswerAudioId={getAnswerAudioId}
-          onSave={handleSaveAnswer}
+          onSave={saveAnswer}
           onSetImages={setAnswerImages}
           onSetVideos={setAnswerVideos}
           onSetAudio={setAnswerAudio}
@@ -444,7 +377,7 @@ export default function App() {
           friends={friends}
           customQuestions={customQuestions}
           profileName={profile?.name ?? ''}
-          onSaveAnswer={handleSaveAnswer}
+          onSaveAnswer={saveAnswer}
           onSetImages={setAnswerImages}
           onSetVideos={setAnswerVideos}
           onSetAudio={setAnswerAudio}
@@ -533,7 +466,7 @@ export default function App() {
           getAnswerImageIds={getAnswerImageIds}
           getAnswerVideoIds={getAnswerVideoIds}
           getAnswerAudioId={getAnswerAudioId}
-          onSave={handleSaveAnswer}
+          onSave={saveAnswer}
           onSetImages={setAnswerImages}
           onSetVideos={setAnswerVideos}
           onSetAudio={setAnswerAudio}
@@ -578,19 +511,11 @@ export default function App() {
 
       {installVisible && <InstallBanner state={installState} onInstall={triggerInstall} onDismiss={dismissInstall} />}
       {needRefresh && <UpdateBanner onUpdate={applyUpdate} onDismiss={dismissUpdate} onViewNotes={() => setShowReleaseNotes(true)} />}
-      {!installVisible && !needRefresh && !showWelcomeBack && showReminderPrompt && (
+      {!installVisible && !needRefresh && showReminderPrompt && (
         <ReminderBanner
           visible={showReminderPrompt}
           onEnable={enableReminder}
           onDismiss={dismissReminder}
-        />
-      )}
-      {showWelcomeBack && (
-        <WelcomeBackBanner
-          visible={showWelcomeBack}
-          daysAway={welcomeBackDays}
-          onContinue={handleWelcomeBackContinue}
-          onDismiss={() => setShowWelcomeBack(false)}
         />
       )}
       {showReleaseNotes && <ReleaseNotesModal onClose={() => setShowReleaseNotes(false)} />}
