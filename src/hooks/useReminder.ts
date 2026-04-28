@@ -7,6 +7,12 @@ const REMINDER_TAG = 'rm-reminder'
 // Backoff schedule (hours)
 const BACKOFF_SCHEDULE = [72, 240, 576] // 3 days, 10 days, 24 days
 
+// If the user has been silent through more than this many days since
+// the last shown reminder, treat their next reschedule() as a return
+// from absence and reset the cadence to stage 0. Below this threshold
+// we advance one stage at a time (cf. progresses backoffStage 0→1→2→3).
+const STALE_THRESHOLD_MS = 14 * 24 * 60 * 60 * 1000
+
 export interface ReminderInternalState {
   permission: 'none' | 'enabled' | 'dismissed'
   backoffStage: 0 | 1 | 2 | 3
@@ -104,9 +110,14 @@ export function useReminder(): UseReminderReturn {
       notifications.forEach(n => n.close())
 
       const stage = nextStage ?? state.backoffStage
-      
-      // Stage 3+ means we're in silent mode
-      if (stage >= 3) return
+
+      // Stage 3+ means we're in silent mode — persist that we've reached
+      // the silent state (so the UI / state.backoffStage reflects it) but
+      // don't schedule a new OS-trigger.
+      if (stage >= 3) {
+        saveState({ ...state, backoffStage: 3 })
+        return
+      }
 
       // Check if showTrigger is supported (fallback for unsupported browsers)
       if (!('showTrigger' in Notification.prototype)) return
@@ -202,11 +213,28 @@ export function useReminder(): UseReminderReturn {
   }, [state, saveState])
 
   const reschedule = useCallback(async () => {
-    if (state.permission === 'enabled') {
-      // Reset to stage 0 and reschedule
-      await scheduleNextNotification(0)
+    if (state.permission !== 'enabled') return
+
+    // Stage 3 is silent — once we're there, stay there until disable() or
+    // a fresh enable() resets the state.
+    if (state.backoffStage >= 3) {
+      await scheduleNextNotification(3)
+      return
     }
-  }, [state.permission, scheduleNextNotification])
+
+    // Long-absence reset (FR-16.1 spirit): if the user has been away past
+    // STALE_THRESHOLD_MS, the cadence has lapsed — start over at stage 0
+    // so the next reminder is again ~3 days out.
+    const elapsed = state.lastShownAt ? Date.now() - state.lastShownAt : 0
+    if (state.lastShownAt && elapsed > STALE_THRESHOLD_MS) {
+      await scheduleNextNotification(0)
+      return
+    }
+
+    // Otherwise advance one stage along 0 → 1 → 2 → 3.
+    const nextStage = Math.min(state.backoffStage + 1, 3) as 0 | 1 | 2 | 3
+    await scheduleNextNotification(nextStage)
+  }, [state, scheduleNextNotification])
 
   const disable = useCallback(() => {
     saveState({ 

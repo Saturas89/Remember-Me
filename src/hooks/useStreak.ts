@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import { useAnswers } from './useAnswers'
 
 export interface StreakState {
@@ -49,9 +49,16 @@ async function triggerMilestoneNotification(count: number, locale: 'de' | 'en' =
   }
 }
 
+const MILESTONES = [10, 25, 50, 100] as const
+
 export function useStreak(): UseStreakReturn {
   const { isLoaded, answers, streak: storedStreak, saveStreak } = useAnswers()
-  
+
+  // Per-session dedup: highest milestone we've already announced.
+  // Prevents duplicate notifications when recordAnswer is called multiple
+  // times with the same totalAnswered (e.g. user edits the same answer).
+  const lastMilestoneRef = useRef<number>(0)
+
   const defaultStreak: StreakState = {
     current: 0,
     longest: 0,
@@ -60,16 +67,16 @@ export function useStreak(): UseStreakReturn {
 
   const streak = storedStreak || defaultStreak
   const totalAnswered = Object.values(answers).filter(
-    a => a.value.trim() !== '' || 
-         (a.imageIds?.length ?? 0) > 0 || 
-         (a.videoIds?.length ?? 0) > 0 || 
-         !!a.audioId || 
+    a => a.value.trim() !== '' ||
+         (a.imageIds?.length ?? 0) > 0 ||
+         (a.videoIds?.length ?? 0) > 0 ||
+         !!a.audioId ||
          !!a.audioTranscript
   ).length
 
   const recordAnswer = useCallback((answeredAt?: string, totalAnsweredCount?: number) => {
     if (!isLoaded) return
-    
+
     const today = answeredAt || getLocalISODate()
     const currentStreak = streak
 
@@ -90,23 +97,24 @@ export function useStreak(): UseStreakReturn {
         newCurrent = 1
       }
     }
-    
+
     const newLongest = Math.max(currentStreak.longest, newCurrent)
     const actualCount = totalAnsweredCount ?? totalAnswered + 1
-    
-    // Check for milestones (10, 25, 50, 100)
-    const milestones = [10, 25, 50, 100]
-    if (milestones.includes(actualCount)) {
+
+    // Milestone notifications (10/25/50/100). Fire only on first crossing
+    // of each tier per session.
+    if ((MILESTONES as readonly number[]).includes(actualCount) && actualCount > lastMilestoneRef.current) {
+      lastMilestoneRef.current = actualCount
       const locale = (navigator.language || 'de').startsWith('de') ? 'de' : 'en'
       triggerMilestoneNotification(actualCount, locale)
     }
-    
+
     const updatedStreak = {
       current: newCurrent,
       longest: newLongest,
       lastAnswerDate: today
     }
-    
+
     saveStreak(updatedStreak)
   }, [isLoaded, streak, totalAnswered, saveStreak])
 

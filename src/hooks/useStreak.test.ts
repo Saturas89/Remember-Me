@@ -167,71 +167,89 @@ describe('useStreak', () => {
   })
 
   describe('milestone notifications', () => {
-    it('triggers notification at 10th answer', () => {
+    // The trigger path goes:
+    //   recordAnswer (sync)
+    //     → triggerMilestoneNotification (async)
+    //       → await navigator.serviceWorker.ready   (microtask 1)
+    //       → await registration.showNotification(…) (microtask 2)
+    // So the test has to flush at least two microtasks before asserting.
+    async function flushMilestone() {
+      await Promise.resolve()
+      await Promise.resolve()
+    }
+
+    it('triggers notification at 10th answer', async () => {
       const { result } = renderHook(() => useStreak())
 
-      act(() => {
+      await act(async () => {
         result.current.recordAnswer(todayISO, 10)
+        await flushMilestone()
       })
 
       expect(mockShowNotification).toHaveBeenCalled()
     })
 
-    it('triggers notification at 25th answer', () => {
+    it('triggers notification at 25th answer', async () => {
       const { result } = renderHook(() => useStreak())
 
-      act(() => {
+      await act(async () => {
         result.current.recordAnswer(todayISO, 25)
+        await flushMilestone()
       })
 
       expect(mockShowNotification).toHaveBeenCalled()
     })
 
-    it('triggers notification at 50th answer', () => {
+    it('triggers notification at 50th answer', async () => {
       const { result } = renderHook(() => useStreak())
 
-      act(() => {
+      await act(async () => {
         result.current.recordAnswer(todayISO, 50)
+        await flushMilestone()
       })
 
       expect(mockShowNotification).toHaveBeenCalled()
     })
 
-    it('triggers notification at 100th answer', () => {
+    it('triggers notification at 100th answer', async () => {
       const { result } = renderHook(() => useStreak())
 
-      act(() => {
+      await act(async () => {
         result.current.recordAnswer(todayISO, 100)
+        await flushMilestone()
       })
 
       expect(mockShowNotification).toHaveBeenCalled()
     })
 
-    it('does not trigger notification for non-milestone answers', () => {
+    it('does not trigger notification for non-milestone answers', async () => {
       const { result } = renderHook(() => useStreak())
 
-      act(() => {
+      await act(async () => {
         result.current.recordAnswer(todayISO, 15)
+        await flushMilestone()
       })
 
       expect(mockShowNotification).not.toHaveBeenCalled()
     })
 
-    it('does not trigger duplicate milestone notifications', () => {
+    it('does not trigger duplicate milestone notifications', async () => {
       mockStreak = { current: 1, longest: 1, lastAnswerDate: yesterdayISO }
       const { result } = renderHook(() => useStreak())
 
       // First time hitting milestone 10
-      act(() => {
+      await act(async () => {
         result.current.recordAnswer(todayISO, 10)
+        await flushMilestone()
       })
 
       expect(mockShowNotification).toHaveBeenCalledTimes(1)
       mockShowNotification.mockReset()
 
       // Answer again with still 10 total - should not trigger again
-      act(() => {
+      await act(async () => {
         result.current.recordAnswer(todayISO, 10)
+        await flushMilestone()
       })
 
       expect(mockShowNotification).not.toHaveBeenCalled()
