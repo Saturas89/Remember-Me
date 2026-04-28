@@ -23,7 +23,6 @@ Alle funktionalen und nicht-funktionalen Anforderungen des Projekts.
 | [REQ-013](./REQ-013-archive-import.md) | Erinnerungs-Archiv-Import (ZIP + JSON) | Import | Medium | ✔️ COMPLETED |
 | [REQ-014](./REQ-014-release-notes.md) | Release Notes / „Was ist neu?" | UX | Low | ✔️ COMPLETED |
 | [REQ-015](./REQ-015-familienmodus.md) | Familienmodus (E2EE Online-Teilen) | Sharing | Medium | ✔️ COMPLETED |
-| [REQ-016](./REQ-016-pwa-notifications.md) | Engagement-Benachrichtigungen | Engagement | Medium | 🟡 PLANNED |
 
 ---
 
@@ -52,7 +51,6 @@ Alle funktionalen und nicht-funktionalen Anforderungen des Projekts.
 - [x] Hilfe & FAQ (Datenschutz, Import, Export) → REQ-010
 - [x] Erinnerungs-Archiv ZIP-Export + Share Sheet (inkl. Fotos, Audio & Video) → REQ-011
 - [x] Erinnerungs-Archiv-Import (ZIP + JSON) → REQ-013
-- [ ] Push Notifications als Erinnerung → [REQ-016](./REQ-016-pwa-notifications.md)
 - [ ] Mehrsprachigkeit (DE / EN)
 - [ ] Biografie erzeugen (KI-Ghostwriter aus Antworten) → REQ-008
 - [x] Familienmodus: Ende-zu-Ende-verschlüsseltes Online-Teilen → REQ-015
@@ -83,9 +81,17 @@ Specs, die neue Hooks, Komponenten oder Utility-Module einführen, **sollen** ei
 
 Zweck: In der parallel-generation-Pipeline (`.github/workflows/parallel-generation.yml`) schreiben Implementierungs- und Test-Agent **isoliert voneinander** Code gegen dieselbe Spec. Ohne expliziten API-Vertrag entsteht Black-Box-Drift bei Naming (`updateStreak` vs `recordAnswer`), Prop-Shapes (Required vs Optional) und Hilfsmethoden — sichtbar erst beim CI-Run.
 
-Beispiel: → **[REQ-016, Section 7a](./REQ-016-pwa-notifications.md#7a-api-vertrag-verbindlich-für-impl--tests)**
-
 Specs, die nur bestehende Symbole erweitern oder reine UI-/Konfig-Änderungen machen, brauchen keinen Vertrag.
+
+Vorlage für neue Specs: → **[`_TEMPLATE.md`](./_TEMPLATE.md)** (enthält API-Vertrag-Block + verbindliche „Akzeptanztests"-Sektion).
+
+---
+
+## ✅ Definition of Done & Test-Konventionen
+
+Jede Spec enthält den Abschnitt **„8. Akzeptanztests"** aus dem Template. Die Häkchen sind PR-Merge-Voraussetzung. Verbindliche Test-Regeln (kein Wegmocken von Behavior-Hooks, klickbare Elemente müssen geklickt werden) sind in **[docs/testing-conventions.md](../testing-conventions.md)** dokumentiert und werden in `npm test` automatisch geprüft (`scripts/check-test-conventions.mjs`).
+
+Hintergrund: REQ-016 (Engagement-Benachrichtigungen) ging mit grünen Tests live, hat in der Praxis aber nicht funktioniert. Die Spec wurde ersatzlos entfernt; die Lehren stehen im Post-Mortem-Abschnitt der Test-Konventionen.
 
 ---
 
