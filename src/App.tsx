@@ -136,6 +136,8 @@ export default function App() {
     disableOnlineSharing,
     setOnlineSharing,
     removeOnlineFriends,
+    streak: storedStreak,
+    saveStreak,
     getAnswer,
     getAnswerImageIds,
     getAnswerVideoIds,
@@ -261,9 +263,9 @@ export default function App() {
     const next = findNextQuestion()
     if (next) {
       if (next.categoryId === 'custom') {
-        setView({ name: 'custom-questions' })
+        goTo({ name: 'custom-questions' })
       } else {
-        setView({ name: 'quiz', categoryId: next.categoryId })
+        goTo({ name: 'quiz', categoryId: next.categoryId })
       }
     } else {
       // All questions answered, go to archive
@@ -289,7 +291,12 @@ export default function App() {
   const { state: installState, visible: installVisible, triggerInstall, dismiss: dismissInstall } = useInstallPrompt()
   const { needRefresh, applyUpdate, dismiss: dismissUpdate } = useServiceWorker()
   const { showPrompt: showReminderPrompt, requestPermission: enableReminder, dismissPrompt: dismissReminder, reschedule } = useReminder()
-  const { streak, recordAnswer, checkStreakReset } = useStreak()
+  const { streak, recordAnswer, checkStreakReset } = useStreak({
+    isLoaded,
+    answers,
+    streak: storedStreak,
+    saveStreak,
+  })
 
   // Welcome back banner state
   const [showWelcomeBack, setShowWelcomeBack] = useState(false)
@@ -373,7 +380,11 @@ export default function App() {
     const paths: Partial<Record<View['name'], string>> = {
       home: '/', friends: '/friends', archive: '/archive', profile: '/profile', feature: '/feature',
     }
-    const path = paths[v.name]
+    let path = paths[v.name]
+    // Quiz lands on its own pseudo-route so deep-link & welcome-back-continue
+    // can leave the home URL.
+    if (v.name === 'quiz') path = `/quiz/${v.categoryId}`
+    if (v.name === 'custom-questions') path = '/custom-questions'
     if (path !== undefined) history.pushState({}, '', path)
     setView(v)
   }

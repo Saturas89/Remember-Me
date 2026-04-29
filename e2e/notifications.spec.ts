@@ -132,142 +132,144 @@ test.describe('REQ-016 – Welcome-Back-Banner (FR-16.8)', () => {
 })
 
 test.describe('REQ-016 – Milestone Notifications (FR-16.7)', () => {
-  test('triggers milestone after 10th answer', async ({ page }) => {
-    let notificationCalled = false
-    
-    // Mock Notification API and service worker
-    await page.addInitScript(() => {
-      Object.defineProperty(window.Notification, 'permission', {
-        get: () => 'granted'
-      })
-      
+  // Setup that mocks Notification + serviceWorker AND pre-seeds the app
+  // state so the next answer crosses the given milestone count. The original
+  // auto-generated tests navigated to a non-existent `/family` route — this
+  // version uses the real quiz flow (category-card → textarea-fill).
+  async function seedMilestoneFixture(
+    page: Page,
+    options: { existingAnswers: number; tagSink: string },
+  ) {
+    await page.addInitScript(([n, sink]) => {
+      // Replace window.Notification (read-only `permission` makes a getter
+      // override unreliable across browsers; full replacement always works).
+      const proto = window.Notification?.prototype ?? {}
+      ;(window as unknown as { Notification: unknown }).Notification = Object.assign(
+        function Notification() { /* noop */ },
+        {
+          permission: 'granted' as NotificationPermission,
+          requestPermission: async () => 'granted' as NotificationPermission,
+          prototype: proto,
+        },
+      )
+
+      // Override navigator.serviceWorker so milestone-trigger goes to our stub.
+      // Vite-plugin-pwa calls `register()` on boot — keep it harmless.
       Object.defineProperty(navigator, 'serviceWorker', {
         value: {
           ready: Promise.resolve({
-            showNotification: async (title: string, options?: any) => {
-              ;(window as any).__milestoneNotificationCalled = true
-              ;(window as any).__milestoneNotificationTitle = title
-            }
-          })
-        }
+            showNotification: async (title: string, opts: { tag?: string } = {}) => {
+              const w = window as unknown as Record<string, unknown>
+              if (opts.tag === 'rm-milestone') {
+                w[sink] = { title, tag: opts.tag }
+              }
+            },
+            getNotifications: async () => [],
+          }),
+          register: async () => ({}),
+          addEventListener: () => {},
+          removeEventListener: () => {},
+        },
+        configurable: true,
+        writable: true,
       })
-    })
 
-    // Setup state with 9 answers
-    await page.addInitScript(() => {
-      const state = {
-        answers: {}
+      // Pre-seed app state: profile + N answers under fake IDs that don't
+      // collide with real category questions.
+      const state: {
+        profile: { name: string; createdAt: string }
+        answers: Record<string, {
+          id: string
+          questionId: string
+          categoryId: string
+          value: string
+          createdAt: string
+          updatedAt: string
+        }>
+        friends: never[]
+        friendAnswers: never[]
+        customQuestions: never[]
+      } = {
+        profile: { name: 'Milestoner', createdAt: '2026-01-01T00:00:00.000Z' },
+        answers: {},
+        friends: [],
+        friendAnswers: [],
+        customQuestions: [],
       }
-      for (let i = 1; i <= 9; i++) {
-        state.answers[`q${i}`] = { value: `answer ${i}` }
+      for (let i = 1; i <= n; i++) {
+        const id = `seed-${i}`
+        state.answers[id] = {
+          id,
+          questionId: id,
+          categoryId: 'seed',
+          value: `seed answer ${i}`,
+          createdAt: '2026-01-01T00:00:00.000Z',
+          updatedAt: '2026-01-01T00:00:00.000Z',
+        }
       }
       localStorage.setItem('remember-me-state', JSON.stringify(state))
-    })
+      // Skip the OS reminder banner so it can't intercept clicks on the
+      // category card in any browser.
+      localStorage.setItem(
+        'rm-reminder-state',
+        JSON.stringify({ permission: 'dismissed', backoffStage: 0 }),
+      )
+    }, [options.existingAnswers, options.tagSink])
+  }
 
-    await completeOnboarding(page)
-    
-    // Navigate to a question to answer the 10th
-    await page.goto('/family')
-    
-    // Answer the question to trigger 10th answer milestone
-    const textarea = page.getByRole('textbox')
+  async function fillFirstAnswerInValuesCategory(page: Page, text: string) {
+    // The pre-seed sets a profile, so onboarding is skipped — App lands on
+    // HomeView directly. Click the category heading to enter QuizView.
+    await page.goto('/')
+    await page.getByRole('heading', { name: 'Werte & Überzeugungen' }).click()
+    const textarea = page.locator('textarea.input-textarea').first()
     await expect(textarea).toBeVisible()
-    await textarea.fill('My 10th milestone answer')
-    
-    const submitButton = page.getByRole('button', { name: /weiter|next/i })
-    await submitButton.click()
+    await textarea.fill(text)
+  }
 
-    // Check if milestone notification was triggered
-    const notificationTriggered = await page.evaluate(() => 
-      (window as any).__milestoneNotificationCalled || false
+  test('triggers milestone after 10th answer', async ({ page }) => {
+    await seedMilestoneFixture(page, { existingAnswers: 9, tagSink: '__ms10' })
+    await fillFirstAnswerInValuesCategory(page, 'Mein zehnter Eintrag.')
+
+    await page.waitForFunction(
+      () => Boolean((window as unknown as { __ms10?: unknown }).__ms10),
+      undefined,
+      { timeout: 5_000 },
     )
-    expect(notificationTriggered).toBe(true)
+
+    const fired = await page.evaluate(
+      () => (window as unknown as { __ms10?: { title: string } }).__ms10,
+    )
+    expect(fired?.title).toMatch(/Meilenstein|Milestone/)
   })
 
   test('triggers milestone at 25th answer', async ({ page }) => {
-    // Mock Notification API
-    await page.addInitScript(() => {
-      Object.defineProperty(window.Notification, 'permission', {
-        get: () => 'granted'
-      })
-      
-      Object.defineProperty(navigator, 'serviceWorker', {
-        value: {
-          ready: Promise.resolve({
-            showNotification: async () => {
-              ;(window as any).__milestone25Called = true
-            }
-          })
-        }
-      })
-    })
+    await seedMilestoneFixture(page, { existingAnswers: 24, tagSink: '__ms25' })
+    await fillFirstAnswerInValuesCategory(page, '25. Antwort.')
 
-    // Setup state with 24 answers
-    await page.addInitScript(() => {
-      const state = {
-        answers: {}
-      }
-      for (let i = 1; i <= 24; i++) {
-        state.answers[`q${i}`] = { value: `answer ${i}` }
-      }
-      localStorage.setItem('remember-me-state', JSON.stringify(state))
-    })
-
-    await completeOnboarding(page)
-    
-    // Answer 25th question
-    await page.goto('/family')
-    const textarea = page.getByRole('textbox')
-    await textarea.fill('25th milestone answer')
-    await page.getByRole('button', { name: /weiter|next/i }).click()
-
-    const milestone25Triggered = await page.evaluate(() => 
-      (window as any).__milestone25Called || false
+    await page.waitForFunction(
+      () => Boolean((window as unknown as { __ms25?: unknown }).__ms25),
+      undefined,
+      { timeout: 5_000 },
     )
-    expect(milestone25Triggered).toBe(true)
+
+    const fired = await page.evaluate(
+      () => (window as unknown as { __ms25?: { title: string } }).__ms25,
+    )
+    expect(fired?.title).toMatch(/Meilenstein|Milestone/)
   })
 
   test('does not trigger milestone for non-milestone answers', async ({ page }) => {
-    // Mock Notification API
-    await page.addInitScript(() => {
-      Object.defineProperty(window.Notification, 'permission', {
-        get: () => 'granted'
-      })
-      
-      Object.defineProperty(navigator, 'serviceWorker', {
-        value: {
-          ready: Promise.resolve({
-            showNotification: async () => {
-              ;(window as any).__nonMilestoneNotification = true
-            }
-          })
-        }
-      })
-    })
+    await seedMilestoneFixture(page, { existingAnswers: 15, tagSink: '__msNo' })
+    await fillFirstAnswerInValuesCategory(page, 'Antwort #16.')
 
-    // Setup state with 15 answers (not a milestone)
-    await page.addInitScript(() => {
-      const state = {
-        answers: {}
-      }
-      for (let i = 1; i <= 15; i++) {
-        state.answers[`q${i}`] = { value: `answer ${i}` }
-      }
-      localStorage.setItem('remember-me-state', JSON.stringify(state))
-    })
+    // Give the milestone path a chance to fire if it would.
+    await page.waitForTimeout(500)
 
-    await completeOnboarding(page)
-    
-    // Answer 16th question (not a milestone)
-    await page.goto('/family')
-    const textarea = page.getByRole('textbox')
-    await textarea.fill('Non-milestone answer')
-    await page.getByRole('button', { name: /weiter|next/i }).click()
-
-    const notificationTriggered = await page.evaluate(() => 
-      (window as any).__nonMilestoneNotification || false
+    const fired = await page.evaluate(
+      () => (window as unknown as { __msNo?: unknown }).__msNo,
     )
-    expect(notificationTriggered).toBe(false)
+    expect(fired).toBeUndefined()
   })
 })
 
@@ -298,6 +300,11 @@ test.describe('REQ-016 – ReminderBanner Permission Flow (FR-16.10)', () => {
     await page.addInitScript(() => {
       Object.defineProperty(window.Notification, 'permission', {
         get: () => 'default'
+      })
+      // showTrigger gate has to be true for canPrompt — without this the
+      // banner never mounts, the toBeVisible assertion below would time out.
+      Object.defineProperty(window.Notification.prototype, 'showTrigger', {
+        value: true,
       })
     })
 
@@ -336,50 +343,110 @@ test.describe('REQ-016 – ReminderBanner Permission Flow (FR-16.10)', () => {
 })
 
 test.describe('REQ-016 – Variantenpool (FR-16.3)', () => {
-  test('ensures different reminder messages on consecutive triggers', async ({ page }) => {
-    const capturedVariants: number[] = []
-    
+  // The auto-generated test set a `window.__originalGetNotificationContent`
+  // override and assumed the impl would consult it — `notificationContent.ts`
+  // has no such hook. This rewrite exercises the real path:
+  // saveAnswer → handleSaveAnswer → reschedule → scheduleNextNotification →
+  // getNotificationContent → saveState({lastVariantIdx, …}) — and inspects
+  // the persisted lastVariantIdx in `rm-reminder-state` between iterations.
+  test('writes a different lastVariantIdx on each consecutive reschedule', async ({ page }) => {
     await page.addInitScript(() => {
-      ;(window as any).__capturedVariants = []
-      
-      // Mock getNotificationContent to capture variant selection
-      ;(window as any).__originalGetNotificationContent = (options: any) => {
-        ;(window as any).__capturedVariants.push(options.lastVariantIdx || -1)
-        const nextIdx = ((options.lastVariantIdx || -1) + 1) % 8
-        return {
-          title: 'Test Title',
-          body: `Variant ${nextIdx} message`,
-          variantIdx: nextIdx
+      // Notification + serviceWorker stubs so reschedule survives.
+      const proto = window.Notification?.prototype ?? {}
+      // showTrigger has to be present on prototype for the canPrompt path
+      // and the scheduleNextNotification path to proceed.
+      ;(proto as Record<string, unknown>).showTrigger = true
+      ;(window as unknown as { Notification: unknown }).Notification = Object.assign(
+        function Notification() { /* noop */ },
+        {
+          permission: 'granted' as NotificationPermission,
+          requestPermission: async () => 'granted' as NotificationPermission,
+          prototype: proto,
+        },
+      )
+
+      ;(window as unknown as { TimestampTrigger: unknown }).TimestampTrigger =
+        class TimestampTrigger {
+          timestamp: number
+          constructor(ts: number) { this.timestamp = ts }
         }
-      }
+
+      Object.defineProperty(navigator, 'serviceWorker', {
+        value: {
+          ready: Promise.resolve({
+            showNotification: async () => {},
+            getNotifications: async () => [],
+          }),
+          register: async () => ({}),
+          addEventListener: () => {},
+          removeEventListener: () => {},
+        },
+        configurable: true,
+        writable: true,
+      })
+
+      // Profile + permission already enabled so reschedule advances stages.
+      localStorage.setItem('remember-me-state', JSON.stringify({
+        profile: { name: 'Var', createdAt: '2026-01-01T00:00:00.000Z' },
+        answers: {},
+        friends: [],
+        friendAnswers: [],
+        customQuestions: [],
+      }))
+      localStorage.setItem(
+        'rm-reminder-state',
+        JSON.stringify({ permission: 'enabled', backoffStage: 0 }),
+      )
     })
 
-    await completeOnboarding(page)
+    await page.goto('/')
 
-    // Simulate multiple reminder triggers
-    for (let i = 0; i < 3; i++) {
-      await page.evaluate((iteration) => {
-        const reminderState = {
-          permission: 'enabled',
-          backoffStage: 1,
-          lastVariantIdx: iteration === 0 ? undefined : iteration - 1
-        }
-        localStorage.setItem('rm-reminder-state', JSON.stringify(reminderState))
-      }, i)
-      
-      await page.reload()
-      await new Promise(resolve => setTimeout(resolve, 100)) // Short delay
+    await page.goto('/')
+    await page.getByRole('heading', { name: 'Werte & Überzeugungen' }).click()
+
+    async function saveAnswerAndReadVariant(
+      text: string,
+      previousVariantIdx: number | undefined,
+    ): Promise<number | undefined> {
+      const textarea = page.locator('textarea.input-textarea').first()
+      await expect(textarea).toBeVisible()
+      await textarea.fill(text)
+
+      // Wait for the reschedule path to land a fresh lastVariantIdx in
+      // localStorage that differs from the previous iteration's value.
+      await page.waitForFunction(
+        (prev) => {
+          const raw = localStorage.getItem('rm-reminder-state')
+          if (!raw) return false
+          const parsed = JSON.parse(raw) as { lastVariantIdx?: number }
+          return (
+            typeof parsed.lastVariantIdx === 'number' &&
+            parsed.lastVariantIdx !== prev
+          )
+        },
+        previousVariantIdx,
+        { timeout: 3_000 },
+      )
+      return await page.evaluate(() => {
+        const raw = localStorage.getItem('rm-reminder-state')
+        return raw ? (JSON.parse(raw) as { lastVariantIdx?: number }).lastVariantIdx : undefined
+      })
     }
 
-    const variants = await page.evaluate(() => (window as any).__capturedVariants || [])
-    
-    // Should have captured multiple different variants
-    expect(variants.length).toBeGreaterThan(1)
-    
-    // Should not repeat the same variant twice in a row
-    for (let i = 1; i < variants.length; i++) {
-      expect(variants[i]).not.toBe(variants[i - 1])
-    }
+    // FR-16.3 only requires that two consecutive variants don't repeat.
+    // Stage 3 is silent (no rotation) — within one session we can produce at
+    // most two distinct rotations (stages 0→1 and 1→2) before reschedule
+    // hits silent, so we don't try a third here.
+    const v1 = await saveAnswerAndReadVariant('Erste Antwort.', undefined)
+    // Advance to next question so the next fill is a NEW save (not an edit
+    // of the same answer) — recordAnswer needs the totalAnswered count to
+    // grow for QuizView's onChange to fire reschedule again.
+    await page.getByRole('button', { name: /Weiter/ }).click()
+    const v2 = await saveAnswerAndReadVariant('Zweite Antwort.', v1)
+
+    expect(v1).toBeDefined()
+    expect(v2).toBeDefined()
+    expect(v2).not.toBe(v1)
   })
 })
 
