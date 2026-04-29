@@ -15,6 +15,18 @@ Grund: Der Workflow `.github/workflows/e2e.yml` läuft die Playwright-Matrix (Ch
 
 Ausnahme: Der Nutzer fordert explizit einen direkten Merge ohne PR.
 
+## Changelog-Pflicht
+
+Jeder PR, der ein **Feature**, ein **neues Pack** (Fragen-Pack, Themen-Pack, Locale, Modus) oder eine sichtbare UX-Änderung bringt, muss **drei Stellen** gleichzeitig aktualisieren:
+
+1. `package.json#version` – SemVer hochzählen (Feature → minor, Fix → patch, Breaking → major).
+2. `docs/CHANGELOG.md` – neuer `## [x.y.z] – YYYY-MM-DD`-Abschnitt am **Anfang der Liste** + Zeile in der „Versionsübersicht"-Tabelle. Keep-a-Changelog-Sektionen (`### Hinzugefügt`, `### Geändert`, `### Behoben`).
+3. `src/data/releaseNotes.ts` – neuer `ReleaseNote`-Eintrag am **Anfang des Arrays** mit 1–4 nutzerfreundlichen Highlights (Emoji + Kurzsatz). Diese landen direkt im in-App „Was ist neu?"-Modal.
+
+Der Script `node scripts/check-changelog.mjs` (läuft als Teil von `npm test`, separat via `npm run check:changelog`) bricht ab, wenn die Version in `package.json` in einem der beiden Dokumente fehlt. Reine Refactor- / Test-Only-PRs ohne Versionsbump sind erlaubt – dann bleibt die Version stehen und der Check ist trivial grün.
+
+Beim Backfill (mehrere Features in einem PR) eine sinnvolle Sammelversion vergeben statt einen Eintrag pro Commit.
+
 ## Tests
 
 - **Unit / Komponenten:** Vitest + Testing Library in `src/**/*.test.{ts,tsx}`. Lauf: `npm test`.

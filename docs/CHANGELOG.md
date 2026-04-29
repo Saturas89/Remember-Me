@@ -5,6 +5,111 @@ Alle veröffentlichten Versionen des Projekts, absteigend sortiert.
 Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 Versionierung folgt [Semantic Versioning](https://semver.org/lang/de/).
 
+> **Pflicht für jeden Feature- oder Pack-PR:** Eintrag hier **und** in
+> `src/data/releaseNotes.ts` ergänzen, `package.json#version` hochzählen.
+> Der Check `npm run check:changelog` (Teil von `npm test`) bricht sonst ab.
+> Details: `CLAUDE.md` → „Changelog-Pflicht".
+
+## [1.9.0] – 2026-04-28
+
+### Hinzugefügt
+
+#### Engagement-Benachrichtigungen (REQ-016)
+
+Damit Nutzer regelmäßig zurückkommen und ihre Geschichte weiter erzählen, gibt es jetzt ein vollständiges Reminder-System.
+
+**PWA Push-Benachrichtigungen:**
+- `ReminderBanner` fragt einmalig die Notification-Permission ab (kein Auto-Prompt beim ersten Start)
+- `useReminder`-Hook plant Erinnerungen mit Backoff, Cadence-Limit und Quiet Hours (Nacht-Sperre)
+- Variantenpool aus `src/data/reminderMessages.ts` (≥ 8 Texte pro Sprache, Rotation verhindert Wiederholung)
+
+**Welcome-Back-Banner (iOS-Fallback):**
+- `WelcomeBackBanner` erscheint, wenn der Nutzer ≥ 3 Tage pausiert hat – ersetzt Push-Benachrichtigungen auf iOS, wo die Web-Push-API nicht verfügbar ist
+- Schließt sich nach Interaktion und merkt sich den letzten Besuch
+
+**Streak-Tracking & Milestones:**
+- `useStreak`-Hook zählt aufeinanderfolgende Antwort-Tage und löst Milestone-Notifications aus (3, 7, 14, 30 Tage)
+- Streak-Feld in `AppState`, persistiert über `useAnswers`
+
+**Lokalisierung:**
+- Neuer Übersetzungsblock `t.reminder.{title,desc,allow,dismiss,welcomeBack,milestone}` in DE/EN
+
+**Spezifikation & Tests:**
+- Neues Requirement `REQ-016` (PWA Notifications) angelegt
+- 515 Vitest grün, Playwright-Matrix grün auf allen 5 Browser-Projekten
+
+---
+
+## [1.8.0] – 2026-04-25
+
+### Hinzugefügt
+
+#### Familienmodus – Online-Teilen mit Ende-zu-Ende-Verschlüsselung (REQ-015)
+
+Strikt opt-in: Ohne aktive Aktivierung gibt es keinen Request zu Supabase, keinen Import von `@supabase/supabase-js` im Main-Chunk und keinen neuen Schlüssel auf dem Gerät.
+
+**Krypto-Architektur:**
+- ECDH P-256 Device-Keypair, non-extractable in IndexedDB (`rm-device-key`)
+- AES-256-GCM pro Erinnerung, Content-Key per-Recipient via ECDH+HKDF gewrappt
+- Supabase als Zero-Knowledge-Server (nur Ciphertext + opake UUIDs, anonymous auth, keine PII)
+- RLS erzwingt ACLs auf `shares`, `share_recipients`, `annotations`, `share_media`
+
+**Neue Views & Komponenten:**
+- `OnlineSharingIntroView` – Consent-Screen mit Datenschutz-Tabelle und Familienmodus-Hero-Banner
+- `OnlineSharingHubView` – 4-Tab-Hub: Feed · Teilen · Kontakte · Einstellungen, plus Onboarding-Screen für leere Kontaktliste
+- `ContactHandshakeView` – `#contact/`-URL-Handshake für beidseitige Verknüpfung
+- `SharedMemoryView` + `SharedMemoryCard` – Empfänger-Ansicht für eingegangene Erinnerungen
+- Familienmodus-Card in `FriendsView` (sichtbar erst, wenn Backend konfiguriert ist)
+
+**WhatsApp-Optimierungen (#62, #63):**
+- Canvas-generierte 1080×1080 Share-Karte (`src/utils/shareCard.ts`) für alle Share-Stellen
+- WhatsApp-kompatible Links (Base64url, kein `+`/`/`); Web Share API mit Datei-Anhang
+- `useContactShare`-Hook gegen Code-Duplikat in den Share-Pfaden
+
+**Vollständige i18n (DE/EN) für Familienmodus (#69, #70):**
+- Neue Sektionen: `onlineSharingIntro`, `contactHandshake`, `onlineSharingHub`, `friends.familienmodus*`
+- Auch Medien-, SEO- und Logo-Komponenten und alle restlichen hardcodierten Strings sind jetzt übersetzbar
+
+**Offline-Garantie:**
+- `src/utils/optin.test.ts` – statischer Check, dass kein Sharing-Modul außerhalb des Lazy-Imports landet
+- Offline-Nutzer laden den 207 KB Supabase-Chunk nie
+
+**Spezifikation:**
+- Requirement `REQ-015` (Familienmodus) angelegt, `REQ-008` korrigiert
+- E2E-Suite `e2e/familienmodus.spec.ts` (Aktivierung, Handshake, Teilen, Deaktivierung) mit `CompressionStream`-Polyfill für WebKit
+
+---
+
+## [1.7.0] – 2026-04-20
+
+### Hinzugefügt
+
+#### Internationalisierung – English-Support mit Auto-Detect
+
+Remember Me ist jetzt zweisprachig (DE/EN), Sprache wird automatisch erkannt.
+
+**Lokalisierungs-Framework:**
+- `src/locales/{de,en}/{ui,categories,faq,features,friendTopics}.ts` – komplette deutsche und englische Übersetzungen
+- `src/locales/types.ts` – typisiertes `Translations`-Interface, TypeScript bricht beim Hinzufügen neuer Strings, wenn eine Sprache fehlt
+- `src/locales/index.ts` – `useTranslation()`-Hook, reaktiv auf Locale-Änderungen
+
+**Auto-Detect (`detectLocale.ts`):**
+- Reihenfolge: `localStorage` → `navigator.languages` → Zeitzone → Fallback `'en'`
+- `GERMAN_TIMEZONES`-Set (DE/AT/CH/LI) gewinnt gegen unpassende Browser-Locale
+- 27 Unit-Tests + E2E-Tests für manuelles Wechseln und Auto-Detection
+
+**Sprachwahl im Profil:**
+- `lang-cards`-Block in `ProfileView` (gleicher Stil wie die Theme-Cards)
+- Persistierung in `localStorage` (`rm-locale`)
+
+**Komponenten umgestellt:**
+- `BottomNav`, `QuestionCard`, `UpdateBanner`, `InstallBanner`, `ReminderBanner`, `ArchiveExportCard` u. a. nutzen `t.*` statt hardcodierter Strings
+
+**CI:**
+- `playwright.config.ts` defaultet auf `de-DE` / `Europe/Berlin`, damit bestehende deutsche Specs grün bleiben
+
+---
+
 ## [1.6.0] – 2026-04-20
 
 ### Hinzugefügt
@@ -519,6 +624,9 @@ Wenn im Hintergrund eine neue Version der App als Service Worker bereit steht, e
 | **1.5.8** | PWA Update-Benachrichtigung (Service Worker Prompt) | ✔️ Fertig |
 | **1.5.9** | Freunde-Einladung: Share-Link-Flow (Web Share API) | ✔️ Fertig |
 | **1.6.0** | Release Notes / „Was ist neu?" (UpdateBanner + Profil) | ✔️ Fertig |
+| **1.7.0** | i18n – English-Support mit Auto-Detect | ✔️ Fertig |
+| **1.8.0** | Familienmodus – E2EE Online-Teilen + WhatsApp-Karte | ✔️ Fertig |
+| **1.9.0** | Engagement-Benachrichtigungen (Push, Welcome-Back, Streaks) | ✔️ Fertig |
 | — | **Geplante Features** | — |
 | **TBD** | Lebenszeitlinie – chronologische visuelle Ansicht | Geplant |
 | **TBD** | Privater Sync – E2EE-Synchronisation zwischen Geräten | Geplant |
