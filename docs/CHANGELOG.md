@@ -10,6 +10,18 @@ Versionierung folgt [Semantic Versioning](https://semver.org/lang/de/).
 > Der Check `npm run check:changelog` (Teil von `npm test`) bricht sonst ab.
 > Details: `CLAUDE.md` → „Changelog-Pflicht".
 
+## [1.9.1] – 2026-04-29
+
+### Behoben
+
+#### Release-Notes-Modal: iOS-Ambient-Layout & Navigation
+
+- Topbar berücksichtigt jetzt `env(safe-area-inset-top)`, damit der „Was ist neu?"-Titel im iOS-Standalone-Modus nicht mehr von der Statusleiste (Uhrzeit, Empfang, Akku) überdeckt wird.
+- Schließen-Button auf den App-weiten „← Zurück"-Button (gleiche `btn btn--ghost btn--sm`-Optik wie FAQ/Profil) umgestellt – konsistente Navigation, klarer Affordance.
+- E2E-Test für das Schließen des Modals an die neue Markup-Struktur angepasst.
+
+---
+
 ## [1.9.0] – 2026-04-28
 
 ### Hinzugefügt
@@ -627,6 +639,7 @@ Wenn im Hintergrund eine neue Version der App als Service Worker bereit steht, e
 | **1.7.0** | i18n – English-Support mit Auto-Detect | ✔️ Fertig |
 | **1.8.0** | Familienmodus – E2EE Online-Teilen + WhatsApp-Karte | ✔️ Fertig |
 | **1.9.0** | Engagement-Benachrichtigungen (Push, Welcome-Back, Streaks) | ✔️ Fertig |
+| **1.9.1** | Fix: Release-Notes-Modal iOS-Ambient-Layout + „Zurück"-Navigation | ✔️ Fertig |
 | — | **Geplante Features** | — |
 | **TBD** | Lebenszeitlinie – chronologische visuelle Ansicht | Geplant |
 | **TBD** | Privater Sync – E2EE-Synchronisation zwischen Geräten | Geplant |

@@ -6,6 +6,14 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '1.9.1',
+    date: '2026-04-29',
+    highlights: [
+      '📱 „Was ist neu?" sitzt im iOS-Standalone-Modus jetzt unter der Statusleiste',
+      '← Zurück-Button statt ✕ – konsistente Navigation wie im Rest der App',
+    ],
+  },
+  {
     version: '1.9.0',
     date: '2026-04-28',
     highlights: [

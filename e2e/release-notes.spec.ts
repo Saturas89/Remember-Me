@@ -47,11 +47,11 @@ test.describe('Remember Me – Release Notes', () => {
     await expect(page.locator('.release-notes-entry--current')).toContainText(CURRENT_VERSION)
   })
 
-  test('modal closes via the close button', async ({ page }) => {
+  test('modal closes via the back button', async ({ page }) => {
     await openProfileTab(page)
     await page.getByRole('button', { name: /Was ist neu/i }).click()
     await expect(page.locator('.release-notes-modal')).toBeVisible()
-    await page.locator('.release-notes-modal__close').click()
+    await page.locator('.release-notes-modal').getByRole('button', { name: 'Schließen' }).click()
     await expect(page.locator('.release-notes-modal')).not.toBeVisible()
   })
 })
