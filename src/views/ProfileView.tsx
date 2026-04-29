@@ -4,6 +4,7 @@ import { THEMES, useTheme } from '../hooks/useTheme'
 import { ArchiveExportCard } from '../components/ArchiveExportCard'
 import { getLastBackupDate, backupAgeLabel, backupAgeStatus } from '../utils/backupStatus'
 import { importFile } from '../utils/archiveImport'
+import { RELEASE_NOTES } from '../data/releaseNotes'
 import { useTranslation } from '../locales'
 import type { Locale } from '../locales'
 import type { Profile, Answer } from '../types'
@@ -360,7 +361,9 @@ export function ProfileView({
           <span className="profile-import-card__icon">🆕</span>
           <span className="profile-import-card__body">
             <span className="profile-import-card__title">{t.releaseNotes.title}</span>
-            <span className="profile-import-card__desc">{t.releaseNotes.versionPrefix} 1.6.0</span>
+            <span className="profile-import-card__desc">
+              {t.releaseNotes.versionPrefix} {RELEASE_NOTES[0]?.version ?? ''}
+            </span>
           </span>
           <span className="profile-import-card__arrow">›</span>
         </button>

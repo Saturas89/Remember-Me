@@ -1,4 +1,9 @@
+import { readFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
 import { test, expect, type Page } from '@playwright/test'
+
+const PKG_PATH = fileURLToPath(new URL('../package.json', import.meta.url))
+const CURRENT_VERSION = (JSON.parse(readFileSync(PKG_PATH, 'utf8')) as { version: string }).version
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
@@ -35,11 +40,11 @@ test.describe('Remember Me – Release Notes', () => {
     await expect(page.locator('.release-notes-modal')).toBeVisible()
   })
 
-  test('modal shows current version 1.6.0', async ({ page }) => {
+  test('modal shows the current version from package.json', async ({ page }) => {
     await openProfileTab(page)
     await page.getByRole('button', { name: /Was ist neu/i }).click()
     await expect(page.locator('.release-notes-modal')).toBeVisible()
-    await expect(page.locator('.release-notes-entry--current')).toContainText('1.6.0')
+    await expect(page.locator('.release-notes-entry--current')).toContainText(CURRENT_VERSION)
   })
 
   test('modal closes via the close button', async ({ page }) => {
