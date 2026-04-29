@@ -152,6 +152,12 @@ export function FriendsView({
 
       {onlineSharingConfigured && onOpenOnlineSharing && (
         <section className="friends-section">
+          <img
+            src="/features/familienmodus.jpg"
+            alt=""
+            className="familien-banner"
+            aria-hidden="true"
+          />
           <h3 className="friends-section-title">{t.friends.familienmodusHeading}</h3>
           <div className="friends-tags">
             <span className="friends-tag friends-tag--accent">{t.friends.familienmodusTagPermanent}</span>
