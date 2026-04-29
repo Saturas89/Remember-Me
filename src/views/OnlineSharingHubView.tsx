@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import { generateContactUrl, shareOrCopy } from '../utils/secureLink'
 import { generateShareCard } from '../utils/shareCard'
 import { CATEGORIES } from '../data/categories'
@@ -31,6 +31,7 @@ interface Props {
   sync: OnlineSyncAPI
   onBack: () => void
   onDeactivate: () => void
+  onRemoveContact: (friendId: string) => void
 }
 
 type Tab = 'feed' | 'share' | 'contacts' | 'settings'
@@ -108,6 +109,7 @@ export function OnlineSharingHubView({
   sync,
   onBack,
   onDeactivate,
+  onRemoveContact,
 }: Props) {
   const { t } = useTranslation()
   const h = t.onlineSharingHub
@@ -187,6 +189,7 @@ export function OnlineSharingHubView({
               profileName={profileName}
               sync={sync}
               onlineFriends={onlineFriends}
+              onRemoveContact={onRemoveContact}
             />
           )}
           {tab === 'settings' && (
@@ -571,14 +574,105 @@ function ShareTab({
 
 // ── Contacts / Einladen ──────────────────────────────────────────────────────
 
+const SWIPE_THRESHOLD = 60
+const REVEAL_WIDTH = 80
+
+function ContactItem({
+  friend,
+  removeLabel,
+  removeAriaLabel,
+  onRemove,
+}: {
+  friend: Friend
+  removeLabel: string
+  removeAriaLabel: string
+  onRemove: (id: string) => void
+}) {
+  const [offset, setOffset] = useState(0)
+  const [revealed, setRevealed] = useState(false)
+  const [dragging, setDragging] = useState(false)
+  const startXRef = useRef<number | null>(null)
+
+  const handlePointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
+    startXRef.current = e.clientX
+    setDragging(true)
+    // setPointerCapture keeps move/up events on this element even when the
+    // pointer drifts outside. Not available in jsdom, so guard gracefully.
+    e.currentTarget.setPointerCapture?.(e.pointerId)
+  }
+
+  const handlePointerMove = (e: ReactPointerEvent<HTMLDivElement>) => {
+    if (startXRef.current === null) return
+    const dx = e.clientX - startXRef.current
+    if (dx < 0) {
+      setOffset(Math.max(dx, -(REVEAL_WIDTH + 20)))
+    }
+  }
+
+  const handlePointerUp = (e: ReactPointerEvent<HTMLDivElement>) => {
+    if (startXRef.current === null) return
+    const dx = e.clientX - startXRef.current
+    setDragging(false)
+    if (dx < -SWIPE_THRESHOLD) {
+      setRevealed(true)
+      setOffset(-REVEAL_WIDTH)
+    } else {
+      setRevealed(false)
+      setOffset(0)
+    }
+    startXRef.current = null
+  }
+
+  const handlePointerLeave = (e: ReactPointerEvent<HTMLDivElement>) => {
+    if (startXRef.current !== null) {
+      handlePointerUp(e)
+    }
+  }
+
+  const handleReset = () => {
+    setRevealed(false)
+    setOffset(0)
+  }
+
+  return (
+    <li className="online-contact-item" data-testid={`contact-item-${friend.id}`}>
+      <div
+        className={`online-contact-swipe${dragging ? ' online-contact-swipe--dragging' : ''}`}
+        style={{ transform: `translateX(${offset}px)` }}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerLeave={handlePointerLeave}
+        onClick={revealed ? handleReset : undefined}
+        role="listitem"
+        data-testid={`contact-swipe-${friend.id}`}
+      >
+        <strong data-testid={`contact-name-${friend.id}`}>{friend.name}</strong>
+      </div>
+      {revealed && (
+        <button
+          className="online-contact-remove-btn"
+          aria-label={removeAriaLabel.replace('{name}', friend.name)}
+          onClick={() => onRemove(friend.id)}
+          data-testid={`contact-remove-btn-${friend.id}`}
+        >
+          {removeLabel}
+        </button>
+      )}
+    </li>
+  )
+}
+
 function ContactsTab({
   profileName,
   sync,
   onlineFriends,
+  onRemoveContact,
 }: {
   profileName: string
   sync: OnlineSyncAPI
   onlineFriends: Friend[]
+  onRemoveContact: (friendId: string) => void
 }) {
   const { t } = useTranslation()
   const c = t.onlineSharingHub.contacts
@@ -596,13 +690,17 @@ function ContactsTab({
         {c.contactsHeading}
       </h3>
       {onlineFriends.length === 0 ? (
-        <p className="friends-hint">{c.noContactsHint}</p>
+        <p className="friends-hint" data-testid="no-contacts-hint">{c.noContactsHint}</p>
       ) : (
-        <ul className="online-contact-list">
+        <ul className="online-contact-list" data-testid="contacts-list">
           {onlineFriends.map(f => (
-            <li key={f.id}>
-              <strong>{f.name}</strong>
-            </li>
+            <ContactItem
+              key={f.id}
+              friend={f}
+              removeLabel={c.removeContactButton}
+              removeAriaLabel={c.removeContactAriaLabel}
+              onRemove={onRemoveContact}
+            />
           ))}
         </ul>
       )}

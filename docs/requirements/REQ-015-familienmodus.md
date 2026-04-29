@@ -129,6 +129,13 @@ Bilder werden separat mit dem gleichen ContentKey des zugehörigen Shares versch
 - [x] **FR-15.27:** Netzwerkanfragen haben ein 20-Sekunden-Timeout (mobile Verbindungen)
 - [x] **FR-15.28:** Bei fehlender Verbindung bleibt die App voll funktionsfähig; Familienmodus zeigt Fehlermeldung statt zu hängen
 
+### 4.8 Kontakt entfernen
+
+- [x] **FR-15.29:** Im Hub-Tab „Einladen" kann ein verknüpfter Kontakt per Swipe-left entfernt werden: Wischen über den Kontakteintrag um ≥ 60 px enthüllt einen roten „Entfernen"-Button
+- [x] **FR-15.30:** Klick auf „Entfernen" löscht den Kontakt sofort aus `friends[]` (localStorage); anschließend erscheint bei 0 verbliebenen Online-Kontakten der Hinweistext „Noch niemand verknüpft"
+- [x] **FR-15.31:** Das Entfernen betrifft ausschließlich die lokale Verknüpfung (`friends[].online`); bestehende Shares/Annotations auf dem Server bleiben unberührt
+- [x] **FR-15.32:** Klick in das noch sichtbare verschobene Element (ohne Klick auf „Entfernen") setzt die Zeile zurück – kein versehentliches Löschen
+
 ---
 
 ## 5. Datenbankschema (Supabase)
@@ -334,6 +341,7 @@ interface ContactHandshake {
 - [x] Deaktivierung entfernt alle Serverdaten und den lokalen Schlüssel
 - [x] Offline-Nutzer sehen keinerlei Netzwerkaktivität zu Supabase
 - [x] E2E-Tests: Kein Netzwerkverkehr zu `*.supabase.co` ohne Opt-in (`sharing-optin.spec.ts`)
+- [x] Kontakt per Swipe entfernen: Button erscheint erst nach ≥ 60 px Swipe-left, Klick löscht lokal, Zeile lässt sich zurücksetzen
 
 ---
 
@@ -354,6 +362,7 @@ interface ContactHandshake {
 | Datei | Abgedeckte Szenarien |
 |-------|--------------------|
 | `sharing-optin.spec.ts` | Kein Supabase-Traffic ohne Opt-in; Feature versteckt wenn nicht konfiguriert; Supabase-Chunk wird nicht geladen |
+| `family-mode-swipe-remove.spec.ts` | Swipe-Button erscheint / verschwindet; Kontakt nach Klick entfernt; localStorage bereinigt; mehrere Kontakte unabhängig |
 
 ---
 
@@ -374,3 +383,4 @@ interface ContactHandshake {
 | Version | Datum | Autor | Änderung |
 |---------|-------|-------|---------|
 | 1.0.0 | 2026-04-26 | Claude | Initiale Dokumentation (Reverse Engineering der Implementierung) |
+| 1.1.0 | 2026-04-29 | Claude | FR-15.29–15.32 hinzugefügt: Kontakt per Swipe-left entfernen |

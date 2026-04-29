@@ -339,6 +339,8 @@ export const UI_EN = {
       copied: 'Copied to clipboard ✓',
       contactsHeading: 'Connected contacts',
       noContactsHint: 'No one connected yet. Share your connection link to get started.',
+      removeContactButton: 'Remove',
+      removeContactAriaLabel: 'Remove {name} from contacts',
     },
     settings: {
       heading: 'Disable direct sharing',
