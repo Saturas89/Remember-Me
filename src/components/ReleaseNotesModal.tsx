@@ -11,14 +11,14 @@ export function ReleaseNotesModal({ onClose }: Props) {
   return (
     <div className="release-notes-modal" role="dialog" aria-modal="true" aria-label={t.releaseNotes.title}>
       <div className="release-notes-modal__topbar">
-        <span className="release-notes-modal__title">{t.releaseNotes.title}</span>
         <button
-          className="release-notes-modal__close"
+          className="btn btn--ghost btn--sm"
           onClick={onClose}
           aria-label={t.releaseNotes.close}
         >
-          ✕
+          {t.global.back}
         </button>
+        <span className="release-notes-modal__title">{t.releaseNotes.title}</span>
       </div>
       <div className="release-notes-modal__body">
         {RELEASE_NOTES.map((entry, i) => (
