@@ -1,10 +1,17 @@
 import { useCallback, useEffect, useRef } from 'react'
-import { useAnswers } from './useAnswers'
+import type { Answer, AppState } from '../types'
 
 export interface StreakState {
   current: number
   longest: number
   lastAnswerDate: string   // ISO 8601 (YYYY-MM-DD)
+}
+
+export interface UseStreakArgs {
+  isLoaded: boolean
+  answers: Record<string, Answer>
+  streak: AppState['streak']
+  saveStreak: (streak: StreakState) => void
 }
 
 export interface UseStreakReturn {
@@ -30,14 +37,14 @@ function daysBetween(date1: string, date2: string): number {
 async function triggerMilestoneNotification(count: number, locale: 'de' | 'en' = 'de') {
   if (typeof window === 'undefined' || !('serviceWorker' in navigator) || !('Notification' in window)) return
   if (Notification.permission !== 'granted') return
-  
+
   try {
     const registration = await navigator.serviceWorker.ready
     const title = locale === 'de' ? 'Meilenstein erreicht! 🎉' : 'Milestone reached! 🎉'
-    const body = locale === 'de' 
+    const body = locale === 'de'
       ? `Du hast ${count} Fragen beantwortet! Deine Geschichte nimmt Form an.`
       : `You've answered ${count} questions! Your story is taking shape.`
-    
+
     await registration.showNotification(title, {
       body,
       icon: '/pwa-192x192.png',
@@ -51,8 +58,11 @@ async function triggerMilestoneNotification(count: number, locale: 'de' | 'en' =
 
 const MILESTONES = [10, 25, 50, 100] as const
 
-export function useStreak(): UseStreakReturn {
-  const { isLoaded, answers, streak: storedStreak, saveStreak } = useAnswers()
+// Compute-Hook: nimmt useAnswers-Werte explizit als Argumente. Vermeidet die
+// zweite useState-Instanz, die entstehen würde, wenn der Hook intern noch
+// einmal useAnswers() aufruft — siehe docs/req-016-pr74-postmortem.md.
+export function useStreak(args: UseStreakArgs): UseStreakReturn {
+  const { isLoaded, answers, streak: storedStreak, saveStreak } = args
 
   // Per-session dedup: highest milestone we've already announced.
   // Prevents duplicate notifications when recordAnswer is called multiple
@@ -120,10 +130,10 @@ export function useStreak(): UseStreakReturn {
 
   const checkStreakReset = useCallback(() => {
     if (!isLoaded) return
-    
+
     const today = getLocalISODate()
     const daysSince = daysBetween(streak.lastAnswerDate, today)
-    
+
     if (daysSince > 1 && streak.current > 0) {
       const updatedStreak = {
         ...streak,
