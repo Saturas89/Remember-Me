@@ -6,6 +6,14 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '1.9.2',
+    date: '2026-04-29',
+    highlights: [
+      '👆 Familienmodus: Kontakt per Swipe-left entfernen – schnell und ohne Bestätigung',
+      '↩️ Kurzes Wischen bricht ab – kein versehentliches Löschen',
+    ],
+  },
+  {
     version: '1.9.1',
     date: '2026-04-29',
     highlights: [

@@ -10,6 +10,19 @@ Versionierung folgt [Semantic Versioning](https://semver.org/lang/de/).
 > Der Check `npm run check:changelog` (Teil von `npm test`) bricht sonst ab.
 > Details: `CLAUDE.md` → „Changelog-Pflicht".
 
+## [1.9.2] – 2026-04-29
+
+### Hinzugefügt
+
+#### Familienmodus: Kontakte per Swipe entfernen
+
+- Kontakteintrag im Hub-Tab „Einladen" nach links wischen enthüllt roten „Entfernen"-Button
+- Klick entfernt den Kontakt sofort lokal (localStorage); kein Reload nötig
+- Kurzes Wischen (< 60 px) oder erneuter Klick auf die Zeile setzt sie zurück – kein versehentliches Löschen
+- Spec (REQ-015) um FR-15.29–15.32 erweitert; neuer E2E-Test `family-mode-swipe-remove.spec.ts`
+
+---
+
 ## [1.9.1] – 2026-04-29
 
 ### Behoben
@@ -640,6 +653,7 @@ Wenn im Hintergrund eine neue Version der App als Service Worker bereit steht, e
 | **1.8.0** | Familienmodus – E2EE Online-Teilen + WhatsApp-Karte | ✔️ Fertig |
 | **1.9.0** | Engagement-Benachrichtigungen (Push, Welcome-Back, Streaks) | ✔️ Fertig |
 | **1.9.1** | Fix: Release-Notes-Modal iOS-Ambient-Layout + „Zurück"-Navigation | ✔️ Fertig |
+| **1.9.2** | Familienmodus: Kontakte per Swipe-left entfernen | ✔️ Fertig |
 | — | **Geplante Features** | — |
 | **TBD** | Lebenszeitlinie – chronologische visuelle Ansicht | Geplant |
 | **TBD** | Privater Sync – E2EE-Synchronisation zwischen Geräten | Geplant |

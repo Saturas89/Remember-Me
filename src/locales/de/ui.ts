@@ -339,6 +339,8 @@ export const UI_DE = {
       copied: 'In die Zwischenablage kopiert ✓',
       contactsHeading: 'Verbundene Kontakte',
       noContactsHint: 'Noch niemand verknüpft. Teile deinen Verbindungslink, um loszulegen.',
+      removeContactButton: 'Entfernen',
+      removeContactAriaLabel: '{name} aus Kontakten entfernen',
     },
     settings: {
       heading: 'Direktes Teilen deaktivieren',

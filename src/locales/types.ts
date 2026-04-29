@@ -365,6 +365,8 @@ export interface Translations {
       copied: string
       contactsHeading: string
       noContactsHint: string
+      removeContactButton: string
+      removeContactAriaLabel: string
     }
 
     settings: {

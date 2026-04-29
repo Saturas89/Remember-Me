@@ -498,6 +498,7 @@ export default function App() {
           answers={answers}
           sync={onlineSync}
           onBack={() => goTo({ name: 'friends' })}
+          onRemoveContact={removeFriend}
           onDeactivate={async () => {
             const svc = onlineSync.service
             if (svc) {

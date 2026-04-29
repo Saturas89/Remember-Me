@@ -64,6 +64,7 @@ function renderHub(
   const sync = makeSync(syncOverrides)
   const onBack = vi.fn()
   const onDeactivate = vi.fn()
+  const onRemoveContact = vi.fn()
   const { container } = render(
     <OnlineSharingHubView
       profileName="Test"
@@ -72,6 +73,7 @@ function renderHub(
       sync={sync}
       onBack={onBack}
       onDeactivate={onDeactivate}
+      onRemoveContact={onRemoveContact}
     />,
   )
 
@@ -80,7 +82,32 @@ function renderHub(
   const teilenTab = Array.from(tabs).find(t => t.textContent?.trim() === 'Teilen')
   if (teilenTab) fireEvent.click(teilenTab)
 
-  return { container, sync, onBack, onDeactivate }
+  return { container, sync, onBack, onDeactivate, onRemoveContact }
+}
+
+function renderContactsTab(
+  friends: Friend[] = [FRIEND],
+) {
+  const sync = makeSync()
+  const onRemoveContact = vi.fn()
+  const { container } = render(
+    <OnlineSharingHubView
+      profileName="Test"
+      friends={friends}
+      answers={{ [ANSWER.id]: ANSWER }}
+      sync={sync}
+      onBack={vi.fn()}
+      onDeactivate={vi.fn()}
+      onRemoveContact={onRemoveContact}
+    />,
+  )
+
+  // Navigate to the Einladen (contacts) tab
+  const tabs = container.querySelectorAll<HTMLButtonElement>('[role="tab"]')
+  const contactsTab = Array.from(tabs).find(t => t.textContent?.trim() === 'Einladen')
+  if (contactsTab) fireEvent.click(contactsTab)
+
+  return { container, onRemoveContact }
 }
 
 function getShareBtn(container: HTMLElement) {
@@ -238,5 +265,69 @@ describe('ShareTab – keine Antworten', () => {
     const { container } = renderHub({}, [FRIEND], {})
     expect(container.textContent).toContain('Beantworte erst eine Frage')
     expect(getShareBtn(container)).toBeNull()
+  })
+})
+
+// ── ContactsTab – Swipe-to-Remove ─────────────────────────────────────────────
+
+function getSwipeEl(container: HTMLElement) {
+  return container.querySelector<HTMLElement>('.online-contact-swipe')
+}
+
+function swipeLeft(el: HTMLElement, dx = 80) {
+  fireEvent.pointerDown(el, { clientX: 200, pointerId: 1 })
+  fireEvent.pointerMove(el, { clientX: 200 - dx, pointerId: 1 })
+  fireEvent.pointerUp(el, { clientX: 200 - dx, pointerId: 1 })
+}
+
+describe('ContactsTab – Kontaktliste', () => {
+  it('zeigt verknüpften Kontakt in der Liste', () => {
+    const { container } = renderContactsTab()
+    expect(container.textContent).toContain('H')
+    expect(container.querySelector('.online-contact-swipe')).not.toBeNull()
+  })
+})
+
+describe('ContactsTab – Swipe-to-Remove', () => {
+  it('Entfernen-Button ist erst nach Swipe-left sichtbar', () => {
+    const { container } = renderContactsTab()
+    expect(container.querySelector('.online-contact-remove-btn')).toBeNull()
+
+    swipeLeft(getSwipeEl(container)!)
+    expect(container.querySelector('.online-contact-remove-btn')).not.toBeNull()
+  })
+
+  it('Entfernen-Button verschwindet bei zu kurzem Swipe wieder', () => {
+    const { container } = renderContactsTab()
+    swipeLeft(getSwipeEl(container)!, 30) // < SWIPE_THRESHOLD (60)
+    expect(container.querySelector('.online-contact-remove-btn')).toBeNull()
+  })
+
+  it('ruft onRemoveContact mit der Freund-ID auf wenn Entfernen geklickt wird', () => {
+    const { container, onRemoveContact } = renderContactsTab()
+    swipeLeft(getSwipeEl(container)!)
+
+    const btn = container.querySelector<HTMLButtonElement>('.online-contact-remove-btn')!
+    fireEvent.click(btn)
+
+    expect(onRemoveContact).toHaveBeenCalledOnce()
+    expect(onRemoveContact).toHaveBeenCalledWith(FRIEND.id)
+  })
+
+  it('Entfernen-Button hat korrekte aria-label mit dem Kontaktnamen', () => {
+    const { container } = renderContactsTab()
+    swipeLeft(getSwipeEl(container)!)
+
+    const btn = container.querySelector('.online-contact-remove-btn')!
+    expect(btn.getAttribute('aria-label')).toBe('H aus Kontakten entfernen')
+  })
+
+  it('Klick auf verschobenes Element setzt es zurück', () => {
+    const { container } = renderContactsTab()
+    swipeLeft(getSwipeEl(container)!)
+    expect(container.querySelector('.online-contact-remove-btn')).not.toBeNull()
+
+    fireEvent.click(getSwipeEl(container)!)
+    expect(container.querySelector('.online-contact-remove-btn')).toBeNull()
   })
 })
