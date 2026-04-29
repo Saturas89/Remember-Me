@@ -635,7 +635,7 @@ function ContactItem({
   }
 
   return (
-    <li className="online-contact-item">
+    <li className="online-contact-item" data-testid={`contact-item-${friend.id}`}>
       <div
         className={`online-contact-swipe${dragging ? ' online-contact-swipe--dragging' : ''}`}
         style={{ transform: `translateX(${offset}px)` }}
@@ -645,14 +645,16 @@ function ContactItem({
         onPointerLeave={handlePointerLeave}
         onClick={revealed ? handleReset : undefined}
         role="listitem"
+        data-testid={`contact-swipe-${friend.id}`}
       >
-        <strong>{friend.name}</strong>
+        <strong data-testid={`contact-name-${friend.id}`}>{friend.name}</strong>
       </div>
       {revealed && (
         <button
           className="online-contact-remove-btn"
           aria-label={removeAriaLabel.replace('{name}', friend.name)}
           onClick={() => onRemove(friend.id)}
+          data-testid={`contact-remove-btn-${friend.id}`}
         >
           {removeLabel}
         </button>
@@ -688,9 +690,9 @@ function ContactsTab({
         {c.contactsHeading}
       </h3>
       {onlineFriends.length === 0 ? (
-        <p className="friends-hint">{c.noContactsHint}</p>
+        <p className="friends-hint" data-testid="no-contacts-hint">{c.noContactsHint}</p>
       ) : (
-        <ul className="online-contact-list">
+        <ul className="online-contact-list" data-testid="contacts-list">
           {onlineFriends.map(f => (
             <ContactItem
               key={f.id}
