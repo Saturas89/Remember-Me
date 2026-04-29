@@ -276,12 +276,20 @@ test.describe('REQ-016 – Milestone Notifications (FR-16.7)', () => {
 test.describe('REQ-016 – ReminderBanner Permission Flow (FR-16.10)', () => {
   test('shows permission prompt for default permission', async ({ page }) => {
     await page.addInitScript(() => {
-      Object.defineProperty(window.Notification, 'permission', {
-        get: () => 'default'
-      })
-      Object.defineProperty(window.Notification.prototype, 'showTrigger', {
-        value: true
-      })
+      // Mobile Safari has no window.Notification — full replacement (instead
+      // of `Object.defineProperty(window.Notification, ...)` on possibly-
+      // undefined Notification) makes the test work across all browser
+      // projects.
+      const proto: Record<string, unknown> = window.Notification?.prototype ?? {}
+      proto.showTrigger = true
+      ;(window as unknown as { Notification: unknown }).Notification = Object.assign(
+        function Notification() { /* noop */ },
+        {
+          permission: 'default' as NotificationPermission,
+          requestPermission: async () => 'default' as NotificationPermission,
+          prototype: proto,
+        },
+      )
     })
 
     await completeOnboarding(page)
@@ -298,14 +306,16 @@ test.describe('REQ-016 – ReminderBanner Permission Flow (FR-16.10)', () => {
 
   test('dismisses banner and stays dismissed after rejection', async ({ page }) => {
     await page.addInitScript(() => {
-      Object.defineProperty(window.Notification, 'permission', {
-        get: () => 'default'
-      })
-      // showTrigger gate has to be true for canPrompt — without this the
-      // banner never mounts, the toBeVisible assertion below would time out.
-      Object.defineProperty(window.Notification.prototype, 'showTrigger', {
-        value: true,
-      })
+      const proto: Record<string, unknown> = window.Notification?.prototype ?? {}
+      proto.showTrigger = true
+      ;(window as unknown as { Notification: unknown }).Notification = Object.assign(
+        function Notification() { /* noop */ },
+        {
+          permission: 'default' as NotificationPermission,
+          requestPermission: async () => 'default' as NotificationPermission,
+          prototype: proto,
+        },
+      )
     })
 
     await completeOnboarding(page)
@@ -452,13 +462,21 @@ test.describe('REQ-016 – Variantenpool (FR-16.3)', () => {
 
 test.describe('REQ-016 – iOS Fallback Behavior', () => {
   test('welcome-back banner works without showTrigger support', async ({ page }) => {
-    // Simulate iOS environment without showTrigger
+    // Simulate iOS environment without showTrigger. Full Notification
+    // replacement (rather than defineProperty on a possibly-undefined
+    // window.Notification) is needed for Mobile Safari, where the API is
+    // absent entirely.
     await page.addInitScript(() => {
-      Object.defineProperty(window.Notification, 'permission', {
-        get: () => 'granted'
-      })
-      // No showTrigger property
-      delete window.Notification.prototype.showTrigger
+      ;(window as unknown as { Notification: unknown }).Notification = Object.assign(
+        function Notification() { /* noop */ },
+        {
+          permission: 'granted' as NotificationPermission,
+          requestPermission: async () => 'granted' as NotificationPermission,
+          // Empty prototype — no showTrigger ⇒ canPrompt is false, this is the
+          // iOS-fallback path the test is asserting.
+          prototype: {},
+        },
+      )
     })
 
     // Setup 4-day gap
