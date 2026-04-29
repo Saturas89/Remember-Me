@@ -1,7 +1,7 @@
 {
   "name": "remember-me",
   "private": true,
-  "version": "1.5.9",
+  "version": "1.9.0",
   "type": "module",
   "engines": {
     "node": ">=22"
@@ -11,7 +11,8 @@
     "build": "tsc -b && vite build && vitest run",
     "build:app": "tsc -b && vite build",
     "preview": "vite preview",
-    "test": "tsc -b --noEmit && node scripts/check-test-conventions.mjs && vitest run",
+    "test": "tsc -b --noEmit && node scripts/check-test-conventions.mjs && node scripts/check-changelog.mjs && vitest run",
+    "check:changelog": "node scripts/check-changelog.mjs",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "generate-icons": "node scripts/generate-icons.mjs"

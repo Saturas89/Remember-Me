@@ -6,6 +6,33 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '1.9.0',
+    date: '2026-04-28',
+    highlights: [
+      '🔔 Sanfte Erinnerungen: PWA-Push hält dich an deiner Geschichte dran',
+      '👋 Welcome-Back-Banner für iOS, wenn du länger pausiert hast',
+      '🔥 Streak-Tracking + Milestones (3, 7, 14, 30 Tage)',
+    ],
+  },
+  {
+    version: '1.8.0',
+    date: '2026-04-25',
+    highlights: [
+      '👨‍👩‍👧 Familienmodus: teile einzelne Erinnerungen Ende-zu-Ende-verschlüsselt mit Familie',
+      '🔒 Strikt opt-in – ohne Aktivierung bleibt alles wie gewohnt offline',
+      '📱 WhatsApp-fertige Share-Karte (1080×1080) für jede Einladung',
+      '🌍 Familienmodus auf Deutsch und Englisch verfügbar',
+    ],
+  },
+  {
+    version: '1.7.0',
+    date: '2026-04-20',
+    highlights: [
+      '🇬🇧 English support – Sprache wird automatisch erkannt',
+      '🌐 Sprachwechsel jederzeit im Profil möglich',
+    ],
+  },
+  {
     version: '1.6.0',
     date: '2026-04-20',
     highlights: [
