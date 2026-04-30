@@ -76,9 +76,10 @@ test.describe('Familienmodus – Kontakt per Swipe entfernen (FR-15.30)', () => 
     await swipeContactLeft(alice)
     await alice.locator('.online-contact-remove-btn').click()
 
-    // Contact row is gone from the UI
+    // Contact row is gone from the UI; hub falls back to the onboarding screen
+    // because hasContacts drops to false when the last friend is removed.
     await expect(alice.locator('.online-contact-swipe')).toHaveCount(0)
-    await expect(alice.getByText('Noch niemand verknüpft')).toBeVisible()
+    await expect(alice.getByRole('heading', { name: 'Jemanden einladen' })).toBeVisible()
 
     await aliceCtx.close()
   })

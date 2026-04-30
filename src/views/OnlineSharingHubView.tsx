@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent, type MouseEvent as ReactMouseEvent } from 'react'
 import { generateContactUrl, shareOrCopy } from '../utils/secureLink'
 import { generateShareCard } from '../utils/shareCard'
 import { CATEGORIES } from '../data/categories'
@@ -592,9 +592,14 @@ function ContactItem({
   const [revealed, setRevealed] = useState(false)
   const [dragging, setDragging] = useState(false)
   const startXRef = useRef<number | null>(null)
+  // Stores the dx of the last pointerup so that the synthetic click that fires
+  // immediately after a large swipe gesture can be distinguished from a genuine
+  // tap and ignored (otherwise the click would call handleReset right away).
+  const lastDxRef = useRef(0)
 
   const handlePointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
     startXRef.current = e.clientX
+    lastDxRef.current = 0
     setDragging(true)
     // setPointerCapture keeps move/up events on this element even when the
     // pointer drifts outside. Not available in jsdom, so guard gracefully.
@@ -612,6 +617,7 @@ function ContactItem({
   const handlePointerUp = (e: ReactPointerEvent<HTMLDivElement>) => {
     if (startXRef.current === null) return
     const dx = e.clientX - startXRef.current
+    lastDxRef.current = dx
     setDragging(false)
     if (dx < -SWIPE_THRESHOLD) {
       setRevealed(true)
@@ -634,6 +640,18 @@ function ContactItem({
     setOffset(0)
   }
 
+  const handleClick = (e: ReactMouseEvent<HTMLDivElement>) => {
+    // After a real pointer swipe the browser synthesises a trusted click at
+    // the release position. That click must be swallowed so it does not undo
+    // the reveal that handlePointerUp just set. Programmatic clicks from
+    // unit-tests (isTrusted=false) are not affected by this guard.
+    if (e.isTrusted && lastDxRef.current < -SWIPE_THRESHOLD) {
+      lastDxRef.current = 0
+      return
+    }
+    if (revealed) handleReset()
+  }
+
   return (
     <li className="online-contact-item" data-testid={`contact-item-${friend.id}`}>
       <div
@@ -643,8 +661,7 @@ function ContactItem({
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
         onPointerLeave={handlePointerLeave}
-        onClick={revealed ? handleReset : undefined}
-        role="listitem"
+        onClick={handleClick}
         data-testid={`contact-swipe-${friend.id}`}
       >
         <strong data-testid={`contact-name-${friend.id}`}>{friend.name}</strong>
