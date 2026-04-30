@@ -49,6 +49,7 @@ test.describe('Familienmodus – Komplette Einladungs- und Teilen-Kette', () => 
     // 3) Alice öffnet Bobs Rück-Link → Mirror-Accept.
     await alice.goto(contactPath('Bob', bobId.deviceId, bobId.publicKey))
     await expect(alice.getByRole('heading', { name: 'Kontakt verknüpfen' })).toBeVisible()
+    await expect(alice.getByRole('button', { name: /Meinen Link zurück senden/ })).toBeVisible()
     const alicesBob = await readOnlineFriends(alice)
     expect(alicesBob).toHaveLength(1)
     expect(alicesBob[0]).toMatchObject({ name: 'Bob' })

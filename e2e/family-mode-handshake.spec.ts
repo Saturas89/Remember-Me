@@ -61,6 +61,7 @@ test.describe('Familienmodus – Kontakt-Handshake (FR-15.5 – FR-15.9)', () =>
     // Alice opens Bob's link → mirror-accept.
     await alice.goto(contactPath('Bob', bobId.deviceId, bobId.publicKey))
     await expect(alice.getByRole('heading', { name: 'Kontakt verknüpfen' })).toBeVisible()
+    await expect(alice.getByRole('button', { name: /Meinen Link zurück senden/ })).toBeVisible()
     const alicesBob = await readOnlineFriends(alice)
     expect(alicesBob).toHaveLength(1)
     expect(alicesBob[0]).toMatchObject({ name: 'Bob' })
