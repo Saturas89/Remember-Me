@@ -111,6 +111,28 @@ export async function readOnlineFriends(
   })
 }
 
+/**
+ * Polls localStorage until at least one friend with an `online` block exists.
+ * The auto-accept effect writes to localStorage inside React's setState updater
+ * (render #3), which runs AFTER the "Meinen Link zurück senden" button becomes
+ * visible (render #2). Waiting on the button alone is therefore not sufficient –
+ * this function guarantees the data layer has caught up before callers proceed.
+ */
+export async function waitForOnlineFriend(page: Page, timeout = 15_000): Promise<void> {
+  await page.waitForFunction(
+    () => {
+      try {
+        const raw = localStorage.getItem('remember-me-state')
+        if (!raw) return false
+        const p = JSON.parse(raw)
+        return (p.friends ?? []).some((f: { online?: unknown }) => f.online)
+      } catch { return false }
+    },
+    undefined,
+    { timeout },
+  )
+}
+
 export async function seedAnswer(
   page: Page,
   questionId: string,

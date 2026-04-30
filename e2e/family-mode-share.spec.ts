@@ -9,6 +9,7 @@ import {
   reopenFamilyHub,
   seedAnswer,
   spawnDevice,
+  waitForOnlineFriend,
 } from './helpers/family-mode-helpers'
 
 // REQ-015 §4.3 – §4.5 Erinnerung teilen, empfangen, ergänzen
@@ -43,6 +44,7 @@ test.describe('Familienmodus – Erinnerung teilen, empfangen, ergänzen (FR-15.
     await expect(bob.getByRole('heading', { name: 'Kontakt verknüpfen' })).toBeVisible()
     await alice.goto(contactPath('Bob', bobId.deviceId, bobId.publicKey))
     await expect(alice.getByRole('heading', { name: 'Kontakt verknüpfen' })).toBeVisible()
+    await waitForOnlineFriend(alice)
 
     await reopenFamilyHub(alice)
     await alice.getByRole('tab', { name: 'Teilen', exact: true }).click()
