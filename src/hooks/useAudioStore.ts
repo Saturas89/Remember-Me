@@ -10,7 +10,7 @@ function getDB(): Promise<IDBDatabase> {
       const req = indexedDB.open(DB_NAME, 1)
       req.onupgradeneeded = () => req.result.createObjectStore(STORE)
       req.onsuccess = () => resolve(req.result)
-      req.onerror  = () => { dbPromise = null; reject(req.error) }
+      req.onerror  = () => { reject(req.error); dbPromise = null }
     })
   }
   return dbPromise

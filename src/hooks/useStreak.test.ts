@@ -37,6 +37,7 @@ describe('useStreak', () => {
   beforeEach(() => {
     mockSaveStreak.mockReset()
     mockShowNotification.mockReset()
+    localStorage.removeItem('rm-last-milestone')
     vi.useFakeTimers()
     // System time at noon local to avoid timezone date-shift surprises
     vi.setSystemTime(new Date(`${todayISO}T12:00:00`))
