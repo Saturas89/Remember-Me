@@ -131,10 +131,10 @@ Bilder werden separat mit dem gleichen ContentKey des zugehörigen Shares versch
 
 ### 4.8 Kontakt entfernen
 
-- [x] **FR-15.29:** Im Hub-Tab „Einladen" kann ein verknüpfter Kontakt per Swipe-left entfernt werden: Wischen über den Kontakteintrag um ≥ 60 px enthüllt einen roten „Entfernen"-Button
-- [x] **FR-15.30:** Klick auf „Entfernen" löscht den Kontakt sofort aus `friends[]` (localStorage); anschließend erscheint bei 0 verbliebenen Online-Kontakten der Hinweistext „Noch niemand verknüpft"
+- [x] **FR-15.29:** Im Hub-Tab „Einladen" kann ein verknüpfter Kontakt per vollständigem Swipe-left entfernt werden: Wischen um ≥ 80 px lässt die Zeile mit einer Fade-out-Animation nach links fliegen und löscht den Kontakt unmittelbar – kein separater Bestätigungs-Button nötig
+- [x] **FR-15.30:** Nach dem Swipe wird der Kontakt sofort aus `friends[]` (localStorage) entfernt; bei 0 verbliebenen Online-Kontakten erscheint der Hinweistext „Noch niemand verknüpft"
 - [x] **FR-15.31:** Das Entfernen betrifft ausschließlich die lokale Verknüpfung (`friends[].online`); bestehende Shares/Annotations auf dem Server bleiben unberührt
-- [x] **FR-15.32:** Klick in das noch sichtbare verschobene Element (ohne Klick auf „Entfernen") setzt die Zeile zurück – kein versehentliches Löschen
+- [x] **FR-15.32:** Kurzes Wischen (< 80 px) bricht ohne Aktion ab – kein versehentliches Löschen
 
 ---
 
@@ -341,7 +341,7 @@ interface ContactHandshake {
 - [x] Deaktivierung entfernt alle Serverdaten und den lokalen Schlüssel
 - [x] Offline-Nutzer sehen keinerlei Netzwerkaktivität zu Supabase
 - [x] E2E-Tests: Kein Netzwerkverkehr zu `*.supabase.co` ohne Opt-in (`sharing-optin.spec.ts`)
-- [x] Kontakt per Swipe entfernen: Button erscheint erst nach ≥ 60 px Swipe-left, Klick löscht lokal, Zeile lässt sich zurücksetzen
+- [x] Kontakt per Swipe entfernen: vollständiges Wischen (≥ 80 px) löscht sofort lokal mit Fly-out-Animation; kurzes Wischen bricht ab
 
 ---
 
@@ -362,7 +362,7 @@ interface ContactHandshake {
 | Datei | Abgedeckte Szenarien |
 |-------|--------------------|
 | `sharing-optin.spec.ts` | Kein Supabase-Traffic ohne Opt-in; Feature versteckt wenn nicht konfiguriert; Supabase-Chunk wird nicht geladen |
-| `family-mode-swipe-remove.spec.ts` | Swipe-Button erscheint / verschwindet; Kontakt nach Klick entfernt; localStorage bereinigt; mehrere Kontakte unabhängig |
+| `family-mode-swipe-remove.spec.ts` | Vollständiger Swipe löscht Kontakt sofort; localStorage bereinigt; mehrere Kontakte unabhängig; kurzer Swipe ohne Aktion |
 
 ---
 
@@ -384,3 +384,4 @@ interface ContactHandshake {
 |---------|-------|-------|---------|
 | 1.0.0 | 2026-04-26 | Claude | Initiale Dokumentation (Reverse Engineering der Implementierung) |
 | 1.1.0 | 2026-04-29 | Claude | FR-15.29–15.32 hinzugefügt: Kontakt per Swipe-left entfernen |
+| 1.2.0 | 2026-05-01 | Claude | FR-15.29/15.30/15.32 überarbeitet: Full-Swipe-to-Delete ohne Zwischenschritt (Schwelle 80 px, Fly-out-Animation) |
