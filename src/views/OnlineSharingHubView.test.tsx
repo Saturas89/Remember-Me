@@ -274,7 +274,7 @@ function getSwipeEl(container: HTMLElement) {
   return container.querySelector<HTMLElement>('.online-contact-swipe')
 }
 
-function swipeLeft(el: HTMLElement, dx = 80) {
+function swipeLeft(el: HTMLElement, dx = 90) {
   fireEvent.pointerDown(el, { clientX: 200, pointerId: 1 })
   fireEvent.pointerMove(el, { clientX: 200 - dx, pointerId: 1 })
   fireEvent.pointerUp(el, { clientX: 200 - dx, pointerId: 1 })
@@ -289,45 +289,29 @@ describe('ContactsTab – Kontaktliste', () => {
 })
 
 describe('ContactsTab – Swipe-to-Remove', () => {
-  it('Entfernen-Button ist erst nach Swipe-left sichtbar', () => {
-    const { container } = renderContactsTab()
-    expect(container.querySelector('.online-contact-remove-btn')).toBeNull()
-
-    swipeLeft(getSwipeEl(container)!)
-    expect(container.querySelector('.online-contact-remove-btn')).not.toBeNull()
+  it('kurzes Swipen ruft onRemoveContact nicht auf', () => {
+    const { onRemoveContact } = renderContactsTab()
+    swipeLeft(getSwipeEl(renderContactsTab().container)!, 30) // < SWIPE_THRESHOLD (80)
+    expect(onRemoveContact).not.toHaveBeenCalled()
   })
 
-  it('Entfernen-Button verschwindet bei zu kurzem Swipe wieder', () => {
-    const { container } = renderContactsTab()
-    swipeLeft(getSwipeEl(container)!, 30) // < SWIPE_THRESHOLD (60)
-    expect(container.querySelector('.online-contact-remove-btn')).toBeNull()
-  })
-
-  it('ruft onRemoveContact mit der Freund-ID auf wenn Entfernen geklickt wird', () => {
-    const { container, onRemoveContact } = renderContactsTab()
-    swipeLeft(getSwipeEl(container)!)
-
-    const btn = container.querySelector<HTMLButtonElement>('.online-contact-remove-btn')!
-    fireEvent.click(btn)
-
-    expect(onRemoveContact).toHaveBeenCalledOnce()
-    expect(onRemoveContact).toHaveBeenCalledWith(FRIEND.id)
-  })
-
-  it('Entfernen-Button hat korrekte aria-label mit dem Kontaktnamen', () => {
+  it('vollständiges Swipen fügt fly-out Klasse hinzu', () => {
     const { container } = renderContactsTab()
     swipeLeft(getSwipeEl(container)!)
-
-    const btn = container.querySelector('.online-contact-remove-btn')!
-    expect(btn.getAttribute('aria-label')).toBe('H aus Kontakten entfernen')
+    expect(getSwipeEl(container)!.classList.contains('online-contact-swipe--fly-out')).toBe(true)
   })
 
-  it('Klick auf verschobenes Element setzt es zurück', () => {
-    const { container } = renderContactsTab()
-    swipeLeft(getSwipeEl(container)!)
-    expect(container.querySelector('.online-contact-remove-btn')).not.toBeNull()
-
-    fireEvent.click(getSwipeEl(container)!)
-    expect(container.querySelector('.online-contact-remove-btn')).toBeNull()
+  it('vollständiges Swipen ruft onRemoveContact nach der Animation auf', () => {
+    vi.useFakeTimers()
+    try {
+      const { container, onRemoveContact } = renderContactsTab()
+      swipeLeft(getSwipeEl(container)!)
+      expect(onRemoveContact).not.toHaveBeenCalled()
+      act(() => { vi.advanceTimersByTime(300) })
+      expect(onRemoveContact).toHaveBeenCalledOnce()
+      expect(onRemoveContact).toHaveBeenCalledWith(FRIEND.id)
+    } finally {
+      vi.useRealTimers()
+    }
   })
 })

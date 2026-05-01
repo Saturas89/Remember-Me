@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent, type MouseEvent as ReactMouseEvent } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import { generateContactUrl, shareOrCopy } from '../utils/secureLink'
 import { generateShareCard } from '../utils/shareCard'
 import { CATEGORIES } from '../data/categories'
@@ -576,32 +576,23 @@ function ShareTab({
 
 // ── Contacts / Einladen ──────────────────────────────────────────────────────
 
-const SWIPE_THRESHOLD = 60
-const REVEAL_WIDTH = 80
+const SWIPE_THRESHOLD = 80
 
 function ContactItem({
   friend,
-  removeLabel,
-  removeAriaLabel,
   onRemove,
 }: {
   friend: Friend
-  removeLabel: string
-  removeAriaLabel: string
   onRemove: (id: string) => void
 }) {
   const [offset, setOffset] = useState(0)
-  const [revealed, setRevealed] = useState(false)
+  const [flyOut, setFlyOut] = useState(false)
   const [dragging, setDragging] = useState(false)
   const startXRef = useRef<number | null>(null)
-  // Stores the dx of the last pointerup so that the synthetic click that fires
-  // immediately after a large swipe gesture can be distinguished from a genuine
-  // tap and ignored (otherwise the click would call handleReset right away).
-  const lastDxRef = useRef(0)
 
   const handlePointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
+    if (flyOut) return
     startXRef.current = e.clientX
-    lastDxRef.current = 0
     setDragging(true)
     // setPointerCapture keeps move/up events on this element even when the
     // pointer drifts outside. Not available in jsdom, so guard gracefully.
@@ -612,23 +603,22 @@ function ContactItem({
     if (startXRef.current === null) return
     const dx = e.clientX - startXRef.current
     if (dx < 0) {
-      setOffset(Math.max(dx, -(REVEAL_WIDTH + 20)))
+      setOffset(Math.max(dx, -600))
     }
   }
 
   const handlePointerUp = (e: ReactPointerEvent<HTMLDivElement>) => {
     if (startXRef.current === null) return
     const dx = e.clientX - startXRef.current
-    lastDxRef.current = dx
+    startXRef.current = null
     setDragging(false)
     if (dx < -SWIPE_THRESHOLD) {
-      setRevealed(true)
-      setOffset(-REVEAL_WIDTH)
+      setFlyOut(true)
+      setOffset(-600)
+      setTimeout(() => onRemove(friend.id), 260)
     } else {
-      setRevealed(false)
       setOffset(0)
     }
-    startXRef.current = null
   }
 
   const handlePointerLeave = (e: ReactPointerEvent<HTMLDivElement>) => {
@@ -637,47 +627,19 @@ function ContactItem({
     }
   }
 
-  const handleReset = () => {
-    setRevealed(false)
-    setOffset(0)
-  }
-
-  const handleClick = (e: ReactMouseEvent<HTMLDivElement>) => {
-    // After a real pointer swipe the browser synthesises a trusted click at
-    // the release position. That click must be swallowed so it does not undo
-    // the reveal that handlePointerUp just set. Programmatic clicks from
-    // unit-tests (isTrusted=false) are not affected by this guard.
-    if (e.isTrusted && lastDxRef.current < -SWIPE_THRESHOLD) {
-      lastDxRef.current = 0
-      return
-    }
-    if (revealed) handleReset()
-  }
-
   return (
     <li className="online-contact-item" data-testid={`contact-item-${friend.id}`}>
       <div
-        className={`online-contact-swipe${dragging ? ' online-contact-swipe--dragging' : ''}`}
+        className={`online-contact-swipe${dragging ? ' online-contact-swipe--dragging' : ''}${flyOut ? ' online-contact-swipe--fly-out' : ''}`}
         style={{ transform: `translateX(${offset}px)` }}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
         onPointerLeave={handlePointerLeave}
-        onClick={handleClick}
         data-testid={`contact-swipe-${friend.id}`}
       >
         <strong data-testid={`contact-name-${friend.id}`}>{friend.name}</strong>
       </div>
-      {revealed && (
-        <button
-          className="online-contact-remove-btn"
-          aria-label={removeAriaLabel.replace('{name}', friend.name)}
-          onClick={() => onRemove(friend.id)}
-          data-testid={`contact-remove-btn-${friend.id}`}
-        >
-          {removeLabel}
-        </button>
-      )}
     </li>
   )
 }
@@ -716,8 +678,6 @@ function ContactsTab({
             <ContactItem
               key={f.id}
               friend={f}
-              removeLabel={c.removeContactButton}
-              removeAriaLabel={c.removeContactAriaLabel}
               onRemove={onRemoveContact}
             />
           ))}
