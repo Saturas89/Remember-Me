@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import { parseInstagramZip, type ImportCandidate } from '../utils/importInstagram'
 import { useImageStore } from '../hooks/useImageStore'
 
@@ -55,6 +55,10 @@ export function ImportView({ onImport, onBack, onDone }: Props) {
   const revokeAll = useCallback((items: ImportCandidate[]) => {
     items.forEach(c => { if (c.previewUrl) URL.revokeObjectURL(c.previewUrl) })
   }, [])
+
+  const candidatesRef = useRef<ImportCandidate[]>(candidates)
+  useEffect(() => { candidatesRef.current = candidates }, [candidates])
+  useEffect(() => () => revokeAll(candidatesRef.current), [revokeAll])
 
   // ── Toggle selection ─────────────────────────────────────
   function toggleAll(selected: boolean) {

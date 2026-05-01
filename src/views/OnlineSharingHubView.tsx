@@ -480,15 +480,17 @@ function ShareTab({
       }
 
       const TIMEOUT_MS = 30_000
-      await Promise.race([
-        sync.service.shareMemory({ body, recipients, images: [] }),
-        new Promise<never>((_, reject) =>
-          setTimeout(
-            () => reject(new Error(s.timeoutMessage)),
-            TIMEOUT_MS,
-          )
-        ),
-      ])
+      let timeoutId: ReturnType<typeof setTimeout> | undefined
+      try {
+        await Promise.race([
+          sync.service.shareMemory({ body, recipients, images: [] }),
+          new Promise<never>((_, reject) => {
+            timeoutId = setTimeout(() => reject(new Error(s.timeoutMessage)), TIMEOUT_MS)
+          }),
+        ])
+      } finally {
+        clearTimeout(timeoutId)
+      }
       setStatus('sent')
       setTimeout(() => setStatus('idle'), 2000)
       setSelectedFriends(new Set())

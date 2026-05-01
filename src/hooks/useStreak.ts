@@ -58,16 +58,20 @@ async function triggerMilestoneNotification(count: number, locale: 'de' | 'en' =
 
 const MILESTONES = [10, 25, 50, 100] as const
 
+function readLastMilestone(): number {
+  try { return parseInt(localStorage.getItem('rm-last-milestone') ?? '0', 10) || 0 }
+  catch { return 0 }
+}
+
 // Compute-Hook: nimmt useAnswers-Werte explizit als Argumente. Vermeidet die
 // zweite useState-Instanz, die entstehen würde, wenn der Hook intern noch
 // einmal useAnswers() aufruft — siehe docs/req-016-pr74-postmortem.md.
 export function useStreak(args: UseStreakArgs): UseStreakReturn {
   const { isLoaded, answers, streak: storedStreak, saveStreak } = args
 
-  // Per-session dedup: highest milestone we've already announced.
-  // Prevents duplicate notifications when recordAnswer is called multiple
-  // times with the same totalAnswered (e.g. user edits the same answer).
-  const lastMilestoneRef = useRef<number>(0)
+  // Persistent dedup: highest milestone we've already announced.
+  // Stored in localStorage so reloads don't re-fire the same milestone.
+  const lastMilestoneRef = useRef<number>(readLastMilestone())
 
   const defaultStreak: StreakState = {
     current: 0,
@@ -111,10 +115,11 @@ export function useStreak(args: UseStreakArgs): UseStreakReturn {
     const newLongest = Math.max(currentStreak.longest, newCurrent)
     const actualCount = totalAnsweredCount ?? totalAnswered + 1
 
-    // Milestone notifications (10/25/50/100). Fire only on first crossing
-    // of each tier per session.
+    // Milestone notifications (10/25/50/100). Fire only once per tier,
+    // persisted across reloads via localStorage.
     if ((MILESTONES as readonly number[]).includes(actualCount) && actualCount > lastMilestoneRef.current) {
       lastMilestoneRef.current = actualCount
+      try { localStorage.setItem('rm-last-milestone', String(actualCount)) } catch { /* quota */ }
       const locale = (navigator.language || 'de').startsWith('de') ? 'de' : 'en'
       triggerMilestoneNotification(actualCount, locale)
     }

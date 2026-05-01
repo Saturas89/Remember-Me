@@ -86,8 +86,13 @@ export async function lookupRecipientPublicKey(deviceId: string): Promise<string
     // Hex prefix "\x..."
     if (raw.startsWith('\\x')) {
       const hex = raw.slice(2)
+      if (hex.length % 2 !== 0) return null
       const bytes = new Uint8Array(hex.length / 2)
-      for (let i = 0; i < bytes.length; i++) bytes[i] = parseInt(hex.slice(i * 2, i * 2 + 2), 16)
+      for (let i = 0; i < bytes.length; i++) {
+        const byte = parseInt(hex.slice(i * 2, i * 2 + 2), 16)
+        if (isNaN(byte)) return null
+        bytes[i] = byte
+      }
       return toB64u(bytes)
     }
     return raw // already base64url
@@ -152,25 +157,34 @@ export async function shareMemory(input: ShareMemoryInput): Promise<{ shareId: s
       session.publicKeyB64,
     )
 
-    for (const img of input.images) {
-      const enc = await encryptImage(img, contentKey)
-      const mediaId = crypto.randomUUID()
-      const path = `${shareId}/${mediaId}.bin`
+    const uploadedPaths: string[] = []
+    try {
+      for (const img of input.images) {
+        const enc = await encryptImage(img, contentKey)
+        const mediaId = crypto.randomUUID()
+        const path = `${shareId}/${mediaId}.bin`
 
-      const { error: upErr } = await supabase.storage
-        .from('share-media')
-        .upload(path, enc.ciphertext, { contentType: 'application/octet-stream' })
-      if (upErr) throw upErr
+        const { error: upErr } = await supabase.storage
+          .from('share-media')
+          .upload(path, enc.ciphertext, { contentType: 'application/octet-stream' })
+        if (upErr) throw upErr
+        uploadedPaths.push(path)
 
-      const { error: mediaErr } = await supabase
-        .from('share_media')
-        .insert({
-          id: mediaId,
-          share_id: shareId,
-          storage_path: path,
-          iv: toBytea(enc.iv),
-        })
-      if (mediaErr) throw mediaErr
+        const { error: mediaErr } = await supabase
+          .from('share_media')
+          .insert({
+            id: mediaId,
+            share_id: shareId,
+            storage_path: path,
+            iv: toBytea(enc.iv),
+          })
+        if (mediaErr) throw mediaErr
+      }
+    } catch (err) {
+      if (uploadedPaths.length > 0) {
+        await supabase.storage.from('share-media').remove(uploadedPaths).catch(() => {})
+      }
+      throw err
     }
   }
 
@@ -377,8 +391,13 @@ function coerceBytes(val: unknown): Uint8Array {
     // Postgres bytea over the REST API comes back as a "\x…"-hex string.
     if (val.startsWith('\\x')) {
       const hex = val.slice(2)
+      if (hex.length % 2 !== 0) throw new Error('invalid bytea hex length')
       const out = new Uint8Array(hex.length / 2)
-      for (let i = 0; i < out.length; i++) out[i] = parseInt(hex.slice(i * 2, i * 2 + 2), 16)
+      for (let i = 0; i < out.length; i++) {
+        const byte = parseInt(hex.slice(i * 2, i * 2 + 2), 16)
+        if (isNaN(byte)) throw new Error('invalid bytea hex character')
+        out[i] = byte
+      }
       return out
     }
     return fromB64u(val)
