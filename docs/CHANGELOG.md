@@ -10,6 +10,18 @@ Versionierung folgt [Semantic Versioning](https://semver.org/lang/de/).
 > Der Check `npm run check:changelog` (Teil von `npm test`) bricht sonst ab.
 > Details: `CLAUDE.md` → „Changelog-Pflicht".
 
+## [1.9.3] – 2026-05-01
+
+### Geändert
+
+#### Familienmodus: Swipe-to-Delete ohne Zwischenschritt
+
+- Kontakteintrag vollständig nach links wischen löscht den Kontakt sofort (kein separater „Entfernen"-Button mehr)
+- Element fliegt mit Fade-out-Animation nach links raus, bevor es aus der Liste verschwindet
+- Kurzes Wischen (< 80 px) bricht ohne Aktion ab – kein versehentliches Löschen
+
+---
+
 ## [1.9.2] – 2026-04-29
 
 ### Hinzugefügt

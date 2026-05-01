@@ -12,7 +12,7 @@ import {
 // REQ-015 §4.2 – Kontakt per Swipe entfernen (FR-15.30).
 //
 // Verifies that a user can remove a linked contact by swiping the contact
-// row to the left in the Contacts tab and confirming the removal.
+// row fully to the left – no extra button tap required.
 
 async function openContactsTab(page: import('@playwright/test').Page) {
   await page.getByRole('tab', { name: 'Einladen' }).click()
@@ -34,7 +34,7 @@ async function swipeContactLeft(page: import('@playwright/test').Page) {
 }
 
 test.describe('Familienmodus – Kontakt per Swipe entfernen (FR-15.30)', () => {
-  test('Entfernen-Button erscheint nach Swipe-left und verschwindet ohne Bestätigung', async ({ browser }) => {
+  test('vollständiger Swipe entfernt den Kontakt sofort ohne Button-Tap', async ({ browser }) => {
     const state = createMockState()
     const { ctx: aliceCtx, page: alice } = await spawnDevice(browser, state)
 
@@ -44,42 +44,13 @@ test.describe('Familienmodus – Kontakt per Swipe entfernen (FR-15.30)', () => 
     await reopenFamilyHub(alice)
     await openContactsTab(alice)
 
-    // Before swipe: remove button must be absent
-    await expect(alice.locator('.online-contact-remove-btn')).toHaveCount(0)
+    await expect(alice.locator('.online-contact-swipe')).toHaveCount(1)
 
     await swipeContactLeft(alice)
 
-    // After swipe: remove button must be visible
-    const removeBtn = alice.locator('.online-contact-remove-btn')
-    await expect(removeBtn).toBeVisible()
-
-    // Clicking the swipe area (not the button) resets the row
-    await alice.locator('.online-contact-swipe').first().click()
-    await expect(alice.locator('.online-contact-remove-btn')).toHaveCount(0)
-
-    await aliceCtx.close()
-  })
-
-  test('Kontakt wird aus der Liste entfernt wenn Entfernen bestätigt wird', async ({ browser }) => {
-    const state = createMockState()
-    const { ctx: aliceCtx, page: alice } = await spawnDevice(browser, state)
-
-    await completeOnboarding(alice, 'Alice')
-    await openFamilyHub(alice)
-    await injectOnlineFriend(alice, 'Bob', 'device-bob', 'pubKeyBob')
-    await reopenFamilyHub(alice)
-    await openContactsTab(alice)
-
-    // Bob is listed
-    await expect(alice.getByRole('listitem').filter({ hasText: 'Bob' })).toBeVisible()
-
-    await swipeContactLeft(alice)
-    await alice.locator('.online-contact-remove-btn').click()
-
-    // Contact row is gone from the UI; hub falls back to the onboarding screen
-    // because hasContacts drops to false when the last friend is removed.
+    // After swipe: row flies out, hub falls back to onboarding (0 contacts)
+    await expect(alice.getByRole('heading', { name: 'Jemanden einladen' })).toBeVisible({ timeout: 1500 })
     await expect(alice.locator('.online-contact-swipe')).toHaveCount(0)
-    await expect(alice.getByRole('heading', { name: 'Jemanden einladen' })).toBeVisible()
 
     await aliceCtx.close()
   })
@@ -95,11 +66,8 @@ test.describe('Familienmodus – Kontakt per Swipe entfernen (FR-15.30)', () => 
     await openContactsTab(alice)
 
     await swipeContactLeft(alice)
-    await alice.locator('.online-contact-remove-btn').click()
 
-    // After removal the hub falls back to the onboarding screen (0 contacts)
-    // because onlineFriends.length drops to 0.
-    await expect(alice.locator('.online-contact-swipe')).toHaveCount(0)
+    await expect(alice.locator('.online-contact-swipe')).toHaveCount(0, { timeout: 1500 })
 
     // Verify localStorage is clean
     const onlineFriends = await readOnlineFriends(alice)
@@ -108,7 +76,7 @@ test.describe('Familienmodus – Kontakt per Swipe entfernen (FR-15.30)', () => 
     await aliceCtx.close()
   })
 
-  test('Mehrere Kontakte – nur geswiped Kontakt hat Entfernen-Button', async ({ browser }) => {
+  test('Mehrere Kontakte – nur geswiped Kontakt wird entfernt', async ({ browser }) => {
     const state = createMockState()
     const { ctx: aliceCtx, page: alice } = await spawnDevice(browser, state)
 
@@ -125,11 +93,35 @@ test.describe('Familienmodus – Kontakt per Swipe entfernen (FR-15.30)', () => 
     // Swipe the first one
     await swipeContactLeft(alice)
 
-    // Only one remove button
-    await expect(alice.locator('.online-contact-remove-btn')).toHaveCount(1)
+    // One contact remains
+    await expect(alice.locator('.online-contact-swipe')).toHaveCount(1, { timeout: 1500 })
 
-    // Confirm removal – one contact remains
-    await alice.locator('.online-contact-remove-btn').click()
+    await aliceCtx.close()
+  })
+
+  test('kurzer Swipe entfernt den Kontakt nicht', async ({ browser }) => {
+    const state = createMockState()
+    const { ctx: aliceCtx, page: alice } = await spawnDevice(browser, state)
+
+    await completeOnboarding(alice, 'Alice')
+    await openFamilyHub(alice)
+    await injectOnlineFriend(alice, 'Bob', 'device-bob', 'pubKeyBob')
+    await reopenFamilyHub(alice)
+    await openContactsTab(alice)
+
+    // Short swipe: only 30px to the left
+    const swipeEl = alice.locator('.online-contact-swipe').first()
+    await expect(swipeEl).toBeVisible()
+    const box = await swipeEl.boundingBox()
+    if (!box) throw new Error('swipe element has no bounding box')
+    const midY = box.y + box.height / 2
+    const startX = box.x + box.width / 2
+    await alice.mouse.move(startX, midY)
+    await alice.mouse.down()
+    await alice.mouse.move(startX - 30, midY, { steps: 5 })
+    await alice.mouse.up()
+
+    // Contact still present
     await expect(alice.locator('.online-contact-swipe')).toHaveCount(1)
 
     await aliceCtx.close()

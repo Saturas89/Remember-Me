@@ -4352,30 +4352,10 @@ details[open] .faq-item__chevron {
   transition: none;
 }
 
-.online-contact-remove-btn {
-  position: absolute;
-  right: 0;
-  top: 0;
-  bottom: 0;
-  min-width: 5rem;
-  padding: 0 1.1rem;
-  background: var(--warn, #dc2626);
-  color: #fff;
-  border: none;
-  border-radius: 0 10px 10px 0;
-  font-size: 0.85rem;
-  font-weight: 600;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  white-space: nowrap;
-}
-
-.online-contact-remove-btn:hover,
-.online-contact-remove-btn:focus-visible {
-  background: var(--warn-hover, #b91c1c);
-  outline: none;
+.online-contact-swipe--fly-out {
+  transition: transform 0.25s ease-out, opacity 0.25s ease-out;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .online-contact-list code {
