@@ -33,6 +33,19 @@ Beim Backfill (mehrere Features in einem PR) eine sinnvolle Sammelversion vergeb
 - **End-to-End:** Playwright in `e2e/`. Lauf: `npm run test:e2e`. Läuft in CI gegen fünf Browser-Projekte.
 - Vor jeder PR-Erstellung sicherstellen, dass `npm test` lokal grün ist.
 
+## Dual-Agent Specs: parallele Ausführung Pflicht
+
+Pläne, die die Header `# ── IMPLEMENTATION AGENT BRIEF ──` **und** `# ── TEST AGENT BRIEF ──` enthalten (Single-Source-of-Truth-Specs für zwei Agents), MÜSSEN über zwei `Agent`-Tool-Aufrufe in **einer einzigen Message** parallel gestartet werden:
+
+- Agent A: `subagent_type: general-purpose`, Prompt = Spec + Verweis auf Implementation-Brief-Sektionen
+- Agent B: `subagent_type: general-purpose`, Prompt = Spec + Verweis auf Test-Brief-Sektionen
+
+**Verboten:** direkte Eigenausführung im Hauptkontext, sequentielle Ausführung beider Briefs nacheinander, oder einen der beiden Briefs auslassen.
+
+**Pre-Approval-Vertrag:** Bevor der Nutzer den Plan genehmigt, gibt Claude explizit bekannt: „Ich starte nach Approval zwei Agents parallel: Agent A (Implementation, §X–Y), Agent B (Test, §Z–W). Beide in einer Message." Damit ist der Vertrag bestätigt, und der Nutzer kann widersprechen, falls Claude es im Eifer vergessen sollte.
+
+Ausnahme: Der Nutzer fordert explizit Eigenausführung oder serielle Reihenfolge.
+
 ## CI-Polling nach PR-Erstellung
 
 GitHub-Webhooks erreichen die Session nicht zuverlässig. Nach jedem `mcp__github__create_pull_request` deshalb **Monitor-Heartbeat im 3,5-min-Takt** (≈ Dauer der Playwright-Matrix) starten und bei jedem Tick die Check-Runs via `mcp__github__pull_request_read` (method `get_check_runs`) abfragen. Loop beenden, sobald alle Checks `completed` sind; Ergebnis zusammenfassen.
