@@ -13,64 +13,43 @@ async function completeOnboarding(page: Page, name = 'Features') {
   await expect(page.getByText(new RegExp(`Hallo,\\s*${name}`))).toBeVisible()
 }
 
-async function openFeaturesTab(page: Page) {
+async function openFeaturesSection(page: Page) {
   const nav = page.getByRole('navigation', { name: 'Hauptnavigation' })
-  await nav.getByRole('button', { name: 'Features', exact: true }).click()
-  await expect(page.getByRole('heading', { name: /Was kommt als Nächstes/ })).toBeVisible()
+  await nav.getByRole('button', { name: 'Profil', exact: true }).click()
+  // Open the <details> section for planned features
+  const details = page.locator('.profile-features-details')
+  await details.locator('summary').click()
+  await expect(page.getByText('Was kommt als Nächstes')).toBeVisible()
 }
 
-test.describe('Remember Me – Features Tab', () => {
+test.describe('Remember Me – Geplante Features (Profil-Tab)', () => {
   test.beforeEach(async ({ page }) => {
     await completeOnboarding(page)
   })
 
-  test('shows the four planned feature banners', async ({ page }) => {
-    await openFeaturesTab(page)
-    const banners = page.locator('.feature-img-btn')
-    await expect(banners).toHaveCount(4)
+  test('zeigt die vier geplanten Feature-Karten im Profil-Tab', async ({ page }) => {
+    await openFeaturesSection(page)
     for (const title of [
       'Automatische Lebensgeschichte',
       'Lebenszeitlinie',
       'Privater Sync',
       'Import bestehender Erinnerungen',
     ]) {
-      await expect(page.getByRole('button', { name: title })).toBeVisible()
+      await expect(page.getByText(title)).toBeVisible()
     }
+    await expect(page.locator('.profile-feature-item')).toHaveCount(4)
   })
 
-  test('opens a feature detail page and returns to the list', async ({ page }) => {
-    await openFeaturesTab(page)
+  test('Features-Sektion ist standardmäßig eingeklappt und öffnet sich per Klick', async ({ page }) => {
+    const nav = page.getByRole('navigation', { name: 'Hauptnavigation' })
+    await nav.getByRole('button', { name: 'Profil', exact: true }).click()
 
-    await page.getByRole('button', { name: 'Lebenszeitlinie' }).click()
+    const details = page.locator('.profile-features-details')
+    await expect(details).toBeVisible()
+    // Feature items are hidden until the <details> is opened
+    await expect(page.locator('.profile-feature-item').first()).not.toBeVisible()
 
-    await expect(page.getByRole('heading', { name: 'Lebenszeitlinie' })).toBeVisible()
-    await expect(page.getByText(/Noch nicht verfügbar/)).toBeVisible()
-    await expect(page).toHaveURL(/\/feature\/lebenszeitlinie$/)
-
-    await page.getByRole('button', { name: /Zurück/ }).click()
-
-    await expect(page.locator('.feature-img-btn')).toHaveCount(4)
-    await expect(page).toHaveURL(/\/feature(\/)?$/)
-  })
-
-  test('renders the detail page directly when the URL contains a feature id', async ({ page }) => {
-    // Profile already seeded by test.beforeEach() onboarding above
-    await page.goto('/feature/privater-sync')
-    await expect(page.getByRole('heading', { name: 'Privater Sync' })).toBeVisible()
-    await expect(page.getByRole('button', { name: /Zurück/ })).toBeVisible()
-  })
-
-  test('falls back to the banner list for unknown feature slugs', async ({ page }) => {
-    await page.goto('/feature/does-not-exist')
-    await expect(page.locator('.feature-img-btn')).toHaveCount(4)
-  })
-
-  test('browser back navigation returns from detail to list', async ({ page }) => {
-    await openFeaturesTab(page)
-    await page.getByRole('button', { name: 'Privater Sync' }).click()
-    await expect(page.getByRole('heading', { name: 'Privater Sync' })).toBeVisible()
-
-    await page.goBack()
-    await expect(page.locator('.feature-img-btn')).toHaveCount(4)
+    await details.locator('summary').click()
+    await expect(page.locator('.profile-feature-item').first()).toBeVisible()
   })
 })
