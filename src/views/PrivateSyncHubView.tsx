@@ -7,6 +7,7 @@ import type { UsePrivateSyncReturn } from '../hooks/usePrivateSync'
 interface Props {
   syncState: PrivateSyncState
   sync: UsePrivateSyncReturn
+  onDeactivated: () => void
 }
 
 function formatDateTime(iso: string, locale: string): string {
@@ -19,7 +20,7 @@ function formatDateTime(iso: string, locale: string): string {
   })
 }
 
-export function PrivateSyncHubView({ syncState, sync }: Props) {
+export function PrivateSyncHubView({ syncState, sync, onDeactivated }: Props) {
   const { t, locale } = useTranslation()
   const s = t.privateSync
 
@@ -94,14 +95,14 @@ export function PrivateSyncHubView({ syncState, sync }: Props) {
             <div className="modal-box__actions">
               <button
                 className="btn btn--danger btn--full"
-                onClick={() => { sync.deactivate(true); setShowDeactivateDialog(false) }}
+                onClick={async () => { await sync.deactivate(true); setShowDeactivateDialog(false); onDeactivated() }}
                 type="button"
               >
                 {s.deactivateDeleteRemote}
               </button>
               <button
                 className="btn btn--secondary btn--full"
-                onClick={() => { sync.deactivate(false); setShowDeactivateDialog(false) }}
+                onClick={async () => { await sync.deactivate(false); setShowDeactivateDialog(false); onDeactivated() }}
                 type="button"
               >
                 {s.deactivateKeepRemote}

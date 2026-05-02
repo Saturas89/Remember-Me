@@ -19,8 +19,9 @@ async function loadStateAsync(): Promise<AppState> {
             friends: parsed.friends ?? [],
             friendAnswers: parsed.friendAnswers ?? [],
             customQuestions: parsed.customQuestions ?? [],
-            onlineSharing: parsed.onlineSharing, // undefined unless opted in
-            streak: parsed.streak, // optional streak tracking
+            onlineSharing: parsed.onlineSharing,
+            streak: parsed.streak,
+            privateSync: parsed.privateSync,
           })
           return
         }

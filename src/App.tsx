@@ -583,7 +583,7 @@ export default function App() {
 
       {view.name === 'sync' && (
         privateSyncState
-          ? <PrivateSyncHubView syncState={privateSyncState} sync={privateSync} />
+          ? <PrivateSyncHubView syncState={privateSyncState} sync={privateSync} onDeactivated={() => savePrivateSync(undefined)} />
           : <PrivateSyncSetupView
               onComplete={(providerType, userId) => {
                 savePrivateSync({
