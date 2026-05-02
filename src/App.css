@@ -4333,6 +4333,18 @@ details[open] .faq-item__chevron {
   overflow: hidden;
 }
 
+.online-contact-delete-bg {
+  position: absolute;
+  inset: 0;
+  background: #dc2626;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 1.25rem;
+  color: #fff;
+  border-radius: 10px;
+}
+
 .online-contact-swipe {
   display: flex;
   justify-content: space-between;
