@@ -93,7 +93,15 @@ export async function installPrivateSyncSupabaseMock(
         user: baseUser,
       }
 
-      if (req.method() === 'POST' && (path === '/auth/v1/signup' || path === '/auth/v1/token')) {
+      if (req.method() === 'POST' && path === '/auth/v1/token') {
+        // Simulate "account not found" so the wizard takes the sign-up path
+        // and shows the recovery-code screen (first-device flow, per E2E-01).
+        return route.fulfill({
+          status: 400, contentType: 'application/json',
+          body: JSON.stringify({ error: 'invalid_grant', error_description: 'Email not confirmed' }),
+        })
+      }
+      if (req.method() === 'POST' && path === '/auth/v1/signup') {
         return route.fulfill({
           status: 200, contentType: 'application/json',
           body: JSON.stringify(session),
