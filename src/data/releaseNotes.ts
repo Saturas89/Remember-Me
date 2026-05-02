@@ -6,6 +6,16 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '2.0.0',
+    date: '2026-05-02',
+    highlights: [
+      '🔄 Privater Sync: Erinnerungen geräteübergreifend synchronisieren',
+      '☁️ Wähle Google Drive, OneDrive oder unseren verschlüsselten Server',
+      '🔐 Remember-Me-Server: Ende-zu-Ende-verschlüsselt – wir können nichts lesen',
+      '✨ Geplante Features jetzt im Profil-Tab',
+    ],
+  },
+  {
     version: '1.9.3',
     date: '2026-05-01',
     highlights: [

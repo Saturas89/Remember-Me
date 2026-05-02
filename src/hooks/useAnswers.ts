@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react'
 import { BACKUP_TYPE } from '../utils/export'
-import type { Profile, AppState, Answer, Friend, FriendAnswer, AnswerExport, CustomQuestion, FriendAnswerZipPayload, OnlineSharingState } from '../types'
+import type { Profile, AppState, Answer, Friend, FriendAnswer, AnswerExport, CustomQuestion, FriendAnswerZipPayload, OnlineSharingState, PrivateSyncState } from '../types'
 
 const STORAGE_KEY = 'remember-me-state'
 
@@ -19,8 +19,9 @@ async function loadStateAsync(): Promise<AppState> {
             friends: parsed.friends ?? [],
             friendAnswers: parsed.friendAnswers ?? [],
             customQuestions: parsed.customQuestions ?? [],
-            onlineSharing: parsed.onlineSharing, // undefined unless opted in
-            streak: parsed.streak, // optional streak tracking
+            onlineSharing: parsed.onlineSharing,
+            streak: parsed.streak,
+            privateSync: parsed.privateSync,
           })
           return
         }
@@ -174,7 +175,10 @@ export function useAnswers() {
 
   const saveProfile = useCallback((profile: Profile) => {
     setState(prev => {
-      const next: AppState = { ...prev, profile }
+      const next: AppState = {
+        ...prev,
+        profile: { ...profile, updatedAt: new Date().toISOString() },
+      }
       saveState(next)
       return next
     })
@@ -451,6 +455,28 @@ export function useAnswers() {
     })
   }, [])
 
+  const savePrivateSync = useCallback((privateSync: PrivateSyncState | undefined) => {
+    setState(prev => {
+      const next: AppState = { ...prev, privateSync }
+      saveState(next)
+      return next
+    })
+  }, [])
+
+  const mergeRemoteState = useCallback((merged: AppState) => {
+    setState(prev => {
+      const next: AppState = {
+        ...merged,
+        // Always keep local-only fields
+        onlineSharing: prev.onlineSharing,
+        privateSync: prev.privateSync,
+        streak: prev.streak,
+      }
+      saveState(next)
+      return next
+    })
+  }, [])
+
   const enableOnlineSharing = useCallback(() => {
     setOnlineSharing({ enabled: true, activatedAt: new Date().toISOString() })
   }, [setOnlineSharing])
@@ -560,6 +586,10 @@ export function useAnswers() {
     customQuestions: state.customQuestions,
     onlineSharing: state.onlineSharing,
     streak: state.streak,
+    privateSync: state.privateSync,
+    appState: state,
+    savePrivateSync,
+    mergeRemoteState,
     saveAnswer,
     setAnswerImages,
     setAnswerVideos,

@@ -1,6 +1,6 @@
 import { useTranslation } from '../locales'
 
-type MainTab = 'home' | 'friends' | 'archive' | 'feature' | 'profile'
+type MainTab = 'home' | 'friends' | 'archive' | 'sync' | 'profile'
 
 interface Props {
   current: string
@@ -12,11 +12,11 @@ export function BottomNav({ current, onNavigate, friendsBadge = 0 }: Props) {
   const { t } = useTranslation()
 
   const TABS: { id: MainTab; label: string; icon: string }[] = [
-    { id: 'home',    label: t.nav.home,     icon: '/menu-icons/lebensweg.jpeg' },
-    { id: 'friends', label: t.nav.friends,  icon: '/menu-icons/freunde.jpeg' },
-    { id: 'archive', label: t.nav.archive,  icon: '/menu-icons/vermaechtnis.jpeg' },
-    { id: 'feature', label: t.nav.features, icon: '/menu-icons/features.jpeg' },
-    { id: 'profile', label: t.nav.profile,  icon: '/menu-icons/profil.jpeg' },
+    { id: 'home',    label: t.nav.home,    icon: '/menu-icons/lebensweg.jpeg' },
+    { id: 'friends', label: t.nav.friends, icon: '/menu-icons/freunde.jpeg' },
+    { id: 'archive', label: t.nav.archive, icon: '/menu-icons/vermaechtnis.jpeg' },
+    { id: 'sync',    label: t.nav.sync,    icon: '/menu-icons/features.jpeg' },
+    { id: 'profile', label: t.nav.profile, icon: '/menu-icons/profil.jpeg' },
   ]
 
   return (

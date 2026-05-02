@@ -68,7 +68,7 @@ test.describe('Remember Me – Bottom navigation', () => {
 
   // Scope to the <nav aria-label="Hauptnavigation"> so labels like "Vermächtnis"
   // don't collide with the "Wünsche & Vermächtnis" category card.
-  for (const label of ['Freunde', 'Vermächtnis', 'Features', 'Profil', 'Lebensweg']) {
+  for (const label of ['Freunde', 'Vermächtnis', 'Sync', 'Profil', 'Lebensweg']) {
     test(`bottom nav opens "${label}" tab`, async ({ page }) => {
       const nav = page.getByRole('navigation', { name: 'Hauptnavigation' })
       const tab = nav.getByRole('button', { name: label, exact: true })

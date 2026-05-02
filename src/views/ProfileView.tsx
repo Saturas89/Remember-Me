@@ -369,6 +369,31 @@ export function ProfileView({
         </button>
       </section>
 
+      <section className="profile-card profile-card--features">
+        <details className="profile-features-details">
+          <summary className="profile-features-summary">
+            <span>✨ {t.feature.listTitle}</span>
+          </summary>
+          <p className="profile-features-intro">{t.feature.listIntro}</p>
+          <p className="profile-features-note">{t.feature.listNote}</p>
+          <div className="profile-features-grid">
+            {t.feature.features.map(feature => (
+              <div key={feature.id} className="profile-feature-item">
+                <img
+                  src={feature.img}
+                  alt={feature.title}
+                  className="profile-feature-item__img"
+                />
+                <div className="profile-feature-item__info">
+                  <strong>{feature.title}</strong>
+                  <span className="profile-feature-item__status">{feature.status}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </details>
+      </section>
+
     </div>
   )
 }

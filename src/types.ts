@@ -50,6 +50,7 @@ export interface Profile {
   name: string
   birthYear?: number
   createdAt: string
+  updatedAt?: string
 }
 
 export interface Friend {
@@ -119,6 +120,18 @@ export interface CustomQuestion {
   createdAt: string
 }
 
+export type SyncProviderType = 'google-drive' | 'onedrive' | 'supabase'
+export type SyncStatus = 'idle' | 'syncing' | 'error' | 'success'
+
+export interface PrivateSyncState {
+  providerType: SyncProviderType
+  userId: string
+  lastSyncAt: string | null
+  status: SyncStatus
+  errorMessage: string | null
+  encryption?: 'recovery-code'
+}
+
 export interface AppState {
   profile: Profile | null
   answers: Record<string, Answer>
@@ -134,6 +147,8 @@ export interface AppState {
     longest: number
     lastAnswerDate: string   // ISO 8601 (YYYY-MM-DD)
   }
+  /** Undefined until the user explicitly opts in to private sync. */
+  privateSync?: PrivateSyncState
 }
 
 export interface OnlineSharingState {
