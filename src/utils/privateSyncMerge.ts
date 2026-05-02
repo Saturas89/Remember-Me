@@ -27,9 +27,12 @@ function mergeAnswers(
 export function mergeStates(local: AppState, remote: AppState): AppState {
   const mergedAnswers = mergeAnswers(local.answers, remote.answers)
 
+  const localProfileTs = local.profile?.updatedAt ?? local.profile?.createdAt
+  const remoteProfileTs = remote.profile?.updatedAt ?? remote.profile?.createdAt
   const remoteProfileNewer =
-    remote.profile?.createdAt !== undefined &&
-    newerTimestamp(remote.profile.createdAt, local.profile?.createdAt)
+    remote.profile !== null &&
+    remote.profile !== undefined &&
+    newerTimestamp(remoteProfileTs, localProfileTs)
 
   return {
     ...local,

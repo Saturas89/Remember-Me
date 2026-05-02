@@ -50,6 +50,7 @@ export interface Profile {
   name: string
   birthYear?: number
   createdAt: string
+  updatedAt?: string
 }
 
 export interface Friend {

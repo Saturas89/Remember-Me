@@ -174,7 +174,10 @@ export function useAnswers() {
 
   const saveProfile = useCallback((profile: Profile) => {
     setState(prev => {
-      const next: AppState = { ...prev, profile }
+      const next: AppState = {
+        ...prev,
+        profile: { ...profile, updatedAt: new Date().toISOString() },
+      }
       saveState(next)
       return next
     })

@@ -90,9 +90,19 @@ describe('mergeStates – LWW per answer', () => {
     expect(merged.answers.B.value).toBe('b')
   })
 
-  it('M-06: Profile remote neuer (createdAt) → merged nutzt Remote-Profile', () => {
-    const localProfile: Profile = { name: 'Old', createdAt: '2024-01-01T00:00:00.000Z' }
-    const remoteProfile: Profile = { name: 'New', createdAt: '2024-06-01T00:00:00.000Z' }
+  it('M-06: Profile remote neuer (updatedAt) → merged nutzt Remote-Profile', () => {
+    // Beide Geräte teilen denselben createdAt (klassisches Sync-Setup);
+    // remote wurde nach lokal aktualisiert → updatedAt entscheidet.
+    const localProfile: Profile = {
+      name: 'Old',
+      createdAt: '2024-01-01T00:00:00.000Z',
+      updatedAt: '2024-01-01T00:00:00.000Z',
+    }
+    const remoteProfile: Profile = {
+      name: 'New',
+      createdAt: '2024-01-01T00:00:00.000Z',
+      updatedAt: '2024-06-01T00:00:00.000Z',
+    }
     const merged = mergeStates(
       makeState({ profile: localProfile }),
       makeState({ profile: remoteProfile }),
@@ -101,8 +111,27 @@ describe('mergeStates – LWW per answer', () => {
   })
 
   it('M-07: Profile local neuer → merged behält Local-Profile', () => {
-    const localProfile: Profile = { name: 'New', createdAt: '2024-06-01T00:00:00.000Z' }
-    const remoteProfile: Profile = { name: 'Old', createdAt: '2024-01-01T00:00:00.000Z' }
+    const localProfile: Profile = {
+      name: 'New',
+      createdAt: '2024-01-01T00:00:00.000Z',
+      updatedAt: '2024-06-01T00:00:00.000Z',
+    }
+    const remoteProfile: Profile = {
+      name: 'Old',
+      createdAt: '2024-01-01T00:00:00.000Z',
+      updatedAt: '2024-01-01T00:00:00.000Z',
+    }
+    const merged = mergeStates(
+      makeState({ profile: localProfile }),
+      makeState({ profile: remoteProfile }),
+    )
+    expect(merged.profile?.name).toBe('New')
+  })
+
+  it('M-11: Profile-Fallback ohne updatedAt → createdAt entscheidet', () => {
+    // Backward-Kompatibilität: bestehende User vor 2.0.x haben kein updatedAt.
+    const localProfile: Profile = { name: 'Old', createdAt: '2024-01-01T00:00:00.000Z' }
+    const remoteProfile: Profile = { name: 'New', createdAt: '2024-06-01T00:00:00.000Z' }
     const merged = mergeStates(
       makeState({ profile: localProfile }),
       makeState({ profile: remoteProfile }),
