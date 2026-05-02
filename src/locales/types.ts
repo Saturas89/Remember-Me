@@ -9,7 +9,7 @@ export interface Translations {
     home: string
     friends: string
     archive: string
-    features: string
+    sync: string
     profile: string
   }
 
@@ -578,6 +578,64 @@ export interface Translations {
     imageLightboxCloseAria: string
     /** AudioPlayer fallback when blob can't be loaded. */
     audioUnavailable: string
+  }
+
+  privateSync: {
+    tabLabel: string
+    introTitle: string
+    introDesc: string
+    setupButton: string
+    providerChoiceTitle: string
+    googleDriveTitle: string
+    googleDriveDesc: string
+    googleDrivePrivacy: string
+    oneDriveTitle: string
+    oneDriveDesc: string
+    oneDrivePrivacy: string
+    supabaseTitle: string
+    supabaseDesc: string
+    supabasePrivacy: string
+    loginTitle: string
+    googleSignInButton: string
+    microsoftSignInButton: string
+    emailLabel: string
+    emailPlaceholder: string
+    passwordLabel: string
+    passwordPlaceholder: string
+    signInButton: string
+    signingIn: string
+    recoveryCodeTitle: string
+    recoveryCodeDesc: string
+    recoveryCodeWarning: string
+    recoveryCodeConfirm: string
+    enterCodeTitle: string
+    enterCodeDesc: string
+    enterCodeLabel: string
+    enterCodePlaceholder: string
+    enterCodeButton: string
+    enterCodeError: string
+    successTitle: string
+    successDesc: string
+    hubTitle: string
+    storedAt: string
+    storedAtGoogle: string
+    storedAtOneDrive: string
+    storedAtSupabase: string
+    storedWhat: string
+    storedWhatFull: string
+    storedWhatTextOnly: string
+    lastSync: string
+    lastSyncNever: string
+    syncNowButton: string
+    syncing: string
+    deactivateButton: string
+    deactivateTitle: string
+    deactivateQuestion: string
+    deactivateDeleteRemote: string
+    deactivateKeepRemote: string
+    deactivateCancel: string
+    back: string
+    continueButton: string
   }
 
   categories: Category[]

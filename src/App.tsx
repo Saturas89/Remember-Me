@@ -25,11 +25,14 @@ import { ImportView } from './views/ImportView'
 import { FaqView } from './views/FaqView'
 import { OnboardingView } from './views/OnboardingView'
 import { SharedMemoryView } from './views/SharedMemoryView'
-import { FeatureView } from './views/FeatureView'
+import { PrivateSyncSetupView } from './views/PrivateSyncSetupView'
+import { PrivateSyncHubView } from './views/PrivateSyncHubView'
 import { OnlineSharingIntroView } from './views/OnlineSharingIntroView'
 import { OnlineSharingHubView } from './views/OnlineSharingHubView'
 import { ContactHandshakeView } from './views/ContactHandshakeView'
 import { useOnlineSync } from './hooks/useOnlineSync'
+import { usePrivateSync } from './hooks/usePrivateSync'
+import { defaultMediaAdapter } from './utils/privateSyncMediaAdapter'
 
 /** True at build time when VITE_SUPABASE_URL + VITE_SUPABASE_ANON_KEY are set.
  *  Kept inline here (instead of reusing utils/supabaseClient's helper) so the
@@ -60,14 +63,14 @@ type View =
   | { name: 'archive' }
   | { name: 'friends' }
   | { name: 'profile' }
-  | { name: 'feature' }
+  | { name: 'sync' }
   | { name: 'custom-questions' }
   | { name: 'import' }
   | { name: 'faq'; from: 'profile' | 'home' }
   | { name: 'online-intro' }
   | { name: 'online-hub' }
 
-type MainTab = 'home' | 'friends' | 'archive' | 'feature' | 'profile'
+type MainTab = 'home' | 'friends' | 'archive' | 'sync' | 'profile'
 
 // Detect URL type synchronously to show a loading state before async parse
 const needsAsyncParse = isSecureInviteHash() || isAnswerHash() || isMemoryShareHash()
@@ -80,7 +83,7 @@ function pathToView(pathname: string): View {
     case 'friends': return { name: 'friends' }
     case 'archive': return { name: 'archive' }
     case 'profile': return { name: 'profile' }
-    case 'feature': return { name: 'feature' }
+    case 'sync':    return { name: 'sync' }
     default:        return { name: 'home' }
   }
 }
@@ -117,6 +120,8 @@ export default function App() {
     friendAnswers,
     customQuestions,
     onlineSharing,
+    privateSync: privateSyncState,
+    appState,
     saveAnswer,
     setAnswerImages,
     setAnswerVideos,
@@ -138,12 +143,20 @@ export default function App() {
     removeOnlineFriends,
     streak: storedStreak,
     saveStreak,
+    savePrivateSync,
+    mergeRemoteState,
     getAnswer,
     getAnswerImageIds,
     getAnswerVideoIds,
     getAnswerAudioId,
     getCategoryProgress,
   } = useAnswers()
+
+  const privateSync = usePrivateSync(
+    appState,
+    defaultMediaAdapter,
+    mergeRemoteState,
+  )
 
   // Pending contact handshake (from URL hash). Parsed synchronously at module
   // load, then held here until the user explicitly accepts in the UI.
@@ -326,6 +339,18 @@ export default function App() {
     return () => window.removeEventListener('popstate', onPopstate)
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Pull on visibility change (app resumes from background)
+  useEffect(() => {
+    if (!isLoaded) return
+    const onVisible = () => {
+      if (document.visibilityState === 'visible' && privateSync.isEnabled) {
+        privateSync.syncNow()
+      }
+    }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => document.removeEventListener('visibilitychange', onVisible)
+  }, [isLoaded, privateSync.isEnabled]) // eslint-disable-line react-hooks/exhaustive-deps
+
   if (!isLoaded || urlParsing) {
     return null // avoid flicker while loading or parsing URL
   }
@@ -378,7 +403,7 @@ export default function App() {
   function goTo(v: View) {
     window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior })
     const paths: Partial<Record<View['name'], string>> = {
-      home: '/', friends: '/friends', archive: '/archive', profile: '/profile', feature: '/feature',
+      home: '/', friends: '/friends', archive: '/archive', profile: '/profile', sync: '/sync',
     }
     let path = paths[v.name]
     // Quiz lands on its own pseudo-route so deep-link & welcome-back-continue
@@ -556,8 +581,22 @@ export default function App() {
         />
       )}
 
-      {view.name === 'feature' && (
-        <FeatureView />
+      {view.name === 'sync' && (
+        privateSyncState
+          ? <PrivateSyncHubView syncState={privateSyncState} sync={privateSync} />
+          : <PrivateSyncSetupView
+              onComplete={(providerType, userId) => {
+                savePrivateSync({
+                  providerType,
+                  userId,
+                  lastSyncAt: null,
+                  status: 'idle',
+                  errorMessage: null,
+                  encryption: providerType === 'supabase' ? 'recovery-code' : undefined,
+                })
+                privateSync.syncNow()
+              }}
+            />
       )}
 
       {view.name === 'faq' && (

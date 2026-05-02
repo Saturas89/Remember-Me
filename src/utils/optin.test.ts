@@ -36,6 +36,7 @@ describe('online sharing opt-in guard', () => {
     for (const f of files) {
       if (f.endsWith(`utils/supabaseClient.ts`)) continue
       if (f.endsWith(`utils/sharingService.ts`)) continue
+      if (f.endsWith(`utils/privateSyncClient.ts`)) continue
       const src = readFileSync(f, 'utf8')
       // Static import:  import ... from '.../supabaseClient'
       if (/import[^;]+from\s+['"][^'"]*supabaseClient['"]/m.test(src)) {
@@ -49,6 +50,7 @@ describe('online sharing opt-in guard', () => {
     const allowedSet = new Set([
       'utils/supabaseClient.ts',
       'utils/sharingService.ts',
+      'utils/privateSyncClient.ts',
     ])
     const offenders: string[] = []
     for (const f of files) {

@@ -10,6 +10,32 @@ Versionierung folgt [Semantic Versioning](https://semver.org/lang/de/).
 > Der Check `npm run check:changelog` (Teil von `npm test`) bricht sonst ab.
 > Details: `CLAUDE.md` → „Changelog-Pflicht".
 
+## [2.0.0] – 2026-05-02
+
+### Hinzugefügt
+
+#### Privater Sync – deine Erinnerungen, deine Cloud
+
+- Neues **Sync-Tab** in der Navigation (ersetzt den alten Features-Tab)
+- Drei gleichwertige Sync-Provider wählbar:
+  - **Google Drive** – Texte + Bilder, Audio und Videos in der eigenen Google Drive
+  - **Microsoft OneDrive** – Texte + Bilder, Audio und Videos im eigenen OneDrive App-Ordner
+  - **Remember Me Server** – nur Texte, Ende-zu-Ende-verschlüsselt (AES-256-GCM), zero-knowledge
+- Automatischer Push 5 Sekunden nach jeder Änderung (debounced)
+- Automatischer Pull bei App-Start und bei Tab-Wechsel (visibilitychange)
+- Manueller Sync-Button mit Statusanzeige (idle / syncing / error / success)
+- Konfliktauflösung via Last-Write-Wins auf Antwort-Ebene
+- Recovery Code (24-Zeichen Base62) für die Serverspeicher-Option
+- Klare Warnung: ohne Recovery Code sind Daten nicht wiederherstellbar
+- Sync-Hub zeigt wohin und was gespeichert wird + letzten Sync-Zeitpunkt
+- Deaktivierung mit optionalem Remote-Lösch-Dialog
+
+#### Navigation & Profil
+
+- „Geplante Features" ist jetzt als zusammenklappbare Sektion im Profil-Tab
+
+---
+
 ## [1.9.3] – 2026-05-01
 
 ### Geändert
