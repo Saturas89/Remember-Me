@@ -91,4 +91,53 @@ describe('encodeQuestionPack / decodeQuestionPack', () => {
     const code = encodeQuestionPack(pack)
     expect(decodeQuestionPack(`\n${code}\n`)).toEqual(pack)
   })
+
+  it('rejects question with unknown type', () => {
+    const bad = btoa(encodeURIComponent(JSON.stringify({
+      questions: [{ id: 'a', text: 't', type: 'malicious', createdAt: 'x' }],
+    })))
+    expect(decodeQuestionPack(bad)).toBeNull()
+  })
+
+  it('rejects question text exceeding 2000 chars', () => {
+    const bad = btoa(encodeURIComponent(JSON.stringify({
+      questions: [{ id: 'a', text: 'x'.repeat(2_001), type: 'text', createdAt: 'x' }],
+    })))
+    expect(decodeQuestionPack(bad)).toBeNull()
+  })
+
+  it('rejects pack with more than 200 questions', () => {
+    const tooMany = Array.from({ length: 201 }, (_, i) => ({
+      id: `q-${i}`, text: 't', type: 'text' as const, createdAt: 'x',
+    }))
+    const bad = btoa(encodeURIComponent(JSON.stringify({ questions: tooMany })))
+    expect(decodeQuestionPack(bad)).toBeNull()
+  })
+
+  it('rejects question with missing required field', () => {
+    const bad = btoa(encodeURIComponent(JSON.stringify({
+      questions: [{ id: 'a', text: 't', type: 'text' }], // no createdAt
+    })))
+    expect(decodeQuestionPack(bad)).toBeNull()
+  })
+
+  it('rejects options array with overly long entries', () => {
+    const bad = btoa(encodeURIComponent(JSON.stringify({
+      questions: [{
+        id: 'a', text: 't', type: 'choice', createdAt: 'x',
+        options: ['x'.repeat(201)],
+      }],
+    })))
+    expect(decodeQuestionPack(bad)).toBeNull()
+  })
+
+  it('round-trips a choice question with options', () => {
+    const choicePack: QuestionPack = {
+      questions: [{
+        id: 'cq-2', text: 'Lieblingsfarbe?', type: 'choice', createdAt: '2026-01-02T00:00:00.000Z',
+        options: ['Rot', 'Blau', 'Grün'],
+      }],
+    }
+    expect(decodeQuestionPack(encodeQuestionPack(choicePack))).toEqual(choicePack)
+  })
 })

@@ -10,6 +10,44 @@ Versionierung folgt [Semantic Versioning](https://semver.org/lang/de/).
 > Der Check `npm run check:changelog` (Teil von `npm test`) bricht sonst ab.
 > Details: `CLAUDE.md` → „Changelog-Pflicht".
 
+## [2.0.1] – 2026-05-03
+
+### Sicherheit
+
+#### Drive-/OneDrive-Sync E2E-verschlüsselt
+
+- **Breaking für Sync-Setup:** Google Drive und OneDrive verschlüsseln jetzt
+  den AppState mit AES-256-GCM und Recovery-Code-abgeleitetem Key (PBKDF2,
+  200k Iterationen, SHA-256). Bisher lagen Profil, Antworten und Freundesliste
+  im Klartext in der Drive-Datei.
+- Recovery-Code-Flow gilt jetzt für alle drei Provider (Drive, OneDrive,
+  Remember Me Server).
+- Sync-Datei-Format auf v2 angehoben; alte v1-Dateien führen zu einem klaren
+  „bitte Setup neu durchlaufen"-Hinweis statt stillem Klartext-Read.
+
+#### Content-Security-Policy + Google Identity Services
+
+- `connect-src` erweitert um `googleapis.com`, `graph.microsoft.com`,
+  `login.microsoftonline.com` und `accounts.google.com/gsi/` – ohne diese
+  Einträge wurden alle Drive-Requests in Production geblockt.
+- Google-Identity-SDK (`gsi/client`) wird jetzt on-demand bei Drive-Login
+  geladen und ist in `script-src` zugelassen.
+
+#### Härtungen
+
+- `decodeQuestionPack`: pro Frage strikte Längen- und Enum-Validierung
+  (max. 200 Fragen, 2 000 Zeichen Text, nur Typen `text`/`choice`/`scale`).
+- `generateRecoveryCode`: Modulo-Bias durch Reject-Sampling entfernt.
+- `npm audit`: postcss-XSS (GHSA-qx2v-qp2m-jg93) durch Update behoben.
+
+### Versionshinweis
+
+Wer schon mit 2.0.0 ein Drive-/OneDrive-Sync eingerichtet hat, muss das Setup
+einmal neu durchlaufen, damit die Daten in das verschlüsselte Format migriert
+werden.
+
+---
+
 ## [2.0.0] – 2026-05-02
 
 ### Hinzugefügt
