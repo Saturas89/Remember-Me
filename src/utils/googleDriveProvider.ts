@@ -2,25 +2,24 @@ import type { AppState, SyncProviderType } from '../types'
 import type { SyncProvider, MediaStoreAccessor, PullResult } from './privateSyncProvider'
 import { SyncError } from './privateSyncProvider'
 import { mergeStates } from './privateSyncMerge'
+import { loadCachedVaultKey } from './recoveryCode'
+import {
+  encryptSyncEnvelope,
+  decryptSyncEnvelope,
+  parseEncryptedSyncEnvelope,
+} from './syncEncryption'
 
 const TOKEN_KEY = 'rm-sync-gdrive-token'
 const FILE_ID_KEY = 'rm-sync-gdrive-fileid'
 const SYNC_FILE_NAME = 'remember-me-sync.json'
 const MEDIA_FOLDER_NAME = 'remember-me-media'
+const APP_VERSION = '2.0.1'
+
+type MediaManifestEntry = { type: 'image' | 'audio' | 'video'; syncedAt: string; driveFileId: string }
 
 interface StoredToken {
   accessToken: string
   expiresAt: number
-}
-
-type MediaManifestEntry = { type: 'image' | 'audio' | 'video'; syncedAt: string; driveFileId: string }
-
-interface SyncJson {
-  schemaVersion: 1
-  syncedAt: string
-  appVersion: string
-  state: AppState
-  mediaManifest: Record<string, MediaManifestEntry>
 }
 
 // ── IndexedDB token store ──────────────────────────────────────────────────
@@ -91,6 +90,44 @@ async function saveFileId(id: string): Promise<void> {
     tx.oncomplete = () => resolve()
     tx.onerror = () => reject(tx.error)
   })
+}
+
+// ── Google Identity Services script loader ────────────────────────────────
+//
+// GIS is required for the OAuth token client. We inject the <script> tag on
+// demand (rather than putting it in index.html) so users who never enable
+// Drive sync don't pay the network cost. The CSP must allow
+// https://accounts.google.com/gsi/client – see vercel.json#script-src.
+
+let _gisScriptPromise: Promise<void> | null = null
+
+function loadGoogleIdentityScript(): Promise<void> {
+  if (typeof window === 'undefined') return Promise.reject(new Error('no window'))
+  const w = window as unknown as { google?: { accounts?: { oauth2?: unknown } } }
+  if (w.google?.accounts?.oauth2) return Promise.resolve()
+  if (_gisScriptPromise) return _gisScriptPromise
+
+  _gisScriptPromise = new Promise<void>((resolve, reject) => {
+    const existing = document.querySelector<HTMLScriptElement>(
+      'script[src="https://accounts.google.com/gsi/client"]',
+    )
+    if (existing) {
+      existing.addEventListener('load', () => resolve(), { once: true })
+      existing.addEventListener('error', () => reject(new Error('GIS script failed')), { once: true })
+      return
+    }
+    const s = document.createElement('script')
+    s.src = 'https://accounts.google.com/gsi/client'
+    s.async = true
+    s.defer = true
+    s.onload = () => resolve()
+    s.onerror = () => {
+      _gisScriptPromise = null // allow retry on next signIn
+      reject(new Error('GIS script failed'))
+    }
+    document.head.appendChild(s)
+  })
+  return _gisScriptPromise
 }
 
 // ── Drive API helpers ──────────────────────────────────────────────────────
@@ -181,11 +218,26 @@ export class GoogleDriveProvider implements SyncProvider {
   readonly type: SyncProviderType = 'google-drive'
 
   private _authenticated = false
+  private _syncId: string | null
 
-  constructor() {
+  /**
+   * @param syncId Stable per-install UUID used as PBKDF2 salt for the vault
+   *               key. Persisted in AppState.privateSync.userId. The setup
+   *               wizard generates one on first setup and recovers it from
+   *               the existing sync file on a second device.
+   */
+  constructor(syncId?: string) {
+    this._syncId = syncId ?? null
     loadToken().then(t => {
       this._authenticated = !!t && t.expiresAt > Date.now()
     })
+  }
+
+  private async _requireVaultKey(): Promise<{ key: CryptoKey; syncId: string }> {
+    if (!this._syncId) throw new SyncError('syncId fehlt – Setup nicht abgeschlossen', 'auth')
+    const key = await loadCachedVaultKey(this._syncId)
+    if (!key) throw new SyncError('Kein Vault-Key – Recovery Code fehlt', 'decrypt')
+    return { key, syncId: this._syncId }
   }
 
   isAuthenticated(): boolean {
@@ -196,11 +248,12 @@ export class GoogleDriveProvider implements SyncProvider {
     const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined
     if (!clientId) throw new SyncError('VITE_GOOGLE_CLIENT_ID nicht gesetzt', 'auth')
 
+    await loadGoogleIdentityScript()
     return new Promise((resolve, reject) => {
-      const client = (window as unknown as {
-        google: {
-          accounts: {
-            oauth2: {
+      const gis = (window as unknown as {
+        google?: {
+          accounts?: {
+            oauth2?: {
               initTokenClient(cfg: {
                 client_id: string
                 scope: string
@@ -209,7 +262,12 @@ export class GoogleDriveProvider implements SyncProvider {
             }
           }
         }
-      }).google.accounts.oauth2.initTokenClient({
+      }).google?.accounts?.oauth2
+      if (!gis) {
+        reject(new SyncError('Google-Identity-SDK konnte nicht geladen werden', 'network'))
+        return
+      }
+      const client = gis.initTokenClient({
         client_id: clientId,
         scope: 'https://www.googleapis.com/auth/drive.file',
         callback: async resp => {
@@ -235,7 +293,31 @@ export class GoogleDriveProvider implements SyncProvider {
     this._authenticated = false
   }
 
+  /**
+   * Probe Drive for an existing sync file and, if present, return its syncId
+   * (the PBKDF2 salt) without decrypting. Returns null when no file exists or
+   * the file is in a legacy/unknown format. Used by the setup wizard to
+   * decide between "generate new recovery code" vs "ask user to enter
+   * existing recovery code".
+   */
+  async readExistingSyncId(): Promise<string | null> {
+    try {
+      const token = await getValidToken()
+      let fileId = await loadFileId()
+      if (!fileId) fileId = await findSyncFile(token)
+      if (!fileId) return null
+      const res = await driveGet(`/drive/v3/files/${fileId}?alt=media`, token)
+      if (!res.ok) return null
+      const raw = await res.json() as unknown
+      const { readEncryptedSyncId } = await import('./syncEncryption')
+      return readEncryptedSyncId(raw)
+    } catch {
+      return null
+    }
+  }
+
   async push(state: AppState, media: MediaStoreAccessor): Promise<void> {
+    const { key: vaultKey, syncId } = await this._requireVaultKey()
     const token = await getValidToken()
     let fileId = await loadFileId()
     if (!fileId) fileId = await findSyncFile(token)
@@ -266,14 +348,14 @@ export class GoogleDriveProvider implements SyncProvider {
       }),
     ])
 
-    const syncJson: SyncJson = {
-      schemaVersion: 1,
-      syncedAt: new Date().toISOString(),
-      appVersion: '2.0.0',
+    const envelope = await encryptSyncEnvelope({
       state,
       mediaManifest: manifest,
-    }
-    const body = JSON.stringify(syncJson)
+      vaultKey,
+      syncId,
+      appVersion: APP_VERSION,
+    })
+    const body = JSON.stringify(envelope)
 
     if (fileId) {
       await driveUpload('PATCH', fileId, { name: SYNC_FILE_NAME }, body, 'application/json', token)
@@ -284,6 +366,7 @@ export class GoogleDriveProvider implements SyncProvider {
   }
 
   async pull(localState: AppState, media: MediaStoreAccessor): Promise<PullResult | null> {
+    const { key: vaultKey } = await this._requireVaultKey()
     const token = await getValidToken()
     let fileId = await loadFileId()
     if (!fileId) fileId = await findSyncFile(token)
@@ -291,9 +374,11 @@ export class GoogleDriveProvider implements SyncProvider {
 
     const res = await driveGet(`/drive/v3/files/${fileId}?alt=media`, token)
     if (!res.ok) return null
-    const syncJson = await res.json() as SyncJson
-    const remote = syncJson.state
-    const manifest = syncJson.mediaManifest ?? {}
+    const raw = await res.json() as unknown
+    const envelope = parseEncryptedSyncEnvelope(raw)
+    const decrypted = await decryptSyncEnvelope<Record<string, MediaManifestEntry>>(envelope, vaultKey)
+    const remote = decrypted.state
+    const manifest = decrypted.mediaManifest ?? {}
 
     const localIds = await media.listLocalMediaIds()
     const localAllIds = new Set([...localIds.images, ...localIds.audio, ...localIds.videos])
@@ -327,6 +412,10 @@ export class GoogleDriveProvider implements SyncProvider {
           })
         }
       } catch { /* best-effort */ }
+    }
+    if (this._syncId) {
+      const { clearCachedVaultKey } = await import('./recoveryCode')
+      await clearCachedVaultKey(this._syncId).catch(() => {})
     }
     await clearToken()
     this._authenticated = false

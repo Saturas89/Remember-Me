@@ -46,10 +46,19 @@ export function PrivateSyncSetupView({ onComplete }: Props) {
       const { GoogleDriveProvider } = await import('../utils/googleDriveProvider')
       const p = new GoogleDriveProvider()
       await p.signIn()
-      const { data } = await (await import('../utils/supabaseClient')).getSupabaseClient().auth.getUser().catch(() => ({ data: { user: null } }))
-      // For Google Drive, userId is derived from google token sub – use random UUID as placeholder
-      const uid = data?.user?.id ?? crypto.randomUUID()
-      onComplete(provider, uid)
+      // Look for an existing encrypted sync file → drives whether the user
+      // needs to enter their existing recovery code or generate a new one.
+      const existingSyncId = await p.readExistingSyncId()
+      if (existingSyncId) {
+        setUserId(existingSyncId)
+        setStep('enter-code')
+      } else {
+        const newId = crypto.randomUUID()
+        setUserId(newId)
+        const code = generateRecoveryCode()
+        setRecoveryCode(code)
+        setStep('recovery-code')
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Anmeldung fehlgeschlagen')
     } finally {
@@ -65,8 +74,17 @@ export function PrivateSyncSetupView({ onComplete }: Props) {
       const { OneDriveProvider } = await import('../utils/oneDriveProvider')
       const p = new OneDriveProvider()
       await p.signIn()
-      const uid = crypto.randomUUID()
-      onComplete(provider, uid)
+      const existingSyncId = await p.readExistingSyncId()
+      if (existingSyncId) {
+        setUserId(existingSyncId)
+        setStep('enter-code')
+      } else {
+        const newId = crypto.randomUUID()
+        setUserId(newId)
+        const code = generateRecoveryCode()
+        setRecoveryCode(code)
+        setStep('recovery-code')
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Anmeldung fehlgeschlagen')
     } finally {
@@ -107,11 +125,12 @@ export function PrivateSyncSetupView({ onComplete }: Props) {
   }
 
   async function handleRecoveryCodeConfirm() {
+    if (!provider) return
     setLoading(true)
     try {
       const key = await deriveVaultKey(recoveryCode, userId)
       await cacheVaultKey(userId, key)
-      onComplete('supabase', userId)
+      onComplete(provider, userId)
     } catch {
       setError('Schlüssel konnte nicht gespeichert werden')
     } finally {
@@ -120,24 +139,66 @@ export function PrivateSyncSetupView({ onComplete }: Props) {
   }
 
   async function handleEnterCode() {
+    if (!provider) return
     setCodeError(null)
     setLoading(true)
     try {
       const normalized = enteredCode.replace(/-/g, '').trim()
       const key = await deriveVaultKey(normalized, userId)
-      // Try to pull to verify the key works
-      const { SupabaseSyncProvider } = await import('../utils/supabaseSyncProvider')
-      const sp = new SupabaseSyncProvider(userId)
-      await cacheVaultKey(userId, key)
-      const supabase = getSyncSupabaseClient()
-      const { data } = await supabase.from('private_sync_state').select('state_ct, state_iv').eq('user_id', userId).single()
-      if (data) {
-        const { decryptText } = await import('../utils/recoveryCode')
-        await decryptText(data.state_ct as string, data.state_iv as string, key)
+
+      // Verify the entered code by trying to decrypt the existing payload.
+      // Each provider has its own canonical "is this code right?" probe.
+      if (provider === 'supabase') {
+        await cacheVaultKey(userId, key)
+        const supabase = getSyncSupabaseClient()
+        const { data } = await supabase
+          .from('private_sync_state')
+          .select('state_ct, state_iv')
+          .eq('user_id', userId)
+          .single()
+        if (data) {
+          const { decryptText } = await import('../utils/recoveryCode')
+          // Throws on wrong key → caught below.
+          await decryptText(data.state_ct as string, data.state_iv as string, key)
+        }
+      } else if (provider === 'google-drive') {
+        await cacheVaultKey(userId, key)
+        const { GoogleDriveProvider } = await import('../utils/googleDriveProvider')
+        const p = new GoogleDriveProvider(userId)
+        // Pull will throw SyncError('decrypt') on a wrong code.
+        await p.pull(
+          { profile: null, answers: {}, friends: [], friendAnswers: [], customQuestions: [] },
+          {
+            getImageBlob: async () => null,
+            getAudioBlob: async () => null,
+            getVideoBlob: async () => null,
+            putImage: async () => {},
+            putAudio: async () => {},
+            putVideo: async () => {},
+            listLocalMediaIds: async () => ({ images: [], audio: [], videos: [] }),
+          },
+        )
+      } else if (provider === 'onedrive') {
+        await cacheVaultKey(userId, key)
+        const { OneDriveProvider } = await import('../utils/oneDriveProvider')
+        const p = new OneDriveProvider(userId)
+        await p.pull(
+          { profile: null, answers: {}, friends: [], friendAnswers: [], customQuestions: [] },
+          {
+            getImageBlob: async () => null,
+            getAudioBlob: async () => null,
+            getVideoBlob: async () => null,
+            putImage: async () => {},
+            putAudio: async () => {},
+            putVideo: async () => {},
+            listLocalMediaIds: async () => ({ images: [], audio: [], videos: [] }),
+          },
+        )
       }
-      void sp
-      onComplete('supabase', userId)
+      onComplete(provider, userId)
     } catch {
+      // Drop the cached key on a failed verification so the user can try again.
+      await import('../utils/recoveryCode').then(m => m.clearCachedVaultKey(userId)).catch(() => {})
       setCodeError(s.enterCodeError)
     } finally {
       setLoading(false)

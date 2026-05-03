@@ -6,6 +6,16 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '2.0.1',
+    date: '2026-05-03',
+    highlights: [
+      '🔐 Drive- und OneDrive-Sync sind jetzt Ende-zu-Ende-verschlüsselt – auch bei kompromittiertem Cloud-Konto bleiben deine Antworten geschützt',
+      '🔑 Recovery-Code-Setup für alle Sync-Provider gleich – einmal speichern, überall wiederherstellen',
+      '🛡 Sicherheits-Härtungen: schärfere Validierung beim Fragen-Import, sauberere Zufallszahlen für den Recovery-Code',
+      '⚙️ Stabilitäts-Fix: Drive-Sync funktioniert jetzt auch unter strenger Content-Security-Policy',
+    ],
+  },
+  {
     version: '2.0.0',
     date: '2026-05-02',
     highlights: [

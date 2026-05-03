@@ -51,10 +51,10 @@ export function usePrivateSync(
 
     if (providerType === 'google-drive') {
       const { GoogleDriveProvider } = await import('../utils/googleDriveProvider')
-      providerRef.current = new GoogleDriveProvider()
+      providerRef.current = new GoogleDriveProvider(appState.privateSync?.userId)
     } else if (providerType === 'onedrive') {
       const { OneDriveProvider } = await import('../utils/oneDriveProvider')
-      providerRef.current = new OneDriveProvider()
+      providerRef.current = new OneDriveProvider(appState.privateSync?.userId)
     } else {
       const { SupabaseSyncProvider } = await import('../utils/supabaseSyncProvider')
       providerRef.current = new SupabaseSyncProvider(appState.privateSync?.userId)

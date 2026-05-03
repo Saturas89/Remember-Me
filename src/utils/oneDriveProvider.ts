@@ -2,10 +2,17 @@ import type { AppState, SyncProviderType } from '../types'
 import type { SyncProvider, MediaStoreAccessor, PullResult } from './privateSyncProvider'
 import { SyncError } from './privateSyncProvider'
 import { mergeStates } from './privateSyncMerge'
+import { loadCachedVaultKey } from './recoveryCode'
+import {
+  encryptSyncEnvelope,
+  decryptSyncEnvelope,
+  parseEncryptedSyncEnvelope,
+} from './syncEncryption'
 
 const TOKEN_IDB = 'rm-sync-auth'
 const TOKEN_STORE = 'tokens'
 const ONEDRIVE_TOKEN_KEY = 'rm-sync-onedrive-token'
+const APP_VERSION = '2.0.1'
 
 interface StoredToken {
   accessToken: string
@@ -14,14 +21,6 @@ interface StoredToken {
 }
 
 type MediaManifestEntry = { type: 'image' | 'audio' | 'video'; syncedAt: string }
-
-interface SyncJson {
-  schemaVersion: 1
-  syncedAt: string
-  appVersion: string
-  state: AppState
-  mediaManifest: Record<string, MediaManifestEntry>
-}
 
 const GRAPH_BASE = 'https://graph.microsoft.com/v1.0'
 const APP_ROOT = `${GRAPH_BASE}/me/drive/special/approot`
@@ -102,11 +101,20 @@ export class OneDriveProvider implements SyncProvider {
   readonly type: SyncProviderType = 'onedrive'
 
   private _authenticated = false
+  private _syncId: string | null
 
-  constructor() {
+  constructor(syncId?: string) {
+    this._syncId = syncId ?? null
     loadToken().then(t => {
       this._authenticated = !!t && t.expiresAt > Date.now()
     })
+  }
+
+  private async _requireVaultKey(): Promise<{ key: CryptoKey; syncId: string }> {
+    if (!this._syncId) throw new SyncError('syncId fehlt – Setup nicht abgeschlossen', 'auth')
+    const key = await loadCachedVaultKey(this._syncId)
+    if (!key) throw new SyncError('Kein Vault-Key – Recovery Code fehlt', 'decrypt')
+    return { key, syncId: this._syncId }
   }
 
   isAuthenticated(): boolean {
@@ -150,7 +158,25 @@ export class OneDriveProvider implements SyncProvider {
     this._authenticated = false
   }
 
+  /**
+   * Probe OneDrive for an existing sync file and return its syncId without
+   * decrypting. See GoogleDriveProvider.readExistingSyncId for context.
+   */
+  async readExistingSyncId(): Promise<string | null> {
+    try {
+      const token = await getValidToken()
+      const res = await graphGet('remember-me-sync.json', token)
+      if (res.status === 404 || !res.ok) return null
+      const raw = await res.json() as unknown
+      const { readEncryptedSyncId } = await import('./syncEncryption')
+      return readEncryptedSyncId(raw)
+    } catch {
+      return null
+    }
+  }
+
   async push(state: AppState, media: MediaStoreAccessor): Promise<void> {
+    const { key: vaultKey, syncId } = await this._requireVaultKey()
     const token = await getValidToken()
     const localIds = await media.listLocalMediaIds()
     const manifest: Record<string, MediaManifestEntry> = {}
@@ -176,24 +202,27 @@ export class OneDriveProvider implements SyncProvider {
       }),
     ])
 
-    const syncJson: SyncJson = {
-      schemaVersion: 1,
-      syncedAt: new Date().toISOString(),
-      appVersion: '2.0.0',
+    const envelope = await encryptSyncEnvelope({
       state,
       mediaManifest: manifest,
-    }
-    await graphPut('remember-me-sync.json', JSON.stringify(syncJson), 'application/json', token)
+      vaultKey,
+      syncId,
+      appVersion: APP_VERSION,
+    })
+    await graphPut('remember-me-sync.json', JSON.stringify(envelope), 'application/json', token)
   }
 
   async pull(localState: AppState, media: MediaStoreAccessor): Promise<PullResult | null> {
+    const { key: vaultKey } = await this._requireVaultKey()
     const token = await getValidToken()
     const res = await graphGet('remember-me-sync.json', token)
     if (res.status === 404 || !res.ok) return null
 
-    const syncJson = await res.json() as SyncJson
-    const remote = syncJson.state
-    const manifest = syncJson.mediaManifest ?? {}
+    const raw = await res.json() as unknown
+    const envelope = parseEncryptedSyncEnvelope(raw)
+    const decrypted = await decryptSyncEnvelope<Record<string, MediaManifestEntry>>(envelope, vaultKey)
+    const remote = decrypted.state
+    const manifest = decrypted.mediaManifest ?? {}
 
     const localIds = await media.listLocalMediaIds()
     const localAllIds = new Set([...localIds.images, ...localIds.audio, ...localIds.videos])
@@ -216,6 +245,10 @@ export class OneDriveProvider implements SyncProvider {
   }
 
   async deactivate(_deleteRemote: boolean): Promise<void> {
+    if (this._syncId) {
+      const { clearCachedVaultKey } = await import('./recoveryCode')
+      await clearCachedVaultKey(this._syncId).catch(() => {})
+    }
     await clearToken()
     this._authenticated = false
   }
