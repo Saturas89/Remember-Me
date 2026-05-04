@@ -24,6 +24,7 @@ Alle funktionalen und nicht-funktionalen Anforderungen des Projekts.
 | [REQ-014](./REQ-014-release-notes.md) | Release Notes / „Was ist neu?" | UX | Low | ✔️ COMPLETED |
 | [REQ-015](./REQ-015-familienmodus.md) | Familienmodus (E2EE Online-Teilen) | Sharing | Medium | ✔️ COMPLETED |
 | [REQ-016](./REQ-016-pwa-notifications.md) | Engagement-Benachrichtigungen | Engagement | Medium | 🟡 PLANNED |
+| [REQ-017](./REQ-017-privater-sync.md) | Privater Sync (geräteübergreifend, 3 Provider) | Sync | High | ✔️ COMPLETED |
 
 ---
 
@@ -56,6 +57,7 @@ Alle funktionalen und nicht-funktionalen Anforderungen des Projekts.
 - [ ] Mehrsprachigkeit (DE / EN)
 - [ ] Biografie erzeugen (KI-Ghostwriter aus Antworten) → REQ-008
 - [x] Familienmodus: Ende-zu-Ende-verschlüsseltes Online-Teilen → REQ-015
+- [x] Privater Sync (Google Drive / OneDrive / Remember Me Server, E2EE) → REQ-017
 
 ### WON'T – Bewusst ausgeschlossen
 - Eigenes Backend / Server in v1.x
