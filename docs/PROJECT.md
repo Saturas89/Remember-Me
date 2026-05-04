@@ -75,10 +75,10 @@ Teilen / Exportieren (PDF, Freunde einladen, KI-Export)
 - [x] **Hilfe & FAQ** – Datenschutz, Import, Export, Offline-Nutzung erklärt; eigene FAQ-Ansicht (REQ-010)
 - [x] **Erinnerungs-Archiv ZIP-Export** – Komplettarchiv als ZIP inkl. Fotos, Audio & Video; Share Sheet Integration (REQ-011)
 - [x] **Erinnerungs-Archiv-Import** – Wiederherstellung aus ZIP oder JSON-Backup; Fotos, Videos, Audio werden mitimportiert (REQ-013)
+- [x] **Privater Sync** – geräteübergreifende Synchronisation über drei Provider (Google Drive, Microsoft OneDrive, Remember Me Server), AES-256-GCM-Verschlüsselung mit Recovery-Code-abgeleitetem Key (REQ-017, v2.0.0/2.0.1)
 - [ ] **Engagement-Benachrichtigungen** – OS-Reminder mit Backoff-Cadence (3/10/24 Tage), iOS-Welcome-Back-Banner, Streak-Tracking & Meilenstein-Glückwünsche (REQ-016)
 - [ ] Mehrsprachigkeit (DE / EN)
 - [ ] **Lebenszeitlinie** – chronologische Ansicht aller Erlebnisse und Fotos auf einer visuellen Timeline, filterbar nach Jahr und Kategorie; optional ungefähres Alter pro Eintrag (z. B. „ca. 8 Jahre alt"), wird automatisch aus Geburtsjahr vorgeschlagen (REQ-006)
-- [ ] **Privater Sync** – Optionaler E2EE-Sync (Web Crypto API, verschlüsselte Synchronisation zwischen Geräten, opt-in)
 - [ ] **Import bestehender Erinnerungen** – Erinnerungen und Fotos aus sozialen Netzwerken (Facebook, Instagram), Clouds und lokalen Ordnern importieren, mit optionaler eigener Beschreibung (REQ-007)
 - [ ] **Automatische Lebensgeschichte** – aus den gespeicherten Antworten per KI eine fertige, lesbare Lebensgeschichte in verschiedenen Stilen und Sprachen generieren, vorschau- und exportierbar (REQ-008)
 
@@ -159,14 +159,14 @@ Update-Banner: `src/components/UpdateBanner.tsx` – Toast bei verfügbarem SW-U
 | InviteData | Daten im Einladungslink (profileName + friendId + topicId?) |
 | FriendTopic | Thema für Freundes-Einladung (id, title, emoji, description, 5 questions) |
 | Release Notes | Versionsbeschreibungen für Nutzer – was hat sich in der neuen Version geändert; abrufbar im Update-Banner und im Profil |
-| E2EE | Ende-zu-Ende-Verschlüsselung (geplant für Privater Sync) |
+| E2EE | Ende-zu-Ende-Verschlüsselung (Familienmodus, Privater Sync) – ✔️ umgesetzt |
 | KI-Export | Archiv in KI-lesbarem Format (Markdown/JSON) – ✔️ umgesetzt |
 | Audio-Aufnahme | Fragen einsprechen statt tippen; Transkript immer gespeichert, Originalton-Datei optional – ✔️ umgesetzt |
 | Video-Anhänge | Videos zu Antworten hinzufügen; IndexedDB-basiert – ✔️ umgesetzt |
 | Erinnerungs-Archiv | ZIP-Export & -Import inkl. Fotos, Audio, Video – ✔️ umgesetzt |
 | approxAge | Ungefähres Lebensalter zum Zeitpunkt eines Erlebnisses, für die Zeitlinie |
 | Lebenszeitlinie | Chronologische visuelle Ansicht aller Einträge und Fotos; mit optionalem ca. Alter (geplant) |
-| Privater Sync | Verschlüsselte Synchronisation zwischen Geräten (geplant) |
+| Privater Sync | Verschlüsselte Synchronisation zwischen Geräten über Google Drive, OneDrive oder Remember Me Server (REQ-017) – ✔️ umgesetzt |
 | Import Erinnerungen | Import aus sozialen Netzwerken, Clouds, lokalen Ordnern (geplant) |
 | Biografie-Generator | KI-gestützte Umwandlung der Antworten in eine fertige Lebensgeschichte (geplant) |
 | Engagement-Benachrichtigungen | Reminder-System mit systemfester 3/10/24-Tage-Backoff-Cadence, Variantenpool, Welcome-Back-Banner als iOS-Fallback und Meilenstein-Glückwünschen (REQ-016, geplant) |
@@ -184,5 +184,5 @@ Update-Banner: `src/components/UpdateBanner.tsx` – Toast bei verfügbarem SW-U
 ## Dokumentation
 
 - [CHANGELOG](./CHANGELOG.md) – Versionshistorie
-- [Anforderungen](./requirements/README.md) – REQ-001 bis REQ-016
+- [Anforderungen](./requirements/README.md) – REQ-001 bis REQ-017
 - [KI-Export Konzept](./design/AI_READABLE_EXPORT.md) – Vorschläge für KI-lesbare Formate

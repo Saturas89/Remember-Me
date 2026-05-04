@@ -730,8 +730,10 @@ Wenn im Hintergrund eine neue Version der App als Service Worker bereit steht, e
 | **1.9.0** | Engagement-Benachrichtigungen (Push, Welcome-Back, Streaks) | ✔️ Fertig |
 | **1.9.1** | Fix: Release-Notes-Modal iOS-Ambient-Layout + „Zurück"-Navigation | ✔️ Fertig |
 | **1.9.2** | Familienmodus: Kontakte per Swipe-left entfernen | ✔️ Fertig |
+| **1.9.3** | Familienmodus: Full-Swipe-to-Delete (kein Bestätigungs-Button mehr) | ✔️ Fertig |
+| **2.0.0** | Privater Sync – Google Drive, OneDrive, Remember Me Server (REQ-017) | ✔️ Fertig |
+| **2.0.1** | Sicherheits-Härtung: E2EE für Drive/OneDrive-Sync, CSP/GIS, Recovery-Code-Bias-Fix | ✔️ Fertig |
 | — | **Geplante Features** | — |
 | **TBD** | Lebenszeitlinie – chronologische visuelle Ansicht | Geplant |
-| **TBD** | Privater Sync – E2EE-Synchronisation zwischen Geräten | Geplant |
 | **TBD** | Import bestehender Erinnerungen (Social Media, Clouds) | Geplant |
 | **TBD** | Automatische Lebensgeschichte – KI-generierte Biografie | Geplant |
