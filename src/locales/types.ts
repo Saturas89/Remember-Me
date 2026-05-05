@@ -446,7 +446,6 @@ export interface Translations {
     feedbackNote: string
     listTitle: string
     listIntro: string
-    listNote: string
     features: Array<{
       id: string
       title: string
