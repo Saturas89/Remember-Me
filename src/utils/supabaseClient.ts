@@ -7,37 +7,6 @@
 
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 
-// In-process lock for E2E — avoids navigator.locks (>5 s on iPhone 14 emulation).
-// Inlined instead of imported from @supabase/auth-js to preserve the sharingService chunk boundary.
-const _e2eLockPrevious: Record<string, Promise<unknown>> = {}
-function e2eProcessLock<R>(name: string, acquireTimeout: number, fn: () => Promise<R>): Promise<R> {
-  const prev = (_e2eLockPrevious[name] as Promise<unknown>) ?? Promise.resolve()
-  const prevHandled = prev.then(() => null, () => null)
-  const current = (async (): Promise<R> => {
-    try {
-      if (acquireTimeout >= 0) {
-        let tid: ReturnType<typeof setTimeout>
-        await Promise.race([
-          prevHandled,
-          new Promise<never>((_, rej) => {
-            tid = setTimeout(
-              () => rej(Object.assign(new Error('E2E lock timed out'), { isAcquireTimeout: true })),
-              acquireTimeout,
-            )
-          }),
-        ]).finally(() => clearTimeout(tid!))
-      } else {
-        await prevHandled
-      }
-    } catch (e) {
-      if ((e as { isAcquireTimeout?: boolean }).isAcquireTimeout) throw e
-    }
-    return fn()
-  })()
-  _e2eLockPrevious[name] = current.then(() => null, () => null)
-  return current
-}
-
 export interface SharingConfig {
   url: string
   anonKey: string
@@ -78,22 +47,22 @@ export function getSupabaseClient(): SupabaseClient {
     auth: {
       persistSession: true,
       autoRefreshToken: true,
-      // In E2E, replace the Web Locks API (navigator.locks) with an in-process
-      // lock (processLock). Playwright's iPhone 14 emulation (hasTouch:true,
-      // isMobile:true) causes navigator.locks.request() to take >5 s before
-      // delivering its callback, triggering the abort+steal cascade in
-      // supabase-js every time the lock is acquired. The cumulative delay pushes
-      // bootstrapSession past readDeviceIdentity's 15 s budget, flaking ~6
-      // family-mode tests on every mobile-safari run (+4 min vs webkit).
+      // Playwright's iPhone 14 emulation (hasTouch:true, isMobile:true) delivers
+      // navigator.locks.request() callbacks with a >5 s delay, triggering the
+      // abort+steal cascade in supabase-js (5 s timeout → steal → another >5 s
+      // delay). The cumulative latency pushes bootstrapSession past the 15 s
+      // readDeviceIdentity budget, flaking ~6 family-mode tests.
       //
-      // processLock is supabase's own in-process mutex (used for React Native /
-      // non-browser environments). It serialises lock requests via promise
-      // chaining without touching the Web Locks API, so it's safe for single-tab
-      // E2E contexts. skipAutoInitialize removes the extra lock acquisition in
-      // the GoTrueClient constructor (initialize() is a no-op in E2E anyway
-      // since each BrowserContext starts with an empty session store).
+      // Two-pronged fix (no custom lock function — avoids mysterious failures on
+      // other browsers):
+      //   1. skipAutoInitialize: skip the initialize() lock acquisition (not
+      //      needed in E2E; each BrowserContext starts with an empty store).
+      //   2. lockAcquireTimeout: 12 000 ms — raises the abort timer past the
+      //      ~5–8 s iPhone 14 callback delay, so the steal cascade never fires.
+      //      On desktop Chromium/Firefox/WebKit the lock arrives in <1 ms;
+      //      the increased timeout has no observable effect there.
       ...(import.meta.env.VITE_E2E === 'true'
-        ? { lock: e2eProcessLock, skipAutoInitialize: true }
+        ? { skipAutoInitialize: true, lockAcquireTimeout: 12_000 }
         : {}),
     },
     global: { fetch: fetchWithTimeout },

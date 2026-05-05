@@ -53,7 +53,7 @@ export async function openFamilyHub(page: Page) {
   // heading appears instead, in which case we can skip the consent step).
   const consentHeading = page.getByRole('heading', { name: 'Familienmodus', exact: true })
   const consentVisible = await consentHeading
-    .waitFor({ state: 'visible', timeout: 10_000 })
+    .waitFor({ state: 'visible', timeout: 20_000 })
     .then(() => true)
     .catch(() => false)
   if (consentVisible) {
@@ -78,12 +78,12 @@ export async function reopenFamilyHub(page: Page) {
   await page.goto('/friends')
   await page.getByTestId('open-online-sharing').click()
   await waitForHubReady(page)
-  await expect(page.getByRole('tablist')).toBeVisible({ timeout: 10_000 })
+  await expect(page.getByRole('tablist')).toBeVisible({ timeout: 20_000 })
 }
 
 async function waitForHubReady(page: Page) {
-  await expect(page.getByRole('heading', { name: 'Online teilen', exact: true })).toBeVisible({ timeout: 15_000 })
-  await expect(page.getByText(/Verbinde mit Server …/)).toHaveCount(0, { timeout: 15_000 })
+  await expect(page.getByRole('heading', { name: 'Online teilen', exact: true })).toBeVisible({ timeout: 25_000 })
+  await expect(page.getByText(/Verbinde mit Server …/)).toHaveCount(0, { timeout: 25_000 })
 }
 
 export async function readDeviceIdentity(page: Page): Promise<{ deviceId: string; publicKey: string }> {
@@ -92,7 +92,7 @@ export async function readDeviceIdentity(page: Page): Promise<{ deviceId: string
       const p = (window as unknown as { __rmState?: { get: () => Record<string, unknown> | null } }).__rmState?.get()
       return Boolean(p?.onlineSharing && (p.onlineSharing as Record<string, unknown>).deviceId && (p.onlineSharing as Record<string, unknown>).publicKey)
     } catch { return false }
-  }, undefined, { timeout: 15_000 })
+  }, undefined, { timeout: 25_000 })
 
   return await page.evaluate(() => {
     const p = (window as unknown as { __rmState: { get: () => Record<string, unknown> } }).__rmState.get()
