@@ -98,11 +98,13 @@ export async function installSupabaseMock(
     const lm = navigator.locks
     let applied = false
 
-    // Strategy 1: patch the prototype (preferred — survives any navigator re-wrap)
+    // Strategy 1: patch the prototype (but never Object.prototype)
     try {
       const proto = Object.getPrototypeOf(lm)
-      Object.defineProperty(proto, 'request', { value: fastRequest, writable: true, configurable: true })
-      applied = lm.request === fastRequest
+      if (proto && proto !== Object.prototype) {
+        Object.defineProperty(proto, 'request', { value: fastRequest, writable: true, configurable: true })
+        applied = lm.request === fastRequest
+      }
     } catch (_) {}
 
     // Strategy 2: own property on the LockManager instance
