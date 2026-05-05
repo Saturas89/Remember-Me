@@ -1,47 +1,24 @@
 import { useState, useCallback, useEffect } from 'react'
 import { BACKUP_TYPE } from '../utils/export'
+import { initStorageKey, loadStoredState, saveState } from '../utils/stateStorage'
 import type { Profile, AppState, Answer, Friend, FriendAnswer, AnswerExport, CustomQuestion, FriendAnswerZipPayload, OnlineSharingState, PrivateSyncState } from '../types'
 
-const STORAGE_KEY = 'remember-me-state'
-
 async function loadStateAsync(): Promise<AppState> {
-  // Wrap in Promise to ensure we don't block the main thread for large parses
-  return new Promise((resolve) => {
-    // Avoid setTimeout to prevent artificial delay, use Promise.resolve().then to defer
-    Promise.resolve().then(() => {
-      try {
-        const raw = localStorage.getItem(STORAGE_KEY)
-        if (raw) {
-          const parsed = JSON.parse(raw) as Partial<AppState>
-          resolve({
-            profile: parsed.profile ?? null,
-            answers: parsed.answers ?? {},
-            friends: parsed.friends ?? [],
-            friendAnswers: parsed.friendAnswers ?? [],
-            customQuestions: parsed.customQuestions ?? [],
-            onlineSharing: parsed.onlineSharing,
-            streak: parsed.streak,
-            privateSync: parsed.privateSync,
-          })
-          return
-        }
-      } catch {
-        // ignore corrupt data
-      }
-      resolve({ profile: null, answers: {}, friends: [], friendAnswers: [], customQuestions: [] })
-    })
-  })
-}
-
-function saveState(state: AppState): void {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
-  } catch (err) {
-    // Most commonly QuotaExceededError – avoid crashing the setState
-    // callback, but make the failure visible in the console so users
-    // can report storage-full issues.
-    console.error('remember-me: failed to persist state', err)
+  await initStorageKey()
+  const stored = await loadStoredState()
+  if (stored) {
+    return {
+      profile: stored.profile ?? null,
+      answers: stored.answers ?? {},
+      friends: stored.friends ?? [],
+      friendAnswers: stored.friendAnswers ?? [],
+      customQuestions: stored.customQuestions ?? [],
+      onlineSharing: stored.onlineSharing,
+      streak: stored.streak,
+      privateSync: stored.privateSync,
+    }
   }
+  return { profile: null, answers: {}, friends: [], friendAnswers: [], customQuestions: [] }
 }
 
 export function useAnswers() {
