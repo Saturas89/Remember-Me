@@ -137,28 +137,31 @@ export async function loadStoredState(): Promise<AppState | null> {
 }
 
 /**
- * Encrypt and write AppState to localStorage.
- * Writes are queued to preserve ordering; encryption is async fire-and-forget.
- * Falls back to plaintext synchronously when the key is not yet available.
+ * Persist AppState to localStorage.
+ *
+ * Always writes plaintext synchronously first so data survives an immediate
+ * page reload (e.g. triggered by the user or an E2E test). When the
+ * encryption key is ready the write is then overwritten with an
+ * AES-GCM-256 ciphertext in the background.
  */
 export function saveState(state: AppState): void {
   const json = JSON.stringify(state)
+  try {
+    localStorage.setItem(STORAGE_KEY, json)
+  } catch (err) {
+    console.error('remember-me: failed to persist state', err)
+    return
+  }
   if (_key) {
     const key = _key
     _pendingWrite = _pendingWrite.then(async () => {
       try {
         const encrypted = await encryptJson(json, key)
         localStorage.setItem(STORAGE_KEY, encrypted)
-      } catch (err) {
-        console.error('remember-me: failed to persist state', err)
+      } catch {
+        // Plaintext fallback is already in localStorage; not fatal.
       }
     })
-  } else {
-    try {
-      localStorage.setItem(STORAGE_KEY, json)
-    } catch (err) {
-      console.error('remember-me: failed to persist state', err)
-    }
   }
 }
 
