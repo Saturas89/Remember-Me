@@ -15,13 +15,6 @@ export function getSyncSupabaseClient(): SupabaseClient {
       persistSession: true,
       autoRefreshToken: true,
       storageKey: 'rm-sync-session',
-      ...(import.meta.env.VITE_E2E === 'true'
-        ? {
-            skipAutoInitialize: true,
-            lockAcquireTimeout: -1,
-            lock: <R>(_: string, __: number, fn: () => Promise<R>) => fn(),
-          }
-        : {}),
     },
     global: { fetch: fetchWithTimeout },
   })

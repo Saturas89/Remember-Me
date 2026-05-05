@@ -56,17 +56,19 @@ export function getSupabaseClient(): SupabaseClient {
       // acquisition (not needed in E2E; each BrowserContext starts empty).
       // lockAcquireTimeout: -1 disables the abort timer so the lock simply
       // waits rather than triggering abort+steal.
-      // lock: bypass navigator.locks entirely in all E2E runs; fn() is called
+      // lock (iPhone only): bypass navigator.locks entirely; fn() is called
       // directly so supabase-js never touches the slow LockManager.
       ...(import.meta.env.VITE_E2E === 'true'
         ? {
             skipAutoInitialize: true,
             lockAcquireTimeout: -1,
-            // Playwright's iPhone 14 emulation delivers navigator.locks.request()
-            // callbacks with >35 s latency. Bypass navigator.locks entirely in all
-            // E2E runs by providing an inline lock that calls fn() directly.
-            // Single-context E2E tests never need cross-tab mutual exclusion.
-            lock: <R>(_: string, __: number, fn: () => Promise<R>) => fn(),
+            // Playwright's iPhone 14 emulation delivers navigator.locks callbacks
+            // with >35 s latency. Bypass navigator.locks entirely on iPhone by
+            // providing an inline lock that calls fn() directly. All other
+            // browsers get undefined (default navigatorLock behaviour).
+            lock: typeof navigator !== 'undefined' && /iPhone/.test(navigator.userAgent)
+              ? <R>(_: string, __: number, fn: () => Promise<R>) => fn()
+              : undefined,
           }
         : {}),
     },
