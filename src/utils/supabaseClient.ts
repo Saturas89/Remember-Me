@@ -6,6 +6,7 @@
 // it into a separate chunk).
 
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+import { GoTrueClient } from '@supabase/auth-js'
 
 export interface SharingConfig {
   url: string
@@ -52,20 +53,17 @@ export function getSupabaseClient(): SupabaseClient {
       // bootstrapSession to exceed the readDeviceIdentity budget and flaking
       // ~6 family-mode tests.
       //
-      // skipAutoInitialize: skip the constructor-time initialize() lock
-      // acquisition (not needed in E2E; each BrowserContext starts empty).
-      // lockAcquireTimeout: -1 disables the abort timer so the lock simply
-      // waits rather than triggering abort+steal.
-      // lock (iPhone only): bypass navigator.locks entirely; fn() is called
-      // directly so supabase-js never touches the slow LockManager.
+      // skipAutoInitialize / lockAcquireTimeout are silently dropped by
+      // supabase-js's _initSupabaseAuthClient (not in its destructuring list).
+      // GoTrueClient therefore always calls initialize() despite our intent.
+      // The lock bypass IS forwarded and keeps each lock acquisition fast, but
+      // initialize() itself can still block on iPhone 14 WebKit inside
+      // _handleVisibilityChange().  The injected-auth workaround below is the
+      // real fix; these options are kept as documentation / fallback.
       ...(import.meta.env.VITE_E2E === 'true'
         ? {
             skipAutoInitialize: true,
             lockAcquireTimeout: -1,
-            // Playwright's iPhone 14 emulation delivers navigator.locks callbacks
-            // with >35 s latency. Bypass navigator.locks entirely on iPhone by
-            // providing an inline lock that calls fn() directly. All other
-            // browsers get undefined (default navigatorLock behaviour).
             lock: typeof navigator !== 'undefined' && /iPhone/.test(navigator.userAgent)
               ? <R>(_: string, __: number, fn: () => Promise<R>) => fn()
               : undefined,
@@ -74,6 +72,29 @@ export function getSupabaseClient(): SupabaseClient {
     },
     global: { fetch: fetchWithTimeout },
   })
+
+  // E2E iPhone 14 fix: supabase-js silently drops skipAutoInitialize so
+  // GoTrueClient.initialize() fires and can block on Playwright's iPhone 14
+  // WebKit emulation.  Replace the auth instance post-construction with a
+  // fresh GoTrueClient that truly has skipAutoInitialize:true so
+  // initializePromise stays null (await null resolves in the next microtask).
+  if (import.meta.env.VITE_E2E === 'true' && typeof navigator !== 'undefined' && /iPhone/.test(navigator.userAgent)) {
+    const iPhoneLock = <R>(_: string, __: number, fn: () => Promise<R>) => fn()
+    const injectedAuth = new GoTrueClient({
+      url: `${cfg.url}/auth/v1`,
+      storageKey: 'supabase.auth.token',
+      autoRefreshToken: false,
+      persistSession: true,
+      detectSessionInUrl: false,
+      skipAutoInitialize: true,
+      lockAcquireTimeout: -1,
+      lock: iPhoneLock,
+      headers: { apikey: cfg.anonKey },
+      fetch: fetchWithTimeout,
+    })
+    ;(_client as unknown as { auth: GoTrueClient }).auth = injectedAuth
+  }
+
   return _client
 }
 
