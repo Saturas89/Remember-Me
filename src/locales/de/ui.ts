@@ -539,7 +539,6 @@ export const UI_DE = {
     feedbackNote: 'Hast du Ideen oder Wünsche zu diesem Feature? Schreib uns unter remember-me.app – wir freuen uns auf dein Feedback! 🙏',
     listTitle: '✨ Was kommt als Nächstes?',
     listIntro: 'Hier siehst du, was wir als Nächstes für Remember Me entwickeln – von der ersten Idee bis zur Umsetzung.',
-    listNote: 'Tippe auf ein Feature, um mehr über den Entwicklungsstand und die geplanten Funktionen zu erfahren.',
   },
 
   privateSync: {

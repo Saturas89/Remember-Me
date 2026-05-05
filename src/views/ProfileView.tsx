@@ -375,7 +375,6 @@ export function ProfileView({
             <span>✨ {t.feature.listTitle}</span>
           </summary>
           <p className="profile-features-intro">{t.feature.listIntro}</p>
-          <p className="profile-features-note">{t.feature.listNote}</p>
           <div className="profile-features-grid">
             {t.feature.features.map(feature => (
               <div key={feature.id} className="profile-feature-item">
