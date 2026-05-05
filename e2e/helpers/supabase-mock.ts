@@ -61,6 +61,36 @@ export async function installSupabaseMock(
   context: BrowserContext,
   state: MockState,
 ): Promise<void> {
+  // Replace navigator.locks with a fast in-process implementation so that
+  // Playwright's iPhone 14 emulation (which delivers lock callbacks with >35 s
+  // latency due to a WebKit worker-thread scheduling quirk) does not time out
+  // family-mode tests. Desktop browsers are unaffected: their real locks
+  // already fire in <1 ms, and the mock behaves identically for them.
+  //
+  // Semantics:
+  //   • { ifAvailable: true }  → call fn(null)  (lock "busy" → auto-refresh
+  //                               tick throws NavigatorLockAcquireTimeoutError,
+  //                               which GoTrueClient catches and swallows)
+  //   • all other requests     → call fn(lock)   (grant immediately)
+  await context.addInitScript(() => {
+    if (typeof navigator === 'undefined') return
+    Object.defineProperty(navigator, 'locks', {
+      value: {
+        request: function (name, optionsOrFn, maybeFn) {
+          const fn = typeof optionsOrFn === 'function' ? optionsOrFn : maybeFn
+          const opts =
+            optionsOrFn !== null && typeof optionsOrFn === 'object' ? optionsOrFn : {}
+          const lock = opts.ifAvailable ? null : { name, mode: opts.mode || 'exclusive' }
+          return Promise.resolve().then(function () { return fn(lock) })
+        },
+        query: function () {
+          return Promise.resolve({ held: [], pending: [] })
+        },
+      },
+      writable: true,
+      configurable: true,
+    })
+  })
   await context.route(`http://${state.baseHost}/**`, route => handle(route, state))
 }
 
