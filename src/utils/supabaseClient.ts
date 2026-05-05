@@ -6,7 +6,37 @@
 // it into a separate chunk).
 
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
-import { processLock } from '@supabase/auth-js'
+
+// In-process lock for E2E — avoids navigator.locks (>5 s on iPhone 14 emulation).
+// Inlined instead of imported from @supabase/auth-js to preserve the sharingService chunk boundary.
+const _e2eLockPrevious: Record<string, Promise<unknown>> = {}
+function e2eProcessLock<R>(name: string, acquireTimeout: number, fn: () => Promise<R>): Promise<R> {
+  const prev = (_e2eLockPrevious[name] as Promise<unknown>) ?? Promise.resolve()
+  const prevHandled = prev.then(() => null, () => null)
+  const current = (async (): Promise<R> => {
+    try {
+      if (acquireTimeout >= 0) {
+        let tid: ReturnType<typeof setTimeout>
+        await Promise.race([
+          prevHandled,
+          new Promise<never>((_, rej) => {
+            tid = setTimeout(
+              () => rej(Object.assign(new Error('E2E lock timed out'), { isAcquireTimeout: true })),
+              acquireTimeout,
+            )
+          }),
+        ]).finally(() => clearTimeout(tid!))
+      } else {
+        await prevHandled
+      }
+    } catch (e) {
+      if ((e as { isAcquireTimeout?: boolean }).isAcquireTimeout) throw e
+    }
+    return fn()
+  })()
+  _e2eLockPrevious[name] = current.then(() => null, () => null)
+  return current
+}
 
 export interface SharingConfig {
   url: string
@@ -63,7 +93,7 @@ export function getSupabaseClient(): SupabaseClient {
       // the GoTrueClient constructor (initialize() is a no-op in E2E anyway
       // since each BrowserContext starts with an empty session store).
       ...(import.meta.env.VITE_E2E === 'true'
-        ? { lock: processLock, skipAutoInitialize: true }
+        ? { lock: e2eProcessLock, skipAutoInitialize: true }
         : {}),
     },
     global: { fetch: fetchWithTimeout },
