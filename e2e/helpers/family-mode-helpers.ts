@@ -82,8 +82,8 @@ export async function reopenFamilyHub(page: Page) {
 }
 
 async function waitForHubReady(page: Page) {
-  await expect(page.getByRole('heading', { name: 'Online teilen', exact: true })).toBeVisible({ timeout: 25_000 })
-  await expect(page.getByText(/Verbinde mit Server …/)).toHaveCount(0, { timeout: 25_000 })
+  await expect(page.getByRole('heading', { name: 'Online teilen', exact: true })).toBeVisible({ timeout: 35_000 })
+  await expect(page.getByText(/Verbinde mit Server …/)).toHaveCount(0, { timeout: 35_000 })
 }
 
 export async function readDeviceIdentity(page: Page): Promise<{ deviceId: string; publicKey: string }> {
@@ -92,7 +92,7 @@ export async function readDeviceIdentity(page: Page): Promise<{ deviceId: string
       const p = (window as unknown as { __rmState?: { get: () => Record<string, unknown> | null } }).__rmState?.get()
       return Boolean(p?.onlineSharing && (p.onlineSharing as Record<string, unknown>).deviceId && (p.onlineSharing as Record<string, unknown>).publicKey)
     } catch { return false }
-  }, undefined, { timeout: 25_000 })
+  }, undefined, { timeout: 35_000 })
 
   return await page.evaluate(() => {
     const p = (window as unknown as { __rmState: { get: () => Record<string, unknown> } }).__rmState.get()

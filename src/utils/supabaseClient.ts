@@ -57,12 +57,16 @@ export function getSupabaseClient(): SupabaseClient {
       // other browsers):
       //   1. skipAutoInitialize: skip the initialize() lock acquisition (not
       //      needed in E2E; each BrowserContext starts with an empty store).
-      //   2. lockAcquireTimeout: 12 000 ms — raises the abort timer past the
-      //      ~5–8 s iPhone 14 callback delay, so the steal cascade never fires.
-      //      On desktop Chromium/Firefox/WebKit the lock arrives in <1 ms;
-      //      the increased timeout has no observable effect there.
+      //   2. lockAcquireTimeout: -1 — disables the abort timer entirely so the
+      //      navigator.locks.request() call simply waits for its callback however
+      //      long that takes. Any positive timeout triggers the abort+steal path,
+      //      which doubles the latency (abort fires → steal request → another slow
+      //      callback). With -1, there is no steal cascade; the single wait is
+      //      shorter than abort+steal even when the callback arrives late.
+      //      On desktop browsers the callback arrives in <1 ms; no observable
+      //      effect there.
       ...(import.meta.env.VITE_E2E === 'true'
-        ? { skipAutoInitialize: true, lockAcquireTimeout: 12_000 }
+        ? { skipAutoInitialize: true, lockAcquireTimeout: -1 }
         : {}),
     },
     global: { fetch: fetchWithTimeout },
