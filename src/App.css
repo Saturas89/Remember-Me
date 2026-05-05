@@ -172,6 +172,11 @@
   padding: env(safe-area-inset-top, 0px) 1rem calc(4.5rem + env(safe-area-inset-bottom, 0px));
 }
 
+/* Private sync views must also clear the fixed bottom nav */
+.private-sync-view {
+  padding-bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
+}
+
 /* ── Bottom navigation ───────────────────────────────── */
 .bottom-nav {
   position: fixed;

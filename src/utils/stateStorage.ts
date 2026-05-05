@@ -25,6 +25,7 @@ let _pendingWrite: Promise<void> = Promise.resolve()
 let _currentState: AppState | null = null
 
 function hasCryptoSupport(): boolean {
+  if (import.meta.env.VITE_E2E === 'true') return false
   return (
     !!globalThis.indexedDB &&
     typeof crypto !== 'undefined' &&

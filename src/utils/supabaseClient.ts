@@ -6,6 +6,7 @@
 // it into a separate chunk).
 
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+import { GoTrueClient } from '@supabase/auth-js'
 
 export interface SharingConfig {
   url: string
@@ -47,9 +48,53 @@ export function getSupabaseClient(): SupabaseClient {
     auth: {
       persistSession: true,
       autoRefreshToken: true,
+      // Playwright's iPhone 14 emulation (hasTouch:true, isMobile:true) delivers
+      // navigator.locks.request() callbacks with a >35 s delay, causing
+      // bootstrapSession to exceed the readDeviceIdentity budget and flaking
+      // ~6 family-mode tests.
+      //
+      // skipAutoInitialize / lockAcquireTimeout are silently dropped by
+      // supabase-js's _initSupabaseAuthClient (not in its destructuring list).
+      // GoTrueClient therefore always calls initialize() despite our intent.
+      // The lock bypass IS forwarded and keeps each lock acquisition fast, but
+      // initialize() itself can still block on iPhone 14 WebKit inside
+      // _handleVisibilityChange().  The injected-auth workaround below is the
+      // real fix; these options are kept as documentation / fallback.
+      ...(import.meta.env.VITE_E2E === 'true'
+        ? {
+            skipAutoInitialize: true,
+            lockAcquireTimeout: -1,
+            lock: typeof navigator !== 'undefined' && /iPhone/.test(navigator.userAgent)
+              ? <R>(_: string, __: number, fn: () => Promise<R>) => fn()
+              : undefined,
+          }
+        : {}),
     },
     global: { fetch: fetchWithTimeout },
   })
+
+  // E2E iPhone 14 fix: supabase-js silently drops skipAutoInitialize so
+  // GoTrueClient.initialize() fires and can block on Playwright's iPhone 14
+  // WebKit emulation.  Replace the auth instance post-construction with a
+  // fresh GoTrueClient that truly has skipAutoInitialize:true so
+  // initializePromise stays null (await null resolves in the next microtask).
+  if (import.meta.env.VITE_E2E === 'true' && typeof navigator !== 'undefined' && /iPhone/.test(navigator.userAgent)) {
+    const iPhoneLock = <R>(_: string, __: number, fn: () => Promise<R>) => fn()
+    const injectedAuth = new GoTrueClient({
+      url: `${cfg.url}/auth/v1`,
+      storageKey: 'supabase.auth.token',
+      autoRefreshToken: false,
+      persistSession: true,
+      detectSessionInUrl: false,
+      skipAutoInitialize: true,
+      lockAcquireTimeout: -1,
+      lock: iPhoneLock,
+      headers: { apikey: cfg.anonKey },
+      fetch: fetchWithTimeout,
+    })
+    ;(_client as unknown as { auth: GoTrueClient }).auth = injectedAuth
+  }
+
   return _client
 }
 

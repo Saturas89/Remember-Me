@@ -211,7 +211,7 @@ export function PrivateSyncSetupView({ onComplete }: Props) {
     return (
       <div className="private-sync-view">
         <div className="private-sync-view__hero">
-          <img src="/menu-icons/features.jpeg" alt="" className="private-sync-view__hero-img" />
+          <img src="/features/privater-sync.jpg" alt="" className="private-sync-view__hero-img" />
         </div>
         <div className="private-sync-view__content">
           <h1 className="private-sync-view__title">{s.introTitle}</h1>
