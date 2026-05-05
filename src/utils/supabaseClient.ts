@@ -6,6 +6,7 @@
 // it into a separate chunk).
 
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+import { processLock } from '@supabase/auth-js'
 
 export interface SharingConfig {
   url: string
@@ -47,15 +48,23 @@ export function getSupabaseClient(): SupabaseClient {
     auth: {
       persistSession: true,
       autoRefreshToken: true,
-      // In E2E, skip the automatic initialize() call that supabase-js fires on
-      // client construction. initialize() acquires navigator.locks and runs
-      // _recoverAndRefresh() — on Playwright's iPhone 14 emulation (hasTouch:true)
-      // the lock can hit its 5 s acquire-timeout, triggering the steal() path and
-      // pushing bootstrapSession latency past readDeviceIdentity's 15 s budget.
-      // Skipping auto-init is safe in E2E: each Playwright BrowserContext starts
-      // fresh (no session to recover) and getSession() still loads any session
-      // written by signInAnonymously() because _useSession reads localStorage directly.
-      ...(import.meta.env.VITE_E2E === 'true' ? { skipAutoInitialize: true } : {}),
+      // In E2E, replace the Web Locks API (navigator.locks) with an in-process
+      // lock (processLock). Playwright's iPhone 14 emulation (hasTouch:true,
+      // isMobile:true) causes navigator.locks.request() to take >5 s before
+      // delivering its callback, triggering the abort+steal cascade in
+      // supabase-js every time the lock is acquired. The cumulative delay pushes
+      // bootstrapSession past readDeviceIdentity's 15 s budget, flaking ~6
+      // family-mode tests on every mobile-safari run (+4 min vs webkit).
+      //
+      // processLock is supabase's own in-process mutex (used for React Native /
+      // non-browser environments). It serialises lock requests via promise
+      // chaining without touching the Web Locks API, so it's safe for single-tab
+      // E2E contexts. skipAutoInitialize removes the extra lock acquisition in
+      // the GoTrueClient constructor (initialize() is a no-op in E2E anyway
+      // since each BrowserContext starts with an empty session store).
+      ...(import.meta.env.VITE_E2E === 'true'
+        ? { lock: processLock, skipAutoInitialize: true }
+        : {}),
     },
     global: { fetch: fetchWithTimeout },
   })
