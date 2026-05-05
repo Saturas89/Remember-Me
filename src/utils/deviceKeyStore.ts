@@ -6,9 +6,14 @@
 // browser's crypto subsystem.
 //
 // Purged by disableOnlineSharing → `clearDeviceKey()`.
+//
+// E2E builds (VITE_E2E=true): IndexedDB callbacks are slow (>35 s) on
+// Playwright's iPhone 14 emulation (isMobile:true, hasTouch:true). We
+// instead use sessionStorage to persist the key pair across page reloads
+// within the same browser context. Private keys are generated as
+// extractable so they can be serialised as JWK.
 
 import {
-  generateDeviceKeyPair,
   exportPublicKey,
   type DeviceKeyPair,
 } from './crypto'
@@ -16,11 +21,6 @@ import {
 const DB_NAME = 'rm-device-key'
 const STORE = 'keys'
 const SINGLETON_ID = 'device-keypair-v1'
-
-// IndexedDB callbacks are slow (>35 s) on Playwright's iPhone 14 emulation
-// (isMobile:true, hasTouch:true). In E2E runs each BrowserContext starts empty
-// anyway, so an in-memory cache is equivalent to IndexedDB persistence.
-let _e2eKeyPair: { keyPair: DeviceKeyPair; publicKeyB64: string } | null = null
 
 interface StoredKeyPair {
   publicKey: CryptoKey
@@ -63,6 +63,71 @@ function idbDelete(db: IDBDatabase, id: string): Promise<void> {
   })
 }
 
+// ── E2E helpers ───────────────────────────────────────────────────────────────
+
+const E2E_SESSION_KEY = 'rm-e2e-device-key'
+
+interface SerializedE2EKey {
+  privateKeyJwk: JsonWebKey
+  publicKeySpki: string // base64
+}
+
+// Module-level cache: avoids re-parsing sessionStorage on repeated calls
+// within the same page load.
+let _e2eKeyPair: { keyPair: DeviceKeyPair; publicKeyB64: string } | null = null
+
+async function e2eLoadOrCreate(): Promise<{ keyPair: DeviceKeyPair; publicKeyB64: string }> {
+  if (_e2eKeyPair) return _e2eKeyPair
+
+  // sessionStorage persists across page reloads within the same browser
+  // context, so the public key stays stable even after page.goto() calls.
+  if (typeof sessionStorage !== 'undefined') {
+    const raw = sessionStorage.getItem(E2E_SESSION_KEY)
+    if (raw) {
+      try {
+        const { privateKeyJwk, publicKeySpki }: SerializedE2EKey = JSON.parse(raw)
+        const spkiBytes = Uint8Array.from(atob(publicKeySpki), c => c.charCodeAt(0))
+        const publicKey = await crypto.subtle.importKey(
+          'spki', spkiBytes,
+          { name: 'ECDH', namedCurve: 'P-256' },
+          true, [],
+        )
+        const privateKey = await crypto.subtle.importKey(
+          'jwk', privateKeyJwk,
+          { name: 'ECDH', namedCurve: 'P-256' },
+          false, ['deriveKey', 'deriveBits'],
+        )
+        const publicKeyB64 = await exportPublicKey(publicKey)
+        _e2eKeyPair = { keyPair: { publicKey, privateKey }, publicKeyB64 }
+        return _e2eKeyPair
+      } catch {
+        sessionStorage.removeItem(E2E_SESSION_KEY)
+      }
+    }
+  }
+
+  // Generate extractable key pair so we can serialise private key to JWK.
+  const kp = await crypto.subtle.generateKey(
+    { name: 'ECDH', namedCurve: 'P-256' },
+    true,
+    ['deriveKey', 'deriveBits'],
+  )
+  const privateKeyJwk = await crypto.subtle.exportKey('jwk', kp.privateKey)
+  const spkiBuffer = await crypto.subtle.exportKey('spki', kp.publicKey)
+  const publicKeySpki = btoa(String.fromCharCode(...new Uint8Array(spkiBuffer)))
+
+  if (typeof sessionStorage !== 'undefined') {
+    const toStore: SerializedE2EKey = { privateKeyJwk, publicKeySpki }
+    sessionStorage.setItem(E2E_SESSION_KEY, JSON.stringify(toStore))
+  }
+
+  const publicKeyB64 = await exportPublicKey(kp.publicKey)
+  _e2eKeyPair = { keyPair: { publicKey: kp.publicKey, privateKey: kp.privateKey }, publicKeyB64 }
+  return _e2eKeyPair
+}
+
+// ── Public API ────────────────────────────────────────────────────────────────
+
 /**
  * Load the existing device key pair or create + persist a new one.
  * Returns the pair plus the SPKI-base64url form of the public key.
@@ -71,12 +136,8 @@ export async function loadOrCreateDeviceKey(): Promise<{
   keyPair: DeviceKeyPair
   publicKeyB64: string
 }> {
-  if (import.meta.env.VITE_E2E === 'true') {
-    if (_e2eKeyPair) return _e2eKeyPair
-    const kp = await generateDeviceKeyPair()
-    _e2eKeyPair = { keyPair: kp, publicKeyB64: await exportPublicKey(kp.publicKey) }
-    return _e2eKeyPair
-  }
+  if (import.meta.env.VITE_E2E === 'true') return e2eLoadOrCreate()
+
   const db = await openDB()
   const existing = await idbGet<StoredKeyPair>(db, SINGLETON_ID)
   if (existing?.publicKey && existing?.privateKey) {
@@ -85,9 +146,13 @@ export async function loadOrCreateDeviceKey(): Promise<{
       publicKeyB64: await exportPublicKey(existing.publicKey),
     }
   }
-  const kp = await generateDeviceKeyPair()
+  const kp = await crypto.subtle.generateKey(
+    { name: 'ECDH', namedCurve: 'P-256' },
+    false,
+    ['deriveKey', 'deriveBits'],
+  )
   await idbPut(db, SINGLETON_ID, { publicKey: kp.publicKey, privateKey: kp.privateKey })
-  return { keyPair: kp, publicKeyB64: await exportPublicKey(kp.publicKey) }
+  return { keyPair: { publicKey: kp.publicKey, privateKey: kp.privateKey }, publicKeyB64: await exportPublicKey(kp.publicKey) }
 }
 
 /**
@@ -97,6 +162,7 @@ export async function loadOrCreateDeviceKey(): Promise<{
 export async function clearDeviceKey(): Promise<void> {
   if (import.meta.env.VITE_E2E === 'true') {
     _e2eKeyPair = null
+    if (typeof sessionStorage !== 'undefined') sessionStorage.removeItem(E2E_SESSION_KEY)
     return
   }
   const db = await openDB()
