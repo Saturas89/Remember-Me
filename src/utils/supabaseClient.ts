@@ -47,15 +47,15 @@ export function getSupabaseClient(): SupabaseClient {
     auth: {
       persistSession: true,
       autoRefreshToken: true,
-      // In E2E, use a simple process-level lock instead of navigator.locks.
-      // Playwright's iPhone 14 emulation (hasTouch:true) can cause navigator.locks
-      // to hit its 5 s acquire-timeout and trigger the steal() path, pushing the
-      // total latency past readDeviceIdentity's 15 s polling budget.
-      // A no-op lock is safe here because each Playwright context is isolated
-      // (single "tab", no concurrent sessions to protect against).
-      ...(import.meta.env.VITE_E2E === 'true'
-        ? { lock: <R>(_: string, __: number, fn: () => Promise<R>) => fn() }
-        : {}),
+      // In E2E, skip the automatic initialize() call that supabase-js fires on
+      // client construction. initialize() acquires navigator.locks and runs
+      // _recoverAndRefresh() — on Playwright's iPhone 14 emulation (hasTouch:true)
+      // the lock can hit its 5 s acquire-timeout, triggering the steal() path and
+      // pushing bootstrapSession latency past readDeviceIdentity's 15 s budget.
+      // Skipping auto-init is safe in E2E: each Playwright BrowserContext starts
+      // fresh (no session to recover) and getSession() still loads any session
+      // written by signInAnonymously() because _useSession reads localStorage directly.
+      ...(import.meta.env.VITE_E2E === 'true' ? { skipAutoInitialize: true } : {}),
     },
     global: { fetch: fetchWithTimeout },
   })
