@@ -17,6 +17,11 @@ const DB_NAME = 'rm-device-key'
 const STORE = 'keys'
 const SINGLETON_ID = 'device-keypair-v1'
 
+// IndexedDB callbacks are slow (>35 s) on Playwright's iPhone 14 emulation
+// (isMobile:true, hasTouch:true). In E2E runs each BrowserContext starts empty
+// anyway, so an in-memory cache is equivalent to IndexedDB persistence.
+let _e2eKeyPair: { keyPair: DeviceKeyPair; publicKeyB64: string } | null = null
+
 interface StoredKeyPair {
   publicKey: CryptoKey
   privateKey: CryptoKey
@@ -66,6 +71,12 @@ export async function loadOrCreateDeviceKey(): Promise<{
   keyPair: DeviceKeyPair
   publicKeyB64: string
 }> {
+  if (import.meta.env.VITE_E2E === 'true') {
+    if (_e2eKeyPair) return _e2eKeyPair
+    const kp = await generateDeviceKeyPair()
+    _e2eKeyPair = { keyPair: kp, publicKeyB64: await exportPublicKey(kp.publicKey) }
+    return _e2eKeyPair
+  }
   const db = await openDB()
   const existing = await idbGet<StoredKeyPair>(db, SINGLETON_ID)
   if (existing?.publicKey && existing?.privateKey) {
@@ -84,6 +95,10 @@ export async function loadOrCreateDeviceKey(): Promise<{
  * *after* the server rows have been removed.
  */
 export async function clearDeviceKey(): Promise<void> {
+  if (import.meta.env.VITE_E2E === 'true') {
+    _e2eKeyPair = null
+    return
+  }
   const db = await openDB()
   await idbDelete(db, SINGLETON_ID)
 }
