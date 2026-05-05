@@ -61,47 +61,6 @@ export async function installSupabaseMock(
   context: BrowserContext,
   state: MockState,
 ): Promise<void> {
-  // On Playwright's iPhone 14 emulation, navigator.locks.request() callbacks
-  // are delivered with >35 s latency (a WebKit worker-thread scheduling quirk),
-  // causing ~6 family-mode tests to time out on mobile-safari. We replace
-  // navigator.locks with a process-level mutex ONLY on iPhone user agents so
-  // the fix is surgical and cannot affect desktop or mobile-chrome projects.
-  //
-  // The mutex uses a promise chain (one per lock name) that preserves the
-  // exclusive-access guarantee supabase-js expects:
-  //   • Normal requests        → grant immediately, serialize via chain
-  //   • { ifAvailable: true }  → always fn(null) so auto-refresh ticks skip
-  //     gracefully (GoTrueClient catches NavigatorLockAcquireTimeoutError)
-  await context.addInitScript(() => {
-    if (typeof navigator === 'undefined') return
-    if (!/iPhone/.test(navigator.userAgent)) return
-    const _q = {}
-    Object.defineProperty(navigator, 'locks', {
-      value: {
-        request: function (name, optionsOrFn, maybeFn) {
-          const fn = typeof optionsOrFn === 'function' ? optionsOrFn : maybeFn
-          const opts =
-            optionsOrFn !== null && typeof optionsOrFn === 'object' ? optionsOrFn : {}
-          if (opts.ifAvailable) {
-            return Promise.resolve().then(function () { return fn(null) })
-          }
-          if (!_q[name]) _q[name] = Promise.resolve()
-          const lock = { name: name, mode: opts.mode || 'exclusive' }
-          const prev = _q[name]
-          let release
-          _q[name] = new Promise(function (r) { release = r })
-          const result = prev.then(function () { return fn(lock) })
-          result.finally(release)
-          return result
-        },
-        query: function () {
-          return Promise.resolve({ held: [], pending: [] })
-        },
-      },
-      writable: true,
-      configurable: true,
-    })
-  })
   await context.route(`http://${state.baseHost}/**`, route => handle(route, state))
 }
 

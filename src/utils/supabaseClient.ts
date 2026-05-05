@@ -6,6 +6,7 @@
 // it into a separate chunk).
 
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+import { processLock } from '@supabase/auth-js'
 
 export interface SharingConfig {
   url: string
@@ -48,25 +49,14 @@ export function getSupabaseClient(): SupabaseClient {
       persistSession: true,
       autoRefreshToken: true,
       // Playwright's iPhone 14 emulation (hasTouch:true, isMobile:true) delivers
-      // navigator.locks.request() callbacks with a >5 s delay, triggering the
-      // abort+steal cascade in supabase-js (5 s timeout → steal → another >5 s
-      // delay). The cumulative latency pushes bootstrapSession past the 15 s
-      // readDeviceIdentity budget, flaking ~6 family-mode tests.
-      //
-      // Two-pronged fix (no custom lock function — avoids mysterious failures on
-      // other browsers):
-      //   1. skipAutoInitialize: skip the initialize() lock acquisition (not
-      //      needed in E2E; each BrowserContext starts with an empty store).
-      //   2. lockAcquireTimeout: -1 — disables the abort timer entirely so the
-      //      navigator.locks.request() call simply waits for its callback however
-      //      long that takes. Any positive timeout triggers the abort+steal path,
-      //      which doubles the latency (abort fires → steal request → another slow
-      //      callback). With -1, there is no steal cascade; the single wait is
-      //      shorter than abort+steal even when the callback arrives late.
-      //      On desktop browsers the callback arrives in <1 ms; no observable
-      //      effect there.
+      // navigator.locks.request() callbacks with >35 s latency, causing
+      // ~6 family-mode tests to time out on mobile-safari. Using processLock
+      // (an in-process promise-chain mutex from @supabase/auth-js) bypasses
+      // navigator.locks entirely so callback delivery speed is irrelevant.
+      // skipAutoInitialize skips the constructor-time initialize() lock
+      // acquisition — safe in E2E where every BrowserContext starts fresh.
       ...(import.meta.env.VITE_E2E === 'true'
-        ? { skipAutoInitialize: true, lockAcquireTimeout: -1 }
+        ? { skipAutoInitialize: true, lock: processLock }
         : {}),
     },
     global: { fetch: fetchWithTimeout },
