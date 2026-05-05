@@ -384,10 +384,6 @@ export function ProfileView({
                   alt={feature.title}
                   className="profile-feature-item__img"
                 />
-                <div className="profile-feature-item__info">
-                  <strong>{feature.title}</strong>
-                  <span className="profile-feature-item__status">{feature.status}</span>
-                </div>
               </div>
             ))}
           </div>
