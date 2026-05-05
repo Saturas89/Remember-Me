@@ -48,19 +48,28 @@ export function getSupabaseClient(): SupabaseClient {
       persistSession: true,
       autoRefreshToken: true,
       // Playwright's iPhone 14 emulation (hasTouch:true, isMobile:true) delivers
-      // navigator.locks.request() callbacks with a >5 s delay, triggering the
-      // abort+steal cascade in supabase-js (5 s timeout → steal → another >5 s
-      // delay). The cumulative latency pushes bootstrapSession past the 35 s
-      // readDeviceIdentity budget, flaking ~6 family-mode tests.
+      // navigator.locks.request() callbacks with a >35 s delay, causing
+      // bootstrapSession to exceed the readDeviceIdentity budget and flaking
+      // ~6 family-mode tests.
       //
       // skipAutoInitialize: skip the constructor-time initialize() lock
       // acquisition (not needed in E2E; each BrowserContext starts empty).
       // lockAcquireTimeout: -1 disables the abort timer so the lock simply
-      // waits for the slow callback rather than triggering abort+steal.
-      // The E2E supabase-mock additionally patches navigator.locks.request
-      // to deliver callbacks instantly on iPhone (see supabase-mock.ts).
+      // waits rather than triggering abort+steal.
+      // lock (iPhone only): bypass navigator.locks entirely; fn() is called
+      // directly so supabase-js never touches the slow LockManager.
       ...(import.meta.env.VITE_E2E === 'true'
-        ? { skipAutoInitialize: true, lockAcquireTimeout: -1 }
+        ? {
+            skipAutoInitialize: true,
+            lockAcquireTimeout: -1,
+            // Playwright's iPhone 14 emulation delivers navigator.locks callbacks
+            // with >35 s latency. Bypass navigator.locks entirely on iPhone by
+            // providing an inline lock that calls fn() directly. All other
+            // browsers get undefined (default navigatorLock behaviour).
+            lock: typeof navigator !== 'undefined' && /iPhone/.test(navigator.userAgent)
+              ? <R>(_: string, __: number, fn: () => Promise<R>) => fn()
+              : undefined,
+          }
         : {}),
     },
     global: { fetch: fetchWithTimeout },
