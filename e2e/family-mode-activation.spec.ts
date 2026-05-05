@@ -69,9 +69,9 @@ test.describe('Familienmodus – Aktivierung & Consent (FR-15.1 – FR-15.3)', (
     await expect(page.getByRole('heading', { name: /Erinnerung einsammeln/ })).toBeVisible()
 
     const stored = await page.evaluate(() => {
-      const raw = localStorage.getItem('remember-me-state')
-      if (!raw) return null
-      try { return JSON.parse(raw).onlineSharing ?? null } catch { return null }
+      type Bridge = { get: () => Record<string, unknown> | null }
+      const p = (window as unknown as { __rmState?: Bridge }).__rmState?.get()
+      return p?.onlineSharing ?? null
     })
     expect(stored).toBeNull()
   })

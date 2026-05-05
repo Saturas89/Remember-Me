@@ -82,19 +82,15 @@ async function waitForHubReady(page: Page) {
 export async function readDeviceIdentity(page: Page): Promise<{ deviceId: string; publicKey: string }> {
   await page.waitForFunction(() => {
     try {
-      const raw = localStorage.getItem('remember-me-state')
-      if (!raw) return false
-      const p = JSON.parse(raw)
-      return Boolean(p?.onlineSharing?.deviceId && p?.onlineSharing?.publicKey)
+      const p = (window as unknown as { __rmState?: { get: () => Record<string, unknown> | null } }).__rmState?.get()
+      return Boolean(p?.onlineSharing && (p.onlineSharing as Record<string, unknown>).deviceId && (p.onlineSharing as Record<string, unknown>).publicKey)
     } catch { return false }
   }, undefined, { timeout: 15_000 })
 
   return await page.evaluate(() => {
-    const p = JSON.parse(localStorage.getItem('remember-me-state') as string)
-    return {
-      deviceId: p.onlineSharing.deviceId as string,
-      publicKey: p.onlineSharing.publicKey as string,
-    }
+    const p = (window as unknown as { __rmState: { get: () => Record<string, unknown> } }).__rmState.get()
+    const os = p.onlineSharing as Record<string, string>
+    return { deviceId: os.deviceId, publicKey: os.publicKey }
   })
 }
 
@@ -102,12 +98,9 @@ export async function readOnlineFriends(
   page: Page,
 ): Promise<Array<{ name: string; online?: { deviceId: string; publicKey: string } }>> {
   return await page.evaluate(() => {
-    const raw = localStorage.getItem('remember-me-state')
-    if (!raw) return []
-    try {
-      const p = JSON.parse(raw)
-      return (p.friends ?? []).filter((f: { online?: unknown }) => f.online)
-    } catch { return [] }
+    const p = (window as unknown as { __rmState?: { get: () => Record<string, unknown> | null } }).__rmState?.get()
+    if (!p) return []
+    return ((p.friends as Array<{ online?: unknown }>) ?? []).filter(f => f.online)
   })
 }
 
@@ -118,19 +111,14 @@ export async function seedAnswer(
   value: string,
 ) {
   await page.evaluate(({ questionId, categoryId, value }) => {
-    const raw = localStorage.getItem('remember-me-state') ?? '{}'
-    const state = JSON.parse(raw)
-    state.answers = state.answers ?? {}
+    type Bridge = { get: () => Record<string, unknown> | null; save: (s: unknown) => void }
+    const bridge = (window as unknown as { __rmState?: Bridge }).__rmState
+    const state: Record<string, unknown> = bridge?.get() ?? {}
+    const answers = (state.answers as Record<string, unknown>) ?? {}
     const now = new Date().toISOString()
-    state.answers[questionId] = {
-      id: questionId,
-      questionId,
-      categoryId,
-      value,
-      createdAt: now,
-      updatedAt: now,
-    }
-    localStorage.setItem('remember-me-state', JSON.stringify(state))
+    answers[questionId] = { id: questionId, questionId, categoryId, value, createdAt: now, updatedAt: now }
+    state.answers = answers
+    bridge?.save(state)
   }, { questionId, categoryId, value })
 }
 
@@ -146,18 +134,20 @@ export async function injectOnlineFriend(
   publicKey: string,
 ) {
   await page.evaluate(({ name, deviceId, publicKey }) => {
-    const raw = localStorage.getItem('remember-me-state') ?? '{}'
-    const state = JSON.parse(raw)
-    state.friends = state.friends ?? []
-    if (!state.friends.find((f: { online?: { deviceId?: string } }) => f.online?.deviceId === deviceId)) {
-      state.friends.push({
+    type Bridge = { get: () => Record<string, unknown> | null; save: (s: unknown) => void }
+    const bridge = (window as unknown as { __rmState?: Bridge }).__rmState
+    const state: Record<string, unknown> = bridge?.get() ?? {}
+    const friends = (state.friends as Array<{ online?: { deviceId?: string } }>) ?? []
+    if (!friends.find(f => f.online?.deviceId === deviceId)) {
+      friends.push({
         id: `friend-${deviceId}`,
         name,
         addedAt: new Date().toISOString(),
         online: { deviceId, publicKey, linkedAt: new Date().toISOString() },
       })
     }
-    localStorage.setItem('remember-me-state', JSON.stringify(state))
+    state.friends = friends
+    bridge?.save(state)
   }, { name, deviceId, publicKey })
 }
 
