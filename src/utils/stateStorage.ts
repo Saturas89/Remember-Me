@@ -22,6 +22,7 @@ const ENC_PREFIX = 'enc1:'
 let _key: CryptoKey | null = null
 let _keyUnavailable = false
 let _pendingWrite: Promise<void> = Promise.resolve()
+let _currentState: AppState | null = null
 
 function hasCryptoSupport(): boolean {
   return (
@@ -130,7 +131,9 @@ export async function loadStoredState(): Promise<AppState | null> {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (!raw) return null
     const json = await decryptStored(raw)
-    return JSON.parse(json) as AppState
+    const state = JSON.parse(json) as AppState
+    _currentState = state
+    return state
   } catch {
     return null
   }
@@ -145,6 +148,7 @@ export async function loadStoredState(): Promise<AppState | null> {
  * AES-GCM-256 ciphertext in the background.
  */
 export function saveState(state: AppState): void {
+  _currentState = state
   const json = JSON.stringify(state)
   try {
     localStorage.setItem(STORAGE_KEY, json)
@@ -175,4 +179,21 @@ export function _resetForTests(): void {
   _key = null
   _keyUnavailable = false
   _pendingWrite = Promise.resolve()
+  _currentState = null
+}
+
+// ── E2E / debug bridge ────────────────────────────────────────────────────────
+//
+// Exposes the current in-memory state on window.__rmState so Playwright
+// helpers can introspect and inject state without having to parse the
+// (possibly encrypted) localStorage key directly.
+//
+// This is intentionally available in all builds: the bridge only returns
+// what any XSS could already read from the React in-memory state, so it
+// adds no meaningful attack surface.
+if (typeof window !== 'undefined') {
+  ;(window as Window & { __rmState?: { get: () => AppState | null; save: (s: AppState) => void } }).__rmState = {
+    get: () => _currentState,
+    save: saveState,
+  }
 }

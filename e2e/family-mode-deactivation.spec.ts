@@ -48,8 +48,8 @@ test.describe('Familienmodus – Deaktivierung (FR-15.22 – FR-15.25)', () => {
     await expect.poll(() => state.devices.some(d => d.id === aliceId.deviceId)).toBe(false)
 
     const aliceState = await alice.evaluate(() => {
-      const raw = localStorage.getItem('remember-me-state')
-      return raw ? JSON.parse(raw) : null
+      type Bridge = { get: () => Record<string, unknown> | null }
+      return (window as unknown as { __rmState?: Bridge }).__rmState?.get() ?? null
     })
     expect(aliceState.onlineSharing).toBeUndefined()
 
