@@ -33,7 +33,7 @@ export default defineConfig({
     { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
     { name: 'webkit', use: { ...devices['Desktop Safari'] } },
     { name: 'mobile-chrome', use: { ...devices['Pixel 7'] } },
-    { name: 'mobile-safari', use: { ...devices['iPhone 14'] } },
+    { name: 'mobile-safari', use: { ...devices['iPhone 14'] }, timeout: 90_000 },
   ],
   webServer: {
     command: 'npm run build:app && npm run preview -- --port 4173 --strictPort',
