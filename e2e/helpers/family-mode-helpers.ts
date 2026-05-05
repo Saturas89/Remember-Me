@@ -46,10 +46,17 @@ export async function openFriendsTab(page: Page) {
 export async function openFamilyHub(page: Page) {
   await openFriendsTab(page)
   await page.getByTestId('open-online-sharing').click()
-  if (await page
-    .getByRole('heading', { name: 'Familienmodus', exact: true })
-    .isVisible()
-    .catch(() => false)) {
+  // On mobile WebKit the React state update triggered by the click may not
+  // have completed when click() resolves, so the point-in-time isVisible()
+  // check would return false even though the consent screen is about to
+  // appear. waitFor polls the DOM until the heading is present (or the hub
+  // heading appears instead, in which case we can skip the consent step).
+  const consentHeading = page.getByRole('heading', { name: 'Familienmodus', exact: true })
+  const consentVisible = await consentHeading
+    .waitFor({ state: 'visible', timeout: 10_000 })
+    .then(() => true)
+    .catch(() => false)
+  if (consentVisible) {
     await page.getByRole('checkbox').check()
     await page.getByRole('button', { name: 'Aktivieren', exact: true }).click()
   }
