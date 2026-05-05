@@ -36,7 +36,11 @@ export default defineConfig({
     { name: 'mobile-safari', use: { ...devices['iPhone 14'] }, timeout: 90_000 },
   ],
   webServer: {
-    command: 'npm run build:app && npm run preview -- --port 4173 --strictPort',
+    // CI builds the app once in a dedicated job and downloads the dist/ artifact;
+    // PW_SKIP_BUILD=1 then short-circuits the per-project rebuild here.
+    command: process.env.PW_SKIP_BUILD
+      ? 'npm run preview -- --port 4173 --strictPort'
+      : 'npm run build:app && npm run preview -- --port 4173 --strictPort',
     url: BASE_URL,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
