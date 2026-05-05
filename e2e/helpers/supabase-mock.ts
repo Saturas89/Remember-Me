@@ -61,27 +61,38 @@ export async function installSupabaseMock(
   context: BrowserContext,
   state: MockState,
 ): Promise<void> {
-  // Replace navigator.locks with a fast in-process implementation so that
-  // Playwright's iPhone 14 emulation (which delivers lock callbacks with >35 s
-  // latency due to a WebKit worker-thread scheduling quirk) does not time out
-  // family-mode tests. Desktop browsers are unaffected: their real locks
-  // already fire in <1 ms, and the mock behaves identically for them.
+  // On Playwright's iPhone 14 emulation, navigator.locks.request() callbacks
+  // are delivered with >35 s latency (a WebKit worker-thread scheduling quirk),
+  // causing ~6 family-mode tests to time out on mobile-safari. We replace
+  // navigator.locks with a process-level mutex ONLY on iPhone user agents so
+  // the fix is surgical and cannot affect desktop or mobile-chrome projects.
   //
-  // Semantics:
-  //   • { ifAvailable: true }  → call fn(null)  (lock "busy" → auto-refresh
-  //                               tick throws NavigatorLockAcquireTimeoutError,
-  //                               which GoTrueClient catches and swallows)
-  //   • all other requests     → call fn(lock)   (grant immediately)
+  // The mutex uses a promise chain (one per lock name) that preserves the
+  // exclusive-access guarantee supabase-js expects:
+  //   • Normal requests        → grant immediately, serialize via chain
+  //   • { ifAvailable: true }  → always fn(null) so auto-refresh ticks skip
+  //     gracefully (GoTrueClient catches NavigatorLockAcquireTimeoutError)
   await context.addInitScript(() => {
     if (typeof navigator === 'undefined') return
+    if (!/iPhone/.test(navigator.userAgent)) return
+    const _q = {}
     Object.defineProperty(navigator, 'locks', {
       value: {
         request: function (name, optionsOrFn, maybeFn) {
           const fn = typeof optionsOrFn === 'function' ? optionsOrFn : maybeFn
           const opts =
             optionsOrFn !== null && typeof optionsOrFn === 'object' ? optionsOrFn : {}
-          const lock = opts.ifAvailable ? null : { name, mode: opts.mode || 'exclusive' }
-          return Promise.resolve().then(function () { return fn(lock) })
+          if (opts.ifAvailable) {
+            return Promise.resolve().then(function () { return fn(null) })
+          }
+          if (!_q[name]) _q[name] = Promise.resolve()
+          const lock = { name: name, mode: opts.mode || 'exclusive' }
+          const prev = _q[name]
+          let release
+          _q[name] = new Promise(function (r) { release = r })
+          const result = prev.then(function () { return fn(lock) })
+          result.finally(release)
+          return result
         },
         query: function () {
           return Promise.resolve({ held: [], pending: [] })
