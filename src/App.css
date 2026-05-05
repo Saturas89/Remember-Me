@@ -3871,40 +3871,15 @@ details[open] .faq-item__chevron {
 }
 
 .profile-feature-item {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.65rem 1rem;
   border-top: 1px solid var(--border);
+  overflow: hidden;
 }
 
 .profile-feature-item__img {
-  width: 64px;
-  height: 64px;
+  width: 100%;
+  height: auto;
+  display: block;
   object-fit: cover;
-  border-radius: 10px;
-  flex-shrink: 0;
-}
-
-.profile-feature-item__info {
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-  min-width: 0;
-}
-
-.profile-feature-item__info strong {
-  font-size: 0.88rem;
-  font-weight: 700;
-  color: var(--text);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.profile-feature-item__status {
-  font-size: 0.75rem;
-  color: var(--text-muted);
 }
 
 /* ── Feature view ────────────────────────────────────── */
