@@ -61,6 +61,68 @@ export async function installSupabaseMock(
   context: BrowserContext,
   state: MockState,
 ): Promise<void> {
+  // On Playwright's iPhone 14 emulation, navigator.locks.request() callbacks
+  // arrive with >35 s latency, causing family-mode tests to time out.
+  // We replace the request method with a fast in-process mutex on iPhone only.
+  //
+  // Three strategies are attempted in order (with fall-through on error) so
+  // the patch succeeds regardless of whether LockManager / navigator is
+  // sealed, non-configurable, or otherwise resistant to own-property writes:
+  //   1. Patch LockManager.prototype.request (works when prototype is writable)
+  //   2. Own property on the navigator.locks instance
+  //   3. Own property on navigator itself (replaces the whole LockManager)
+  //
+  // Mutex semantics:
+  //   • Normal lock requests  → serialised via a per-name promise chain
+  //   • { ifAvailable: true } → always fn(null) so GoTrueClient auto-refresh
+  //     ticks throw NavigatorLockAcquireTimeoutError and skip gracefully
+  await context.addInitScript(() => {
+    if (typeof navigator === 'undefined' || !/iPhone/.test(navigator.userAgent)) return
+    if (!navigator.locks) return
+
+    const _q = {}
+    function fastRequest(name, optionsOrFn, maybeFn) {
+      const fn = typeof optionsOrFn === 'function' ? optionsOrFn : maybeFn
+      const opts = optionsOrFn !== null && typeof optionsOrFn === 'object' ? optionsOrFn : {}
+      if (opts.ifAvailable) return Promise.resolve().then(function () { return fn(null) })
+      if (!_q[name]) _q[name] = Promise.resolve()
+      const lock = { name: name, mode: opts.mode || 'exclusive' }
+      const prev = _q[name]
+      let release
+      _q[name] = new Promise(function (r) { release = r })
+      const result = prev.then(function () { return fn(lock) })
+      result.finally(release)
+      return result
+    }
+
+    const lm = navigator.locks
+    let applied = false
+
+    // Strategy 1: patch the prototype (preferred — survives any navigator re-wrap)
+    try {
+      const proto = Object.getPrototypeOf(lm)
+      Object.defineProperty(proto, 'request', { value: fastRequest, writable: true, configurable: true })
+      applied = lm.request === fastRequest
+    } catch (_) {}
+
+    // Strategy 2: own property on the LockManager instance
+    if (!applied) {
+      try {
+        Object.defineProperty(lm, 'request', { value: fastRequest, writable: true, configurable: true })
+        applied = lm.request === fastRequest
+      } catch (_) {}
+    }
+
+    // Strategy 3: replace navigator.locks entirely
+    if (!applied) {
+      try {
+        Object.defineProperty(navigator, 'locks', {
+          value: { request: fastRequest, query: function () { return Promise.resolve({ held: [], pending: [] }) } },
+          writable: true, configurable: true,
+        })
+      } catch (_) {}
+    }
+  })
   await context.route(`http://${state.baseHost}/**`, route => handle(route, state))
 }
 

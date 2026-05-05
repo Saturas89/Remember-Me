@@ -6,7 +6,6 @@
 // it into a separate chunk).
 
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
-import { processLock } from '@supabase/auth-js'
 
 export interface SharingConfig {
   url: string
@@ -49,14 +48,19 @@ export function getSupabaseClient(): SupabaseClient {
       persistSession: true,
       autoRefreshToken: true,
       // Playwright's iPhone 14 emulation (hasTouch:true, isMobile:true) delivers
-      // navigator.locks.request() callbacks with >35 s latency, causing
-      // ~6 family-mode tests to time out on mobile-safari. Using processLock
-      // (an in-process promise-chain mutex from @supabase/auth-js) bypasses
-      // navigator.locks entirely so callback delivery speed is irrelevant.
-      // skipAutoInitialize skips the constructor-time initialize() lock
-      // acquisition — safe in E2E where every BrowserContext starts fresh.
+      // navigator.locks.request() callbacks with a >5 s delay, triggering the
+      // abort+steal cascade in supabase-js (5 s timeout → steal → another >5 s
+      // delay). The cumulative latency pushes bootstrapSession past the 35 s
+      // readDeviceIdentity budget, flaking ~6 family-mode tests.
+      //
+      // skipAutoInitialize: skip the constructor-time initialize() lock
+      // acquisition (not needed in E2E; each BrowserContext starts empty).
+      // lockAcquireTimeout: -1 disables the abort timer so the lock simply
+      // waits for the slow callback rather than triggering abort+steal.
+      // The E2E supabase-mock additionally patches navigator.locks.request
+      // to deliver callbacks instantly on iPhone (see supabase-mock.ts).
       ...(import.meta.env.VITE_E2E === 'true'
-        ? { skipAutoInitialize: true, lock: processLock }
+        ? { skipAutoInitialize: true, lockAcquireTimeout: -1 }
         : {}),
     },
     global: { fetch: fetchWithTimeout },
