@@ -50,6 +50,23 @@ function getFill(container: HTMLElement) {
   return container.querySelector('.tree-progress-logo__fill') as HTMLElement | null
 }
 
+describe('ProfileView – Geplante Features', () => {
+  it('rendert für jedes Feature ein <img> mit der Klasse profile-feature-item__img', () => {
+    const { container } = render(<ProfileView {...defaultProps} />)
+    const imgs = container.querySelectorAll<HTMLImageElement>('.profile-feature-item__img')
+    expect(imgs.length).toBeGreaterThan(0)
+    imgs.forEach(img => expect(img.tagName).toBe('IMG'))
+  })
+
+  it('jedes Feature-Bild sitzt in einem .profile-feature-item-Wrapper', () => {
+    const { container } = render(<ProfileView {...defaultProps} />)
+    const items = container.querySelectorAll('.profile-feature-item')
+    const imgs  = container.querySelectorAll('.profile-feature-item__img')
+    expect(items.length).toBe(imgs.length)
+    expect(items.length).toBeGreaterThan(0)
+  })
+})
+
 describe('ProfileView – TreeProgressLogo', () => {
   it('zeigt das tree-progress-logo statt dem alten Initialen-Avatar', () => {
     const { container } = render(<ProfileView {...defaultProps} />)

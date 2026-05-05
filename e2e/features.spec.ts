@@ -40,6 +40,19 @@ test.describe('Remember Me – Geplante Features (Profil-Tab)', () => {
     await expect(page.locator('.profile-feature-item')).toHaveCount(4)
   })
 
+  test('Feature-Bilder sind auf maximal 80 px begrenzt (kein Vollbild)', async ({ page }) => {
+    await openFeaturesSection(page)
+    const imgs = page.locator('.profile-feature-item__img')
+    const count = await imgs.count()
+    expect(count).toBeGreaterThan(0)
+    for (let i = 0; i < count; i++) {
+      const box = await imgs.nth(i).boundingBox()
+      expect(box).not.toBeNull()
+      expect(box!.width).toBeLessThanOrEqual(80)
+      expect(box!.height).toBeLessThanOrEqual(80)
+    }
+  })
+
   test('Features-Sektion ist standardmäßig eingeklappt und öffnet sich per Klick', async ({ page }) => {
     const nav = page.getByRole('navigation', { name: 'Hauptnavigation' })
     await nav.getByRole('button', { name: 'Profil', exact: true }).click()

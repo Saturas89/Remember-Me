@@ -3827,6 +3827,86 @@ details[open] .faq-item__chevron {
 .profile-import-card__desc  { font-size: 0.78rem; color: var(--text-muted); display: block; margin-top: 0.1rem; }
 .profile-import-card__arrow { margin-left: auto; font-size: 1rem; color: var(--text-muted); flex-shrink: 0; }
 
+/* ── Profile – upcoming features section ─────────────── */
+.profile-card--features { padding: 0; overflow: hidden; }
+
+.profile-features-details { width: 100%; }
+
+.profile-features-summary {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.9rem 1rem;
+  font-size: 0.92rem;
+  font-weight: 700;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+.profile-features-summary::-webkit-details-marker { display: none; }
+.profile-features-summary::before {
+  content: '▶';
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+.profile-features-details[open] .profile-features-summary::before {
+  transform: rotate(90deg);
+}
+
+.profile-features-intro,
+.profile-features-note {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin: 0 1rem 0.6rem;
+}
+
+.profile-features-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding-bottom: 0.5rem;
+}
+
+.profile-feature-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.65rem 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.profile-feature-item__img {
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.profile-feature-item__info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.profile-feature-item__info strong {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profile-feature-item__status {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
 /* ── Feature view ────────────────────────────────────── */
 .feature-view {
   min-height: 100dvh;
