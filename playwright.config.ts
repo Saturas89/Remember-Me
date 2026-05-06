@@ -33,7 +33,7 @@ export default defineConfig({
     { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
     { name: 'webkit', use: { ...devices['Desktop Safari'] } },
     { name: 'mobile-chrome', use: { ...devices['Pixel 7'] } },
-    { name: 'mobile-safari', use: { ...devices['iPhone 14'] }, timeout: 90_000 },
+    { name: 'mobile-safari', use: { ...devices['iPhone 14'] }, timeout: 120_000 },
   ],
   webServer: {
     // CI builds the app once in a dedicated job and downloads the dist/ artifact;

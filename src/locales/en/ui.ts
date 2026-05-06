@@ -199,7 +199,7 @@ export const UI_EN = {
   friends: {
     pageTitle: 'Invite friends',
     topbarTitle: 'Collect memories',
-    inviteLinkHeading: 'Your invite link',
+    inviteLinkHeading: 'One-time invitation',
     inviteHintNoName: 'Tip: Enter your name on the home screen so the invitation is personalised.',
     inviteHint: 'Share the link – the other person clicks it, types their memories and sends them back to you. No app or account needed. You can send the link to as many people as you like, as often as you like.',
     opening: 'Opening…',

@@ -199,7 +199,7 @@ export const UI_DE = {
   friends: {
     pageTitle: 'Freunde einladen',
     topbarTitle: 'Erinnerung einsammeln',
-    inviteLinkHeading: 'Dein Einladungslink',
+    inviteLinkHeading: 'Einmalige Einladung',
     inviteHintNoName: 'Tipp: Gib deinen Namen auf der Startseite ein, damit die Einladung personalisiert ist.',
     inviteHint: 'Du teilst den Link – dein Gegenüber klickt darauf, tippt seine Erinnerungen ein und schickt sie dir zurück. Ganz ohne App oder Account. Du kannst den Link beliebig oft und an beliebig viele Personen schicken.',
     opening: 'Wird geöffnet…',

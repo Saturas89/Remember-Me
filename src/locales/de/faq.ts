@@ -69,4 +69,22 @@ export const FAQ_DE = [
       },
     ],
   },
+  {
+    emoji: '👥',
+    title: 'Freunde & Familienmodus',
+    items: [
+      {
+        q: 'Was ist die „Einmalige Einladung"?',
+        a: 'Du teilst einen persönlichen Link – dein Gegenüber klickt darauf, tippt seine Erinnerungen ein und schickt sie dir zurück. Kein Account, keine App, kein Aufwand. Den Link kannst du beliebig oft und an beliebig viele Personen verschicken. Jede Antwort ist eine Einzelverbindung – danach ist sie abgeschlossen.',
+      },
+      {
+        q: 'Was ist der Familienmodus?',
+        a: 'Der Familienmodus schafft eine dauerhafte, gegenseitige Verbindung zwischen zwei Personen. Ihr tauscht einmalig einen Verbindungslink aus – danach könnt ihr euch jederzeit ausgewählte Erinnerungen zuschicken, die nur ihr beide lesen könnt. Alles ist Ende-zu-Ende-verschlüsselt und bleibt auf euren Geräten.',
+      },
+      {
+        q: 'Was ist der Unterschied zwischen Einmaliger Einladung und Familienmodus?',
+        a: 'Die Einmalige Einladung ist offen und anonym: du sendest einen Link, eine Person antwortet – kein Account nötig, keine dauerhafte Verbindung. Der Familienmodus ist dauerhaft und gegenseitig: nach einmaligem Setup könnt ihr laufend private Erinnerungen austauschen. Kurz: Einmalige Einladung = schnell eine Antwort einsammeln, Familienmodus = fortlaufender privater Austausch.',
+      },
+    ],
+  },
 ]

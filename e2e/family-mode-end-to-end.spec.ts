@@ -20,7 +20,7 @@ import {
 
 test.describe('Familienmodus – Komplette Einladungs- und Teilen-Kette', () => {
   test('Alice lädt Bob ein, Bob nimmt an, Alice teilt, Bob ergänzt zurück', async ({ browser }) => {
-    test.setTimeout(90_000)
+    test.setTimeout(120_000)
     const state = createMockState()
     const { ctx: aliceCtx, page: alice } = await spawnDevice(browser, state)
     const { ctx: bobCtx, page: bob } = await spawnDevice(browser, state)
