@@ -69,4 +69,22 @@ export const FAQ_EN = [
       },
     ],
   },
+  {
+    emoji: '👥',
+    title: 'Friends & Family Mode',
+    items: [
+      {
+        q: 'What is the "One-time invitation"?',
+        a: 'You share a personal link – the recipient clicks it, types in their memories and sends them back to you. No account, no app, no hassle. You can send the link as many times as you like and to as many people as you want. Each response is a single connection – once answered, it\'s complete.',
+      },
+      {
+        q: 'What is Family Mode?',
+        a: 'Family Mode creates a permanent, mutual connection between two people. You each exchange a connection link once – after that you can send each other selected memories at any time, which only the two of you can read. Everything is end-to-end encrypted and stays on your devices.',
+      },
+      {
+        q: 'What is the difference between One-time invitation and Family Mode?',
+        a: 'The One-time invitation is open and anonymous: you send a link, someone responds – no account needed, no lasting connection. Family Mode is permanent and mutual: after a one-time setup, you can continuously exchange private memories. In short: One-time invitation = quickly collect a response, Family Mode = ongoing private exchange.',
+      },
+    ],
+  },
 ]
