@@ -162,19 +162,22 @@
 .quiz-view,
 .archive-view,
 .friends-view,
-.friend-answer-view {
+.friend-answer-view,
+.private-sync-view {
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
   max-width: 720px;
   margin: 0 auto;
-  /* bottom padding = bottom-nav height + safe area */
+  /* top/bottom padding respect iOS safe areas (notch + home indicator) */
   padding: env(safe-area-inset-top, 0px) 1rem calc(4.5rem + env(safe-area-inset-bottom, 0px));
 }
 
-/* Private sync views must also clear the fixed bottom nav */
-.private-sync-view {
-  padding-bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
+.private-sync-view__topbar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 0 0.25rem;
 }
 
 .private-sync-view__hero-img {
