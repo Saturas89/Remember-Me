@@ -214,10 +214,10 @@ export function PrivateSyncSetupView({ onComplete }: Props) {
           <img src="/features/privater-sync.jpg" alt="" className="private-sync-view__hero-img" />
         </div>
         <div className="private-sync-view__content">
-          <h1 className="private-sync-view__title">{s.introTitle}</h1>
-          <p className="private-sync-view__desc">{s.introDesc}</p>
+          <h3 className="friends-section-title">{s.introTitle}</h3>
+          <p className="friends-hint">{s.introDesc}</p>
           <button
-            className="btn btn--primary btn--full"
+            className="share-cta-btn"
             onClick={() => setStep('provider-choice')}
             type="button"
           >
