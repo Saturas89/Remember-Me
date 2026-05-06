@@ -92,43 +92,11 @@ async function saveFileId(id: string): Promise<void> {
   })
 }
 
-// ── Google Identity Services script loader ────────────────────────────────
+// ── OAuth state key ────────────────────────────────────────────────────────
 //
-// GIS is required for the OAuth token client. We inject the <script> tag on
-// demand (rather than putting it in index.html) so users who never enable
-// Drive sync don't pay the network cost. The CSP must allow
-// https://accounts.google.com/gsi/client – see vercel.json#script-src.
-
-let _gisScriptPromise: Promise<void> | null = null
-
-function loadGoogleIdentityScript(): Promise<void> {
-  if (typeof window === 'undefined') return Promise.reject(new Error('no window'))
-  const w = window as unknown as { google?: { accounts?: { oauth2?: unknown } } }
-  if (w.google?.accounts?.oauth2) return Promise.resolve()
-  if (_gisScriptPromise) return _gisScriptPromise
-
-  _gisScriptPromise = new Promise<void>((resolve, reject) => {
-    const existing = document.querySelector<HTMLScriptElement>(
-      'script[src="https://accounts.google.com/gsi/client"]',
-    )
-    if (existing) {
-      existing.addEventListener('load', () => resolve(), { once: true })
-      existing.addEventListener('error', () => reject(new Error('GIS script failed')), { once: true })
-      return
-    }
-    const s = document.createElement('script')
-    s.src = 'https://accounts.google.com/gsi/client'
-    s.async = true
-    s.defer = true
-    s.onload = () => resolve()
-    s.onerror = () => {
-      _gisScriptPromise = null // allow retry on next signIn
-      reject(new Error('GIS script failed'))
-    }
-    document.head.appendChild(s)
-  })
-  return _gisScriptPromise
-}
+// Saved to sessionStorage before the Supabase OAuth redirect so that on
+// return the view can detect it and resume the setup flow.
+const OAUTH_STATE_KEY = 'rm-gdrive-oauth-pending'
 
 // ── Drive API helpers ──────────────────────────────────────────────────────
 
@@ -245,47 +213,38 @@ export class GoogleDriveProvider implements SyncProvider {
   }
 
   async signIn(): Promise<void> {
-    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined
-    if (!clientId) throw new SyncError('VITE_GOOGLE_CLIENT_ID nicht gesetzt', 'auth')
-
-    await loadGoogleIdentityScript()
-    return new Promise((resolve, reject) => {
-      const gis = (window as unknown as {
-        google?: {
-          accounts?: {
-            oauth2?: {
-              initTokenClient(cfg: {
-                client_id: string
-                scope: string
-                callback: (resp: { access_token?: string; expires_in?: number; error?: string }) => void
-              }): { requestAccessToken(opts?: { prompt?: string }): void }
-            }
-          }
-        }
-      }).google?.accounts?.oauth2
-      if (!gis) {
-        reject(new SyncError('Google-Identity-SDK konnte nicht geladen werden', 'network'))
-        return
-      }
-      const client = gis.initTokenClient({
-        client_id: clientId,
-        scope: 'https://www.googleapis.com/auth/drive.file',
-        callback: async resp => {
-          if (resp.error || !resp.access_token) {
-            reject(new SyncError(`Google OAuth Fehler: ${resp.error}`, 'auth'))
-            return
-          }
-          const token: StoredToken = {
-            accessToken: resp.access_token,
-            expiresAt: Date.now() + (resp.expires_in ?? 3600) * 1000,
-          }
-          await saveToken(token)
-          this._authenticated = true
-          resolve()
-        },
-      })
-      client.requestAccessToken({ prompt: '' })
+    const { getSyncSupabaseClient } = await import('./privateSyncClient')
+    const supabase = getSyncSupabaseClient()
+    sessionStorage.setItem(OAUTH_STATE_KEY, '1')
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        scopes: 'https://www.googleapis.com/auth/drive.file',
+        redirectTo: `${window.location.origin}/sync`,
+      },
     })
+    if (error) {
+      sessionStorage.removeItem(OAUTH_STATE_KEY)
+      throw new SyncError(`Google OAuth Fehler: ${error.message}`, 'auth')
+    }
+    // The browser navigates to Google OAuth; this promise intentionally never resolves.
+    return new Promise(() => {})
+  }
+
+  async resumeFromOAuth(): Promise<boolean> {
+    if (!sessionStorage.getItem(OAUTH_STATE_KEY)) return false
+    sessionStorage.removeItem(OAUTH_STATE_KEY)
+    const { getSyncSupabaseClient } = await import('./privateSyncClient')
+    const supabase = getSyncSupabaseClient()
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session?.provider_token) return false
+    const token: StoredToken = {
+      accessToken: session.provider_token,
+      expiresAt: (session.expires_at ?? Math.floor(Date.now() / 1000) + 3600) * 1000,
+    }
+    await saveToken(token)
+    this._authenticated = true
+    return true
   }
 
   async signOut(): Promise<void> {

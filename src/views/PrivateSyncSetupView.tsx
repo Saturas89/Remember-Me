@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useTranslation } from '../locales'
 import { formatRecoveryCode, generateRecoveryCode, deriveVaultKey, cacheVaultKey } from '../utils/recoveryCode'
 import { getSyncSupabaseClient } from '../utils/privateSyncClient'
@@ -37,6 +37,41 @@ export function PrivateSyncSetupView({ onComplete }: Props) {
 
   // userId after login
   const [userId, setUserId] = useState('')
+
+  // Resume Google Drive setup after Supabase OAuth redirect returns to /sync
+  useEffect(() => {
+    const PENDING_KEY = 'rm-gdrive-oauth-pending'
+    if (!sessionStorage.getItem(PENDING_KEY)) return
+    setProvider('google-drive')
+    setStep('login')
+    setLoading(true)
+    ;(async () => {
+      try {
+        const { GoogleDriveProvider } = await import('../utils/googleDriveProvider')
+        const p = new GoogleDriveProvider()
+        const resumed = await p.resumeFromOAuth()
+        if (!resumed) {
+          setError('Google-Authentifizierung fehlgeschlagen')
+          return
+        }
+        const existingSyncId = await p.readExistingSyncId()
+        if (existingSyncId) {
+          setUserId(existingSyncId)
+          setStep('enter-code')
+        } else {
+          const newId = crypto.randomUUID()
+          setUserId(newId)
+          const code = generateRecoveryCode()
+          setRecoveryCode(code)
+          setStep('recovery-code')
+        }
+      } catch (e) {
+        setError(e instanceof Error ? e.message : 'Anmeldung fehlgeschlagen')
+      } finally {
+        setLoading(false)
+      }
+    })()
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function handleGoogleSignIn() {
     if (!provider) return
