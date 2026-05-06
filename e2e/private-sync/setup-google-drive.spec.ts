@@ -2,7 +2,6 @@ import { test, expect } from '@playwright/test'
 import {
   completeOnboarding,
   dismissInstallPrompt,
-  installGoogleOAuthMock,
   openSyncTab,
 } from './helpers'
 import { createDriveMockState, installGoogleDriveMock } from '../mocks/googleDriveMock'
@@ -10,13 +9,13 @@ import { createDriveMockState, installGoogleDriveMock } from '../mocks/googleDri
 // E2E-02 – Setup-Wizard für Provider „Google Drive"
 // Ableitung: Master-Spec §13, US-007.
 //
-// OAuth wird komplett gemockt: window.google.accounts.oauth2 liefert sofort
-// einen Fake-Token zurück, sodass kein echter Google-Popup geöffnet wird.
+// OAuth läuft über Supabase (signInWithOAuth → Redirect). Das vollständige
+// Redirect-Roundtrip wird hier nicht simuliert; getestet wird, dass der
+// Setup-Wizard den richtigen Schritt anzeigt und die Schaltfläche sichtbar ist.
 
 test.describe('Privater Sync – Setup-Wizard Google Drive (E2E-02)', () => {
   test.beforeEach(async ({ context }) => {
     await dismissInstallPrompt(context)
-    await installGoogleOAuthMock(context)
     await installGoogleDriveMock(context, createDriveMockState())
   })
 
