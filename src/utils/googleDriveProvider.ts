@@ -236,11 +236,38 @@ export class GoogleDriveProvider implements SyncProvider {
     sessionStorage.removeItem(OAUTH_STATE_KEY)
     const { getSyncSupabaseClient } = await import('./privateSyncClient')
     const supabase = getSyncSupabaseClient()
+
+    // provider_token is ephemeral: Supabase does not persist it in localStorage.
+    // onAuthStateChange fires during initialize() with the full in-memory session
+    // (including provider_token) before it is stripped for storage. This is the
+    // only reliable place to read it after a redirect-based OAuth flow.
+    const providerToken = await new Promise<string | null>(resolve => {
+      let done = false
+      let sub: { unsubscribe(): void } = { unsubscribe: () => {} }
+      const finish = (token: string | null) => {
+        if (done) return
+        done = true
+        clearTimeout(timer)
+        sub.unsubscribe()
+        resolve(token)
+      }
+      const timer = setTimeout(() => finish(null), 8000)
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        sub = subscription
+        if (session?.provider_token) {
+          finish(session.provider_token)
+        } else if (_event === 'INITIAL_SESSION' || _event === 'SIGNED_IN') {
+          finish(null)
+        }
+      })
+      sub = subscription
+    })
+
+    if (!providerToken) return false
     const { data: { session } } = await supabase.auth.getSession()
-    if (!session?.provider_token) return false
     const token: StoredToken = {
-      accessToken: session.provider_token,
-      expiresAt: (session.expires_at ?? Math.floor(Date.now() / 1000) + 3600) * 1000,
+      accessToken: providerToken,
+      expiresAt: (session?.expires_at ?? Math.floor(Date.now() / 1000) + 3600) * 1000,
     }
     await saveToken(token)
     this._authenticated = true
