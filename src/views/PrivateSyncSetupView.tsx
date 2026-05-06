@@ -229,6 +229,11 @@ export function PrivateSyncSetupView({ onComplete }: Props) {
   }
 
   if (step === 'provider-choice') {
+    const providers = [
+      { id: 'google-drive' as SyncProviderType, title: s.googleDriveTitle, desc: s.googleDriveDesc, privacy: s.googleDrivePrivacy, icon: '☁️', colorClass: 'provider-card__icon--google' },
+      { id: 'onedrive'     as SyncProviderType, title: s.oneDriveTitle,   desc: s.oneDriveDesc,   privacy: s.oneDrivePrivacy,   icon: '☁️', colorClass: 'provider-card__icon--onedrive' },
+      { id: 'supabase'     as SyncProviderType, title: s.supabaseTitle,   desc: s.supabaseDesc,   privacy: s.supabasePrivacy,   icon: '🔒', colorClass: 'provider-card__icon--server' },
+    ]
     return (
       <div className="private-sync-view">
         <div className="private-sync-view__topbar">
@@ -239,25 +244,22 @@ export function PrivateSyncSetupView({ onComplete }: Props) {
         <div className="private-sync-view__content">
           <h2 className="private-sync-view__title">{s.providerChoiceTitle}</h2>
           <div className="private-sync-view__provider-list">
-            {(
-              [
-                { id: 'google-drive' as SyncProviderType, title: s.googleDriveTitle, desc: s.googleDriveDesc, privacy: s.googleDrivePrivacy, icon: '🟢' },
-                { id: 'onedrive' as SyncProviderType, title: s.oneDriveTitle, desc: s.oneDriveDesc, privacy: s.oneDrivePrivacy, icon: '🔵' },
-                { id: 'supabase' as SyncProviderType, title: s.supabaseTitle, desc: s.supabaseDesc, privacy: s.supabasePrivacy, icon: '🔐' },
-              ] as const
-            ).map(p => (
+            {providers.map(p => (
               <button
                 key={p.id}
-                className={`private-sync-view__provider-card${provider === p.id ? ' private-sync-view__provider-card--selected' : ''}`}
+                className={`provider-card${provider === p.id ? ' provider-card--selected' : ''}`}
                 onClick={() => setProvider(p.id)}
                 type="button"
               >
-                <span className="private-sync-view__provider-icon">{p.icon}</span>
-                <div className="private-sync-view__provider-info">
-                  <strong>{p.title}</strong>
-                  <p>{p.desc}</p>
-                  <p className="private-sync-view__privacy-hint">{p.privacy}</p>
+                <span className={`provider-card__icon ${p.colorClass}`}>{p.icon}</span>
+                <div className="provider-card__body">
+                  <p className="provider-card__title">{p.title}</p>
+                  <p className="provider-card__desc">{p.desc}</p>
+                  <p className="provider-card__privacy">{p.privacy}</p>
                 </div>
+                {provider === p.id && (
+                  <span className="provider-card__badge" aria-hidden="true">✓</span>
+                )}
               </button>
             ))}
           </div>
