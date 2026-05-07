@@ -98,6 +98,50 @@ async function saveFileId(id: string): Promise<void> {
 // return the view can detect it and resume the setup flow.
 const OAUTH_STATE_KEY = 'rm-gdrive-oauth-pending'
 
+// Maximum time to wait for an onAuthStateChange event with provider_token.
+// Longer than the original 8s to tolerate slow mobile networks / cold service
+// workers on iOS Safari, where the redirect return can stall a few seconds
+// before the auth listener fires.
+const PROVIDER_TOKEN_WAIT_MS = 20_000
+
+// Lightweight, opt-in logger for the OAuth resume flow. Enabled when the build
+// is in DEV (`import.meta.env.DEV`) or when the user sets
+// `localStorage.rm-debug-oauth = '1'` so we can capture flow timing in
+// production without shipping noisy logs by default.
+function oauthLog(message: string, data?: Record<string, unknown>): void {
+  try {
+    const dev = (import.meta as unknown as { env?: { DEV?: boolean } }).env?.DEV === true
+    const flag = typeof localStorage !== 'undefined' && localStorage.getItem('rm-debug-oauth') === '1'
+    if (!dev && !flag) return
+    // eslint-disable-next-line no-console
+    console.log(`[oauth] ${message}`, data ?? '')
+  } catch {
+    /* logging must never throw */
+  }
+}
+
+// Parse `provider_token` directly from the URL hash. After a Supabase implicit
+// OAuth redirect, the hash carries:
+//   #access_token=…&expires_in=3600&provider_token=…&refresh_token=…&token_type=bearer
+// Reading the hash here, before `getSyncSupabaseClient()` triggers
+// `detectSessionInUrl`, removes the race where the Supabase client consumes
+// the hash before our `onAuthStateChange` listener can attach.
+export function parseProviderTokenFromHash(hash: string): {
+  providerToken: string | null
+  expiresIn: number | null
+} {
+  if (!hash || hash.length < 2) return { providerToken: null, expiresIn: null }
+  const raw = hash.startsWith('#') ? hash.slice(1) : hash
+  const params = new URLSearchParams(raw)
+  const providerToken = params.get('provider_token')
+  const expiresInRaw = params.get('expires_in')
+  const expiresIn = expiresInRaw ? Number.parseInt(expiresInRaw, 10) : null
+  return {
+    providerToken,
+    expiresIn: Number.isFinite(expiresIn) && expiresIn !== null && expiresIn > 0 ? expiresIn : null,
+  }
+}
+
 // ── Drive API helpers ──────────────────────────────────────────────────────
 
 async function getValidToken(): Promise<string> {
@@ -232,45 +276,106 @@ export class GoogleDriveProvider implements SyncProvider {
   }
 
   async resumeFromOAuth(): Promise<boolean> {
-    if (!sessionStorage.getItem(OAUTH_STATE_KEY)) return false
-    sessionStorage.removeItem(OAUTH_STATE_KEY)
+    if (!sessionStorage.getItem(OAUTH_STATE_KEY)) {
+      oauthLog('resume: no pending flag, skip')
+      return false
+    }
+    const startedAt = Date.now()
+    oauthLog('resume: start', {
+      hashPresent: typeof window !== 'undefined' && !!window.location.hash,
+      hashLength: typeof window !== 'undefined' ? window.location.hash.length : 0,
+    })
+
+    // Strategy 1: read provider_token directly from the URL hash before any
+    // other code (e.g. the Supabase client's `detectSessionInUrl`) consumes
+    // it. This avoids the race where the auth listener attaches after the
+    // SIGNED_IN event has already fired.
+    const hashParsed = typeof window !== 'undefined'
+      ? parseProviderTokenFromHash(window.location.hash)
+      : { providerToken: null, expiresIn: null }
+    oauthLog('resume: hash parse', {
+      hasProviderToken: !!hashParsed.providerToken,
+      expiresIn: hashParsed.expiresIn,
+    })
+
+    let providerToken: string | null = hashParsed.providerToken
+    let expiresInSec: number | null = hashParsed.expiresIn
+
     const { getSyncSupabaseClient } = await import('./privateSyncClient')
     const supabase = getSyncSupabaseClient()
 
-    // provider_token is ephemeral: Supabase does not persist it in localStorage.
-    // onAuthStateChange fires during initialize() with the full in-memory session
-    // (including provider_token) before it is stripped for storage. This is the
-    // only reliable place to read it after a redirect-based OAuth flow.
-    const providerToken = await new Promise<string | null>(resolve => {
-      let done = false
-      let sub: { unsubscribe(): void } = { unsubscribe: () => {} }
-      const finish = (token: string | null) => {
-        if (done) return
-        done = true
-        clearTimeout(timer)
-        sub.unsubscribe()
-        resolve(token)
-      }
-      const timer = setTimeout(() => finish(null), 8000)
-      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-        sub = subscription
-        if (session?.provider_token) {
-          finish(session.provider_token)
-        } else if (_event === 'INITIAL_SESSION' || _event === 'SIGNED_IN') {
-          finish(null)
-        }
+    // Strategy 2 (fallback): if the hash was already consumed (e.g. React
+    // StrictMode double-mount, or any other code that initialised the
+    // Supabase client first), wait on `onAuthStateChange` for an event whose
+    // session still carries provider_token.
+    if (!providerToken) {
+      oauthLog('resume: falling back to onAuthStateChange', {
+        timeoutMs: PROVIDER_TOKEN_WAIT_MS,
       })
-      sub = subscription
-    })
+      providerToken = await new Promise<string | null>(resolve => {
+        let done = false
+        let sub: { unsubscribe(): void } = { unsubscribe: () => {} }
+        const finish = (token: string | null, reason: string) => {
+          if (done) return
+          done = true
+          clearTimeout(timer)
+          sub.unsubscribe()
+          oauthLog('resume: listener finish', {
+            reason,
+            hasToken: !!token,
+            elapsedMs: Date.now() - startedAt,
+          })
+          resolve(token)
+        }
+        const timer = setTimeout(() => finish(null, 'timeout'), PROVIDER_TOKEN_WAIT_MS)
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+          sub = subscription
+          oauthLog('resume: auth event', {
+            event,
+            hasSession: !!session,
+            hasProviderToken: !!session?.provider_token,
+          })
+          if (session?.provider_token) {
+            finish(session.provider_token, `event:${event}`)
+          } else if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN') {
+            finish(null, `event:${event}-no-token`)
+          }
+        })
+        sub = subscription
+      })
+    }
 
-    if (!providerToken) return false
-    const { data: { session } } = await supabase.auth.getSession()
+    if (!providerToken) {
+      oauthLog('resume: failed, clearing pending flag', {
+        elapsedMs: Date.now() - startedAt,
+      })
+      sessionStorage.removeItem(OAUTH_STATE_KEY)
+      return false
+    }
+
+    // Compute expiry: prefer the hash's expires_in, fall back to the persisted
+    // session's expires_at, and finally to a 1-hour default. We do this last
+    // so that a slow Supabase response cannot block the resume on success.
+    let expiresAtMs: number
+    if (expiresInSec) {
+      expiresAtMs = Date.now() + expiresInSec * 1000
+    } else {
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        expiresAtMs = (session?.expires_at ?? Math.floor(Date.now() / 1000) + 3600) * 1000
+      } catch {
+        expiresAtMs = Date.now() + 3600 * 1000
+      }
+    }
+
     const token: StoredToken = {
       accessToken: providerToken,
-      expiresAt: (session?.expires_at ?? Math.floor(Date.now() / 1000) + 3600) * 1000,
+      expiresAt: expiresAtMs,
     }
     await saveToken(token)
     this._authenticated = true
+    sessionStorage.removeItem(OAUTH_STATE_KEY)
+    oauthLog('resume: success', { elapsedMs: Date.now() - startedAt })
     return true
   }
 

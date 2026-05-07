@@ -6,6 +6,14 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '2.0.2',
+    date: '2026-05-07',
+    highlights: [
+      '🔁 Google-Drive-Login: Nach dem Redirect zurück in die App bist du jetzt zuverlässig eingeloggt – kein Stecken bleiben mehr auf dem Anmeldebildschirm',
+      '⏱ Längeres Auth-Timeout für langsame Mobilverbindungen, besonders auf iOS Safari',
+    ],
+  },
+  {
     version: '2.0.1',
     date: '2026-05-03',
     highlights: [
