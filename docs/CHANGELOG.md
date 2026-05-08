@@ -10,6 +10,35 @@ Versionierung folgt [Semantic Versioning](https://semver.org/lang/de/).
 > Der Check `npm run check:changelog` (Teil von `npm test`) bricht sonst ab.
 > Details: `CLAUDE.md` → „Changelog-Pflicht".
 
+## [2.0.2] – 2026-05-07
+
+### Behoben
+
+- **Google-Drive-Login**: Nach dem OAuth-Redirect zurück in die App stand der
+  Nutzer wieder vor dem Login-Screen mit der Meldung
+  „Google-Authentifizierung fehlgeschlagen". Ursache war ein Race zwischen
+  dem Anbinden des `onAuthStateChange`-Listeners und Supabase's
+  `detectSessionInUrl`, der das `provider_token` aus dem URL-Hash bereits
+  konsumiert hatte.
+- `GoogleDriveProvider.resumeFromOAuth` liest das `provider_token` jetzt
+  zuerst direkt aus `window.location.hash`, bevor irgendein anderer Code
+  den Hash anfassen kann. Auf Fallback-`onAuthStateChange` wird nur
+  zurückgegriffen, wenn der Hash bereits geleert ist.
+- Listener-Timeout von 8 s auf 20 s angehoben, damit langsame
+  Mobilverbindungen (insbesondere iOS Safari mit kaltem Service-Worker)
+  nicht in einen falschen Misserfolg laufen.
+- Optionales Logging via `localStorage.rm-debug-oauth = '1'` zur
+  Diagnose künftiger Auth-Probleme.
+
+### Tests
+
+- Unit-Tests für `parseProviderTokenFromHash` und alle Pfade von
+  `resumeFromOAuth` (Hash-Primär, Listener-Fallback, Timeout).
+- E2E-Regressionstest, der das vollständige Redirect-Roundtrip simuliert
+  und sicherstellt, dass der Recovery-Code-Schritt erscheint.
+
+---
+
 ## [2.0.1] – 2026-05-03
 
 ### Sicherheit
@@ -733,6 +762,7 @@ Wenn im Hintergrund eine neue Version der App als Service Worker bereit steht, e
 | **1.9.3** | Familienmodus: Full-Swipe-to-Delete (kein Bestätigungs-Button mehr) | ✔️ Fertig |
 | **2.0.0** | Privater Sync – Google Drive, OneDrive, Remember Me Server (REQ-017) | ✔️ Fertig |
 | **2.0.1** | Sicherheits-Härtung: E2EE für Drive/OneDrive-Sync, CSP/GIS, Recovery-Code-Bias-Fix | ✔️ Fertig |
+| **2.0.2** | Fix: Google-Drive-Login bricht nach OAuth-Redirect nicht mehr ab | ✔️ Fertig |
 | — | **Geplante Features** | — |
 | **TBD** | Lebenszeitlinie – chronologische visuelle Ansicht | Geplant |
 | **TBD** | Import bestehender Erinnerungen (Social Media, Clouds) | Geplant |

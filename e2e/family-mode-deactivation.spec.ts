@@ -47,16 +47,22 @@ test.describe('Familienmodus – Deaktivierung (FR-15.22 – FR-15.25)', () => {
     // FR-15.22 – 24: server cascades + local online state cleared.
     await expect.poll(() => state.devices.some(d => d.id === aliceId.deviceId)).toBe(false)
 
-    const aliceState = await alice.evaluate(() => {
+    // Local cleanup runs in a separate React effect after the server cascade
+    // resolves. On slow runners (mobile-safari) the local update can lag a
+    // few ticks behind the server-state poll above, so poll the local state
+    // too instead of reading it once.
+    type LocalState = { onlineSharing?: unknown; friends?: { online?: unknown }[] }
+    const readState = (): Promise<LocalState | null> => alice.evaluate(() => {
       type Bridge = { get: () => Record<string, unknown> | null }
       return (window as unknown as { __rmState?: Bridge }).__rmState?.get() ?? null
     })
-    expect(aliceState.onlineSharing).toBeUndefined()
+
+    await expect.poll(async () => (await readState())?.onlineSharing).toBeUndefined()
 
     // FR-15.25: friends[].online stripped, but offline data intact.
-    for (const f of aliceState.friends ?? []) {
-      expect(f.online).toBeUndefined()
-    }
+    await expect
+      .poll(async () => ((await readState())?.friends ?? []).every(f => f.online === undefined))
+      .toBe(true)
 
     await aliceCtx.close()
     await bobCtx.close()
