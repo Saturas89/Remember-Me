@@ -10,6 +10,26 @@ Versionierung folgt [Semantic Versioning](https://semver.org/lang/de/).
 > Der Check `npm run check:changelog` (Teil von `npm test`) bricht sonst ab.
 > Details: `CLAUDE.md` → „Changelog-Pflicht".
 
+## [2.1.1] – 2026-05-08
+
+### Behoben
+
+- **Google-Drive-Sync: „Jetzt synchronisieren" reagiert auf abgelaufene Token.**
+  Wenn der Google-Access-Token abgelaufen war, blieb der Hub im Status
+  „Sync-Fehler" („Kein gültiger Google-Token – bitte erneut anmelden") hängen
+  und der Sync-Knopf hatte keinerlei Effekt – nur ein Deaktivieren mit
+  anschließendem Setup-Wizard half. Jetzt erscheint bei Auth-Fehlern ein
+  zusätzlicher „Erneut anmelden"-Button im Status-Block, der die Google-OAuth-
+  Wiederanmeldung direkt aus der Hub-Ansicht startet. Nach Rückkehr aus dem
+  Redirect übernimmt der Hub den frischen Token automatisch und stößt einen
+  Sync an.
+- **Kein sinnloses Auto-Retrying bei Auth-Fehlern.** Bisher lief die 30-s-
+  Wiederholungsschleife auch dann drei Mal durch, wenn der Token nicht mehr
+  gültig war (es schlug jedes Mal mit derselben Meldung fehl). Auth-Fehler
+  brechen den Auto-Retry jetzt sauber ab und warten auf eine User-Aktion.
+
+---
+
 ## [2.1.0] – 2026-05-08
 
 ### Geändert
@@ -823,6 +843,7 @@ Wenn im Hintergrund eine neue Version der App als Service Worker bereit steht, e
 | **2.0.2** | Fix: Google-Drive-Login bricht nach OAuth-Redirect nicht mehr ab | ✔️ Fertig |
 | **2.0.3** | Fix: Google-Drive-Sync 404 nach „Sync deaktivieren" – stale File-ID, Selbstheilung im Push | ✔️ Fertig |
 | **2.1.0** | UX: Sync-Tab im Stil des Freunde-Tabs neu aufgesetzt – Sektionen, Tags, Gradient-CTA, Modal mit Erklärung | ✔️ Fertig |
+| **2.1.1** | Fix: „Erneut anmelden"-Button im Sync-Hub bei abgelaufenem Google-Token + sauberer OAuth-Resume außerhalb des Setup-Wizards | ✔️ Fertig |
 | — | **Geplante Features** | — |
 | **TBD** | Lebenszeitlinie – chronologische visuelle Ansicht | Geplant |
 | **TBD** | Import bestehender Erinnerungen (Social Media, Clouds) | Geplant |

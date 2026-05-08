@@ -627,6 +627,7 @@ export interface Translations {
     lastSyncNever: string
     syncNowButton: string
     syncing: string
+    reauthenticateButton: string
     deactivateButton: string
     deactivateTitle: string
     deactivateQuestion: string

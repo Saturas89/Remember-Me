@@ -57,6 +57,25 @@ export function PrivateSyncHubView({ syncState, sync, onDeactivated }: Props) {
         {sync.errorMessage && (
           <p className="friends-hint friends-hint--warn">{sync.errorMessage}</p>
         )}
+        {sync.errorCode === 'auth' && syncState.providerType !== 'supabase' && (
+          <div className="friends-share">
+            <button
+              className="share-cta-btn"
+              onClick={() => sync.reauthenticate()}
+              disabled={isSyncing}
+              type="button"
+            >
+              {isSyncing ? (
+                <>
+                  <span className="share-cta-btn__spinner" aria-hidden="true" />
+                  {s.signingIn}
+                </>
+              ) : (
+                s.reauthenticateButton
+              )}
+            </button>
+          </div>
+        )}
         <div className="friends-share">
           <button
             className="share-cta-btn"

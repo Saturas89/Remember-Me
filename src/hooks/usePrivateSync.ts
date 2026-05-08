@@ -7,13 +7,23 @@ const DEBOUNCE_MS = 5_000
 const RETRY_DELAY_MS = 30_000
 const MAX_RETRIES = 3
 
+type SyncErrorCode = 'auth' | 'network' | 'quota' | 'decrypt' | 'unknown'
+
+// sessionStorage flag set by GoogleDriveProvider.signIn() before its OAuth
+// redirect. The Setup view consumes it on its own mount; here we mirror that
+// for the Hub case, where the user re-authenticates from an already-configured
+// install and lands back on /sync without ever entering the wizard again.
+const GDRIVE_OAUTH_PENDING_KEY = 'rm-gdrive-oauth-pending'
+
 export interface UsePrivateSyncReturn {
   isEnabled: boolean
   providerType: SyncProviderType | null
   status: SyncStatus
   lastSyncAt: string | null
   errorMessage: string | null
+  errorCode: SyncErrorCode | null
   syncNow(): Promise<void>
+  reauthenticate(): Promise<void>
   setup(provider: SyncProviderType): Promise<void>
   deactivate(deleteRemote?: boolean): Promise<void>
 }
@@ -32,12 +42,14 @@ export function usePrivateSync(
   const [errorMessage, setErrorMessage] = useState<string | null>(
     appState.privateSync?.errorMessage ?? null,
   )
+  const [errorCode, setErrorCode] = useState<SyncErrorCode | null>(null)
 
   const providerRef = useRef<SyncProvider | null>(null)
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const retryCountRef = useRef(0)
   const syncingRef = useRef(false)
   const isMountedRef = useRef(true)
+  const oauthResumeAttemptedRef = useRef(false)
 
   useEffect(() => {
     return () => { isMountedRef.current = false }
@@ -82,16 +94,23 @@ export function usePrivateSync(
         setStatus('success')
         setLastSyncAt(now)
         setErrorMessage(null)
+        setErrorCode(null)
         setTimeout(() => { if (isMountedRef.current) setStatus('idle') }, 3_000)
       }
     } catch (err) {
       retryCountRef.current++
-      const msg = err instanceof SyncError ? err.message : 'Unbekannter Sync-Fehler'
+      const isSyncErr = err instanceof SyncError
+      const msg = isSyncErr ? err.message : 'Unbekannter Sync-Fehler'
+      const code: SyncErrorCode = isSyncErr ? err.code : 'unknown'
       if (isMountedRef.current) {
         setStatus('error')
         setErrorMessage(msg)
+        setErrorCode(code)
       }
-      if (retryCountRef.current < MAX_RETRIES) {
+      // Auth errors require user intervention (re-login). Auto-retrying just
+      // burns timers and keeps showing the same error — skip the retry loop
+      // and let the user trigger reauthenticate() from the UI instead.
+      if (code !== 'auth' && retryCountRef.current < MAX_RETRIES) {
         setTimeout(() => runSync(), RETRY_DELAY_MS)
       }
     } finally {
@@ -112,10 +131,70 @@ export function usePrivateSync(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [appState, providerType])
 
+  // Resume an in-flight Google Drive OAuth redirect when the Hub view is the
+  // landing target (i.e. the user re-authenticated from the already-configured
+  // install). The Setup view has its own resume effect for the first-time
+  // setup case; here providerType !== null so the two paths don't collide.
+  useEffect(() => {
+    if (providerType !== 'google-drive') return
+    if (oauthResumeAttemptedRef.current) return
+    if (typeof sessionStorage === 'undefined') return
+    if (!sessionStorage.getItem(GDRIVE_OAUTH_PENDING_KEY)) return
+    oauthResumeAttemptedRef.current = true
+    ;(async () => {
+      const provider = await getProvider()
+      if (!provider || !provider.resumeFromOAuth) return
+      try {
+        const resumed = await provider.resumeFromOAuth()
+        if (resumed) {
+          retryCountRef.current = 0
+          await runSync()
+        } else if (isMountedRef.current) {
+          setStatus('error')
+          setErrorMessage('Google-Authentifizierung fehlgeschlagen')
+          setErrorCode('auth')
+        }
+      } catch (err) {
+        if (!isMountedRef.current) return
+        const isSyncErr = err instanceof SyncError
+        setStatus('error')
+        setErrorMessage(isSyncErr ? err.message : 'Anmeldung fehlgeschlagen')
+        setErrorCode(isSyncErr ? err.code : 'auth')
+      }
+    })()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [providerType])
+
   const syncNow = useCallback(async () => {
     if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current)
+    retryCountRef.current = 0
     await runSync()
   }, [runSync])
+
+  const reauthenticate = useCallback(async () => {
+    const provider = await getProvider()
+    if (!provider) return
+    if (isMountedRef.current) {
+      setStatus('syncing')
+      setErrorMessage(null)
+      setErrorCode(null)
+    }
+    try {
+      // Google: full-page redirect — the promise never resolves; resume runs
+      // on the next mount via the useEffect above.
+      // OneDrive: popup login — resolves once the popup closes and the token
+      // is persisted, so we can immediately follow up with a sync.
+      await provider.signIn()
+      retryCountRef.current = 0
+      await runSync()
+    } catch (err) {
+      if (!isMountedRef.current) return
+      const isSyncErr = err instanceof SyncError
+      setStatus('error')
+      setErrorMessage(isSyncErr ? err.message : 'Anmeldung fehlgeschlagen')
+      setErrorCode(isSyncErr ? err.code : 'auth')
+    }
+  }, [getProvider, runSync])
 
   const setup = useCallback(async (_provider: SyncProviderType) => {
     // Setup is handled by PrivateSyncSetupView; this is a no-op placeholder
@@ -131,6 +210,7 @@ export function usePrivateSync(
       setStatus('idle')
       setLastSyncAt(null)
       setErrorMessage(null)
+      setErrorCode(null)
     }
   }, [getProvider])
 
@@ -140,7 +220,9 @@ export function usePrivateSync(
     status,
     lastSyncAt,
     errorMessage,
+    errorCode,
     syncNow,
+    reauthenticate,
     setup,
     deactivate,
   }
