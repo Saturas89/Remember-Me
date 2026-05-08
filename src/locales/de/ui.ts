@@ -589,6 +589,7 @@ export const UI_DE = {
     lastSyncNever: 'Noch nie',
     syncNowButton: 'Jetzt synchronisieren',
     syncing: 'Synchronisiert…',
+    reauthenticateButton: 'Erneut anmelden',
     deactivateButton: 'Sync deaktivieren',
     deactivateTitle: 'Sync deaktivieren',
     deactivateQuestion: 'Sollen die gespeicherten Daten auch in der Cloud gelöscht werden?',

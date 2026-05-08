@@ -6,6 +6,15 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '2.1.1',
+    date: '2026-05-08',
+    highlights: [
+      '🔑 Google-Drive-Sync: Bei abgelaufenem Token erscheint jetzt direkt im Sync-Tab ein „Erneut anmelden"-Button – kein Umweg mehr über Sync deaktivieren und neu einrichten',
+      '🔄 Nach der erneuten Google-Anmeldung übernimmt der Sync-Tab den frischen Token automatisch und startet sofort eine Synchronisation',
+      '⏹️ Auth-Fehler lösen kein sinnloses Wiederholen mehr aus – die App wartet auf deine Aktion, statt im Hintergrund weiterzuversuchen',
+    ],
+  },
+  {
     version: '2.1.0',
     date: '2026-05-08',
     highlights: [

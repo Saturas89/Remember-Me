@@ -40,4 +40,8 @@ export interface SyncProvider {
   push(state: AppState, media: MediaStoreAccessor): Promise<void>
   pull(localState: AppState, media: MediaStoreAccessor): Promise<PullResult | null>
   deactivate(deleteRemote: boolean): Promise<void>
+  // Returns true if a pending OAuth redirect was successfully consumed and a
+  // fresh token is now persisted. Providers without a redirect flow (popup,
+  // password) return false.
+  resumeFromOAuth?(): Promise<boolean>
 }

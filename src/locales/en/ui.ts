@@ -589,6 +589,7 @@ export const UI_EN = {
     lastSyncNever: 'Never',
     syncNowButton: 'Sync now',
     syncing: 'Syncing…',
+    reauthenticateButton: 'Sign in again',
     deactivateButton: 'Deactivate sync',
     deactivateTitle: 'Deactivate sync',
     deactivateQuestion: 'Should the stored data also be deleted from the cloud?',
