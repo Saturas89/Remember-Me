@@ -6,6 +6,14 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '2.0.3',
+    date: '2026-05-08',
+    highlights: [
+      '☁️ Google-Drive-Sync: kein „Drive-Upload fehlgeschlagen: 404" mehr nach erneutem Anmelden – die App legt verlorene Sync-Dateien automatisch neu an',
+      '🧹 „Sync deaktivieren" räumt jetzt auch den lokalen Datei-Verweis auf, damit der nächste Login sauber startet',
+    ],
+  },
+  {
     version: '2.0.2',
     date: '2026-05-07',
     highlights: [

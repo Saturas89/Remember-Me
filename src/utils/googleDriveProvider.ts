@@ -92,6 +92,29 @@ async function saveFileId(id: string): Promise<void> {
   })
 }
 
+async function clearFileId(): Promise<void> {
+  try {
+    const db = await openTokenDb()
+    await new Promise<void>((resolve, reject) => {
+      const tx = db.transaction(TOKEN_STORE, 'readwrite')
+      tx.objectStore(TOKEN_STORE).delete(FILE_ID_KEY)
+      tx.oncomplete = () => resolve()
+      tx.onerror = () => reject(tx.error)
+    })
+  } catch { /* best-effort */ }
+}
+
+// Internal sentinel: PATCH on a fileId that no longer exists in Drive (file
+// was deleted manually, trashed, or removed via deactivate(deleteRemote)).
+// Caught only inside push() so it can drop the stale cache and create a fresh
+// envelope file. Never escapes the module.
+class StaleDriveFileError extends Error {
+  constructor() {
+    super('Drive file no longer exists')
+    this.name = 'StaleDriveFileError'
+  }
+}
+
 // ── OAuth state key ────────────────────────────────────────────────────────
 //
 // Saved to sessionStorage before the Supabase OAuth redirect so that on
@@ -190,6 +213,7 @@ async function driveUpload(
     body: fullBody,
   })
   if (res.status === 401) throw new SyncError('Google-Authentifizierung abgelaufen', 'auth')
+  if (res.status === 404 && method === 'PATCH') throw new StaleDriveFileError()
   if (!res.ok) throw new SyncError(`Drive-Upload fehlgeschlagen: ${res.status}`, 'network')
   const data = await res.json() as { id: string }
   return data.id
@@ -197,7 +221,7 @@ async function driveUpload(
 
 async function findSyncFile(token: string): Promise<string | null> {
   const res = await driveGet(
-    `/drive/v3/files?q=name='${SYNC_FILE_NAME}'&spaces=drive&fields=files(id)`,
+    `/drive/v3/files?q=name='${SYNC_FILE_NAME}' and trashed=false&spaces=drive&fields=files(id)`,
     token,
   )
   const data = await res.json() as { files: { id: string }[] }
@@ -449,7 +473,16 @@ export class GoogleDriveProvider implements SyncProvider {
     const body = JSON.stringify(envelope)
 
     if (fileId) {
-      await driveUpload('PATCH', fileId, { name: SYNC_FILE_NAME }, body, 'application/json', token)
+      try {
+        await driveUpload('PATCH', fileId, { name: SYNC_FILE_NAME }, body, 'application/json', token)
+      } catch (err) {
+        if (!(err instanceof StaleDriveFileError)) throw err
+        // Cached fileId points at a Drive file that no longer exists. Drop the
+        // cache and create a fresh envelope file so the next sync converges.
+        await clearFileId()
+        const newId = await driveUpload('POST', null, { name: SYNC_FILE_NAME }, body, 'application/json', token)
+        await saveFileId(newId)
+      }
     } else {
       const newId = await driveUpload('POST', null, { name: SYNC_FILE_NAME }, body, 'application/json', token)
       await saveFileId(newId)
@@ -509,6 +542,7 @@ export class GoogleDriveProvider implements SyncProvider {
       await clearCachedVaultKey(this._syncId).catch(() => {})
     }
     await clearToken()
+    await clearFileId()
     this._authenticated = false
   }
 }
