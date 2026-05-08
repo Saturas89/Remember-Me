@@ -39,53 +39,68 @@ export function PrivateSyncHubView({ syncState, sync, onDeactivated }: Props) {
     ? formatDateTime(syncState.lastSyncAt, locale)
     : s.lastSyncNever
 
+  const isSyncing = sync.status === 'syncing'
+
   return (
     <div className="private-sync-view">
-      <div className="private-sync-view__content">
-        <h1 className="private-sync-view__title">{s.hubTitle}</h1>
+      <h1 className="private-sync-view__title">{s.hubTitle}</h1>
 
-        <div className="private-sync-hub__status-row">
-          <SyncStatusBadge status={sync.status} />
+      <section className="friends-section">
+        <h3 className="friends-section-title">{s.statusHeading}</h3>
+        <div className="friends-tags">
+          <SyncStatusBadge status={sync.status} className="friends-tag friends-tag--accent" />
+          <span className="friends-tag">{s.tagEncrypted}</span>
         </div>
-
+        <p className="friends-hint">
+          <strong>{s.lastSync}:</strong> {lastSyncText}
+        </p>
         {sync.errorMessage && (
-          <p className="private-sync-view__error">{sync.errorMessage}</p>
+          <p className="friends-hint friends-hint--warn">{sync.errorMessage}</p>
         )}
-
-        <div className="private-sync-hub__info">
-          <div className="private-sync-hub__info-row">
-            <span className="private-sync-hub__info-label">{s.storedAt}</span>
-            <span className="private-sync-hub__info-value">{providerLabel}</span>
-          </div>
-          <div className="private-sync-hub__info-row">
-            <span className="private-sync-hub__info-label">{s.storedWhat}</span>
-            <span className="private-sync-hub__info-value">{storedWhat}</span>
-          </div>
-          <div className="private-sync-hub__info-row">
-            <span className="private-sync-hub__info-label">{s.lastSync}</span>
-            <span className="private-sync-hub__info-value">{lastSyncText}</span>
-          </div>
+        <div className="friends-share">
+          <button
+            className="share-cta-btn"
+            onClick={() => sync.syncNow()}
+            disabled={isSyncing}
+            type="button"
+          >
+            {isSyncing ? (
+              <>
+                <span className="share-cta-btn__spinner" aria-hidden="true" />
+                {s.syncing}
+              </>
+            ) : (
+              s.syncNowButton
+            )}
+          </button>
         </div>
+      </section>
 
+      <section className="friends-section">
+        <h3 className="friends-section-title">{s.storageHeading}</h3>
+        <dl className="sync-info">
+          <div className="sync-info__row">
+            <dt className="sync-info__label">{s.storedAt}</dt>
+            <dd className="sync-info__value">{providerLabel}</dd>
+          </div>
+          <div className="sync-info__row">
+            <dt className="sync-info__label">{s.storedWhat}</dt>
+            <dd className="sync-info__value">{storedWhat}</dd>
+          </div>
+        </dl>
+      </section>
+
+      <section className="friends-section">
+        <h3 className="friends-section-title">{s.deactivateHeading}</h3>
+        <p className="friends-hint">{s.deactivateSectionHint}</p>
         <button
-          className="btn btn--primary btn--full"
-          onClick={() => sync.syncNow()}
-          disabled={sync.status === 'syncing'}
-          type="button"
-        >
-          {sync.status === 'syncing' ? s.syncing : s.syncNowButton}
-        </button>
-
-        <hr className="private-sync-hub__divider" />
-
-        <button
-          className="btn btn--ghost btn--full private-sync-hub__deactivate-btn"
+          className="btn btn--ghost btn--full"
           onClick={() => setShowDeactivateDialog(true)}
           type="button"
         >
           {s.deactivateButton}
         </button>
-      </div>
+      </section>
 
       {showDeactivateDialog && (
         <div className="modal-overlay" role="dialog" aria-modal="true">
