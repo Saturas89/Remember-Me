@@ -597,5 +597,10 @@ export const UI_DE = {
     deactivateCancel: 'Abbrechen',
     back: '← Zurück',
     continueButton: 'Weiter',
+    statusHeading: 'Status',
+    storageHeading: 'Speicherort',
+    deactivateHeading: 'Sync deaktivieren',
+    deactivateSectionHint: 'Du kannst nur die Verbindung zu deiner Cloud trennen – die Sync-Datei bleibt dann erhalten – oder sie zusätzlich löschen. Lokale Erinnerungen auf diesem Gerät bleiben in beiden Fällen unverändert.',
+    tagEncrypted: 'Verschlüsselt',
   },
 }

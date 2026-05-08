@@ -635,6 +635,11 @@ export interface Translations {
     deactivateCancel: string
     back: string
     continueButton: string
+    statusHeading: string
+    storageHeading: string
+    deactivateHeading: string
+    deactivateSectionHint: string
+    tagEncrypted: string
   }
 
   categories: Category[]

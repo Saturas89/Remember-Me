@@ -597,5 +597,10 @@ export const UI_EN = {
     deactivateCancel: 'Cancel',
     back: '← Back',
     continueButton: 'Continue',
+    statusHeading: 'Status',
+    storageHeading: 'Storage',
+    deactivateHeading: 'Deactivate sync',
+    deactivateSectionHint: 'You can either disconnect this device only – your cloud file stays intact – or delete the cloud file as well. Memories stored locally on this device remain unchanged either way.',
+    tagEncrypted: 'Encrypted',
   },
 }

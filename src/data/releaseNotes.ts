@@ -6,6 +6,15 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '2.1.0',
+    date: '2026-05-08',
+    highlights: [
+      '🎨 Sync-Tab im Look des Freunde-Tabs: klare Sektionen, Tag-Chips und ein leuchtender „Jetzt synchronisieren"-Button',
+      '🗂️ „Speicherort"-Karten zeigen Provider und Inhalt jetzt sauber getrennt – kein zusammengelaufener Text mehr',
+      '🛑 Neuer Hinweis im Sync-Tab erklärt vor dem Klick, dass „Sync deaktivieren" deine Cloud-Datei nur auf Wunsch mitlöscht',
+    ],
+  },
+  {
     version: '2.0.3',
     date: '2026-05-08',
     highlights: [

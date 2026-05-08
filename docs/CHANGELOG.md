@@ -10,6 +10,37 @@ Versionierung folgt [Semantic Versioning](https://semver.org/lang/de/).
 > Der Check `npm run check:changelog` (Teil von `npm test`) bricht sonst ab.
 > Details: `CLAUDE.md` → „Changelog-Pflicht".
 
+## [2.1.0] – 2026-05-08
+
+### Geändert
+
+- **Sync-Tab Redesign:** Der Hub-Screen („Privater Sync") übernimmt das visuelle
+  Vokabular des Freunde-Tabs: Inhalte sind jetzt in drei klar abgegrenzte
+  Sektionen („Status", „Speicherort", „Sync deaktivieren") mit
+  border-bottom-Titeln aufgeteilt, der Sync-Status erscheint als Tag-Chip
+  neben einem „Verschlüsselt"-Tag, und „Jetzt synchronisieren" ist auf den
+  prominenten Gradient-CTA-Button (`share-cta-btn`, Logo-Farbverlauf) im
+  Familienmodus-Stil umgestellt.
+- **Speicherort-Karten:** Provider, Inhalte und letzter Sync werden in
+  saubere Label/Wert-Kartenrows gerendert (`.sync-info`), damit Beschriftung
+  und Wert nicht mehr ineinanderlaufen wie zuvor („Synchronisiert
+  Gespeichert beideiner Google Drive").
+- **„Sync deaktivieren" mit Erklärung:** Eine neue Sektion erläutert, dass
+  der Klick zwischen „nur Verbindung trennen" und „Cloud-Datei zusätzlich
+  löschen" wählen lässt – das Bestätigungsmodal selbst hat dafür schon
+  drei Optionen, jetzt versteht man auch vorher, worum es geht.
+
+### Behoben
+
+- **Sync-Hub Stylesheet-Lücken:** Mehrere referenzierte Klassen
+  (`private-sync-hub__info-row`, `modal-overlay`, `modal-box`, `sync-badge`,
+  `btn--danger`, `btn--secondary`) hatten keine CSS-Definitionen und führten
+  dazu, dass Status-Badge, Info-Zeilen und das Bestätigungsmodal als
+  unformatierter Fließtext angezeigt wurden. Alle fehlenden Styles sind
+  ergänzt.
+
+---
+
 ## [2.0.3] – 2026-05-08
 
 ### Behoben
@@ -791,6 +822,7 @@ Wenn im Hintergrund eine neue Version der App als Service Worker bereit steht, e
 | **2.0.1** | Sicherheits-Härtung: E2EE für Drive/OneDrive-Sync, CSP/GIS, Recovery-Code-Bias-Fix | ✔️ Fertig |
 | **2.0.2** | Fix: Google-Drive-Login bricht nach OAuth-Redirect nicht mehr ab | ✔️ Fertig |
 | **2.0.3** | Fix: Google-Drive-Sync 404 nach „Sync deaktivieren" – stale File-ID, Selbstheilung im Push | ✔️ Fertig |
+| **2.1.0** | UX: Sync-Tab im Stil des Freunde-Tabs neu aufgesetzt – Sektionen, Tags, Gradient-CTA, Modal mit Erklärung | ✔️ Fertig |
 | — | **Geplante Features** | — |
 | **TBD** | Lebenszeitlinie – chronologische visuelle Ansicht | Geplant |
 | **TBD** | Import bestehender Erinnerungen (Social Media, Clouds) | Geplant |
