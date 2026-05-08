@@ -10,6 +10,33 @@ Versionierung folgt [Semantic Versioning](https://semver.org/lang/de/).
 > Der Check `npm run check:changelog` (Teil von `npm test`) bricht sonst ab.
 > Details: `CLAUDE.md` → „Changelog-Pflicht".
 
+## [2.0.3] – 2026-05-08
+
+### Behoben
+
+- **Google-Drive-Sync: `Drive-Upload fehlgeschlagen: 404` nach erneutem Login.**
+  Nach „Sync deaktivieren" und Wieder-Anmelden zeigte der gecachte File-ID
+  in IndexedDB auf eine Drive-Datei, die nicht mehr existierte (entweder weil
+  der frühere `deactivate(deleteRemote=true)`-Pfad sie entfernt hatte, oder
+  weil der Nutzer sie manuell aus Drive gelöscht/getrasht hatte). Der nächste
+  Push schickte ein PATCH auf die tote ID → 404 → Sync-Fehler.
+- `GoogleDriveProvider.deactivate` löscht jetzt die gecachte File-ID mit, nicht
+  nur den OAuth-Token.
+- `findSyncFile` filtert die Drive-Suche zusätzlich auf `trashed=false`, damit
+  ein im Papierkorb liegender Treffer nicht erneut als gültige Sync-Datei
+  zurückkommt.
+- **Selbstheilung im Push:** Antwortet Drive auf den PATCH mit `404`, verwirft
+  der Provider den lokalen Cache und legt direkt im selben Sync-Lauf eine
+  frische Envelope-Datei an. Der Nutzer sieht keinen Fehler mehr.
+
+### Tests
+
+- Unit-Tests für die 404-Selbstheilung, den `trashed=false`-Filter, das
+  Aufräumen der File-ID in `deactivate` und die Weitergabe nicht-stale
+  PATCH-Fehler (z. B. 500).
+
+---
+
 ## [2.0.2] – 2026-05-07
 
 ### Behoben
@@ -763,6 +790,7 @@ Wenn im Hintergrund eine neue Version der App als Service Worker bereit steht, e
 | **2.0.0** | Privater Sync – Google Drive, OneDrive, Remember Me Server (REQ-017) | ✔️ Fertig |
 | **2.0.1** | Sicherheits-Härtung: E2EE für Drive/OneDrive-Sync, CSP/GIS, Recovery-Code-Bias-Fix | ✔️ Fertig |
 | **2.0.2** | Fix: Google-Drive-Login bricht nach OAuth-Redirect nicht mehr ab | ✔️ Fertig |
+| **2.0.3** | Fix: Google-Drive-Sync 404 nach „Sync deaktivieren" – stale File-ID, Selbstheilung im Push | ✔️ Fertig |
 | — | **Geplante Features** | — |
 | **TBD** | Lebenszeitlinie – chronologische visuelle Ansicht | Geplant |
 | **TBD** | Import bestehender Erinnerungen (Social Media, Clouds) | Geplant |
