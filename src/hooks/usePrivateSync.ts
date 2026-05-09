@@ -32,6 +32,7 @@ export function usePrivateSync(
   appState: AppState,
   mediaStore: MediaStoreAccessor,
   onStateMerged: (merged: AppState) => void,
+  onSyncSuccess?: (lastSyncAt: string) => void,
 ): UsePrivateSyncReturn {
   const [status, setStatus] = useState<SyncStatus>(
     appState.privateSync?.status ?? 'idle',
@@ -97,6 +98,7 @@ export function usePrivateSync(
         setErrorCode(null)
         setTimeout(() => { if (isMountedRef.current) setStatus('idle') }, 3_000)
       }
+      onSyncSuccess?.(now)
     } catch (err) {
       retryCountRef.current++
       const isSyncErr = err instanceof SyncError
@@ -116,9 +118,11 @@ export function usePrivateSync(
     } finally {
       syncingRef.current = false
     }
-  }, [appState, mediaStore, getProvider, onStateMerged])
+  }, [appState, mediaStore, getProvider, onStateMerged, onSyncSuccess])
 
-  // Debounced auto-push on state changes
+  // Debounced auto-push on state changes. Depends only on user-data fields so
+  // that persisting privateSync metadata (lastSyncAt) after a successful sync
+  // doesn't re-trigger the timer and create a sync loop.
   useEffect(() => {
     if (!providerType) return
     if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current)
@@ -129,7 +133,14 @@ export function usePrivateSync(
       if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [appState, providerType])
+  }, [
+    appState.answers,
+    appState.friends,
+    appState.friendAnswers,
+    appState.customQuestions,
+    appState.profile,
+    providerType,
+  ])
 
   // Resume an in-flight Google Drive OAuth redirect when the Hub view is the
   // landing target (i.e. the user re-authenticated from the already-configured

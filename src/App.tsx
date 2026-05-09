@@ -156,6 +156,11 @@ export default function App() {
     appState,
     defaultMediaAdapter,
     mergeRemoteState,
+    lastSyncAt => {
+      const current = appState.privateSync
+      if (!current) return
+      savePrivateSync({ ...current, lastSyncAt })
+    },
   )
 
   // Pending contact handshake (from URL hash). Parsed synchronously at module

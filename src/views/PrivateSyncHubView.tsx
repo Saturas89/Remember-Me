@@ -35,8 +35,8 @@ export function PrivateSyncHubView({ syncState, sync, onDeactivated }: Props) {
   const storedWhat =
     syncState.providerType === 'supabase' ? s.storedWhatTextOnly : s.storedWhatFull
 
-  const lastSyncText = syncState.lastSyncAt
-    ? formatDateTime(syncState.lastSyncAt, locale)
+  const lastSyncText = sync.lastSyncAt
+    ? formatDateTime(sync.lastSyncAt, locale)
     : s.lastSyncNever
 
   const isSyncing = sync.status === 'syncing'

@@ -234,6 +234,59 @@ describe('usePrivateSync', () => {
     expect(providerSpy.push).not.toHaveBeenCalled()
   })
 
+  it('H-07: Erfolgreicher Sync aktualisiert lastSyncAt und ruft onSyncSuccess auf', async () => {
+    const onSyncSuccess = vi.fn()
+    const state = makeState({
+      providerType: 'supabase',
+      userId: 'u1',
+      lastSyncAt: null,
+      status: 'idle',
+      errorMessage: null,
+    })
+    const { result } = renderHook(() =>
+      usePrivateSync(state, noopMedia, () => {}, onSyncSuccess),
+    )
+
+    expect(result.current.lastSyncAt).toBeNull()
+
+    await act(async () => { await result.current.syncNow() })
+
+    expect(result.current.lastSyncAt).not.toBeNull()
+    expect(onSyncSuccess).toHaveBeenCalledTimes(1)
+    expect(onSyncSuccess.mock.calls[0][0]).toBe(result.current.lastSyncAt)
+  })
+
+  it('H-08: privateSync-only AppState-Update löst keinen erneuten Sync aus', async () => {
+    vi.useFakeTimers()
+    let state = makeState({
+      providerType: 'supabase',
+      userId: 'u1',
+      lastSyncAt: null,
+      status: 'idle',
+      errorMessage: null,
+    })
+    const { rerender } = renderHook(({ s }: { s: AppState }) =>
+      usePrivateSync(s, noopMedia, () => {}),
+      { initialProps: { s: state } },
+    )
+
+    // Initial trigger from first render's debounce.
+    await act(async () => { await vi.advanceTimersByTimeAsync(5_500) })
+    await act(async () => { await flushMicrotasks() })
+    const initialPushCount = providerSpy.push.mock.calls.length
+
+    // Update only privateSync.lastSyncAt (simulates persisting after sync).
+    state = {
+      ...state,
+      privateSync: { ...state.privateSync!, lastSyncAt: '2024-06-01T00:00:00.000Z' },
+    }
+    rerender({ s: state })
+    await act(async () => { await vi.advanceTimersByTimeAsync(5_500) })
+    await act(async () => { await flushMicrotasks() })
+
+    expect(providerSpy.push.mock.calls.length).toBe(initialPushCount)
+  })
+
   it('H-06: Erfolgreicher Pull ruft onStateMerged mit merged State auf', async () => {
     const merged: AppState = {
       profile: null,
