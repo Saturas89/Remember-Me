@@ -55,32 +55,13 @@ export class ErrorBoundary extends Component<Props, State> {
     const e = (this.resolveLocale() === 'en' ? UI_EN : UI_DE).errorBoundary
 
     return (
-      <div
-        role="alert"
-        style={{
-          padding: '2rem',
-          maxWidth: '520px',
-          margin: '3rem auto',
-          fontFamily: 'system-ui, -apple-system, sans-serif',
-          lineHeight: 1.5,
-        }}
-      >
-        <h1 style={{ fontSize: '1.25rem', marginBottom: '0.75rem' }}>
-          {e.heading}
-        </h1>
-        <p style={{ marginBottom: '1.25rem' }}>{e.body}</p>
+      <div role="alert" className="error-boundary">
+        <h1 className="error-boundary__heading">{e.heading}</h1>
+        <p className="error-boundary__body">{e.body}</p>
         <button
           type="button"
           onClick={this.handleReload}
-          style={{
-            padding: '0.6rem 1.2rem',
-            fontSize: '1rem',
-            border: 0,
-            borderRadius: '8px',
-            background: '#4b3f2f',
-            color: '#fff',
-            cursor: 'pointer',
-          }}
+          className="btn btn--primary"
         >
           {e.reloadButton}
         </button>
