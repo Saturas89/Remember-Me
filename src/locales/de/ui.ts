@@ -557,8 +557,6 @@ export const UI_DE = {
     supabaseDesc: 'Nur Texte (keine Medien) werden verschlüsselt auf unserem Server gespeichert.',
     supabasePrivacy: 'Ende-zu-Ende-verschlüsselt. Wir können deine Daten nicht lesen.',
     loginTitle: 'Anmelden',
-    googleSignInButton: 'Mit Google anmelden',
-    microsoftSignInButton: 'Mit Microsoft anmelden',
     emailLabel: 'E-Mail',
     emailPlaceholder: 'deine@email.de',
     passwordLabel: 'Passwort',

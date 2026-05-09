@@ -22,18 +22,18 @@ test.describe('Privater Sync – Setup-Wizard Google Drive (E2E-02)', () => {
     // S1
     await page.getByRole('button', { name: 'Einrichten' }).click()
 
-    // S2
+    // S2 – Provider-Auswahl. „Weiter" startet jetzt direkt den Google-OAuth-Flow,
+    // ein separater Anmelden-Screen entfällt. Der Continue-Button bleibt sichtbar
+    // und wechselt während des Flows in den Lade-Zustand.
     await page.getByRole('button', { name: /Google Drive/ }).click()
-    await page.getByRole('button', { name: 'Weiter' }).click()
-
-    // S3 – OAuth-Button (Mock liefert Token sofort).
-    const signInBtn = page.getByRole('button', { name: 'Mit Google anmelden' })
-    await expect(signInBtn).toBeVisible()
+    const continueBtn = page.getByRole('button', { name: 'Weiter' })
+    await expect(continueBtn).toBeEnabled()
 
     // We don't click further than the visible UI in this scenario because the
     // GoogleDriveProvider implementation depends on @react-oauth/google
     // internals that are not yet exercised end-to-end. The presence of the
-    // button + the working OAuth-mock surface is the contract under test.
+    // enabled continue button + the working OAuth-mock surface is the contract
+    // under test.
   })
 
   // Regression: after a successful Google OAuth redirect the user used to land
