@@ -593,6 +593,7 @@ export const UI_EN = {
     lastSync: 'Last synced',
     lastSyncNever: 'Never',
     syncNowButton: 'Sync now',
+    retrySyncButton: 'Try again',
     syncing: 'Syncing…',
     reauthenticateButton: 'Sign in again',
     deactivateButton: 'Deactivate sync',

@@ -35,11 +35,18 @@ export function PrivateSyncHubView({ syncState, sync, onDeactivated }: Props) {
   const storedWhat =
     syncState.providerType === 'supabase' ? s.storedWhatTextOnly : s.storedWhatFull
 
-  const lastSyncText = syncState.lastSyncAt
-    ? formatDateTime(syncState.lastSyncAt, locale)
+  const lastSyncText = sync.lastSyncAt
+    ? formatDateTime(sync.lastSyncAt, locale)
     : s.lastSyncNever
 
   const isSyncing = sync.status === 'syncing'
+  const showReauthButton =
+    sync.errorCode === 'auth' && syncState.providerType !== 'supabase'
+  // Auto-sync läuft 5s nach jeder Änderung + Auto-Retry alle 30s im Fehlerfall.
+  // Manuelles Synchronisieren ist nur dann sinnvoll, wenn ein Fehler ansteht
+  // und der Auth-Reauth-Flow nicht greift (also Netzwerk-/Quota-/Decrypt-/
+  // Unknown-Fehler oder Supabase-Auth-Fehler).
+  const showRetryButton = sync.status === 'error' && !showReauthButton
 
   return (
     <div className="private-sync-view">
@@ -57,7 +64,7 @@ export function PrivateSyncHubView({ syncState, sync, onDeactivated }: Props) {
         {sync.errorMessage && (
           <p className="friends-hint friends-hint--warn">{sync.errorMessage}</p>
         )}
-        {sync.errorCode === 'auth' && syncState.providerType !== 'supabase' && (
+        {showReauthButton && (
           <div className="friends-share">
             <button
               className="share-cta-btn"
@@ -76,23 +83,25 @@ export function PrivateSyncHubView({ syncState, sync, onDeactivated }: Props) {
             </button>
           </div>
         )}
-        <div className="friends-share">
-          <button
-            className="share-cta-btn"
-            onClick={() => sync.syncNow()}
-            disabled={isSyncing}
-            type="button"
-          >
-            {isSyncing ? (
-              <>
-                <span className="share-cta-btn__spinner" aria-hidden="true" />
-                {s.syncing}
-              </>
-            ) : (
-              s.syncNowButton
-            )}
-          </button>
-        </div>
+        {showRetryButton && (
+          <div className="friends-share">
+            <button
+              className="share-cta-btn"
+              onClick={() => sync.syncNow()}
+              disabled={isSyncing}
+              type="button"
+            >
+              {isSyncing ? (
+                <>
+                  <span className="share-cta-btn__spinner" aria-hidden="true" />
+                  {s.syncing}
+                </>
+              ) : (
+                s.retrySyncButton
+              )}
+            </button>
+          </div>
+        )}
       </section>
 
       <section className="friends-section">
