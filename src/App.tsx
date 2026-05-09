@@ -52,6 +52,7 @@ import { BottomNav } from './components/BottomNav'
 import { useServiceWorker } from './hooks/useServiceWorker'
 import { useReminder } from './hooks/useReminder'
 import { useStreak } from './hooks/useStreak'
+import { AppModeProvider } from './hooks/useAppMode'
 import { exportAsMarkdown, exportAsEnrichedJSON, downloadFile } from './utils/export'
 import { importFile } from './utils/archiveImport'
 import type { Category, InviteData, AnswerExport, MemorySharePayload, ContactHandshake } from './types'
@@ -90,6 +91,11 @@ function pathToView(pathname: string): View {
 
 const INVITE_URL_STORAGE_KEY = 'remember-me-invite-url'
 
+// Views that are hidden in Simple Mode (also blocked from deep-links).
+const HIDDEN_IN_SIMPLE: ReadonlySet<View['name']> = new Set([
+  'friends', 'sync', 'online-intro', 'online-hub', 'custom-questions',
+])
+
 function loadCachedInviteUrl(): string {
   try {
     const raw = localStorage.getItem(INVITE_URL_STORAGE_KEY)
@@ -121,6 +127,7 @@ export default function App() {
     customQuestions,
     onlineSharing,
     privateSync: privateSyncState,
+    appMode,
     appState,
     saveAnswer,
     setAnswerImages,
@@ -143,6 +150,7 @@ export default function App() {
     removeOnlineFriends,
     streak: storedStreak,
     saveStreak,
+    saveAppMode,
     savePrivateSync,
     mergeRemoteState,
     getAnswer,
@@ -151,6 +159,7 @@ export default function App() {
     getAnswerAudioId,
     getCategoryProgress,
   } = useAnswers()
+  const isSimple = appMode === 'simple'
 
   const privateSync = usePrivateSync(
     appState,
@@ -344,6 +353,17 @@ export default function App() {
     return () => window.removeEventListener('popstate', onPopstate)
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Redirect hidden routes to home whenever simple mode is active. This
+  // covers initial landing on a deep link (/friends, /sync) as well as
+  // the user toggling into simple mode while already on a hidden view.
+  useEffect(() => {
+    if (!isSimple) return
+    if (HIDDEN_IN_SIMPLE.has(view.name)) {
+      history.replaceState({}, '', '/')
+      setView({ name: 'home' })
+    }
+  }, [isSimple, view.name]) // eslint-disable-line react-hooks/exhaustive-deps
+
   // Pull on visibility change (app resumes from background)
   useEffect(() => {
     if (!isLoaded) return
@@ -392,20 +412,31 @@ export default function App() {
     )
   }
 
-  // First-time open: show onboarding before anything else
-  if (!profile) {
+  // First-time open: show onboarding before anything else.
+  // Onboarding now also covers the mode-choice step for users who upgrade
+  // from a pre-Simple-Mode version (profile present, appMode missing).
+  if (!profile || !appMode) {
     return (
-      <>
+      <AppModeProvider appMode={appMode} setAppMode={saveAppMode}>
         <SEOHead viewName="home" />
-        <OnboardingView onComplete={saveProfile} onImportBackup={restoreBackup} />
+        <OnboardingView
+          needsModeChoice={!appMode}
+          modeOnly={Boolean(profile) && !appMode}
+          onChooseMode={saveAppMode}
+          onComplete={saveProfile}
+          onImportBackup={restoreBackup}
+        />
         {installVisible && <InstallBanner state={installState} onInstall={triggerInstall} onDismiss={dismissInstall} />}
         {needRefresh && <UpdateBanner onUpdate={applyUpdate} onDismiss={dismissUpdate} onViewNotes={() => setShowReleaseNotes(true)} />}
-      </>
+      </AppModeProvider>
     )
   }
 
   // Navigate to a main tab and update the URL so Vercel Analytics tracks the page view
   function goTo(v: View) {
+    if (isSimple && HIDDEN_IN_SIMPLE.has(v.name)) {
+      v = { name: 'home' }
+    }
     window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior })
     const paths: Partial<Record<View['name'], string>> = {
       home: '/', friends: '/friends', archive: '/archive', profile: '/profile', sync: '/sync',
@@ -450,7 +481,7 @@ export default function App() {
     }
     if (!category) return null
     return (
-      <>
+      <AppModeProvider appMode={appMode} setAppMode={saveAppMode}>
         <SEOHead viewName="home" />
         <QuizView
           category={category}
@@ -470,12 +501,12 @@ export default function App() {
         />
         {installVisible && <InstallBanner state={installState} onInstall={triggerInstall} onDismiss={dismissInstall} />}
         {needRefresh && <UpdateBanner onUpdate={applyUpdate} onDismiss={dismissUpdate} onViewNotes={() => setShowReleaseNotes(true)} />}
-      </>
+      </AppModeProvider>
     )
   }
 
   return (
-    <>
+    <AppModeProvider appMode={appMode} setAppMode={saveAppMode}>
       <SEOHead viewName={view.name} />
       {view.name === 'archive' && (
         <ArchiveView
@@ -650,6 +681,6 @@ export default function App() {
         />
       )}
       {showReleaseNotes && <ReleaseNotesModal onClose={() => setShowReleaseNotes(false)} />}
-    </>
+    </AppModeProvider>
   )
 }

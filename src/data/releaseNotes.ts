@@ -6,6 +6,16 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '2.4.0',
+    date: '2026-05-09',
+    highlights: [
+      '🪶 Neuer „Einfach"-Modus mit großen Knöpfen, größerer Schrift und nur den wichtigsten Funktionen – ideal zum Verschenken',
+      '⚙️ Beim allerersten Start fragt die App jetzt: „Wie möchten Sie sie nutzen?" – „Einfach" oder „Vollständig"',
+      '🔁 Jederzeit umschaltbar im Profil unter „Bedienung" – nichts geht verloren beim Wechsel',
+      '🎙 Sprachaufnahme bleibt auch im Einfach-Modus aktiv – einfach drauf-tippen und losreden',
+    ],
+  },
+  {
     version: '2.3.0',
     date: '2026-05-09',
     highlights: [

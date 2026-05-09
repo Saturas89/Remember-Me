@@ -1,13 +1,14 @@
 import { useState, useRef } from 'react'
 import { getCategoriesForLocale } from '../data/categories'
 import { THEMES, useTheme } from '../hooks/useTheme'
+import { useAppMode } from '../hooks/useAppMode'
 import { ArchiveExportCard } from '../components/ArchiveExportCard'
 import { getLastBackupDate, backupAgeLabel, backupAgeStatus } from '../utils/backupStatus'
 import { importFile } from '../utils/archiveImport'
 import { RELEASE_NOTES } from '../data/releaseNotes'
 import { useTranslation } from '../locales'
 import type { Locale } from '../locales'
-import type { Profile, Answer } from '../types'
+import type { Profile, Answer, AppMode } from '../types'
 import type { ExportData } from '../utils/export'
 
 interface Props {
@@ -74,6 +75,7 @@ export function ProfileView({
 }: Props) {
   const { t, locale, setLocale } = useTranslation()
   const { theme, setTheme } = useTheme()
+  const { isSimple, setAppMode } = useAppMode()
   const [lastBackup, setLastBackup] = useState<Date | null>(() => getLastBackupDate())
   const [name, setName] = useState(profile?.name ?? '')
   const [birthYear, setBirthYear] = useState(
@@ -210,20 +212,22 @@ export function ProfileView({
               placeholder={t.profile.namePlaceholder}
             />
           </div>
-          <div className="profile-field-row profile-field-row--top-border">
-            <label className="profile-field-label" htmlFor="profile-year">{t.profile.yearLabel}</label>
-            <input
-              id="profile-year"
-              className="input-year profile-field-input"
-              type="number"
-              min={1900}
-              max={new Date().getFullYear()}
-              value={birthYear}
-              onChange={e => setBirthYear(e.target.value)}
-              onBlur={handleSave}
-              placeholder={t.profile.yearPlaceholder}
-            />
-          </div>
+          {!isSimple && (
+            <div className="profile-field-row profile-field-row--top-border">
+              <label className="profile-field-label" htmlFor="profile-year">{t.profile.yearLabel}</label>
+              <input
+                id="profile-year"
+                className="input-year profile-field-input"
+                type="number"
+                min={1900}
+                max={new Date().getFullYear()}
+                value={birthYear}
+                onChange={e => setBirthYear(e.target.value)}
+                onBlur={handleSave}
+                placeholder={t.profile.yearPlaceholder}
+              />
+            </div>
+          )}
         </div>
       </section>
 
@@ -234,6 +238,37 @@ export function ProfileView({
           safeName={safeName}
           onBackupRecorded={() => setLastBackup(new Date())}
         />
+      </section>
+
+      <section className="profile-card">
+        <h2 className="profile-card__heading">{t.profile.modeHeading}</h2>
+        <p className="profile-mode-desc">{t.profile.modeDesc}</p>
+        <div className="profile-mode-cards">
+          {(['simple', 'full'] as AppMode[]).map(m => (
+            <button
+              key={m}
+              type="button"
+              className={`profile-mode-card ${isSimple === (m === 'simple') ? 'profile-mode-card--active' : ''}`}
+              onClick={() => setAppMode(m)}
+              aria-pressed={isSimple === (m === 'simple')}
+            >
+              <span className="profile-mode-card__icon" aria-hidden="true">
+                {m === 'simple' ? '🪶' : '✨'}
+              </span>
+              <span className="profile-mode-card__body">
+                <span className="profile-mode-card__title">
+                  {m === 'simple' ? t.profile.modeSimpleTitle : t.profile.modeFullTitle}
+                </span>
+                <span className="profile-mode-card__desc">
+                  {m === 'simple' ? t.profile.modeSimpleDesc : t.profile.modeFullDesc}
+                </span>
+              </span>
+              {isSimple === (m === 'simple') && (
+                <span className="profile-mode-card__check" aria-hidden="true">✓</span>
+              )}
+            </button>
+          ))}
+        </div>
       </section>
 
       <section className="profile-card">
@@ -260,41 +295,46 @@ export function ProfileView({
         </div>
       </section>
 
-      <section className="profile-card">
-        <h2 className="profile-card__heading">{t.profile.langLabel}</h2>
-        <div className="lang-cards">
-          {(['de', 'en'] as Locale[]).map(l => (
-            <button
-              key={l}
-              type="button"
-              className={`lang-card ${locale === l ? 'lang-card--active' : ''}`}
-              onClick={() => setLocale(l)}
-              aria-pressed={locale === l}
-            >
-              <span className="lang-card__flag" aria-hidden="true">
-                {l === 'de' ? '🇩🇪' : '🇬🇧'}
-              </span>
-              <span className="lang-card__label">
-                {l === 'de' ? 'Deutsch' : 'English'}
-              </span>
-              {locale === l && <span className="lang-card__check" aria-hidden="true">✓</span>}
-            </button>
-          ))}
-        </div>
-      </section>
+      {!isSimple && (
+        <section className="profile-card">
+          <h2 className="profile-card__heading">{t.profile.langLabel}</h2>
+          <div className="lang-cards">
+            {(['de', 'en'] as Locale[]).map(l => (
+              <button
+                key={l}
+                type="button"
+                className={`lang-card ${locale === l ? 'lang-card--active' : ''}`}
+                onClick={() => setLocale(l)}
+                aria-pressed={locale === l}
+              >
+                <span className="lang-card__flag" aria-hidden="true">
+                  {l === 'de' ? '🇩🇪' : '🇬🇧'}
+                </span>
+                <span className="lang-card__label">
+                  {l === 'de' ? 'Deutsch' : 'English'}
+                </span>
+                {locale === l && <span className="lang-card__check" aria-hidden="true">✓</span>}
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
 
-      <section className="profile-card">
-        <h2 className="profile-card__heading">{t.profile.importHeading}</h2>
-        <button type="button" className="profile-import-card" onClick={onOpenImport}>
-          <span className="profile-import-card__icon">📥</span>
-          <span className="profile-import-card__body">
-            <span className="profile-import-card__title">{t.profile.socialTitle}</span>
-            <span className="profile-import-card__desc">{t.profile.socialDesc}</span>
-          </span>
-          <span className="profile-import-card__arrow">›</span>
-        </button>
-      </section>
+      {!isSimple && (
+        <section className="profile-card">
+          <h2 className="profile-card__heading">{t.profile.importHeading}</h2>
+          <button type="button" className="profile-import-card" onClick={onOpenImport}>
+            <span className="profile-import-card__icon">📥</span>
+            <span className="profile-import-card__body">
+              <span className="profile-import-card__title">{t.profile.socialTitle}</span>
+              <span className="profile-import-card__desc">{t.profile.socialDesc}</span>
+            </span>
+            <span className="profile-import-card__arrow">›</span>
+          </button>
+        </section>
+      )}
 
+      {!isSimple && (
       <section className="profile-card">
         <h2 className="profile-card__heading">{t.profile.formatsHeading}</h2>
         <p className="backup-desc">{t.profile.formatsDesc}</p>
@@ -347,6 +387,7 @@ export function ProfileView({
           )}
         </div>
       </section>
+      )}
 
       <section className="profile-card">
         <button type="button" className="profile-import-card" onClick={onOpenFaq}>
@@ -357,37 +398,41 @@ export function ProfileView({
           </span>
           <span className="profile-import-card__arrow">›</span>
         </button>
-        <button type="button" className="profile-import-card" onClick={onShowReleaseNotes}>
-          <span className="profile-import-card__icon">🆕</span>
-          <span className="profile-import-card__body">
-            <span className="profile-import-card__title">{t.releaseNotes.title}</span>
-            <span className="profile-import-card__desc">
-              {t.releaseNotes.versionPrefix} {RELEASE_NOTES[0]?.version ?? ''}
+        {!isSimple && (
+          <button type="button" className="profile-import-card" onClick={onShowReleaseNotes}>
+            <span className="profile-import-card__icon">🆕</span>
+            <span className="profile-import-card__body">
+              <span className="profile-import-card__title">{t.releaseNotes.title}</span>
+              <span className="profile-import-card__desc">
+                {t.releaseNotes.versionPrefix} {RELEASE_NOTES[0]?.version ?? ''}
+              </span>
             </span>
-          </span>
-          <span className="profile-import-card__arrow">›</span>
-        </button>
+            <span className="profile-import-card__arrow">›</span>
+          </button>
+        )}
       </section>
 
-      <section className="profile-card profile-card--features">
-        <details className="profile-features-details">
-          <summary className="profile-features-summary">
-            <span>✨ {t.feature.listTitle}</span>
-          </summary>
-          <p className="profile-features-intro">{t.feature.listIntro}</p>
-          <div className="profile-features-grid">
-            {t.feature.features.map(feature => (
-              <div key={feature.id} className="profile-feature-item">
-                <img
-                  src={feature.img}
-                  alt={feature.title}
-                  className="profile-feature-item__img"
-                />
-              </div>
-            ))}
-          </div>
-        </details>
-      </section>
+      {!isSimple && (
+        <section className="profile-card profile-card--features">
+          <details className="profile-features-details">
+            <summary className="profile-features-summary">
+              <span>✨ {t.feature.listTitle}</span>
+            </summary>
+            <p className="profile-features-intro">{t.feature.listIntro}</p>
+            <div className="profile-features-grid">
+              {t.feature.features.map(feature => (
+                <div key={feature.id} className="profile-feature-item">
+                  <img
+                    src={feature.img}
+                    alt={feature.title}
+                    className="profile-feature-item__img"
+                  />
+                </div>
+              ))}
+            </div>
+          </details>
+        </section>
+      )}
 
     </div>
   )

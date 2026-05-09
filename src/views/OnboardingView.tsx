@@ -2,15 +2,21 @@ import { useState, useRef } from 'react'
 import { HeroLogo } from '../components/Logo'
 import { importFile } from '../utils/archiveImport'
 import { useTranslation } from '../locales'
-import type { Profile } from '../types'
+import type { Profile, AppMode } from '../types'
 
 interface Props {
+  needsModeChoice: boolean
+  /** When true, skip the name step after picking mode (used during the
+   *  upgrade flow where the profile already exists). */
+  modeOnly?: boolean
+  onChooseMode: (mode: AppMode) => void
   onComplete: (profile: Profile) => void
   onImportBackup: (json: string) => { ok: boolean; error?: string }
 }
 
-export function OnboardingView({ onComplete, onImportBackup }: Props) {
+export function OnboardingView({ needsModeChoice, modeOnly = false, onChooseMode, onComplete, onImportBackup }: Props) {
   const { t } = useTranslation()
+  const [step, setStep] = useState<'mode' | 'name'>(needsModeChoice ? 'mode' : 'name')
   const [name, setName] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [importProgress, setImportProgress] = useState<{ step: string; pct: number } | null>(null)
@@ -21,6 +27,11 @@ export function OnboardingView({ onComplete, onImportBackup }: Props) {
     { icon: '📴', title: t.onboarding.featuresOfflineTitle, desc: t.onboarding.featuresOfflineDesc },
     { icon: '❤️', title: t.onboarding.featuresForeverTitle, desc: t.onboarding.featuresForeverDesc },
   ]
+
+  function handlePickMode(mode: AppMode) {
+    onChooseMode(mode)
+    if (!modeOnly) setStep('name')
+  }
 
   function handleStart() {
     const trimmed = name.trim()
@@ -75,10 +86,58 @@ export function OnboardingView({ onComplete, onImportBackup }: Props) {
     })
   }
 
+  if (step === 'mode') {
+    return (
+      <div className="onboarding">
+        <div className="onboarding__hero">
+          <HeroLogo />
+          <p className="onboarding__step-badge">
+            {t.onboarding.modeStepBadge.replace('{n}', '1')}
+          </p>
+        </div>
+
+        <div className="onboarding__mode-choice">
+          <h2 className="onboarding__mode-choice-title">{t.onboarding.modeChoiceTitle}</h2>
+
+          <button
+            type="button"
+            className="onboarding__mode-card"
+            onClick={() => handlePickMode('simple')}
+          >
+            <span className="onboarding__mode-card-icon" aria-hidden="true">🪶</span>
+            <span className="onboarding__mode-card-body">
+              <span className="onboarding__mode-card-title">{t.onboarding.modeSimpleTitle}</span>
+              <span className="onboarding__mode-card-desc">{t.onboarding.modeSimpleDesc}</span>
+            </span>
+          </button>
+
+          <button
+            type="button"
+            className="onboarding__mode-card"
+            onClick={() => handlePickMode('full')}
+          >
+            <span className="onboarding__mode-card-icon" aria-hidden="true">✨</span>
+            <span className="onboarding__mode-card-body">
+              <span className="onboarding__mode-card-title">{t.onboarding.modeFullTitle}</span>
+              <span className="onboarding__mode-card-desc">{t.onboarding.modeFullDesc}</span>
+            </span>
+          </button>
+
+          <p className="onboarding__mode-choice-hint">{t.onboarding.modeChoiceHint}</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="onboarding">
       <div className="onboarding__hero">
         <HeroLogo />
+        {needsModeChoice && (
+          <p className="onboarding__step-badge">
+            {t.onboarding.modeStepBadge.replace('{n}', '2')}
+          </p>
+        )}
         <p className="onboarding__tagline">
           {t.onboarding.tagline.split('\n').map((line, i) => (
             i === 0 ? <span key={i}>{line}<br /></span> : <span key={i}>{line}</span>

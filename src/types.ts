@@ -132,6 +132,8 @@ export interface PrivateSyncState {
   encryption?: 'recovery-code'
 }
 
+export type AppMode = 'simple' | 'full'
+
 export interface AppState {
   profile: Profile | null
   answers: Record<string, Answer>
@@ -149,6 +151,8 @@ export interface AppState {
   }
   /** Undefined until the user explicitly opts in to private sync. */
   privateSync?: PrivateSyncState
+  /** Undefined ⇒ user hasn't picked yet (triggers mode-choice in onboarding). */
+  appMode?: AppMode
 }
 
 export interface OnlineSharingState {

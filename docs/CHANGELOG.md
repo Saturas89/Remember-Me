@@ -10,6 +10,22 @@ Versionierung folgt [Semantic Versioning](https://semver.org/lang/de/).
 > Der Check `npm run check:changelog` (Teil von `npm test`) bricht sonst ab.
 > Details: `CLAUDE.md` → „Changelog-Pflicht".
 
+## [2.4.0] – 2026-05-09
+
+### Hinzugefügt
+
+- **Vereinfachter Bedienmodus** – ein neuer „Einfach"-Modus reduziert die App
+  auf Lebensweg, Vermächtnis und Profil, blendet Power-Features (Familienmodus,
+  Sync, eigene Fragen, Foto/Video-Anhänge, Export, Release-Notes) aus und
+  vergrößert Schrift und Buttons. Beim allerersten Start fragt das Onboarding
+  vor der Namens-Eingabe „Wie möchten Sie die App nutzen?" – Bestandsnutzer
+  werden beim nächsten Öffnen einmalig nachgezogen. Im Profil unter
+  „Bedienung" lässt sich jederzeit auf den vollständigen Modus zurückwechseln.
+  Sprachaufnahmen bleiben im Einfach-Modus verfügbar, weil ältere Nutzer
+  ungern viel tippen.
+
+---
+
 ## [2.3.0] – 2026-05-09
 
 ### Hinzugefügt
@@ -858,6 +874,7 @@ Wenn im Hintergrund eine neue Version der App als Service Worker bereit steht, e
 | **2.1.0** | UX: Sync-Tab im Stil des Freunde-Tabs neu aufgesetzt – Sektionen, Tags, Gradient-CTA, Modal mit Erklärung | ✔️ Fertig |
 | **2.1.1** | Fix: „Erneut anmelden"-Button im Sync-Hub bei abgelaufenem Google-Token + sauberer OAuth-Resume außerhalb des Setup-Wizards | ✔️ Fertig |
 | **2.3.0** | Sync-Login: „Schlüssel verloren?"-Option mit Neustart per frischem Sicherheitsschlüssel (REQ-018) | ✔️ Fertig |
+| **2.4.0** | Vereinfachter Bedienmodus für ältere Nutzer (Mode-Auswahl im Onboarding & Profil, große Buttons, reduzierte UI) | ✔️ Fertig |
 | — | **Geplante Features** | — |
 | **TBD** | Lebenszeitlinie – chronologische visuelle Ansicht | Geplant |
 | **TBD** | Import bestehender Erinnerungen (Social Media, Clouds) | Geplant |

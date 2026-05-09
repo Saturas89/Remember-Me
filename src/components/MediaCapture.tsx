@@ -4,6 +4,7 @@ import { ImageAttachment } from './ImageAttachment'
 import { VideoAttachment } from './VideoAttachment'
 import { AudioPlayer } from './AudioPlayer'
 import { useTranslation } from '../locales'
+import { useAppMode } from '../hooks/useAppMode'
 
 const MAX_IMAGES = 5
 const MAX_VIDEOS = 3
@@ -37,6 +38,7 @@ export function MediaCapture({
   onSaveAudio, onRemoveAudio,
 }: Props) {
   const { t } = useTranslation()
+  const { isSimple } = useAppMode()
   const m = t.media
   const photoTrigger = useRef<HTMLInputElement>(null)
   const videoTrigger = useRef<HTMLInputElement>(null)
@@ -67,12 +69,15 @@ export function MediaCapture({
 
   return (
     <div className="media-capture">
-      {/* Hint – visible only before any media is attached */}
-      {!hasAnyMedia && (
+      {/* Hint – visible only before any media is attached. Hidden in Simple Mode
+          because the original hint advertises photos/videos which we don't offer there. */}
+      {!hasAnyMedia && !isSimple && (
         <p className="media-capture__hint">{m.introHint}</p>
       )}
 
-      {/* Thumbnail strip – shown when content exists; components always rendered so triggerRefs stay in DOM */}
+      {/* Thumbnail strip – shown when content exists; components always rendered so triggerRefs stay in DOM.
+          In Simple Mode, photo & video are not offered, but existing attachments
+          (e.g. from a backup or after switching from Full Mode) are still shown. */}
       <div className={imageIds.length > 0 || videoIds.length > 0 ? 'media-capture__strip' : undefined}>
         <ImageAttachment
           imageIds={imageIds}
@@ -212,37 +217,41 @@ export function MediaCapture({
 
       {/* ── Unified media toolbar ───────────────────────────── */}
       <div className="media-toolbar" role="group" aria-label={m.toolbarAriaLabel}>
-        {/* Photo */}
-        <button
-          type="button"
-          className={`media-toolbar__btn${imageIds.length > 0 ? ' media-toolbar__btn--has' : ''}`}
-          onClick={() => photoTrigger.current?.click()}
-          disabled={imageIds.length >= MAX_IMAGES}
-          title={imageIds.length >= MAX_IMAGES ? m.photoTooltipMax : m.photoTooltipAdd}
-          aria-label={`${m.photoAriaAdd}${imageIds.length > 0 ? `, ${m.photoAriaCount.replace('{n}', String(imageIds.length))}` : ''}`}
-        >
-          <span className="media-toolbar__icon" aria-hidden="true">📷</span>
-          <span className="media-toolbar__label">{m.photoLabel}</span>
-          {imageIds.length > 0 && (
-            <span className="media-toolbar__badge" aria-hidden="true">{imageIds.length}</span>
-          )}
-        </button>
+        {!isSimple && (
+          <>
+            {/* Photo */}
+            <button
+              type="button"
+              className={`media-toolbar__btn${imageIds.length > 0 ? ' media-toolbar__btn--has' : ''}`}
+              onClick={() => photoTrigger.current?.click()}
+              disabled={imageIds.length >= MAX_IMAGES}
+              title={imageIds.length >= MAX_IMAGES ? m.photoTooltipMax : m.photoTooltipAdd}
+              aria-label={`${m.photoAriaAdd}${imageIds.length > 0 ? `, ${m.photoAriaCount.replace('{n}', String(imageIds.length))}` : ''}`}
+            >
+              <span className="media-toolbar__icon" aria-hidden="true">📷</span>
+              <span className="media-toolbar__label">{m.photoLabel}</span>
+              {imageIds.length > 0 && (
+                <span className="media-toolbar__badge" aria-hidden="true">{imageIds.length}</span>
+              )}
+            </button>
 
-        {/* Video */}
-        <button
-          type="button"
-          className={`media-toolbar__btn${videoIds.length > 0 ? ' media-toolbar__btn--has' : ''}`}
-          onClick={() => videoTrigger.current?.click()}
-          disabled={videoIds.length >= MAX_VIDEOS}
-          title={videoIds.length >= MAX_VIDEOS ? m.videoTooltipMax : m.videoTooltipAdd}
-          aria-label={`${m.videoAriaAdd}${videoIds.length > 0 ? `, ${m.videoAriaCount.replace('{n}', String(videoIds.length))}` : ''}`}
-        >
-          <span className="media-toolbar__icon" aria-hidden="true">🎬</span>
-          <span className="media-toolbar__label">{m.videoLabel}</span>
-          {videoIds.length > 0 && (
-            <span className="media-toolbar__badge" aria-hidden="true">{videoIds.length}</span>
-          )}
-        </button>
+            {/* Video */}
+            <button
+              type="button"
+              className={`media-toolbar__btn${videoIds.length > 0 ? ' media-toolbar__btn--has' : ''}`}
+              onClick={() => videoTrigger.current?.click()}
+              disabled={videoIds.length >= MAX_VIDEOS}
+              title={videoIds.length >= MAX_VIDEOS ? m.videoTooltipMax : m.videoTooltipAdd}
+              aria-label={`${m.videoAriaAdd}${videoIds.length > 0 ? `, ${m.videoAriaCount.replace('{n}', String(videoIds.length))}` : ''}`}
+            >
+              <span className="media-toolbar__icon" aria-hidden="true">🎬</span>
+              <span className="media-toolbar__label">{m.videoLabel}</span>
+              {videoIds.length > 0 && (
+                <span className="media-toolbar__badge" aria-hidden="true">{videoIds.length}</span>
+              )}
+            </button>
+          </>
+        )}
 
         {/* Audio */}
         <button

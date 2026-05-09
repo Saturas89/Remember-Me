@@ -26,6 +26,14 @@ export interface Translations {
   }
 
   onboarding: {
+    /** Simple-Mode choice screen, shown as step 1 of onboarding. */
+    modeChoiceTitle: string
+    modeChoiceHint: string
+    modeSimpleTitle: string
+    modeSimpleDesc: string
+    modeFullTitle: string
+    modeFullDesc: string
+    modeStepBadge: string
     tagline: string
     story1: string
     story2: string
@@ -100,6 +108,14 @@ export interface Translations {
     yearPlaceholder: string
     historyHeading: string
     appearanceHeading: string
+    /** Simple-Mode toggle section in profile. */
+    modeHeading: string
+    modeDesc: string
+    modeSimpleTitle: string
+    modeSimpleDesc: string
+    modeFullTitle: string
+    modeFullDesc: string
+    moreOptionsLabel: string
     importHeading: string
     socialTitle: string
     socialDesc: string
