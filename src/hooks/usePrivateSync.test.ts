@@ -120,7 +120,7 @@ describe('usePrivateSync', () => {
     expect(result.current.status).toBe('idle')
   })
 
-  it('H-02: Debounce – zwei State-Updates innerhalb 5 s lösen nur einen push aus', async () => {
+  it('H-02: Debounce – zwei State-Updates innerhalb 30 s lösen nur einen push aus', async () => {
     vi.useFakeTimers()
     let state = makeState({
       providerType: 'supabase',
@@ -137,14 +137,14 @@ describe('usePrivateSync', () => {
     // First change at t=0
     state = { ...state, answers: { ...state.answers, A: makeAnswer('A', 'a', '2024-01-01T00:00:00.000Z') } }
     rerender({ s: state })
-    await act(async () => { await vi.advanceTimersByTimeAsync(2_000) })
+    await act(async () => { await vi.advanceTimersByTimeAsync(10_000) })
 
-    // Second change at t=2 s (still within the 5 s debounce window)
+    // Second change at t=10 s (still within the 30 s debounce window)
     state = { ...state, answers: { ...state.answers, B: makeAnswer('B', 'b', '2024-01-01T00:00:00.000Z') } }
     rerender({ s: state })
 
-    // Advance past the second debounce (5 s after the second change)
-    await act(async () => { await vi.advanceTimersByTimeAsync(5_500) })
+    // Advance past the second debounce (30 s after the second change)
+    await act(async () => { await vi.advanceTimersByTimeAsync(31_000) })
     await act(async () => { await flushMicrotasks() })
 
     expect(providerSpy.push).toHaveBeenCalledTimes(1)
@@ -207,9 +207,9 @@ describe('usePrivateSync', () => {
     await act(async () => {
       await result.current.syncNow()
     })
-    // Two more retry attempts via the 30 s retry timer.
-    await act(async () => { await vi.advanceTimersByTimeAsync(30_000) })
-    await act(async () => { await vi.advanceTimersByTimeAsync(30_000) })
+    // Two more retry attempts via the 60 s retry timer.
+    await act(async () => { await vi.advanceTimersByTimeAsync(60_000) })
+    await act(async () => { await vi.advanceTimersByTimeAsync(60_000) })
     await act(async () => { await flushMicrotasks() })
 
     expect(providerSpy.push).toHaveBeenCalledTimes(3)
