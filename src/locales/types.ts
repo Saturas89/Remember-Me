@@ -613,6 +613,11 @@ export interface Translations {
     enterCodePlaceholder: string
     enterCodeButton: string
     enterCodeError: string
+    lostKeyLink: string
+    lostKeyTitle: string
+    lostKeyBody: string
+    lostKeyConfirm: string
+    lostKeyCancel: string
     successTitle: string
     successDesc: string
     hubTitle: string

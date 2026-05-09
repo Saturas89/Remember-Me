@@ -6,6 +6,14 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '2.2.0',
+    date: '2026-05-09',
+    highlights: [
+      '🔑 Neue Option „Schlüssel verloren?" im Sync-Login – starte mit einem frischen Sicherheitsschlüssel neu, ohne lokale Daten zu verlieren',
+      '☁️ Alte Cloud-Daten werden beim ersten Push automatisch mit dem neuen Schlüssel überschrieben',
+    ],
+  },
+  {
     version: '2.1.1',
     date: '2026-05-08',
     highlights: [

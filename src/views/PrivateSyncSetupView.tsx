@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useTranslation } from '../locales'
-import { formatRecoveryCode, generateRecoveryCode, deriveVaultKey, cacheVaultKey } from '../utils/recoveryCode'
+import { formatRecoveryCode, generateRecoveryCode, deriveVaultKey, cacheVaultKey, clearCachedVaultKey } from '../utils/recoveryCode'
 import { getSyncSupabaseClient } from '../utils/privateSyncClient'
 import type { SyncProviderType } from '../types'
 
@@ -34,6 +34,7 @@ export function PrivateSyncSetupView({ onComplete }: Props) {
   const [codeConfirmed, setCodeConfirmed] = useState(false)
   const [enteredCode, setEnteredCode] = useState('')
   const [codeError, setCodeError] = useState<string | null>(null)
+  const [showLostKeyDialog, setShowLostKeyDialog] = useState(false)
 
   // userId after login
   const [userId, setUserId] = useState('')
@@ -240,6 +241,15 @@ export function PrivateSyncSetupView({ onComplete }: Props) {
     }
   }
 
+  async function handleLostKeyReset() {
+    try { await clearCachedVaultKey(userId) } catch { /* best-effort */ }
+    setEnteredCode('')
+    setCodeError(null)
+    setShowLostKeyDialog(false)
+    setRecoveryCode(generateRecoveryCode())
+    setStep('recovery-code')
+  }
+
   // ── Screens ───────────────────────────────────────────────────────────────
 
   if (step === 'intro') {
@@ -442,7 +452,38 @@ export function PrivateSyncSetupView({ onComplete }: Props) {
           >
             {loading ? s.signingIn : s.enterCodeButton}
           </button>
+          <button
+            type="button"
+            className="btn btn--ghost btn--full"
+            onClick={() => setShowLostKeyDialog(true)}
+          >
+            {s.lostKeyLink}
+          </button>
         </div>
+        {showLostKeyDialog && (
+          <div className="modal-overlay" role="dialog" aria-modal="true">
+            <div className="modal-box">
+              <h3 className="modal-box__title">{s.lostKeyTitle}</h3>
+              <p className="modal-box__body">{s.lostKeyBody}</p>
+              <div className="modal-box__actions">
+                <button
+                  className="btn btn--danger btn--full"
+                  onClick={handleLostKeyReset}
+                  type="button"
+                >
+                  {s.lostKeyConfirm}
+                </button>
+                <button
+                  className="btn btn--ghost btn--full"
+                  onClick={() => setShowLostKeyDialog(false)}
+                  type="button"
+                >
+                  {s.lostKeyCancel}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     )
   }
