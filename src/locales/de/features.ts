@@ -16,14 +16,6 @@ export const FEATURES_DE = [
     status: 'In Planung',
   },
   {
-    id: 'privater-sync',
-    title: 'Privater Sync',
-    subtitle: 'Sicher & Verschlüsselt',
-    img: '/features/privater-sync.jpg',
-    description: 'Ihre Daten sind sicher. Synchronisieren Sie Ihre Erinnerungen und Fotos nahtlos und privat zwischen all Ihren Geräten, geschützt durch starke Verschlüsselung.',
-    status: 'In Entwicklung',
-  },
-  {
     id: 'import-erinnerungen',
     title: 'Import bestehender Erinnerungen',
     subtitle: 'Alles an einem Ort',

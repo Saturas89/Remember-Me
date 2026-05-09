@@ -16,14 +16,6 @@ export const FEATURES_EN = [
     status: 'In planning',
   },
   {
-    id: 'privater-sync',
-    title: 'Private Sync',
-    subtitle: 'Secure & encrypted',
-    img: '/features/privater-sync.jpg',
-    description: 'Your data is safe. Synchronise your memories and photos seamlessly and privately across all your devices, protected by strong encryption.',
-    status: 'In development',
-  },
-  {
     id: 'import-erinnerungen',
     title: 'Import existing memories',
     subtitle: 'Everything in one place',
