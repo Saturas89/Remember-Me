@@ -10,6 +10,19 @@ Versionierung folgt [Semantic Versioning](https://semver.org/lang/de/).
 > Der Check `npm run check:changelog` (Teil von `npm test`) bricht sonst ab.
 > Details: `CLAUDE.md` → „Changelog-Pflicht".
 
+## [2.3.0] – 2026-05-09
+
+### Hinzugefügt
+
+- **Sync-Login: Option „Schlüssel verloren?"** – ermöglicht einen Neustart
+  mit frischem Sicherheitsschlüssel; lokale Daten bleiben erhalten,
+  alte Cloud-Daten werden beim ersten Push überschrieben. Unter dem
+  Entschlüsseln-Button im `enter-code`-Schritt erscheint ein dezenter Link,
+  der ein Erklär-Modal öffnet. Bestätigung erzeugt einen neuen
+  Recovery-Code und springt zurück in den `recovery-code`-Schritt.
+
+---
+
 ## [2.1.1] – 2026-05-08
 
 ### Behoben
@@ -844,6 +857,7 @@ Wenn im Hintergrund eine neue Version der App als Service Worker bereit steht, e
 | **2.0.3** | Fix: Google-Drive-Sync 404 nach „Sync deaktivieren" – stale File-ID, Selbstheilung im Push | ✔️ Fertig |
 | **2.1.0** | UX: Sync-Tab im Stil des Freunde-Tabs neu aufgesetzt – Sektionen, Tags, Gradient-CTA, Modal mit Erklärung | ✔️ Fertig |
 | **2.1.1** | Fix: „Erneut anmelden"-Button im Sync-Hub bei abgelaufenem Google-Token + sauberer OAuth-Resume außerhalb des Setup-Wizards | ✔️ Fertig |
+| **2.3.0** | Sync-Login: „Schlüssel verloren?"-Option mit Neustart per frischem Sicherheitsschlüssel (REQ-018) | ✔️ Fertig |
 | — | **Geplante Features** | — |
 | **TBD** | Lebenszeitlinie – chronologische visuelle Ansicht | Geplant |
 | **TBD** | Import bestehender Erinnerungen (Social Media, Clouds) | Geplant |
