@@ -13,6 +13,11 @@ import { test, expect, type Page, type Request } from '@playwright/test'
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
     localStorage.setItem('rm-install-dismissed', '1')
+    // E2E: skip the new mode-choice step in onboarding
+    localStorage.setItem('remember-me-state', JSON.stringify({
+      profile: null, answers: {}, friends: [], friendAnswers: [],
+      customQuestions: [], appMode: 'full',
+    }))
   })
 })
 

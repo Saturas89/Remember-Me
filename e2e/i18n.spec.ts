@@ -6,6 +6,11 @@ import { test, expect, type Page } from '@playwright/test'
 function initScript(clearLang = false) {
   return () => {
     localStorage.setItem('rm-install-dismissed', '1')
+    // E2E: skip the new mode-choice step in onboarding
+    localStorage.setItem('remember-me-state', JSON.stringify({
+      profile: null, answers: {}, friends: [], friendAnswers: [],
+      customQuestions: [], appMode: 'full',
+    }))
     if (clearLang) localStorage.removeItem('rm-lang')
   }
 }
@@ -156,6 +161,11 @@ test.describe('localStorage schlägt Browser-Locale', () => {
     await page.addInitScript(() => {
       localStorage.setItem('rm-install-dismissed', '1')
       localStorage.setItem('rm-lang', 'de') // gespeicherte Präferenz
+      // E2E: skip the new mode-choice step in onboarding
+      localStorage.setItem('remember-me-state', JSON.stringify({
+        profile: null, answers: {}, friends: [], friendAnswers: [],
+        customQuestions: [], appMode: 'full',
+      }))
     })
   })
 

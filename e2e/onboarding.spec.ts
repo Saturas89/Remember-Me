@@ -5,6 +5,13 @@ import { test, expect, type Page } from '@playwright/test'
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
     localStorage.setItem('rm-install-dismissed', '1')
+    // E2E: skip the new mode-choice step in onboarding so legacy tests still
+    // see the name input directly. The dedicated mode-choice spec clears
+    // this state in its own beforeEach.
+    localStorage.setItem('remember-me-state', JSON.stringify({
+      profile: null, answers: {}, friends: [], friendAnswers: [],
+      customQuestions: [], appMode: 'full',
+    }))
   })
 })
 
@@ -76,6 +83,99 @@ test.describe('Remember Me – Bottom navigation', () => {
       await expect(tab).toHaveAttribute('aria-current', 'page')
     })
   }
+})
+
+test.describe('Remember Me – Simple Mode (mode-choice flow)', () => {
+  // Override the parent pre-seed: clear the appMode so the mode-choice
+  // step is actually shown. The parent install-dismissed flag still applies.
+  test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => {
+      localStorage.setItem('rm-install-dismissed', '1')
+      localStorage.removeItem('remember-me-state')
+    })
+  })
+
+  test('first-time visitor sees mode-choice before name entry', async ({ page }) => {
+    await page.goto('/')
+
+    // Mode-choice screen should be visible
+    await expect(page.getByText(/Wie möchten Sie die App nutzen\?/)).toBeVisible()
+    await expect(page.getByRole('button', { name: /Einfach/ })).toBeVisible()
+    await expect(page.getByRole('button', { name: /Vollständig/ })).toBeVisible()
+
+    // Name input should NOT be visible yet
+    await expect(page.getByLabel('Wie heißt du?')).toHaveCount(0)
+  })
+
+  test('picking "Vollständig" continues to the name step and shows all 5 tabs', async ({ page }) => {
+    await page.goto('/')
+
+    await page.getByRole('button', { name: /Vollständig/ }).click()
+
+    // Now the name step should be visible
+    await expect(page.getByLabel('Wie heißt du?')).toBeVisible()
+    await page.getByLabel('Wie heißt du?').fill('Voll')
+    await page.getByRole('button', { name: /Loslegen/ }).click()
+
+    await expect(page.getByText(/Hallo,\s*Voll/)).toBeVisible()
+
+    // All 5 main tabs visible in full mode
+    const nav = page.getByRole('navigation', { name: 'Hauptnavigation' })
+    for (const label of ['Lebensweg', 'Freunde', 'Vermächtnis', 'Sync', 'Profil']) {
+      await expect(nav.getByRole('button', { name: label, exact: true })).toBeVisible()
+    }
+  })
+
+  test('picking "Einfach" continues to name and reduces UI to 3 tabs + no custom card', async ({ page }) => {
+    await page.goto('/')
+
+    await page.getByRole('button', { name: /Einfach/ }).click()
+
+    await expect(page.getByLabel('Wie heißt du?')).toBeVisible()
+    await page.getByLabel('Wie heißt du?').fill('Oma')
+    await page.getByRole('button', { name: /Loslegen/ }).click()
+
+    await expect(page.getByText(/Hallo,\s*Oma/)).toBeVisible()
+
+    // Only 3 tabs in simple mode
+    const nav = page.getByRole('navigation', { name: 'Hauptnavigation' })
+    await expect(nav.getByRole('button', { name: 'Lebensweg', exact: true })).toBeVisible()
+    await expect(nav.getByRole('button', { name: 'Vermächtnis', exact: true })).toBeVisible()
+    await expect(nav.getByRole('button', { name: 'Profil', exact: true })).toBeVisible()
+    // Friends + Sync hidden
+    await expect(nav.getByRole('button', { name: 'Freunde', exact: true })).toHaveCount(0)
+    await expect(nav.getByRole('button', { name: 'Sync', exact: true })).toHaveCount(0)
+
+    // Custom-questions card hidden
+    await expect(page.getByRole('heading', { name: 'Eigene Erinnerung' })).toHaveCount(0)
+
+    // Visual marker: data-app-mode set on <html>
+    await expect(page.locator('html')).toHaveAttribute('data-app-mode', 'simple')
+  })
+
+  test('Simple Mode is switchable from profile and survives reload', async ({ page }) => {
+    await page.goto('/')
+    await page.getByRole('button', { name: /Einfach/ }).click()
+    await page.getByLabel('Wie heißt du?').fill('Switcher')
+    await page.getByRole('button', { name: /Loslegen/ }).click()
+
+    // Open profile
+    const nav = page.getByRole('navigation', { name: 'Hauptnavigation' })
+    await nav.getByRole('button', { name: 'Profil', exact: true }).click()
+
+    // Switch to "Vollständig"
+    const fullCard = page.getByRole('button', { name: /Vollständig/ })
+    await expect(fullCard).toBeVisible()
+    await fullCard.click()
+
+    // Friends tab now visible
+    await expect(nav.getByRole('button', { name: 'Freunde', exact: true })).toBeVisible()
+    await expect(page.locator('html')).not.toHaveAttribute('data-app-mode', 'simple')
+
+    // Persists across reload
+    await page.reload()
+    await expect(nav.getByRole('button', { name: 'Freunde', exact: true })).toBeVisible()
+  })
 })
 
 test.describe('Remember Me – Eigene Erinnerung (custom questions)', () => {
