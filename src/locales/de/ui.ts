@@ -593,6 +593,7 @@ export const UI_DE = {
     lastSync: 'Zuletzt synchronisiert',
     lastSyncNever: 'Noch nie',
     syncNowButton: 'Jetzt synchronisieren',
+    retrySyncButton: 'Erneut versuchen',
     syncing: 'Synchronisiert…',
     reauthenticateButton: 'Erneut anmelden',
     deactivateButton: 'Sync deaktivieren',
