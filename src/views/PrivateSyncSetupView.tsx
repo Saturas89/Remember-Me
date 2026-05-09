@@ -276,7 +276,6 @@ export function PrivateSyncSetupView({ onComplete }: Props) {
   if (step === 'provider-choice') {
     const providers = [
       { id: 'google-drive' as SyncProviderType, title: s.googleDriveTitle, desc: s.googleDriveDesc, privacy: s.googleDrivePrivacy, icon: '☁️', colorClass: 'provider-card__icon--google' },
-      { id: 'onedrive'     as SyncProviderType, title: s.oneDriveTitle,   desc: s.oneDriveDesc,   privacy: s.oneDrivePrivacy,   icon: '☁️', colorClass: 'provider-card__icon--onedrive' },
       { id: 'supabase'     as SyncProviderType, title: s.supabaseTitle,   desc: s.supabaseDesc,   privacy: s.supabasePrivacy,   icon: '🔒', colorClass: 'provider-card__icon--server' },
     ]
     const handleContinue = () => {
