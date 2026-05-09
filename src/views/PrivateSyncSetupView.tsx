@@ -44,7 +44,7 @@ export function PrivateSyncSetupView({ onComplete }: Props) {
     const PENDING_KEY = 'rm-gdrive-oauth-pending'
     if (!sessionStorage.getItem(PENDING_KEY)) return
     setProvider('google-drive')
-    setStep('login')
+    setStep('provider-choice')
     setLoading(true)
     ;(async () => {
       try {
@@ -279,6 +279,11 @@ export function PrivateSyncSetupView({ onComplete }: Props) {
       { id: 'onedrive'     as SyncProviderType, title: s.oneDriveTitle,   desc: s.oneDriveDesc,   privacy: s.oneDrivePrivacy,   icon: '☁️', colorClass: 'provider-card__icon--onedrive' },
       { id: 'supabase'     as SyncProviderType, title: s.supabaseTitle,   desc: s.supabaseDesc,   privacy: s.supabasePrivacy,   icon: '🔒', colorClass: 'provider-card__icon--server' },
     ]
+    const handleContinue = () => {
+      if (provider === 'google-drive') return handleGoogleSignIn()
+      if (provider === 'onedrive') return handleMicrosoftSignIn()
+      if (provider === 'supabase') setStep('login')
+    }
     return (
       <div className="private-sync-view">
         <div className="private-sync-view__topbar">
@@ -288,6 +293,7 @@ export function PrivateSyncSetupView({ onComplete }: Props) {
         </div>
         <div className="private-sync-view__content">
           <h2 className="private-sync-view__title">{s.providerChoiceTitle}</h2>
+          {error && <p className="private-sync-view__error">{error}</p>}
           <div className="private-sync-view__provider-list">
             {providers.map(p => (
               <button
@@ -295,6 +301,7 @@ export function PrivateSyncSetupView({ onComplete }: Props) {
                 className={`provider-card${provider === p.id ? ' provider-card--selected' : ''}`}
                 onClick={() => setProvider(p.id)}
                 type="button"
+                disabled={loading}
               >
                 <span className={`provider-card__icon ${p.colorClass}`}>{p.icon}</span>
                 <div className="provider-card__body">
@@ -310,11 +317,11 @@ export function PrivateSyncSetupView({ onComplete }: Props) {
           </div>
           <button
             className="btn btn--primary btn--full"
-            disabled={!provider}
-            onClick={() => setStep('login')}
+            disabled={!provider || loading}
+            onClick={handleContinue}
             type="button"
           >
-            {s.continueButton}
+            {loading ? s.signingIn : s.continueButton}
           </button>
         </div>
       </div>
@@ -333,62 +340,38 @@ export function PrivateSyncSetupView({ onComplete }: Props) {
           <h2 className="private-sync-view__title">{s.loginTitle}</h2>
           {error && <p className="private-sync-view__error">{error}</p>}
 
-          {provider === 'google-drive' && (
+          <div className="private-sync-view__form">
+            <label className="profile-label">
+              {s.emailLabel}
+              <input
+                className="profile-input"
+                type="email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                placeholder={s.emailPlaceholder}
+                autoComplete="email"
+              />
+            </label>
+            <label className="profile-label">
+              {s.passwordLabel}
+              <input
+                className="profile-input"
+                type="password"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                placeholder={s.passwordPlaceholder}
+                autoComplete="current-password"
+              />
+            </label>
             <button
-              className="btn btn--oauth btn--full"
-              onClick={handleGoogleSignIn}
-              disabled={loading}
+              className="btn btn--primary btn--full"
+              onClick={handleEmailSignIn}
+              disabled={loading || !email || !password}
               type="button"
             >
-              {loading ? s.signingIn : s.googleSignInButton}
+              {loading ? s.signingIn : s.signInButton}
             </button>
-          )}
-
-          {provider === 'onedrive' && (
-            <button
-              className="btn btn--oauth btn--full"
-              onClick={handleMicrosoftSignIn}
-              disabled={loading}
-              type="button"
-            >
-              {loading ? s.signingIn : s.microsoftSignInButton}
-            </button>
-          )}
-
-          {provider === 'supabase' && (
-            <div className="private-sync-view__form">
-              <label className="profile-label">
-                {s.emailLabel}
-                <input
-                  className="profile-input"
-                  type="email"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  placeholder={s.emailPlaceholder}
-                  autoComplete="email"
-                />
-              </label>
-              <label className="profile-label">
-                {s.passwordLabel}
-                <input
-                  className="profile-input"
-                  type="password"
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  placeholder={s.passwordPlaceholder}
-                  autoComplete="current-password"
-                />
-              </label>
-              <button
-                className="btn btn--primary btn--full"
-                onClick={handleEmailSignIn}
-                disabled={loading || !email || !password}
-                type="button"
-              >
-                {loading ? s.signingIn : s.signInButton}
-              </button>
-            </div>
-          )}
+          </div>
         </div>
       </div>
     )

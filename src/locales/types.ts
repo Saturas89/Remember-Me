@@ -595,8 +595,6 @@ export interface Translations {
     supabaseDesc: string
     supabasePrivacy: string
     loginTitle: string
-    googleSignInButton: string
-    microsoftSignInButton: string
     emailLabel: string
     emailPlaceholder: string
     passwordLabel: string

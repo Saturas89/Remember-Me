@@ -557,8 +557,6 @@ export const UI_EN = {
     supabaseDesc: 'Only texts (no media) are stored encrypted on our server.',
     supabasePrivacy: 'End-to-end encrypted. We cannot read your data.',
     loginTitle: 'Sign in',
-    googleSignInButton: 'Sign in with Google',
-    microsoftSignInButton: 'Sign in with Microsoft',
     emailLabel: 'Email',
     emailPlaceholder: 'your@email.com',
     passwordLabel: 'Password',
