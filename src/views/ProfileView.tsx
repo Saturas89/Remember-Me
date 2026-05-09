@@ -248,6 +248,7 @@ export function ProfileView({
             <button
               key={m}
               type="button"
+              data-testid={`profile-mode-${m}`}
               className={`profile-mode-card ${isSimple === (m === 'simple') ? 'profile-mode-card--active' : ''}`}
               onClick={() => setAppMode(m)}
               aria-pressed={isSimple === (m === 'simple')}

@@ -103,8 +103,8 @@ test.describe('Remember Me – Simple Mode (mode-choice flow)', () => {
 
     // Mode-choice screen should be visible
     await expect(page.getByText(/Wie möchten Sie die App nutzen\?/)).toBeVisible()
-    await expect(page.getByRole('button', { name: /Einfach/ })).toBeVisible()
-    await expect(page.getByRole('button', { name: /Vollständig/ })).toBeVisible()
+    await expect(page.getByTestId('onboarding-mode-simple')).toBeVisible()
+    await expect(page.getByTestId('onboarding-mode-full')).toBeVisible()
 
     // Name input should NOT be visible yet
     await expect(page.getByLabel('Wie heißt du?')).toHaveCount(0)
@@ -113,7 +113,7 @@ test.describe('Remember Me – Simple Mode (mode-choice flow)', () => {
   test('picking "Vollständig" continues to the name step and shows all 5 tabs', async ({ page }) => {
     await page.goto('/')
 
-    await page.getByRole('button', { name: /Vollständig/ }).click()
+    await page.getByTestId('onboarding-mode-full').click()
 
     // Now the name step should be visible
     await expect(page.getByLabel('Wie heißt du?')).toBeVisible()
@@ -132,7 +132,7 @@ test.describe('Remember Me – Simple Mode (mode-choice flow)', () => {
   test('picking "Einfach" continues to name and reduces UI to 3 tabs + no custom card', async ({ page }) => {
     await page.goto('/')
 
-    await page.getByRole('button', { name: /Einfach/ }).click()
+    await page.getByTestId('onboarding-mode-simple').click()
 
     await expect(page.getByLabel('Wie heißt du?')).toBeVisible()
     await page.getByLabel('Wie heißt du?').fill('Oma')
@@ -158,7 +158,7 @@ test.describe('Remember Me – Simple Mode (mode-choice flow)', () => {
 
   test('Simple Mode is switchable from profile and survives reload', async ({ page }) => {
     await page.goto('/')
-    await page.getByRole('button', { name: /Einfach/ }).click()
+    await page.getByTestId('onboarding-mode-simple').click()
     await page.getByLabel('Wie heißt du?').fill('Switcher')
     await page.getByRole('button', { name: /Loslegen/ }).click()
 
@@ -166,9 +166,11 @@ test.describe('Remember Me – Simple Mode (mode-choice flow)', () => {
     const nav = page.getByRole('navigation', { name: 'Hauptnavigation' })
     await nav.getByRole('button', { name: 'Profil', exact: true }).click()
 
-    // Switch to "Vollständig"
-    const fullCard = page.getByRole('button', { name: /Vollständig/ })
+    // Switch to "Vollständig" – use data-testid so we don't fight role-name
+    // ambiguity if other UI happens to contain "Vollständig" text.
+    const fullCard = page.getByTestId('profile-mode-full')
     await expect(fullCard).toBeVisible()
+    await fullCard.scrollIntoViewIfNeeded()
     await fullCard.click()
 
     // Friends tab now visible

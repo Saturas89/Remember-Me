@@ -101,6 +101,7 @@ export function OnboardingView({ needsModeChoice, modeOnly = false, onChooseMode
 
           <button
             type="button"
+            data-testid="onboarding-mode-simple"
             className="onboarding__mode-card"
             onClick={() => handlePickMode('simple')}
           >
@@ -113,6 +114,7 @@ export function OnboardingView({ needsModeChoice, modeOnly = false, onChooseMode
 
           <button
             type="button"
+            data-testid="onboarding-mode-full"
             className="onboarding__mode-card"
             onClick={() => handlePickMode('full')}
           >

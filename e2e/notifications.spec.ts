@@ -57,12 +57,15 @@ test.describe('REQ-016 – Welcome-Back-Banner (FR-16.8)', () => {
           longest: 2,
           lastAnswerDate: new Date(fourDaysAgo).toISOString().split('T')[0],
         },
+        // Skip the new Simple-Mode mode-choice step so the existing
+        // completeOnboarding() helper can still type into the name input.
+        appMode: 'full',
       }
       localStorage.setItem('remember-me-state', JSON.stringify(state))
     })
 
     await completeOnboarding(page)
-    
+
     // Welcome-back banner should appear
     const banner = page.getByTestId('welcome-back-banner')
     await expect(banner).toBeVisible()
@@ -92,6 +95,7 @@ test.describe('REQ-016 – Welcome-Back-Banner (FR-16.8)', () => {
           longest: 1,
           lastAnswerDate: new Date(fourDaysAgo).toISOString().split('T')[0],
         },
+        appMode: 'full', // skip Simple-Mode mode-choice step
       }
       localStorage.setItem('remember-me-state', JSON.stringify(state))
     })
@@ -121,6 +125,7 @@ test.describe('REQ-016 – Welcome-Back-Banner (FR-16.8)', () => {
           longest: 1,
           lastAnswerDate: new Date(fourDaysAgo).toISOString().split('T')[0],
         },
+        appMode: 'full', // skip Simple-Mode mode-choice step
       }
       localStorage.setItem('remember-me-state', JSON.stringify(state))
     })
@@ -197,12 +202,14 @@ test.describe('REQ-016 – Milestone Notifications (FR-16.7)', () => {
         friends: never[]
         friendAnswers: never[]
         customQuestions: never[]
+        appMode: 'full'
       } = {
         profile: { name: 'Milestoner', createdAt: '2026-01-01T00:00:00.000Z' },
         answers: {},
         friends: [],
         friendAnswers: [],
         customQuestions: [],
+        appMode: 'full', // skip Simple-Mode mode-choice step
       }
       for (let i = 1; i <= n; i++) {
         const id = `seed-${i}`
@@ -410,6 +417,7 @@ test.describe('REQ-016 – Variantenpool (FR-16.3)', () => {
         friends: [],
         friendAnswers: [],
         customQuestions: [],
+        appMode: 'full', // skip Simple-Mode mode-choice step
       }))
       localStorage.setItem(
         'rm-reminder-state',
@@ -496,6 +504,7 @@ test.describe('REQ-016 – iOS Fallback Behavior', () => {
           longest: 1,
           lastAnswerDate: new Date(fourDaysAgo).toISOString().split('T')[0],
         },
+        appMode: 'full', // skip Simple-Mode mode-choice step
       }
       localStorage.setItem('remember-me-state', JSON.stringify(state))
     })
