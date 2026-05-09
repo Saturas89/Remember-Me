@@ -89,12 +89,26 @@ test.describe('Remember Me – Bottom navigation', () => {
 })
 
 test.describe('Remember Me – Simple Mode (mode-choice flow)', () => {
-  // Override the parent pre-seed: clear the appMode so the mode-choice
-  // step is actually shown. The parent install-dismissed flag still applies.
+  // Override the parent pre-seed so the mode-choice step is actually shown
+  // on the FIRST navigation – but preserve any state the test itself has
+  // produced (mode pick, name, profile) on subsequent navigations like
+  // page.reload(). Otherwise reloads would always drop the user back to
+  // mode-choice, which is not what these specs assert.
   test.beforeEach(async ({ page }) => {
     await page.addInitScript(() => {
       localStorage.setItem('rm-install-dismissed', '1')
-      localStorage.removeItem('remember-me-state')
+      const raw = localStorage.getItem('remember-me-state')
+      if (!raw) return
+      try {
+        const parsed = JSON.parse(raw)
+        const isPreSeed =
+          parsed.profile === null &&
+          parsed.appMode === 'full' &&
+          (!parsed.answers || Object.keys(parsed.answers).length === 0)
+        if (isPreSeed) localStorage.removeItem('remember-me-state')
+      } catch {
+        localStorage.removeItem('remember-me-state')
+      }
     })
   })
 
