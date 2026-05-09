@@ -5240,6 +5240,10 @@ details[open] .faq-item__chevron {
   font-size: 1.05rem;
 }
 
+[data-app-mode="simple"] .theme-cards {
+  grid-template-columns: 1fr;
+}
+
 /* ── Onboarding mode-choice step ─────────────────────────────────────── */
 
 .onboarding__step-badge {
