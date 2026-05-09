@@ -3,11 +3,14 @@ import { test, expect, type Page } from '@playwright/test'
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
     localStorage.setItem('rm-install-dismissed', '1')
-    // E2E: skip the new mode-choice step in onboarding
-    localStorage.setItem('remember-me-state', JSON.stringify({
-      profile: null, answers: {}, friends: [], friendAnswers: [],
-      customQuestions: [], appMode: 'full',
-    }))
+    // E2E: only seed on first navigation – tests that build state via
+    // __rmState.save between gotos must not be reset by a re-run init script.
+    if (!localStorage.getItem('remember-me-state')) {
+      localStorage.setItem('remember-me-state', JSON.stringify({
+        profile: null, answers: {}, friends: [], friendAnswers: [],
+        customQuestions: [], appMode: 'full',
+      }))
+    }
   })
 })
 

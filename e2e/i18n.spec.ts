@@ -6,11 +6,14 @@ import { test, expect, type Page } from '@playwright/test'
 function initScript(clearLang = false) {
   return () => {
     localStorage.setItem('rm-install-dismissed', '1')
-    // E2E: skip the new mode-choice step in onboarding
-    localStorage.setItem('remember-me-state', JSON.stringify({
-      profile: null, answers: {}, friends: [], friendAnswers: [],
-      customQuestions: [], appMode: 'full',
-    }))
+    // E2E: only seed on first navigation – tests that build state via
+    // __rmState.save between gotos must not be reset by a re-run init script.
+    if (!localStorage.getItem('remember-me-state')) {
+      localStorage.setItem('remember-me-state', JSON.stringify({
+        profile: null, answers: {}, friends: [], friendAnswers: [],
+        customQuestions: [], appMode: 'full',
+      }))
+    }
     if (clearLang) localStorage.removeItem('rm-lang')
   }
 }
@@ -161,11 +164,14 @@ test.describe('localStorage schlägt Browser-Locale', () => {
     await page.addInitScript(() => {
       localStorage.setItem('rm-install-dismissed', '1')
       localStorage.setItem('rm-lang', 'de') // gespeicherte Präferenz
-      // E2E: skip the new mode-choice step in onboarding
-      localStorage.setItem('remember-me-state', JSON.stringify({
-        profile: null, answers: {}, friends: [], friendAnswers: [],
-        customQuestions: [], appMode: 'full',
-      }))
+      // E2E: only seed on first navigation – tests that build state via
+      // __rmState.save between gotos must not be reset by a re-run init script.
+      if (!localStorage.getItem('remember-me-state')) {
+        localStorage.setItem('remember-me-state', JSON.stringify({
+          profile: null, answers: {}, friends: [], friendAnswers: [],
+          customQuestions: [], appMode: 'full',
+        }))
+      }
     })
   })
 
