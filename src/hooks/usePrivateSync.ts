@@ -3,8 +3,8 @@ import type { AppState, SyncProviderType, SyncStatus } from '../types'
 import type { SyncProvider, MediaStoreAccessor } from '../utils/privateSyncProvider'
 import { SyncError } from '../utils/privateSyncProvider'
 
-const DEBOUNCE_MS = 5_000
-const RETRY_DELAY_MS = 30_000
+const DEBOUNCE_MS = 30_000
+const RETRY_DELAY_MS = 60_000
 const MAX_RETRIES = 3
 
 type SyncErrorCode = 'auth' | 'network' | 'quota' | 'decrypt' | 'unknown'
