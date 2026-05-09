@@ -5170,3 +5170,231 @@ details[open] .faq-item__chevron {
   text-decoration: underline;
 }
 
+/* ── Simple Mode ──────────────────────────────────────────────────────────
+   Reduced UI for elderly / non-technical users. Activated via
+   <html data-app-mode="simple"> set by useAppMode. All values use the
+   existing design tokens (--surface, --accent, …) so every theme works. */
+
+[data-app-mode="simple"] {
+  font-size: 1.15rem;
+}
+
+[data-app-mode="simple"] .btn,
+[data-app-mode="simple"] .btn--primary,
+[data-app-mode="simple"] .btn--ghost,
+[data-app-mode="simple"] .btn--outline {
+  min-height: 3rem;
+  padding: 0.75rem 1rem;
+  font-size: 1.05rem;
+  border-radius: 12px;
+}
+
+[data-app-mode="simple"] .btn--sm {
+  min-height: 2.4rem;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.95rem;
+}
+
+[data-app-mode="simple"] .home-greeting {
+  font-size: 1.4rem;
+}
+
+[data-app-mode="simple"] .category-card__title {
+  font-size: 1.25rem;
+}
+
+[data-app-mode="simple"] .category-card__desc {
+  font-size: 1rem;
+}
+
+[data-app-mode="simple"] .question-card__text {
+  font-size: 1.5rem;
+  line-height: 1.4;
+}
+
+[data-app-mode="simple"] .question-card__help {
+  font-size: 1.05rem;
+}
+
+[data-app-mode="simple"] .input-textarea,
+[data-app-mode="simple"] .input-text {
+  font-size: 1.1rem;
+  padding: 1rem;
+}
+
+[data-app-mode="simple"] .bottom-nav {
+  padding: 0.6rem 0.4rem;
+}
+
+[data-app-mode="simple"] .bottom-nav__label {
+  font-size: 0.95rem;
+}
+
+[data-app-mode="simple"] .bottom-nav__icon-img {
+  width: 2.2rem;
+  height: 2.2rem;
+}
+
+[data-app-mode="simple"] .media-toolbar__btn {
+  min-height: 3rem;
+  font-size: 1.05rem;
+}
+
+/* ── Onboarding mode-choice step ─────────────────────────────────────── */
+
+.onboarding__step-badge {
+  display: inline-block;
+  align-self: center;
+  padding: 0.2rem 0.75rem;
+  border-radius: 999px;
+  background: var(--surface-raised);
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-top: 0.6rem;
+}
+
+.onboarding__mode-choice {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
+  max-width: 480px;
+  margin: 1rem auto 0;
+}
+
+.onboarding__mode-choice-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text);
+  text-align: center;
+  margin: 0 0 0.4rem;
+}
+
+.onboarding__mode-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  border-radius: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s, transform 0.1s;
+}
+
+.onboarding__mode-card:hover {
+  border-color: var(--border-focus);
+  transform: translateY(-1px);
+}
+
+.onboarding__mode-card-icon {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.onboarding__mode-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  flex: 1;
+}
+
+.onboarding__mode-card-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.onboarding__mode-card-desc {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.onboarding__mode-choice-hint {
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--text-faint);
+  margin: 0.4rem 0 0;
+}
+
+/* Larger mode cards inside Simple Mode (which the user might re-pick from
+   the profile while already in Simple Mode). */
+[data-app-mode="simple"] .onboarding__mode-card {
+  padding: 1.5rem;
+}
+
+[data-app-mode="simple"] .onboarding__mode-card-title {
+  font-size: 1.3rem;
+}
+
+[data-app-mode="simple"] .onboarding__mode-card-desc {
+  font-size: 1.05rem;
+}
+
+/* ── Profile: Bedienung-Sektion (Mode toggle) ────────────────────────── */
+
+.profile-mode-desc {
+  margin: 0 0 0.75rem;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+
+.profile-mode-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.profile-mode-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  border-radius: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.profile-mode-card:hover {
+  border-color: var(--border-focus);
+}
+
+.profile-mode-card--active {
+  border-color: var(--accent);
+  background: var(--accent-tinted);
+}
+
+.profile-mode-card__icon {
+  font-size: 1.6rem;
+  line-height: 1;
+}
+
+.profile-mode-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  flex: 1;
+}
+
+.profile-mode-card__title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.profile-mode-card__desc {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.profile-mode-card__check {
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 1.2rem;
+}

@@ -1,4 +1,5 @@
 import { useTranslation } from '../locales'
+import { useAppMode } from '../hooks/useAppMode'
 
 type MainTab = 'home' | 'friends' | 'archive' | 'sync' | 'profile'
 
@@ -10,14 +11,18 @@ interface Props {
 
 export function BottomNav({ current, onNavigate, friendsBadge = 0 }: Props) {
   const { t } = useTranslation()
+  const { isSimple } = useAppMode()
 
-  const TABS: { id: MainTab; label: string; icon: string }[] = [
+  const ALL_TABS: { id: MainTab; label: string; icon: string }[] = [
     { id: 'home',    label: t.nav.home,    icon: '/menu-icons/lebensweg.jpeg' },
     { id: 'friends', label: t.nav.friends, icon: '/menu-icons/freunde.jpeg' },
     { id: 'archive', label: t.nav.archive, icon: '/menu-icons/vermaechtnis.jpeg' },
     { id: 'sync',    label: t.nav.sync,    icon: '/menu-icons/features.jpeg' },
     { id: 'profile', label: t.nav.profile, icon: '/menu-icons/profil.jpeg' },
   ]
+  const TABS = isSimple
+    ? ALL_TABS.filter(t => t.id === 'home' || t.id === 'archive' || t.id === 'profile')
+    : ALL_TABS
 
   return (
     <nav className="bottom-nav" aria-label="Hauptnavigation">

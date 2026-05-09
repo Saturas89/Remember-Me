@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from 'react'
 import { BACKUP_TYPE } from '../utils/export'
 import { initStorageKey, loadStoredState, saveState } from '../utils/stateStorage'
-import type { Profile, AppState, Answer, Friend, FriendAnswer, AnswerExport, CustomQuestion, FriendAnswerZipPayload, OnlineSharingState, PrivateSyncState } from '../types'
+import type { Profile, AppState, AppMode, Answer, Friend, FriendAnswer, AnswerExport, CustomQuestion, FriendAnswerZipPayload, OnlineSharingState, PrivateSyncState } from '../types'
 
 async function loadStateAsync(): Promise<AppState> {
   await initStorageKey()
@@ -16,6 +16,7 @@ async function loadStateAsync(): Promise<AppState> {
       onlineSharing: stored.onlineSharing,
       streak: stored.streak,
       privateSync: stored.privateSync,
+      appMode: stored.appMode,
     }
   }
   return { profile: null, answers: {}, friends: [], friendAnswers: [], customQuestions: [] }
@@ -432,6 +433,14 @@ export function useAnswers() {
     })
   }, [])
 
+  const saveAppMode = useCallback((appMode: AppMode) => {
+    setState(prev => {
+      const next: AppState = { ...prev, appMode }
+      saveState(next)
+      return next
+    })
+  }, [])
+
   const savePrivateSync = useCallback((privateSync: PrivateSyncState | undefined) => {
     setState(prev => {
       const next: AppState = { ...prev, privateSync }
@@ -489,16 +498,21 @@ export function useAnswers() {
         return { ok: false, error: 'Unbekanntes Dateiformat. Bitte eine Backup-Datei von Remember Me verwenden.' }
       }
       const s = (parsed.state ?? {}) as Partial<AppState>
-      const restored: AppState = {
-        profile: s.profile ?? null,
-        answers: s.answers ?? {},
-        friends: s.friends ?? [],
-        friendAnswers: s.friendAnswers ?? [],
-        customQuestions: s.customQuestions ?? [],
-        streak: s.streak, // optional
-      }
-      saveState(restored)
-      setState(restored)
+      setState(prev => {
+        const restored: AppState = {
+          profile: s.profile ?? null,
+          answers: s.answers ?? {},
+          friends: s.friends ?? [],
+          friendAnswers: s.friendAnswers ?? [],
+          customQuestions: s.customQuestions ?? [],
+          streak: s.streak, // optional
+          // Preserve current appMode if backup pre-dates the field, so the
+          // user doesn't get bounced back to the mode-choice screen.
+          appMode: s.appMode ?? prev.appMode,
+        }
+        saveState(restored)
+        return restored
+      })
       return { ok: true }
     } catch {
       return { ok: false, error: 'Die Datei konnte nicht gelesen werden. Ist es eine gültige Backup-Datei?' }
@@ -564,6 +578,7 @@ export function useAnswers() {
     onlineSharing: state.onlineSharing,
     streak: state.streak,
     privateSync: state.privateSync,
+    appMode: state.appMode,
     appState: state,
     savePrivateSync,
     mergeRemoteState,
@@ -588,6 +603,7 @@ export function useAnswers() {
     setOnlineSharing,
     removeOnlineFriends,
     saveStreak,
+    saveAppMode,
     getAnswer,
     getAnswerImageIds,
     getAnswerVideoIds,

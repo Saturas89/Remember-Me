@@ -1,6 +1,7 @@
 import { CATEGORIES } from '../data/categories'
 import { getCategoriesForLocale } from '../data/categories'
 import { useTranslation } from '../locales'
+import { useAppMode } from '../hooks/useAppMode'
 import { CategoryCard } from '../components/CategoryCard'
 import { HeroLogo } from '../components/Logo'
 import type { Friend, FriendAnswer, CustomQuestion } from '../types'
@@ -25,6 +26,7 @@ export function HomeView({
   onOpenFaq,
 }: Props) {
   const { t, locale } = useTranslation()
+  const { isSimple } = useAppMode()
   const categories = getCategoriesForLocale(locale)
   void CATEGORIES
   const totalQuestions = categories.reduce((s, c) => s + c.questions.length, 0)
@@ -74,19 +76,21 @@ export function HomeView({
             onClick={() => onSelectCategory(cat.id)}
           />
         ))}
-        <button
-          type="button"
-          className="category-card category-card--custom"
-          onClick={() => onSelectCategory('custom')}
-        >
-          <img src="/categories/custom-preview.svg" className="category-card__image" alt={t.home.customCatImgAlt} />
-          <div className="category-card__body">
-            <h3 className="category-card__title">{t.home.customCatTitle}</h3>
-            <p className="category-card__desc">
-              {customQuestions.length > 0 ? t.home.customCatDesc : t.home.customCatDescEmpty}
-            </p>
-          </div>
-        </button>
+        {!isSimple && (
+          <button
+            type="button"
+            className="category-card category-card--custom"
+            onClick={() => onSelectCategory('custom')}
+          >
+            <img src="/categories/custom-preview.svg" className="category-card__image" alt={t.home.customCatImgAlt} />
+            <div className="category-card__body">
+              <h3 className="category-card__title">{t.home.customCatTitle}</h3>
+              <p className="category-card__desc">
+                {customQuestions.length > 0 ? t.home.customCatDesc : t.home.customCatDescEmpty}
+              </p>
+            </div>
+          </button>
+        )}
       </section>
     </div>
   )
