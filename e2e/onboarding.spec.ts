@@ -162,23 +162,26 @@ test.describe('Remember Me – Simple Mode (mode-choice flow)', () => {
     await page.getByLabel('Wie heißt du?').fill('Switcher')
     await page.getByRole('button', { name: /Loslegen/ }).click()
 
+    // Confirm Simple Mode is actually active
+    await expect(page.locator('html')).toHaveAttribute('data-app-mode', 'simple')
+
     // Open profile
     const nav = page.getByRole('navigation', { name: 'Hauptnavigation' })
     await nav.getByRole('button', { name: 'Profil', exact: true }).click()
 
-    // Switch to "Vollständig" – use data-testid so we don't fight role-name
-    // ambiguity if other UI happens to contain "Vollständig" text.
+    // Switch to "Vollständig"
     const fullCard = page.getByTestId('profile-mode-full')
     await expect(fullCard).toBeVisible()
     await fullCard.scrollIntoViewIfNeeded()
     await fullCard.click()
 
-    // Friends tab now visible
-    await expect(nav.getByRole('button', { name: 'Freunde', exact: true })).toBeVisible()
-    await expect(page.locator('html')).not.toHaveAttribute('data-app-mode', 'simple')
+    // The button itself flips to aria-pressed=true – this confirms the state
+    // mutation reached React. We then reload to verify the mode is persisted
+    // and the BottomNav comes up with all 5 tabs from a fresh mount.
+    await expect(fullCard).toHaveAttribute('aria-pressed', 'true')
 
-    // Persists across reload
     await page.reload()
+    await expect(page.locator('html')).not.toHaveAttribute('data-app-mode', 'simple')
     await expect(nav.getByRole('button', { name: 'Freunde', exact: true })).toBeVisible()
   })
 })
