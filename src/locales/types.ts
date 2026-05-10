@@ -128,6 +128,8 @@ export interface Translations {
     restoreButton: string
     faqTitle: string
     faqDesc: string
+    impressumTitle: string
+    impressumDesc: string
     confirmZip: string
     confirmJson: string
     preparing: string
@@ -454,6 +456,25 @@ export interface Translations {
     }>
   }
 
+  impressum: {
+    topbarTitle: string
+    intro: string
+    providerHeading: string
+    contactHeading: string
+    contactEmailLabel: string
+    responsibleHeading: string
+    responsibleNote: string
+    disputeHeading: string
+    disputeOsLabel: string
+    disputeOsHref: string
+    disputeNote: string
+    liabilityHeading: string
+    liabilityContent: string
+    liabilityLinks: string
+    copyrightHeading: string
+    copyrightContent: string
+  }
+
   feature: {
     back: string
     futureFeatureLabel: string
@@ -526,6 +547,7 @@ export interface Translations {
     profile: { title: string; description: string }
     feature: { title: string; description: string }
     faq: { title: string; description: string }
+    impressum: { title: string; description: string }
   }
 
   errorBoundary: {

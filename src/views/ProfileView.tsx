@@ -24,6 +24,7 @@ interface Props {
   onImportBackup: (json: string) => { ok: boolean; error?: string }
   onOpenImport: () => void
   onOpenFaq: () => void
+  onOpenImpressum: () => void
   onShowReleaseNotes: () => void
 }
 
@@ -71,7 +72,7 @@ export function ProfileView({
   exportData, safeName,
   onSave, onBack,
   onExportMarkdown, onExportJson, onImportBackup,
-  onOpenImport, onOpenFaq, onShowReleaseNotes,
+  onOpenImport, onOpenFaq, onOpenImpressum, onShowReleaseNotes,
 }: Props) {
   const { t, locale, setLocale } = useTranslation()
   const { theme, setTheme } = useTheme()
@@ -411,6 +412,14 @@ export function ProfileView({
             <span className="profile-import-card__arrow">›</span>
           </button>
         )}
+        <button type="button" className="profile-import-card" onClick={onOpenImpressum}>
+          <span className="profile-import-card__icon">📄</span>
+          <span className="profile-import-card__body">
+            <span className="profile-import-card__title">{t.profile.impressumTitle}</span>
+            <span className="profile-import-card__desc">{t.profile.impressumDesc}</span>
+          </span>
+          <span className="profile-import-card__arrow">›</span>
+        </button>
       </section>
 
       {!isSimple && (

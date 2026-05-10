@@ -6,6 +6,15 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '2.5.0',
+    date: '2026-05-10',
+    highlights: [
+      '📄 Neue Impressum-Seite im Profil – rechtssichere Anbieterkennzeichnung nach § 5 DDG',
+      '⚖️ Verantwortlicher i. S. d. § 18 MStV, Hinweis zur EU-Streitbeilegung und Haftungs-/Urheberrechtsklauseln',
+      '🎨 Look passt sich dem Freunde-Tab an und funktioniert in allen vier Themes',
+    ],
+  },
+  {
     version: '2.4.0',
     date: '2026-05-09',
     highlights: [
