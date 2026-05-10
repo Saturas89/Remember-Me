@@ -16,10 +16,14 @@ export function getSyncSupabaseClient(): SupabaseClient {
       persistSession: true,
       autoRefreshToken: true,
       storageKey: 'rm-sync-session',
-      // Implicit flow puts provider_token directly in the URL hash so it is
-      // available in the session right after the Google OAuth redirect returns.
-      // PKCE strips it before the client can read it.
-      flowType: 'implicit',
+      // PKCE: the OAuth response comes back as `?code=…` instead of a URL
+      // hash carrying the bearer token directly. Supabase's
+      // detectSessionInUrl auto-exchanges the code for a session and emits
+      // SIGNED_IN with provider_token. PKCE binds the redirect to the
+      // originating client via a code_verifier in storage, which closes
+      // the OAuth-CSRF window the implicit flow left open. See REQ-017
+      // security audit Critical #2.
+      flowType: 'pkce',
       ...(import.meta.env.VITE_E2E === 'true'
         ? {
             lock: typeof navigator !== 'undefined' && /iPhone/.test(navigator.userAgent)

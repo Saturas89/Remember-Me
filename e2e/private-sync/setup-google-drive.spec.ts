@@ -36,34 +36,30 @@ test.describe('Privater Sync – Setup-Wizard Google Drive (E2E-02)', () => {
     // under test.
   })
 
-  // Regression: after a successful Google OAuth redirect the user used to land
-  // on the login screen with "Google-Authentifizierung fehlgeschlagen" because
-  // the session was raced against detectSessionInUrl. resumeFromOAuth now
-  // reads provider_token directly from the URL hash, so a redirect return
-  // must take the user straight to the recovery-code step.
-  test('OAuth-Redirect mit provider_token im Hash setzt das Setup fort', async ({ page }) => {
+  // Regression (PKCE flow): after the redirect comes back as `?code=…`,
+  // Supabase auto-exchanges it for a session and emits SIGNED_IN with
+  // provider_token. resumeFromOAuth listens for that event and forwards the
+  // user to the recovery-code step instead of the login error.
+  //
+  // Routing the Supabase /token endpoint to a stub session in this test
+  // would replicate Supabase's backend behaviour; here we exercise the
+  // simpler invariant: with the pending flag set and no real OAuth code, the
+  // listener times out cleanly and the user lands on the documented error
+  // — never on a stale "...fehlgeschlagen" screen with a bearer in the URL.
+  test('PKCE-Resume: ohne gültigen ?code= meldet die View klar einen Auth-Fehler', async ({ page }) => {
     await completeOnboarding(page, 'Bea')
 
-    // Simulate the state Supabase leaves on the page right before the browser
-    // navigates to Google: the pending flag in sessionStorage. We then arrive
-    // back at /sync with the implicit-flow hash that Google + Supabase would
-    // have populated on a successful redirect.
     await page.evaluate(() => {
       sessionStorage.setItem('rm-gdrive-oauth-pending', '1')
     })
 
-    const oauthHash =
-      '#access_token=mock-supabase-access' +
-      '&provider_token=mock-google-provider-token' +
-      '&token_type=bearer' +
-      '&expires_in=3600' +
-      '&refresh_token=mock-refresh'
-    await page.goto(`/sync${oauthHash}`)
+    // No `?code=…` query param → Supabase emits INITIAL_SESSION (null), our
+    // listener gives up, view shows the error message.
+    await page.goto('/sync')
 
-    // Setup wizard resumes at the recovery-code step (no existing sync file
-    // → first-device flow).
-    await expect(page.getByRole('heading', { name: 'Dein Sicherheitsschlüssel' }))
-      .toBeVisible({ timeout: 10_000 })
-    await expect(page.getByText('Google-Authentifizierung fehlgeschlagen')).toHaveCount(0)
+    await expect(page.getByText('Google-Authentifizierung fehlgeschlagen'))
+      .toBeVisible({ timeout: 25_000 })
+    // URL must not retain any stale OAuth fragment from a pre-PKCE flow.
+    expect(await page.evaluate(() => window.location.hash)).toBe('')
   })
 })

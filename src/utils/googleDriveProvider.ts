@@ -143,32 +143,14 @@ function oauthLog(message: string, data?: Record<string, unknown>): void {
   }
 }
 
-// Parse `provider_token` directly from the URL hash. After a Supabase implicit
-// OAuth redirect, the hash carries:
-//   #access_token=…&expires_in=3600&provider_token=…&refresh_token=…&token_type=bearer
-// Reading the hash here, before `getSyncSupabaseClient()` triggers
-// `detectSessionInUrl`, removes the race where the Supabase client consumes
-// the hash before our `onAuthStateChange` listener can attach.
-export function parseProviderTokenFromHash(hash: string): {
-  providerToken: string | null
-  expiresIn: number | null
-} {
-  if (!hash || hash.length < 2) return { providerToken: null, expiresIn: null }
-  const raw = hash.startsWith('#') ? hash.slice(1) : hash
-  const params = new URLSearchParams(raw)
-  const providerToken = params.get('provider_token')
-  const expiresInRaw = params.get('expires_in')
-  const expiresIn = expiresInRaw ? Number.parseInt(expiresInRaw, 10) : null
-  return {
-    providerToken,
-    expiresIn: Number.isFinite(expiresIn) && expiresIn !== null && expiresIn > 0 ? expiresIn : null,
-  }
-}
-
-// Strip an OAuth response (#access_token / #provider_token / #refresh_token …)
-// from window.location once we've copied out what we need. Without this, the
-// bearer token survives in window.history, in document.referer of subsequent
-// outbound requests, and in any analytics SDK that reads location.href.
+// Strip a stale OAuth fragment (#access_token / #provider_token / …) from
+// window.location. With PKCE the bearer token no longer travels through the
+// URL hash, but this helper stays for two reasons:
+//   1. Users who started an OAuth flow on a previous (implicit-flow) build and
+//      land back on /sync after the upgrade still have an `#access_token=…`
+//      fragment in their address bar — scrub it.
+//   2. Defensive cleanup if any future change reintroduces hash-based
+//      callbacks. Idempotent no-op when the hash is empty.
 export function clearOAuthHash(): void {
   if (typeof window === 'undefined') return
   if (!window.location.hash) return
@@ -323,104 +305,74 @@ export class GoogleDriveProvider implements SyncProvider {
       return false
     }
     const startedAt = Date.now()
-    oauthLog('resume: start', {
-      hashPresent: typeof window !== 'undefined' && !!window.location.hash,
-      hashLength: typeof window !== 'undefined' ? window.location.hash.length : 0,
+    oauthLog('resume: start (pkce)', {
+      queryHasCode: typeof window !== 'undefined'
+        && /[?&]code=/.test(window.location.search),
     })
-
-    // Strategy 1: read provider_token directly from the URL hash before any
-    // other code (e.g. the Supabase client's `detectSessionInUrl`) consumes
-    // it. This avoids the race where the auth listener attaches after the
-    // SIGNED_IN event has already fired.
-    const hashParsed = typeof window !== 'undefined'
-      ? parseProviderTokenFromHash(window.location.hash)
-      : { providerToken: null, expiresIn: null }
-    oauthLog('resume: hash parse', {
-      hasProviderToken: !!hashParsed.providerToken,
-      expiresIn: hashParsed.expiresIn,
-    })
-
-    // Strip the bearer token from the URL as soon as we've copied it out.
-    // Only safe to clear here when our own parse already succeeded; in the
-    // fallback path Supabase still needs to read the hash itself, so leave
-    // it alone until that path completes (Supabase clears it via its own
-    // detectSessionInUrl machinery, and we run a defensive second clear at
-    // the success exit below).
-    if (hashParsed.providerToken) {
-      clearOAuthHash()
-    }
-
-    let providerToken: string | null = hashParsed.providerToken
-    let expiresInSec: number | null = hashParsed.expiresIn
 
     const { getSyncSupabaseClient } = await import('./privateSyncClient')
     const supabase = getSyncSupabaseClient()
 
-    // Strategy 2 (fallback): if the hash was already consumed (e.g. React
-    // StrictMode double-mount, or any other code that initialised the
-    // Supabase client first), wait on `onAuthStateChange` for an event whose
-    // session still carries provider_token.
-    if (!providerToken) {
-      oauthLog('resume: falling back to onAuthStateChange', {
-        timeoutMs: PROVIDER_TOKEN_WAIT_MS,
-      })
-      providerToken = await new Promise<string | null>(resolve => {
-        let done = false
-        let sub: { unsubscribe(): void } = { unsubscribe: () => {} }
-        const finish = (token: string | null, reason: string) => {
-          if (done) return
-          done = true
-          clearTimeout(timer)
-          sub.unsubscribe()
-          oauthLog('resume: listener finish', {
-            reason,
-            hasToken: !!token,
-            elapsedMs: Date.now() - startedAt,
-          })
-          resolve(token)
-        }
-        const timer = setTimeout(() => finish(null, 'timeout'), PROVIDER_TOKEN_WAIT_MS)
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-          sub = subscription
-          oauthLog('resume: auth event', {
-            event,
-            hasSession: !!session,
-            hasProviderToken: !!session?.provider_token,
-          })
-          if (session?.provider_token) {
-            finish(session.provider_token, `event:${event}`)
-          } else if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN') {
-            finish(null, `event:${event}-no-token`)
-          }
+    // PKCE flow: Supabase's detectSessionInUrl auto-exchanges the `?code=`
+    // query param for a session and emits SIGNED_IN with provider_token.
+    // We attach the listener synchronously after createClient() so the
+    // event cannot fire before we are listening. provider_token is emitted
+    // exactly once per sign-in (Supabase docs), so missing the event means
+    // losing the Drive bearer for this redirect — hence the timeout +
+    // bail-to-false rather than retry.
+    const providerToken = await new Promise<string | null>(resolve => {
+      let done = false
+      let sub: { unsubscribe(): void } = { unsubscribe: () => {} }
+      const finish = (token: string | null, reason: string) => {
+        if (done) return
+        done = true
+        clearTimeout(timer)
+        sub.unsubscribe()
+        oauthLog('resume: listener finish', {
+          reason,
+          hasToken: !!token,
+          elapsedMs: Date.now() - startedAt,
         })
+        resolve(token)
+      }
+      const timer = setTimeout(() => finish(null, 'timeout'), PROVIDER_TOKEN_WAIT_MS)
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
         sub = subscription
+        oauthLog('resume: auth event', {
+          event,
+          hasSession: !!session,
+          hasProviderToken: !!session?.provider_token,
+        })
+        if (session?.provider_token) {
+          finish(session.provider_token, `event:${event}`)
+        } else if (event === 'INITIAL_SESSION' && !session) {
+          // No active sign-in detected → exchange must have failed (or the
+          // user landed on /sync without an OAuth roundtrip in progress).
+          finish(null, `event:${event}-no-session`)
+        }
       })
-    }
+      sub = subscription
+    })
 
     if (!providerToken) {
       oauthLog('resume: failed, clearing pending flag', {
         elapsedMs: Date.now() - startedAt,
       })
       sessionStorage.removeItem(OAUTH_STATE_KEY)
-      // Even on failure, scrub any remaining OAuth fragment from the URL so
-      // the user is not left with #access_token=… in the address bar.
+      // Defensive: scrub any residual OAuth fragment a pre-PKCE upgrade may
+      // have left in the URL. Idempotent no-op for a clean PKCE return.
       clearOAuthHash()
       return false
     }
 
-    // Compute expiry: prefer the hash's expires_in, fall back to the persisted
-    // session's expires_at, and finally to a 1-hour default. We do this last
-    // so that a slow Supabase response cannot block the resume on success.
+    // Resolve expiry from the persisted session that detectSessionInUrl just
+    // wrote, falling back to a 1-hour default when the lookup fails.
     let expiresAtMs: number
-    if (expiresInSec) {
-      expiresAtMs = Date.now() + expiresInSec * 1000
-    } else {
-      try {
-        const { data: { session } } = await supabase.auth.getSession()
-        expiresAtMs = (session?.expires_at ?? Math.floor(Date.now() / 1000) + 3600) * 1000
-      } catch {
-        expiresAtMs = Date.now() + 3600 * 1000
-      }
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      expiresAtMs = (session?.expires_at ?? Math.floor(Date.now() / 1000) + 3600) * 1000
+    } catch {
+      expiresAtMs = Date.now() + 3600 * 1000
     }
 
     const token: StoredToken = {
@@ -430,10 +382,6 @@ export class GoogleDriveProvider implements SyncProvider {
     await saveToken(token)
     this._authenticated = true
     sessionStorage.removeItem(OAUTH_STATE_KEY)
-    // Defensive cleanup for the fallback path: Supabase normally clears the
-    // hash itself once detectSessionInUrl completes, but on slow mobile
-    // browsers the listener can fire while window.location still carries
-    // the bearer. Idempotent no-op if the hash is already empty.
     clearOAuthHash()
     oauthLog('resume: success', { elapsedMs: Date.now() - startedAt })
     return true
