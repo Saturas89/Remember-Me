@@ -144,21 +144,24 @@ test.describe('Privater Sync – Media-Verschlüsselung Google Drive (H1)', () =
     // Wait for the Drive mock to receive at least one .bin upload. On Safari
     // the dynamic import of GoogleDriveProvider + crypto.subtle path can be
     // noticeably slower than Chromium, so we give it a generous window.
-    try {
-      await expect.poll(
-        () => [...drive.files.values()].filter(f => f.name.endsWith('.bin')).length,
-        { timeout: 20_000, intervals: [200, 500, 1_000] },
-      ).toBeGreaterThanOrEqual(1)
-    } catch (err) {
-      // eslint-disable-next-line no-console
-      console.log('[H1-E2E DIAG]', JSON.stringify(diag))
-      // eslint-disable-next-line no-console
-      console.log('[H1-E2E ERRORS]', JSON.stringify(pageErrors))
-      // eslint-disable-next-line no-console
-      console.log('[H1-E2E DRIVE FILES]', JSON.stringify(
-        [...drive.files.entries()].map(([id, f]) => ({ id, name: f.name, mimeType: f.mimeType })),
-      ))
-      throw err
+    const binCount = () => [...drive.files.values()].filter(f => f.name.endsWith('.bin')).length
+    const start = Date.now()
+    while (binCount() === 0 && Date.now() - start < 20_000) {
+      await new Promise(r => setTimeout(r, 200))
+    }
+    if (binCount() === 0) {
+      // Embed the diag info in the assertion message itself: GitHub Actions'
+      // collapsed step logs are not scrape-able from outside, but the failure
+      // line in the test summary is.
+      const driveFiles = [...drive.files.entries()].map(([id, f]) => ({
+        id, name: f.name, mimeType: f.mimeType,
+      }))
+      throw new Error(
+        '[H1-E2E] No .bin upload reached the Drive mock within 20s.\n' +
+        `DIAG: ${JSON.stringify(diag)}\n` +
+        `ERRORS: ${JSON.stringify(pageErrors)}\n` +
+        `DRIVE FILES: ${JSON.stringify(driveFiles)}`,
+      )
     }
 
     // ── Encryption invariant ────────────────────────────────────────────
