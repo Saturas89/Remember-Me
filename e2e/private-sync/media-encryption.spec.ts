@@ -29,6 +29,16 @@ function indexOfBytes(haystack: Uint8Array, needleHex: string): number {
 
 test.describe('Privater Sync – Media-Verschlüsselung Google Drive (H1)', () => {
   test('Push lädt Ciphertext hoch, niemals Plaintext-Bilder', async ({ context, page }) => {
+    // Capture page-level errors so a failing assertion has actionable info
+    // instead of just "timed out waiting for predicate".
+    const pageErrors: string[] = []
+    page.on('pageerror', e => pageErrors.push(`pageerror: ${e.message}`))
+    page.on('console', m => {
+      if (m.type() === 'error' || m.type() === 'warning') {
+        pageErrors.push(`console.${m.type()}: ${m.text()}`)
+      }
+    })
+
     await dismissInstallPrompt(context)
     const drive = createDriveMockState()
     // Pre-seed the media folder so findOrCreateMediaFolder takes the "found"
@@ -86,23 +96,70 @@ test.describe('Privater Sync – Media-Verschlüsselung Google Drive (H1)', () =
     // already in place.
     await page.goto('/sync')
 
-    // Trigger a deterministic sync via the VITE_E2E bridge.
-    await page.evaluate(async () => {
-      const w = window as Window & { __rmSyncNow?: () => Promise<void> }
-      // The hub mounts asynchronously — give the hook a tick to expose itself.
+    // Trigger a deterministic sync via the VITE_E2E bridge and capture
+    // diagnostic state so a Safari-specific failure surfaces actionable
+    // detail instead of an opaque poll timeout.
+    type Diag = {
+      phase: string
+      bridgeWaitMs?: number
+      before?: unknown
+      after?: unknown
+      image?: unknown
+      error?: string
+    }
+    const diag = await page.evaluate(async (): Promise<Diag> => {
+      const w = window as Window & {
+        __rmSyncNow?: () => Promise<void>
+        __rmState?: { get: () => unknown }
+      }
       const start = Date.now()
-      while (!w.__rmSyncNow && Date.now() - start < 5_000) {
+      while (!w.__rmSyncNow && Date.now() - start < 15_000) {
         await new Promise(r => setTimeout(r, 50))
       }
-      if (!w.__rmSyncNow) throw new Error('__rmSyncNow not exposed')
-      await w.__rmSyncNow()
+      const bridgeWaitMs = Date.now() - start
+      if (!w.__rmSyncNow) return { phase: 'no-bridge', bridgeWaitMs }
+      const before = (w.__rmState?.get() as { privateSync?: unknown } | null)?.privateSync ?? null
+      try {
+        await w.__rmSyncNow()
+      } catch (e) {
+        return { phase: 'syncNow-threw', bridgeWaitMs, before, error: String(e) }
+      }
+      const after = (w.__rmState?.get() as { privateSync?: unknown } | null)?.privateSync ?? null
+      const checkImage = (): Promise<unknown> => new Promise(resolve => {
+        const r = indexedDB.open('rm-images', 1)
+        r.onsuccess = () => {
+          const tx = r.result.transaction('images', 'readonly')
+          const g = tx.objectStore('images').get('img-1')
+          g.onsuccess = () => resolve({
+            found: g.result !== undefined,
+            len: typeof g.result === 'string' ? (g.result as string).length : null,
+          })
+          g.onerror = () => resolve({ error: 'idb-get' })
+        }
+        r.onerror = () => resolve({ error: 'idb-open' })
+      })
+      return { phase: 'done', bridgeWaitMs, before, after, image: await checkImage() }
     })
 
-    // Wait for the Drive mock to receive at least one .bin upload.
-    await expect.poll(
-      () => [...drive.files.values()].filter(f => f.name.endsWith('.bin')).length,
-      { timeout: 10_000, intervals: [200, 500, 1_000] },
-    ).toBeGreaterThanOrEqual(1)
+    // Wait for the Drive mock to receive at least one .bin upload. On Safari
+    // the dynamic import of GoogleDriveProvider + crypto.subtle path can be
+    // noticeably slower than Chromium, so we give it a generous window.
+    try {
+      await expect.poll(
+        () => [...drive.files.values()].filter(f => f.name.endsWith('.bin')).length,
+        { timeout: 20_000, intervals: [200, 500, 1_000] },
+      ).toBeGreaterThanOrEqual(1)
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.log('[H1-E2E DIAG]', JSON.stringify(diag))
+      // eslint-disable-next-line no-console
+      console.log('[H1-E2E ERRORS]', JSON.stringify(pageErrors))
+      // eslint-disable-next-line no-console
+      console.log('[H1-E2E DRIVE FILES]', JSON.stringify(
+        [...drive.files.entries()].map(([id, f]) => ({ id, name: f.name, mimeType: f.mimeType })),
+      ))
+      throw err
+    }
 
     // ── Encryption invariant ────────────────────────────────────────────
     const binFiles = [...drive.files.values()].filter(f => f.name.endsWith('.bin'))
