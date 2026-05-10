@@ -25,13 +25,12 @@ export async function installGoogleDriveMock(
   context: BrowserContext,
   state: DriveMockState = createDriveMockState(),
 ): Promise<DriveMockState> {
-  // Glob pattern is more reliable than a RegExp here: WebKit headless has
-  // a long-running Playwright issue where regex routes occasionally miss
-  // requests they should match (see microsoft/playwright issues around
-  // context.route(/.../) on WebKit). The glob form catches every Drive
-  // call regardless of query-string encoding.
+  // Use a predicate function instead of a RegExp / glob: on WebKit both
+  // forms have miss-rates against URLs with complex query strings, but
+  // the function predicate is evaluated on the full URL string and is
+  // reliably called for every request.
   await context.route(
-    '**/www.googleapis.com/**',
+    (url: URL) => url.hostname === 'www.googleapis.com',
     route => handle(route, state),
   )
   // OAuth GIS sources – stubbed so the script tag never tries to load real
