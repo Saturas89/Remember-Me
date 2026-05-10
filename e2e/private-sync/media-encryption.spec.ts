@@ -104,12 +104,16 @@ test.describe('Privater Sync – Media-Verschlüsselung Google Drive (H1)', () =
       bridgeWaitMs?: number
       before?: unknown
       after?: unknown
+      hookStatus?: unknown
       image?: unknown
+      tokenInIdb?: unknown
+      vaultKeyInIdb?: unknown
       error?: string
     }
     const diag = await page.evaluate(async (): Promise<Diag> => {
       const w = window as Window & {
         __rmSyncNow?: () => Promise<void>
+        __rmSyncStatus?: () => unknown
         __rmState?: { get: () => unknown }
       }
       const start = Date.now()
@@ -125,20 +129,35 @@ test.describe('Privater Sync – Media-Verschlüsselung Google Drive (H1)', () =
         return { phase: 'syncNow-threw', bridgeWaitMs, before, error: String(e) }
       }
       const after = (w.__rmState?.get() as { privateSync?: unknown } | null)?.privateSync ?? null
-      const checkImage = (): Promise<unknown> => new Promise(resolve => {
-        const r = indexedDB.open('rm-images', 1)
+      const hookStatus = w.__rmSyncStatus?.() ?? null
+      const idbProbe = (db: string, store: string, key: string) => new Promise(resolve => {
+        const r = indexedDB.open(db, 1)
         r.onsuccess = () => {
-          const tx = r.result.transaction('images', 'readonly')
-          const g = tx.objectStore('images').get('img-1')
-          g.onsuccess = () => resolve({
-            found: g.result !== undefined,
-            len: typeof g.result === 'string' ? (g.result as string).length : null,
-          })
+          const tx = r.result.transaction(store, 'readonly')
+          const g = tx.objectStore(store).get(key)
+          g.onsuccess = () => {
+            const v = g.result
+            resolve({
+              found: v !== undefined,
+              type: v === null ? 'null' : typeof v,
+              keys: v && typeof v === 'object' ? Object.keys(v) : null,
+              len: typeof v === 'string' ? v.length : null,
+            })
+          }
           g.onerror = () => resolve({ error: 'idb-get' })
         }
-        r.onerror = () => resolve({ error: 'idb-open' })
+        r.onerror = () => resolve({ error: `idb-open-${db}` })
       })
-      return { phase: 'done', bridgeWaitMs, before, after, image: await checkImage() }
+      return {
+        phase: 'done',
+        bridgeWaitMs,
+        before,
+        after,
+        hookStatus,
+        image: await idbProbe('rm-images', 'images', 'img-1'),
+        tokenInIdb: await idbProbe('rm-sync-auth', 'tokens', 'rm-sync-gdrive-token'),
+        vaultKeyInIdb: await idbProbe('rm-sync-vault-db', 'rm-sync-vault', '00000000-0000-4000-8000-000000000001'),
+      }
     })
 
     // Wait for the Drive mock to receive at least one .bin upload. On Safari
