@@ -25,6 +25,8 @@ Alle funktionalen und nicht-funktionalen Anforderungen des Projekts.
 | [REQ-015](./REQ-015-familienmodus.md) | Familienmodus (E2EE Online-Teilen) | Sharing | Medium | ✔️ COMPLETED |
 | [REQ-016](./REQ-016-pwa-notifications.md) | Engagement-Benachrichtigungen | Engagement | Medium | 🟡 PLANNED |
 | [REQ-017](./REQ-017-privater-sync.md) | Privater Sync (geräteübergreifend, 3 Provider) | Sync | High | ✔️ COMPLETED |
+| [REQ-018](./REQ-018-sync-key-loss-reset.md) | Sync-Login: „Schlüssel verloren?"-Reset | Sync | Medium | ✔️ COMPLETED |
+| [REQ-019](./REQ-019-einfach-modus.md) | Einfach-Modus (vereinfachter Bedienmodus) | UX | Medium | ✔️ COMPLETED |
 
 ---
 
@@ -58,6 +60,7 @@ Alle funktionalen und nicht-funktionalen Anforderungen des Projekts.
 - [ ] Biografie erzeugen (KI-Ghostwriter aus Antworten) → REQ-008
 - [x] Familienmodus: Ende-zu-Ende-verschlüsseltes Online-Teilen → REQ-015
 - [x] Privater Sync (Google Drive / OneDrive / Remember Me Server, E2EE) → REQ-017
+- [x] Einfach-Modus für ältere Nutzer (3 Tabs, größere Schrift, reduzierte UI) → [REQ-019](./REQ-019-einfach-modus.md)
 
 ### WON'T – Bewusst ausgeschlossen
 - Eigenes Backend / Server in v1.x
