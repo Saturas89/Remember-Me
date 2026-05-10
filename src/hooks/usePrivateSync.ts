@@ -183,11 +183,23 @@ export function usePrivateSync(
   }, [runSync])
 
   // E2E bridge: Playwright deterministically triggers a sync without going
-  // through the wizard or the 5s auto-debounce, and reads the hook's
+  // through the wizard or the 30s auto-debounce, and reads the hook's
   // internal status / error so a failing test can pin down whether sync
   // never started, threw, or completed. Gated by VITE_E2E so neither hook
-  // is visible in production builds. No cleanup — the latest closure
-  // overwrites the previous one, so callers never fall into a gap.
+  // is visible in production builds.
+  //
+  // Status fields are read through refs that update on every render so
+  // __rmSyncStatus always returns the latest value — capturing them in a
+  // useEffect closure leaves the test reading stale "syncing" state when
+  // the actual status has already advanced to "error" / "success".
+  const statusRef = useRef(status)
+  const errorMessageRef = useRef(errorMessage)
+  const errorCodeRef = useRef(errorCode)
+  const lastSyncAtRef = useRef(lastSyncAt)
+  statusRef.current = status
+  errorMessageRef.current = errorMessage
+  errorCodeRef.current = errorCode
+  lastSyncAtRef.current = lastSyncAt
   useEffect(() => {
     if (import.meta.env.VITE_E2E !== 'true') return
     if (typeof window === 'undefined') return
@@ -197,8 +209,13 @@ export function usePrivateSync(
     }
     const w = window as Window & Bridge
     w.__rmSyncNow = syncNow
-    w.__rmSyncStatus = () => ({ status, errorMessage, errorCode, lastSyncAt })
-  }, [syncNow, status, errorMessage, errorCode, lastSyncAt])
+    w.__rmSyncStatus = () => ({
+      status: statusRef.current,
+      errorMessage: errorMessageRef.current,
+      errorCode: errorCodeRef.current,
+      lastSyncAt: lastSyncAtRef.current,
+    })
+  }, [syncNow])
 
   const reauthenticate = useCallback(async () => {
     const provider = await getProvider()

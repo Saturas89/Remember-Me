@@ -105,6 +105,7 @@ test.describe('Privater Sync – Media-Verschlüsselung Google Drive (H1)', () =
       before?: unknown
       after?: unknown
       hookStatus?: unknown
+      syncOutcome?: string
       image?: unknown
       tokenInIdb?: unknown
       vaultKeyInIdb?: unknown
@@ -123,11 +124,20 @@ test.describe('Privater Sync – Media-Verschlüsselung Google Drive (H1)', () =
       const bridgeWaitMs = Date.now() - start
       if (!w.__rmSyncNow) return { phase: 'no-bridge', bridgeWaitMs }
       const before = (w.__rmState?.get() as { privateSync?: unknown } | null)?.privateSync ?? null
-      try {
-        await w.__rmSyncNow()
-      } catch (e) {
-        return { phase: 'syncNow-threw', bridgeWaitMs, before, error: String(e) }
-      }
+      // Race the bridge call against a 25s timeout — if push hangs in
+      // WebKit, await would block forever and the diag would never
+      // surface. Instead we record that the call timed out and continue.
+      const syncOutcome = await Promise.race<string>([
+        (async () => {
+          try {
+            await w.__rmSyncNow!()
+            return 'resolved'
+          } catch (e) {
+            return `threw:${String(e)}`
+          }
+        })(),
+        new Promise<string>(r => setTimeout(() => r('timed-out-25s'), 25_000)),
+      ])
       const after = (w.__rmState?.get() as { privateSync?: unknown } | null)?.privateSync ?? null
       const hookStatus = w.__rmSyncStatus?.() ?? null
       const idbProbe = (db: string, store: string, key: string) => new Promise(resolve => {
@@ -154,6 +164,7 @@ test.describe('Privater Sync – Media-Verschlüsselung Google Drive (H1)', () =
         before,
         after,
         hookStatus,
+        syncOutcome,
         image: await idbProbe('rm-images', 'images', 'img-1'),
         tokenInIdb: await idbProbe('rm-sync-auth', 'tokens', 'rm-sync-gdrive-token'),
         vaultKeyInIdb: await idbProbe('rm-sync-vault-db', 'rm-sync-vault', '00000000-0000-4000-8000-000000000001'),
@@ -179,7 +190,8 @@ test.describe('Privater Sync – Media-Verschlüsselung Google Drive (H1)', () =
         '[H1-E2E] No .bin upload reached the Drive mock within 20s.\n' +
         `DIAG: ${JSON.stringify(diag)}\n` +
         `ERRORS: ${JSON.stringify(pageErrors)}\n` +
-        `DRIVE FILES: ${JSON.stringify(driveFiles)}`,
+        `DRIVE FILES: ${JSON.stringify(driveFiles)}\n` +
+        `DRIVE LOG: ${JSON.stringify(drive.log)}`,
       )
     }
 
