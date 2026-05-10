@@ -130,6 +130,10 @@ describe('GoogleDriveProvider.resumeFromOAuth', () => {
     expect(recorder.getSessionCalls).toBe(0)
     // Listener fallback was not used.
     expect(recorder.listeners.length).toBe(0)
+    // Bearer token must not survive in window.location after we copied it
+    // out — it would otherwise leak via history, document.referer, and any
+    // analytics SDK that reads location.href.
+    expect(window.location.hash).toBe('')
   })
 
   it('falls back to onAuthStateChange when the hash has been consumed already', async () => {
@@ -152,6 +156,28 @@ describe('GoogleDriveProvider.resumeFromOAuth', () => {
     expect(sessionStorage.getItem(OAUTH_KEY)).toBeNull()
   })
 
+  it('strips a residual OAuth hash on the fallback success path', async () => {
+    sessionStorage.setItem(OAUTH_KEY, '1')
+    // Provider token is missing from the hash but other OAuth fragments
+    // remain — simulates a Supabase implicit return where its own
+    // detectSessionInUrl has not yet cleared the URL by the time the
+    // listener fires.
+    setHash('#access_token=residual&token_type=bearer')
+
+    const p = new GoogleDriveProvider()
+    const resumePromise = p.resumeFromOAuth()
+
+    await flush()
+    expect(recorder.listeners.length).toBe(1)
+    recorder.listeners[0]('SIGNED_IN', {
+      provider_token: 'token-from-listener',
+      expires_at: Math.floor(Date.now() / 1000) + 1800,
+    })
+
+    expect(await resumePromise).toBe(true)
+    expect(window.location.hash).toBe('')
+  })
+
   it('returns false and clears the pending flag when the listener never sees a provider_token', async () => {
     sessionStorage.setItem(OAUTH_KEY, '1')
     setHash('')
@@ -168,6 +194,25 @@ describe('GoogleDriveProvider.resumeFromOAuth', () => {
 
     expect(await resumePromise).toBe(false)
     expect(sessionStorage.getItem(OAUTH_KEY)).toBeNull()
+  })
+
+  it('strips the OAuth hash even when resume fails', async () => {
+    sessionStorage.setItem(OAUTH_KEY, '1')
+    // Hash contains Supabase's own access_token but no provider_token; the
+    // fallback path will not produce one, so resume returns false. The URL
+    // must still be scrubbed so the user is not left with a bearer in the
+    // address bar.
+    setHash('#access_token=residual&token_type=bearer')
+
+    const p = new GoogleDriveProvider()
+    const resumePromise = p.resumeFromOAuth()
+
+    await flush()
+    expect(recorder.listeners.length).toBe(1)
+    recorder.listeners[0]('INITIAL_SESSION', null)
+
+    expect(await resumePromise).toBe(false)
+    expect(window.location.hash).toBe('')
   })
 
   it('falls back to getSession expiry when the hash has no expires_in', async () => {

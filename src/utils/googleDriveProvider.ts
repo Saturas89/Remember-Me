@@ -165,6 +165,24 @@ export function parseProviderTokenFromHash(hash: string): {
   }
 }
 
+// Strip an OAuth response (#access_token / #provider_token / #refresh_token …)
+// from window.location once we've copied out what we need. Without this, the
+// bearer token survives in window.history, in document.referer of subsequent
+// outbound requests, and in any analytics SDK that reads location.href.
+export function clearOAuthHash(): void {
+  if (typeof window === 'undefined') return
+  if (!window.location.hash) return
+  try {
+    window.history.replaceState(
+      window.history.state,
+      '',
+      window.location.pathname + window.location.search,
+    )
+  } catch {
+    /* replaceState can fail in sandboxed iframes — best-effort */
+  }
+}
+
 // ── Drive API helpers ──────────────────────────────────────────────────────
 
 async function getValidToken(): Promise<string> {
@@ -322,6 +340,16 @@ export class GoogleDriveProvider implements SyncProvider {
       expiresIn: hashParsed.expiresIn,
     })
 
+    // Strip the bearer token from the URL as soon as we've copied it out.
+    // Only safe to clear here when our own parse already succeeded; in the
+    // fallback path Supabase still needs to read the hash itself, so leave
+    // it alone until that path completes (Supabase clears it via its own
+    // detectSessionInUrl machinery, and we run a defensive second clear at
+    // the success exit below).
+    if (hashParsed.providerToken) {
+      clearOAuthHash()
+    }
+
     let providerToken: string | null = hashParsed.providerToken
     let expiresInSec: number | null = hashParsed.expiresIn
 
@@ -374,6 +402,9 @@ export class GoogleDriveProvider implements SyncProvider {
         elapsedMs: Date.now() - startedAt,
       })
       sessionStorage.removeItem(OAUTH_STATE_KEY)
+      // Even on failure, scrub any remaining OAuth fragment from the URL so
+      // the user is not left with #access_token=… in the address bar.
+      clearOAuthHash()
       return false
     }
 
@@ -399,6 +430,11 @@ export class GoogleDriveProvider implements SyncProvider {
     await saveToken(token)
     this._authenticated = true
     sessionStorage.removeItem(OAUTH_STATE_KEY)
+    // Defensive cleanup for the fallback path: Supabase normally clears the
+    // hash itself once detectSessionInUrl completes, but on slow mobile
+    // browsers the listener can fire while window.location still carries
+    // the bearer. Idempotent no-op if the hash is already empty.
+    clearOAuthHash()
     oauthLog('resume: success', { elapsedMs: Date.now() - startedAt })
     return true
   }
