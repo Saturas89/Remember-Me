@@ -23,6 +23,7 @@ import { ProfileView } from './views/ProfileView'
 import { CustomQuestionsView } from './views/CustomQuestionsView'
 import { ImportView } from './views/ImportView'
 import { FaqView } from './views/FaqView'
+import { ImpressumView } from './views/ImpressumView'
 import { OnboardingView } from './views/OnboardingView'
 import { SharedMemoryView } from './views/SharedMemoryView'
 import { PrivateSyncSetupView } from './views/PrivateSyncSetupView'
@@ -68,6 +69,7 @@ type View =
   | { name: 'custom-questions' }
   | { name: 'import' }
   | { name: 'faq'; from: 'profile' | 'home' }
+  | { name: 'impressum'; from: 'profile' | 'home' }
   | { name: 'online-intro' }
   | { name: 'online-hub' }
 
@@ -586,6 +588,7 @@ export default function App() {
           onImportBackup={restoreBackup}
           onOpenImport={() => setView({ name: 'import' })}
           onOpenFaq={() => { window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior }); setView({ name: 'faq', from: 'profile' }) }}
+          onOpenImpressum={() => { window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior }); setView({ name: 'impressum', from: 'profile' }) }}
           onShowReleaseNotes={() => setShowReleaseNotes(true)}
         />
       )}
@@ -637,6 +640,10 @@ export default function App() {
 
       {view.name === 'faq' && (
         <FaqView onBack={() => goTo({ name: view.from } as View)} />
+      )}
+
+      {view.name === 'impressum' && (
+        <ImpressumView onBack={() => goTo({ name: view.from } as View)} />
       )}
 
       {view.name === 'home' && (

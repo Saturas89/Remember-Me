@@ -120,6 +120,8 @@ export const UI_EN = {
     restoreButton: '📂 Load archive or backup…',
     faqTitle: 'Help & FAQ',
     faqDesc: 'Privacy, import, export – frequently asked questions',
+    impressumTitle: 'Legal notice',
+    impressumDesc: 'Provider information under German § 5 DDG',
     confirmZip: 'This will restore all memories – texts, photos, videos and recordings – from the archive and overwrite all current data. Continue?',
     confirmJson: 'This will overwrite all current data with the backup. Continue?',
     preparing: 'Preparing…',
@@ -456,6 +458,10 @@ export const UI_EN = {
     faq: {
       title: 'Help & FAQ – Remember Me',
       description: 'Answers about privacy, import, export and how Remember Me works.',
+    },
+    impressum: {
+      title: 'Legal notice – Remember Me',
+      description: 'Provider information under German § 5 DDG and § 18 MStV for Remember Me.',
     },
   },
 

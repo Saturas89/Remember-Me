@@ -120,6 +120,8 @@ export const UI_DE = {
     restoreButton: '📂 Archiv oder Backup laden…',
     faqTitle: 'Hilfe & FAQ',
     faqDesc: 'Datenschutz, Import, Export – häufige Fragen',
+    impressumTitle: 'Impressum',
+    impressumDesc: 'Anbieterkennzeichnung nach § 5 DDG',
     confirmZip: 'Dies stellt alle Erinnerungen – Texte, Fotos, Videos und Aufnahmen – aus dem Archiv wieder her und überschreibt alle aktuellen Daten. Fortfahren?',
     confirmJson: 'Dies überschreibt alle aktuellen Daten mit dem Backup. Fortfahren?',
     preparing: 'Vorbereitung…',
@@ -456,6 +458,10 @@ export const UI_DE = {
     faq: {
       title: 'Hilfe & FAQ – Remember Me',
       description: 'Antworten zu Datenschutz, Import, Export und der Funktionsweise von Remember Me.',
+    },
+    impressum: {
+      title: 'Impressum – Remember Me',
+      description: 'Anbieterkennzeichnung gemäß § 5 DDG und § 18 MStV für Remember Me.',
     },
   },
 

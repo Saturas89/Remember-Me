@@ -3643,6 +3643,38 @@ details[open] .faq-item__chevron {
   text-align: center;
 }
 
+/* ── Impressum view ──────────────────────────────────── */
+.impressum-view {
+  min-height: 100dvh;
+  max-width: 680px;
+  margin: 0 auto;
+  padding: env(safe-area-inset-top, 0px) 1rem calc(4.5rem + env(safe-area-inset-bottom, 0px));
+}
+
+.impressum-address {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-style: normal;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+}
+
+.impressum-link {
+  color: var(--accent);
+  text-decoration: underline;
+  word-break: break-word;
+}
+
+.impressum-link:hover {
+  color: var(--text);
+}
+
 /* ── Import view ─────────────────────────────────────── */
 .import-view {
   min-height: 100dvh;

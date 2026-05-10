@@ -15,6 +15,7 @@ const CANONICAL: Record<SeoView, string> = {
   profile: 'https://rememberme.dad/profile',
   feature: 'https://rememberme.dad/feature',
   faq: 'https://rememberme.dad/',
+  impressum: 'https://rememberme.dad/impressum',
 }
 
 function isSeoView(name: string, seo: Translations['seo']): name is SeoView {

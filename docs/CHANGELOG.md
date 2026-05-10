@@ -10,6 +10,20 @@ Versionierung folgt [Semantic Versioning](https://semver.org/lang/de/).
 > Der Check `npm run check:changelog` (Teil von `npm test`) bricht sonst ab.
 > Details: `CLAUDE.md` → „Changelog-Pflicht".
 
+## [2.5.0] – 2026-05-10
+
+### Hinzugefügt
+
+- **Impressum-Seite** – neue rechtskonforme Anbieterkennzeichnung gemäß § 5 DDG
+  und § 18 Abs. 2 MStV. Im Profil unter „Hilfe & FAQ" erreichbar, mit
+  Anbieter-Anschrift, Kontakt-E-Mail, Verantwortlichem nach Medienstaatsvertrag,
+  Hinweis auf die EU-OS-Streitbeilegungsplattform sowie den üblichen Haftungs-
+  und Urheberrechts-Klauseln. Styling folgt dem Friends-Tab (Sektionen, Hint-
+  Texte, Theme-Variablen) und unterstützt alle vier Themes sowie Deutsch und
+  Englisch.
+
+---
+
 ## [2.4.0] – 2026-05-09
 
 ### Hinzugefügt
@@ -875,6 +889,7 @@ Wenn im Hintergrund eine neue Version der App als Service Worker bereit steht, e
 | **2.1.1** | Fix: „Erneut anmelden"-Button im Sync-Hub bei abgelaufenem Google-Token + sauberer OAuth-Resume außerhalb des Setup-Wizards | ✔️ Fertig |
 | **2.3.0** | Sync-Login: „Schlüssel verloren?"-Option mit Neustart per frischem Sicherheitsschlüssel (REQ-018) | ✔️ Fertig |
 | **2.4.0** | Vereinfachter Bedienmodus für ältere Nutzer (Mode-Auswahl im Onboarding & Profil, große Buttons, reduzierte UI) | ✔️ Fertig |
+| **2.5.0** | Impressum-Seite (§ 5 DDG, § 18 MStV) im Profil – Anbieter, Kontakt, Streitbeilegung, Haftung, Urheberrecht | ✔️ Fertig |
 | — | **Geplante Features** | — |
 | **TBD** | Lebenszeitlinie – chronologische visuelle Ansicht | Geplant |
 | **TBD** | Import bestehender Erinnerungen (Social Media, Clouds) | Geplant |
