@@ -25,7 +25,7 @@ export function getNotificationContent(opts: NotificationContentOptions): Notifi
   const body = questionTitle || messages[nextIdx]
   
   return {
-    title: 'Remember Me',
+    title: 'Storyhold',
     body,
     variantIdx: nextIdx
   }

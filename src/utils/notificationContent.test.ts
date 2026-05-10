@@ -31,7 +31,7 @@ vi.mock('../data/reminderMessages', () => ({
 vi.mock('../locales/de/ui', () => ({
   de: {
     reminder: {
-      notificationTitle: 'Remember Me'
+      notificationTitle: 'Storyhold'
     }
   }
 }))
@@ -39,7 +39,7 @@ vi.mock('../locales/de/ui', () => ({
 vi.mock('../locales/en/ui', () => ({
   en: {
     reminder: {
-      notificationTitle: 'Remember Me'
+      notificationTitle: 'Storyhold'
     }
   }
 }))
@@ -57,7 +57,7 @@ describe('getNotificationContent', () => {
 
     const result = getNotificationContent(options)
 
-    expect(result.title).toBe('Remember Me')
+    expect(result.title).toBe('Storyhold')
     expect(result.body).toBe('Wie geht es dir heute?') // index 1, rotated from 0
     expect(result.variantIdx).toBe(1)
   })
@@ -70,7 +70,7 @@ describe('getNotificationContent', () => {
 
     const result = getNotificationContent(options)
 
-    expect(result.title).toBe('Remember Me')
+    expect(result.title).toBe('Storyhold')
     expect(result.body).toBe('A moment of contemplation.') // index 3, rotated from 2
     expect(result.variantIdx).toBe(3)
   })
@@ -96,7 +96,7 @@ describe('getNotificationContent', () => {
 
     const result = getNotificationContent(options)
 
-    expect(result.title).toBe('Remember Me')
+    expect(result.title).toBe('Storyhold')
     expect(result.body).toBe('Was war dein schönster Moment heute?')
     expect(result.variantIdx).toBe(4) // still rotates for tracking
   })
@@ -108,7 +108,7 @@ describe('getNotificationContent', () => {
 
     const result = getNotificationContent(options)
 
-    expect(result.title).toBe('Remember Me')
+    expect(result.title).toBe('Storyhold')
     expect(result.variantIdx).toBe(0) // starts at 0
     expect(result.body).toBe('Time for a little break!')
   })
@@ -147,7 +147,7 @@ describe('getNotificationContent', () => {
 
     const result = getNotificationContent(options)
 
-    expect(result.title).toBe('Remember Me')
+    expect(result.title).toBe('Storyhold')
     expect(result.body).toBe('What are you grateful for today?') // uses questionTitle
     expect(result.variantIdx).toBe(2) // still tracks rotation for next time
   })

@@ -7,7 +7,7 @@ import {
   openSyncTab,
 } from './helpers'
 
-// E2E-01 – Setup-Wizard für Provider „Remember Me Server" (Supabase)
+// E2E-01 – Setup-Wizard für Provider „Storyhold Server" (Supabase)
 // Ableitung: Master-Spec §13, AC-001-* / US-008.
 
 test.describe('Privater Sync – Setup-Wizard Server (E2E-01)', () => {
@@ -24,9 +24,9 @@ test.describe('Privater Sync – Setup-Wizard Server (E2E-01)', () => {
     await expect(page.getByRole('heading', { name: 'Privater Sync' })).toBeVisible()
     await page.getByRole('button', { name: 'Einrichten' }).click()
 
-    // S2: Provider-Wahl – „Remember Me Server"
+    // S2: Provider-Wahl – „Storyhold Server"
     await expect(page.getByRole('heading', { name: /Wo sollen deine Daten/ })).toBeVisible()
-    await page.getByRole('button', { name: /Remember Me Server/ }).click()
+    await page.getByRole('button', { name: /Storyhold Server/ }).click()
     await page.getByRole('button', { name: 'Weiter' }).click()
 
     // S3: E-Mail-Login (mocked via installPrivateSyncSupabaseMock)
@@ -49,6 +49,6 @@ test.describe('Privater Sync – Setup-Wizard Server (E2E-01)', () => {
     // After completion, the Hub view is rendered (the App auto-switches once
     // appState.privateSync is set by onComplete).
     await expect(page.getByRole('heading', { name: 'Privater Sync', exact: true })).toBeVisible()
-    await expect(page.getByText(/Remember Me Server/)).toBeVisible()
+    await expect(page.getByText(/Storyhold Server/)).toBeVisible()
   })
 })

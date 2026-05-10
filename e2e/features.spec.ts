@@ -30,7 +30,7 @@ async function openFeaturesSection(page: Page) {
   await expect(page.getByText('Was kommt als Nächstes')).toBeVisible()
 }
 
-test.describe('Remember Me – Geplante Features (Profil-Tab)', () => {
+test.describe('Storyhold – Geplante Features (Profil-Tab)', () => {
   test.beforeEach(async ({ page }) => {
     await completeOnboarding(page)
   })

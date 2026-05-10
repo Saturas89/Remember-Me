@@ -7,9 +7,9 @@
 
 ## 1. Product Overview
 
-Remember Me speichert alle Daten lokal. Der Privater-Sync gibt Nutzern die
+Storyhold speichert alle Daten lokal. Der Privater-Sync gibt Nutzern die
 Möglichkeit, ihre Daten geräteübergreifend zu synchronisieren, ohne dass
-Remember Me die Kontrolle über die Daten übernimmt.
+Storyhold die Kontrolle über die Daten übernimmt.
 
 **Drei gleichwertige Optionen** (kein "Fallback", keine versteckte Tier-Logik):
 
@@ -17,7 +17,7 @@ Remember Me die Kontrolle über die Daten übernimmt.
 |---|--------|-------------|--------|-----------------|
 | 1 | **Google Drive** | Nutzers eigene Google Drive | ✅ Ja | Provider-seitig (Google) |
 | 2 | **Microsoft OneDrive** | Nutzers eigener OneDrive App-Folder | ✅ Ja | Provider-seitig (Microsoft) |
-| 3 | **Remember Me Server** | Unser Supabase | ❌ Nur Text | AES-256-GCM, zero-knowledge (wir können nicht lesen) |
+| 3 | **Storyhold Server** | Unser Supabase | ❌ Nur Text | AES-256-GCM, zero-knowledge (wir können nicht lesen) |
 
 Kernprinzipien:
 - **Opt-in**, standardmäßig deaktiviert
@@ -41,7 +41,7 @@ Akzeptanzkriterien:
 - AC-001-2: Schritt 1 zeigt Intro-Text + „Einrichten"-Button
 - AC-001-3: Schritt 2 zeigt drei Provider-Karten; Auswahl aktiviert „Weiter"
 - AC-001-4: Schritt 3 startet OAuth-Flow (Drive/OneDrive) bzw. E-Mail-Login
-  (Remember Me Server)
+  (Storyhold Server)
 - AC-001-5 (nur Server): Nach Login erscheint Recovery-Code-Anzeige mit
   Bestätigungs-Checkbox. „Weiter" ist deaktiviert, bis Checkbox aktiviert.
 - AC-001-6: Letzter Schritt: Erfolgs-Screen mit Provider-Icon + „Sync aktiv"
@@ -104,7 +104,7 @@ Akzeptanzkriterien:
 - AC-007-2: LWW-Merge: Remote-Antworten mit neuerem `updatedAt` überschreiben lokale
 - AC-007-3: Media-Dateien werden lazy nachgeladen (nur fehlende IDs)
 
-### US-008 · Neues Gerät einrichten (Remember Me Server)
+### US-008 · Neues Gerät einrichten (Storyhold Server)
 **Als Nutzer** möchte ich auf einem neuen Gerät meinen Recovery Code
 eingeben, **damit** meine verschlüsselten Daten entschlüsselt werden.
 
@@ -279,7 +279,7 @@ remember-me-media/{id}.bin
 
 **API**: Microsoft Graph `/me/drive/special/approot:/{path}:/content`
 
-### 4.3 Remember Me Server Provider (Supabase, zero-knowledge)
+### 4.3 Storyhold Server Provider (Supabase, zero-knowledge)
 
 **Auth**: Supabase Auth, `storageKey: 'rm-sync-session'` (getrennt von Family-Mode)
 
@@ -326,7 +326,7 @@ Icon: `/menu-icons/features.jpeg` (unverändert). `FeatureView.tsx` wurde gelös
 
 Screens (kein Modal, Tab-Inhalt):
 - **S1 – Intro**: Überschrift „Privater Sync", Erklärtext, „Einrichten"-Button
-- **S2 – Provider-Wahl**: Drei Karten (Google Drive / OneDrive / Remember Me Server)
+- **S2 – Provider-Wahl**: Drei Karten (Google Drive / OneDrive / Storyhold Server)
 - **S3 – Login**: OAuth-Button (Drive/OneDrive) oder E-Mail-Formular (Server)
 - **S4 (Server, erstes Gerät) – Recovery Code**: Monospace-Code, Checkbox, Warnung
 - **S5 (Server, neues Gerät) – Code eingeben**: Eingabefeld für Recovery Code
@@ -338,7 +338,7 @@ Screens (kein Modal, Tab-Inhalt):
 
 Angezeigt wenn `appState.privateSync` gesetzt. Enthält:
 - Provider-Label + Status-Badge (`idle` / `syncing` / `error` / `success`)
-- Speicherort-Info (Google Drive / OneDrive / Remember Me Server verschlüsselt)
+- Speicherort-Info (Google Drive / OneDrive / Storyhold Server verschlüsselt)
 - Was gespeichert wird (Texte + Medien vs. nur Texte)
 - Zuletzt synchronisiert Zeitstempel
 - „Jetzt synchronisieren"-Button

@@ -32,7 +32,7 @@ async function openProfileTab(page: Page) {
   await expect(page.getByRole('heading', { name: 'Fortschritt' })).toBeVisible()
 }
 
-test.describe('Remember Me – Release Notes', () => {
+test.describe('Storyhold – Release Notes', () => {
   test.beforeEach(async ({ page }) => {
     await completeOnboarding(page)
   })

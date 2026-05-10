@@ -149,7 +149,7 @@ export function OnboardingView({ needsModeChoice, modeOnly = false, onChooseMode
 
       <div className="onboarding__story">
         <p>{t.onboarding.story1}</p>
-        <p><strong>Remember Me</strong> {t.onboarding.story2}</p>
+        <p><strong>Storyhold</strong> {t.onboarding.story2}</p>
       </div>
 
       <div className="onboarding__features">

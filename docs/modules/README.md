@@ -1,4 +1,4 @@
-# Architektur – Remember Me
+# Architektur – Storyhold
 
 Technische Modulübersicht der App.
 

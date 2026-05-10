@@ -1,4 +1,4 @@
-# Changelog – Remember Me
+# Changelog – Storyhold
 
 Alle veröffentlichten Versionen des Projekts, absteigend sortiert.
 
@@ -157,7 +157,7 @@ Versionierung folgt [Semantic Versioning](https://semver.org/lang/de/).
   200k Iterationen, SHA-256). Bisher lagen Profil, Antworten und Freundesliste
   im Klartext in der Drive-Datei.
 - Recovery-Code-Flow gilt jetzt für alle drei Provider (Drive, OneDrive,
-  Remember Me Server).
+  Storyhold Server).
 - Sync-Datei-Format auf v2 angehoben; alte v1-Dateien führen zu einem klaren
   „bitte Setup neu durchlaufen"-Hinweis statt stillem Klartext-Read.
 
@@ -194,7 +194,7 @@ werden.
 - Drei gleichwertige Sync-Provider wählbar:
   - **Google Drive** – Texte + Bilder, Audio und Videos in der eigenen Google Drive
   - **Microsoft OneDrive** – Texte + Bilder, Audio und Videos im eigenen OneDrive App-Ordner
-  - **Remember Me Server** – nur Texte, Ende-zu-Ende-verschlüsselt (AES-256-GCM), zero-knowledge
+  - **Storyhold Server** – nur Texte, Ende-zu-Ende-verschlüsselt (AES-256-GCM), zero-knowledge
 - Automatischer Push 5 Sekunden nach jeder Änderung (debounced)
 - Automatischer Pull bei App-Start und bei Tab-Wechsel (visibilitychange)
 - Manueller Sync-Button mit Statusanzeige (idle / syncing / error / success)
@@ -323,7 +323,7 @@ Strikt opt-in: Ohne aktive Aktivierung gibt es keinen Request zu Supabase, keine
 
 #### Internationalisierung – English-Support mit Auto-Detect
 
-Remember Me ist jetzt zweisprachig (DE/EN), Sprache wird automatisch erkannt.
+Storyhold ist jetzt zweisprachig (DE/EN), Sprache wird automatisch erkannt.
 
 **Lokalisierungs-Framework:**
 - `src/locales/{de,en}/{ui,categories,faq,features,friendTopics}.ts` – komplette deutsche und englische Übersetzungen
@@ -670,7 +670,7 @@ Wenn im Hintergrund eine neue Version der App als Service Worker bereit steht, e
   - `<link rel="apple-touch-icon">` – Icon für „Zum Home-Bildschirm hinzufügen"
   - `<meta name="apple-mobile-web-app-capable" content="yes">` – Startet ohne Safari-UI (Standalone)
   - `<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">` – Statusleiste transparent
-  - `<meta name="apple-mobile-web-app-title" content="Remember Me">` – Label unter dem App-Icon
+  - `<meta name="apple-mobile-web-app-title" content="Storyhold">` – Label unter dem App-Icon
   - `viewport-fit=cover` im `viewport`-Meta für Geräte mit Notch (iPhone X+)
 - **Android-Unterstützung** in `index.html`:
   - `<meta name="mobile-web-app-capable" content="yes">` – Chrome Install-Banner
@@ -867,7 +867,7 @@ Wenn im Hintergrund eine neue Version der App als Service Worker bereit steht, e
 | **1.9.1** | Fix: Release-Notes-Modal iOS-Ambient-Layout + „Zurück"-Navigation | ✔️ Fertig |
 | **1.9.2** | Familienmodus: Kontakte per Swipe-left entfernen | ✔️ Fertig |
 | **1.9.3** | Familienmodus: Full-Swipe-to-Delete (kein Bestätigungs-Button mehr) | ✔️ Fertig |
-| **2.0.0** | Privater Sync – Google Drive, OneDrive, Remember Me Server (REQ-017) | ✔️ Fertig |
+| **2.0.0** | Privater Sync – Google Drive, OneDrive, Storyhold Server (REQ-017) | ✔️ Fertig |
 | **2.0.1** | Sicherheits-Härtung: E2EE für Drive/OneDrive-Sync, CSP/GIS, Recovery-Code-Bias-Fix | ✔️ Fertig |
 | **2.0.2** | Fix: Google-Drive-Login bricht nach OAuth-Redirect nicht mehr ab | ✔️ Fertig |
 | **2.0.3** | Fix: Google-Drive-Sync 404 nach „Sync deaktivieren" – stale File-ID, Selbstheilung im Push | ✔️ Fertig |

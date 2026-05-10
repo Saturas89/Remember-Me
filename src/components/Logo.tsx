@@ -26,7 +26,7 @@ function AppLogo({ size }: { size: number }) {
 export function HeroLogo() {
   const { t } = useTranslation()
   return (
-    <div className="hero-logo" aria-label="Remember Me">
+    <div className="hero-logo" aria-label="Storyhold">
       <div className="hero-logo__heart-wrap" style={{
         width: 160, height: 160, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem'
       }}>
@@ -34,8 +34,7 @@ export function HeroLogo() {
       </div>
       <p className="hero-logo__tagline">{t.logo.tagline}</p>
       <p className="hero-logo__name">
-        <span className="hero-logo__name-remember">Remember</span>
-        <span className="hero-logo__name-me">Me</span>
+        <span className="hero-logo__name-remember">Storyhold</span>
       </p>
     </div>
   )
@@ -52,13 +51,12 @@ export function Logo({ size = 'md' }: LogoProps) {
   const { t } = useTranslation()
   const px = SIZE_PX[size]
   return (
-    <div className={`logo logo--${size}`} aria-label="Remember Me">
+    <div className={`logo logo--${size}`} aria-label="Storyhold">
       <AppLogo size={px} />
       <div className="logo__wordmark">
         <span className="logo__tagline">{t.logo.tagline}</span>
         <span className="logo__name">
-          <span className="logo__name-grad">Remember</span>
-          <span className="logo__name-grad">Me</span>
+          <span className="logo__name-grad">Storyhold</span>
         </span>
       </div>
     </div>

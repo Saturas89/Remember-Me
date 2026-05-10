@@ -31,7 +31,7 @@ export function SharedMemoryView({ payload }: Props) {
 
         <p className="shared-memory__cta">
           Möchtest du deine eigenen Erinnerungen festhalten?{' '}
-          <a href="/" className="shared-memory__link">Remember Me öffnen →</a>
+          <a href="/" className="shared-memory__link">Storyhold öffnen →</a>
         </p>
       </div>
     </div>

@@ -1,4 +1,4 @@
-# Anforderungen – Remember Me
+# Anforderungen – Storyhold
 
 Alle funktionalen und nicht-funktionalen Anforderungen des Projekts.
 
@@ -59,7 +59,7 @@ Alle funktionalen und nicht-funktionalen Anforderungen des Projekts.
 - [ ] Mehrsprachigkeit (DE / EN)
 - [ ] Biografie erzeugen (KI-Ghostwriter aus Antworten) → REQ-008
 - [x] Familienmodus: Ende-zu-Ende-verschlüsseltes Online-Teilen → REQ-015
-- [x] Privater Sync (Google Drive / OneDrive / Remember Me Server, E2EE) → REQ-017
+- [x] Privater Sync (Google Drive / OneDrive / Storyhold Server, E2EE) → REQ-017
 - [x] Einfach-Modus für ältere Nutzer (3 Tabs, größere Schrift, reduzierte UI) → [REQ-019](./REQ-019-einfach-modus.md)
 
 ### WON'T – Bewusst ausgeschlossen

@@ -38,7 +38,7 @@ Optimiert für programmatische Verarbeitung, API-Calls, Langzeitarchivierung.
   "$schema": "https://remember-me.app/schema/export/v1.json",
   "exportVersion": "1",
   "exportedAt": "2026-04-10T14:30:00Z",
-  "app": "Remember Me",
+  "app": "Storyhold",
   "profile": {
     "name": "Karl Müller",
     "birthYear": 1970,
@@ -103,7 +103,7 @@ Optimiert für direktes Einfügen in einen LLM-Chat (Claude, ChatGPT, Gemini). M
 ```markdown
 # Lebensgeschichte von Karl Müller (geb. 1970)
 
-*Exportiert am 10. April 2026 · Remember Me*
+*Exportiert am 10. April 2026 · Storyhold*
 
 ---
 
@@ -141,7 +141,7 @@ Papa ist immer für uns da, egal was passiert.
 
 ---
 
-*Dieses Dokument wurde mit Remember Me erstellt – einer App zum Festhalten
+*Dieses Dokument wurde mit Storyhold erstellt – einer App zum Festhalten
 von Lebensgeschichten für die Nachwelt.*
 ```
 
@@ -317,11 +317,11 @@ User kann sie bearbeiten, drucken oder teilen
 | Ansatz | Beschreibung | Datenschutz |
 |--------|-------------|-------------|
 | **Eigener API-Key** | User trägt seinen Anthropic/OpenAI-Key ein, Calls gehen direkt vom Browser | Hoch – Daten gehen nur an Anbieter, den User wählt |
-| **Remember Me Backend** | App hat eigenen Proxy-Server | Mittel – Betreiber sieht Metadaten |
+| **Storyhold Backend** | App hat eigenen Proxy-Server | Mittel – Betreiber sieht Metadaten |
 | **Lokales LLM** | Ollama o.ä. lokal auf dem Gerät | Maximal – keine Daten verlassen das Gerät |
 
 **Empfehlung für v2.1:** Eigener API-Key (User bringt seinen Schlüssel mit).
-Keine Daten gehen an Remember Me – maximale Transparenz.
+Keine Daten gehen an Storyhold – maximale Transparenz.
 
 ### Prompt-Vorlage (Entwurf)
 

@@ -5,7 +5,7 @@ export const FAQ_DE = [
     items: [
       {
         q: 'Werden meine Erinnerungen auf einen Server hochgeladen?',
-        a: 'Nein – und das ist genau so gewollt. Deine Geschichte gehört dir allein. Alle Antworten, Fotos und Sprachaufnahmen bleiben ausschließlich auf deinem Gerät. Remember Me kommt vollständig ohne eigene Server aus – deine Erinnerungen fließen nirgendwo hin, wo du sie nicht hingeschickt hast.',
+        a: 'Nein – und das ist genau so gewollt. Deine Geschichte gehört dir allein. Alle Antworten, Fotos und Sprachaufnahmen bleiben ausschließlich auf deinem Gerät. Storyhold kommt vollständig ohne eigene Server aus – deine Erinnerungen fließen nirgendwo hin, wo du sie nicht hingeschickt hast.',
       },
       {
         q: 'Wer kann meine Erinnerungen sehen?',
@@ -31,7 +31,7 @@ export const FAQ_DE = [
     items: [
       {
         q: 'Wie importiere ich meine Instagram-Daten?',
-        a: 'Gehe zu Profil → Importieren → Social Media. Dort findest du eine einfache Schritt-für-Schritt-Anleitung, wie du deine Instagram-Daten anforderst und hochlädst. Remember Me liest deine Beiträge und schlägt vor, daraus Antworten zu erstellen – aus alten Momenten werden bleibende Erinnerungen.',
+        a: 'Gehe zu Profil → Importieren → Social Media. Dort findest du eine einfache Schritt-für-Schritt-Anleitung, wie du deine Instagram-Daten anforderst und hochlädst. Storyhold liest deine Beiträge und schlägt vor, daraus Antworten zu erstellen – aus alten Momenten werden bleibende Erinnerungen.',
       },
       {
         q: 'Wie stelle ich gesicherte Erinnerungen wieder her?',
@@ -61,7 +61,7 @@ export const FAQ_DE = [
       },
       {
         q: 'Wie übertrage ich meine Erinnerungen auf ein neues Gerät?',
-        a: 'Erstelle ein Erinnerungs-Archiv unter Profil → Sichern & Teilen. Übertrage die Datei auf das neue Gerät (per AirDrop, E-Mail oder Cloud). Öffne Remember Me auf dem neuen Gerät und lade das Archiv – alle deine Erinnerungen sind wieder da, als wärst du nie weg gewesen.',
+        a: 'Erstelle ein Erinnerungs-Archiv unter Profil → Sichern & Teilen. Übertrage die Datei auf das neue Gerät (per AirDrop, E-Mail oder Cloud). Öffne Storyhold auf dem neuen Gerät und lade das Archiv – alle deine Erinnerungen sind wieder da, als wärst du nie weg gewesen.',
       },
       {
         q: 'Kann ich meine Erinnerungen auch in anderen Apps nutzen?',

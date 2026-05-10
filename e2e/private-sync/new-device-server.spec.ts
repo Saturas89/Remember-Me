@@ -34,7 +34,7 @@ test.describe('Privater Sync – Recovery-Code auf neuem Gerät (E2E-05)', () =>
 
     // Walk the wizard: Server → Login.
     await page.getByRole('button', { name: 'Einrichten' }).click()
-    await page.getByRole('button', { name: /Remember Me Server/ }).click()
+    await page.getByRole('button', { name: /Storyhold Server/ }).click()
     await page.getByRole('button', { name: 'Weiter' }).click()
 
     await page.getByLabel('E-Mail').fill('returning@example.com')

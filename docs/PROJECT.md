@@ -1,4 +1,4 @@
-# Projektübersicht – Remember Me
+# Projektübersicht – Storyhold
 
 **Status:** 🔵 IN PROGRESS  
 **Version:** 1.6.0  
@@ -8,9 +8,9 @@
 
 ## Projektbeschreibung
 
-**Remember Me** ist eine Progressive Web App (PWA), mit der Menschen ihre Lebensgeschichte, persönlichen Erinnerungen, Werte und Erfahrungen spielerisch für die Nachwelt festhalten können.
+**Storyhold** ist eine Progressive Web App (PWA), mit der Menschen ihre Lebensgeschichte, persönlichen Erinnerungen, Werte und Erfahrungen spielerisch für die Nachwelt festhalten können.
 
-Die Idee: Viele Menschen möchten ihren Kindern, Enkeln und Angehörigen mehr hinterlassen als nur Fotos – echte Geschichten, Werte, Ratschläge, Kindheitserinnerungen. **Remember Me** führt sie durch gezielte Fragen in Lebenskategorien und macht daraus ein persönliches, bleibendes Dokument.
+Die Idee: Viele Menschen möchten ihren Kindern, Enkeln und Angehörigen mehr hinterlassen als nur Fotos – echte Geschichten, Werte, Ratschläge, Kindheitserinnerungen. **Storyhold** führt sie durch gezielte Fragen in Lebenskategorien und macht daraus ein persönliches, bleibendes Dokument.
 
 Die App ist vollständig responsiv und funktioniert nahtlos auf:
 - 📱 Mobilgeräten – installierbar als PWA auf iOS & Android
@@ -75,7 +75,7 @@ Teilen / Exportieren (PDF, Freunde einladen, KI-Export)
 - [x] **Hilfe & FAQ** – Datenschutz, Import, Export, Offline-Nutzung erklärt; eigene FAQ-Ansicht (REQ-010)
 - [x] **Erinnerungs-Archiv ZIP-Export** – Komplettarchiv als ZIP inkl. Fotos, Audio & Video; Share Sheet Integration (REQ-011)
 - [x] **Erinnerungs-Archiv-Import** – Wiederherstellung aus ZIP oder JSON-Backup; Fotos, Videos, Audio werden mitimportiert (REQ-013)
-- [x] **Privater Sync** – geräteübergreifende Synchronisation über drei Provider (Google Drive, Microsoft OneDrive, Remember Me Server), AES-256-GCM-Verschlüsselung mit Recovery-Code-abgeleitetem Key (REQ-017, v2.0.0/2.0.1)
+- [x] **Privater Sync** – geräteübergreifende Synchronisation über drei Provider (Google Drive, Microsoft OneDrive, Storyhold Server), AES-256-GCM-Verschlüsselung mit Recovery-Code-abgeleitetem Key (REQ-017, v2.0.0/2.0.1)
 - [ ] **Engagement-Benachrichtigungen** – OS-Reminder mit Backoff-Cadence (3/10/24 Tage), iOS-Welcome-Back-Banner, Streak-Tracking & Meilenstein-Glückwünsche (REQ-016)
 - [ ] Mehrsprachigkeit (DE / EN)
 - [ ] **Lebenszeitlinie** – chronologische Ansicht aller Erlebnisse und Fotos auf einer visuellen Timeline, filterbar nach Jahr und Kategorie; optional ungefähres Alter pro Eintrag (z. B. „ca. 8 Jahre alt"), wird automatisch aus Geburtsjahr vorgeschlagen (REQ-006)
@@ -166,7 +166,7 @@ Update-Banner: `src/components/UpdateBanner.tsx` – Toast bei verfügbarem SW-U
 | Erinnerungs-Archiv | ZIP-Export & -Import inkl. Fotos, Audio, Video – ✔️ umgesetzt |
 | approxAge | Ungefähres Lebensalter zum Zeitpunkt eines Erlebnisses, für die Zeitlinie |
 | Lebenszeitlinie | Chronologische visuelle Ansicht aller Einträge und Fotos; mit optionalem ca. Alter (geplant) |
-| Privater Sync | Verschlüsselte Synchronisation zwischen Geräten über Google Drive, OneDrive oder Remember Me Server (REQ-017) – ✔️ umgesetzt |
+| Privater Sync | Verschlüsselte Synchronisation zwischen Geräten über Google Drive, OneDrive oder Storyhold Server (REQ-017) – ✔️ umgesetzt |
 | Import Erinnerungen | Import aus sozialen Netzwerken, Clouds, lokalen Ordnern (geplant) |
 | Biografie-Generator | KI-gestützte Umwandlung der Antworten in eine fertige Lebensgeschichte (geplant) |
 | Engagement-Benachrichtigungen | Reminder-System mit systemfester 3/10/24-Tage-Backoff-Cadence, Variantenpool, Welcome-Back-Banner als iOS-Fallback und Meilenstein-Glückwünschen (REQ-016, geplant) |

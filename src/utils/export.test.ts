@@ -70,8 +70,8 @@ describe('exportAsBackup', () => {
     expect(JSON.parse(exportAsBackup(EMPTY)).version).toBe(2)
   })
 
-  it('sets app name to "Remember Me"', () => {
-    expect(JSON.parse(exportAsBackup(EMPTY)).app).toBe('Remember Me')
+  it('sets app name to "Storyhold"', () => {
+    expect(JSON.parse(exportAsBackup(EMPTY)).app).toBe('Storyhold')
   })
 
   it('embeds profile data in state', () => {
@@ -220,9 +220,9 @@ describe('exportAsMarkdown', () => {
     expect(md).toContain('Petra')
   })
 
-  it('ends with Remember Me footer', () => {
+  it('ends with Storyhold footer', () => {
     const md = exportAsMarkdown(EMPTY)
-    expect(md).toContain('Remember Me')
+    expect(md).toContain('Storyhold')
   })
 
   it('includes video-only answers (videoIds, no text value)', () => {

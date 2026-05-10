@@ -1,6 +1,6 @@
 # Wo liegen meine Daten?
 
-Remember Me ist eine Offline-first-App. Dieses Dokument erklärt in einfacher
+Storyhold ist eine Offline-first-App. Dieses Dokument erklärt in einfacher
 Sprache, welche Daten **wo** gespeichert werden und **warum**.
 
 ## Kurzfassung
