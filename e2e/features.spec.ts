@@ -35,10 +35,10 @@ test.describe('Remember Me – Geplante Features (Profil-Tab)', () => {
     await completeOnboarding(page)
   })
 
-  test('zeigt die vier geplanten Feature-Karten im Profil-Tab', async ({ page }) => {
+  test('zeigt die drei geplanten Feature-Karten im Profil-Tab', async ({ page }) => {
     await openFeaturesSection(page)
-    await expect(page.locator('.profile-feature-item')).toHaveCount(4)
-    await expect(page.locator('.profile-feature-item__img')).toHaveCount(4)
+    await expect(page.locator('.profile-feature-item')).toHaveCount(3)
+    await expect(page.locator('.profile-feature-item__img')).toHaveCount(3)
   })
 
   test('Feature-Banner skalieren auf volle Breite des Containers', async ({ page }) => {
