@@ -7,6 +7,8 @@ import {
   encryptSyncEnvelope,
   decryptSyncEnvelope,
   parseEncryptedSyncEnvelope,
+  encryptMediaBlob,
+  decryptMediaBlob,
 } from './syncEncryption'
 
 const TOKEN_IDB = 'rm-sync-auth'
@@ -20,7 +22,15 @@ interface StoredToken {
   accountId: string
 }
 
-type MediaManifestEntry = { type: 'image' | 'audio' | 'video'; syncedAt: string }
+// `iv` + `mimeType` are written by post-H1 clients (media is sealed with the
+// vault key before upload). Entries without `iv` are legacy plaintext blobs
+// from older clients and are passed through verbatim during pull.
+type MediaManifestEntry = {
+  type: 'image' | 'audio' | 'video'
+  syncedAt: string
+  iv?: string
+  mimeType?: string
+}
 
 const GRAPH_BASE = 'https://graph.microsoft.com/v1.0'
 const APP_ROOT = `${GRAPH_BASE}/me/drive/special/approot`
@@ -181,24 +191,36 @@ export class OneDriveProvider implements SyncProvider {
     const localIds = await media.listLocalMediaIds()
     const manifest: Record<string, MediaManifestEntry> = {}
 
+    const uploadEncrypted = async (
+      id: string,
+      blob: Blob,
+      kind: 'image' | 'audio' | 'video',
+    ): Promise<void> => {
+      const sealed = await encryptMediaBlob(blob, vaultKey)
+      await graphPut(`media/${id}.bin`, sealed.ciphertext, 'application/octet-stream', token)
+      manifest[id] = {
+        type: kind,
+        syncedAt: new Date().toISOString(),
+        iv: sealed.iv,
+        mimeType: sealed.mimeType,
+      }
+    }
+
     await Promise.all([
       ...localIds.images.map(async id => {
         const blob = await media.getImageBlob(id)
         if (!blob) return
-        await graphPut(`media/${id}.bin`, blob, blob.type, token)
-        manifest[id] = { type: 'image', syncedAt: new Date().toISOString() }
+        await uploadEncrypted(id, blob, 'image')
       }),
       ...localIds.audio.map(async id => {
         const blob = await media.getAudioBlob(id)
         if (!blob) return
-        await graphPut(`media/${id}.bin`, blob, blob.type, token)
-        manifest[id] = { type: 'audio', syncedAt: new Date().toISOString() }
+        await uploadEncrypted(id, blob, 'audio')
       }),
       ...localIds.videos.map(async id => {
         const blob = await media.getVideoBlob(id)
         if (!blob) return
-        await graphPut(`media/${id}.bin`, blob, blob.type, token)
-        manifest[id] = { type: 'video', syncedAt: new Date().toISOString() }
+        await uploadEncrypted(id, blob, 'video')
       }),
     ])
 
@@ -233,7 +255,10 @@ export class OneDriveProvider implements SyncProvider {
         if (localAllIds.has(id)) return
         const mediaRes = await graphGet(`media/${id}.bin`, token)
         if (!mediaRes.ok) return
-        const blob = await mediaRes.blob()
+        const ct = await mediaRes.blob()
+        const blob = entry.iv
+          ? await decryptMediaBlob(ct, entry.iv, entry.mimeType ?? '', vaultKey)
+          : ct
         if (entry.type === 'image') await media.putImage(id, blob)
         else if (entry.type === 'audio') await media.putAudio(id, blob)
         else await media.putVideo(id, blob)

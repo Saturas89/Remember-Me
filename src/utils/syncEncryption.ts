@@ -11,9 +11,14 @@
 // The non-secret `syncId` doubles as PBKDF2 salt and lets a second device
 // derive the same key after the user enters their recovery code.
 //
-// Media blobs themselves are still uploaded as raw bytes – encrypting them
-// would break resumable uploads and is tracked separately. Their filenames
-// are random UUIDs so they leak no metadata about questions or answers.
+// schemaVersion 2 also encrypts media blobs (images / audio / video). Each
+// blob is sealed with a fresh AES-256-GCM nonce under the same vault key; the
+// IV and the original MIME type are persisted in the manifest entry inside
+// the encrypted envelope. Cloud-side the files are uploaded as
+// application/octet-stream, so a Drive viewer cannot tell whether a given
+// object is a photo, an audio clip, or noise. Manifest entries without an
+// `iv` field are treated as plaintext for backward compatibility with users
+// upgrading from the H1-prefix release.
 
 import type { AppState } from '../types'
 import { encryptText, decryptText } from './recoveryCode'
@@ -71,6 +76,64 @@ export async function decryptSyncEnvelope<TManifest>(
 ): Promise<EncryptedPayload<TManifest>> {
   const plain = await decryptText(envelope.ciphertext, envelope.iv, vaultKey)
   return JSON.parse(plain) as EncryptedPayload<TManifest>
+}
+
+// ── Media blob encryption ────────────────────────────────────────────────────
+//
+// Cloud storage gets raw AES-GCM ciphertext as an opaque
+// application/octet-stream object. The IV and the original MIME type stay
+// inside the encrypted manifest (which lives in the envelope above), so the
+// only thing a Drive-side attacker learns is the file size — and the
+// approximate media kind from the manifest itself, which we cannot avoid
+// without padding every blob.
+
+const MEDIA_IV_BYTES = 12 as const
+
+/**
+ * Seal a media blob with a fresh 12-byte IV under the vault key. The
+ * returned ciphertext is binary (no base64 inflation) and gets uploaded as
+ * `application/octet-stream`; iv + mimeType land in the manifest entry.
+ */
+export async function encryptMediaBlob(
+  blob: Blob,
+  vaultKey: CryptoKey,
+): Promise<{ ciphertext: Blob; iv: string; mimeType: string }> {
+  const ivBytes = crypto.getRandomValues(new Uint8Array(MEDIA_IV_BYTES))
+  const plain = await blob.arrayBuffer()
+  const ct = await crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv: ivBytes },
+    vaultKey,
+    plain,
+  )
+  return {
+    ciphertext: new Blob([ct], { type: 'application/octet-stream' }),
+    iv: btoa(String.fromCharCode(...ivBytes)),
+    mimeType: blob.type || 'application/octet-stream',
+  }
+}
+
+/**
+ * Reverse of `encryptMediaBlob`. Throws SyncError('decrypt') if the auth tag
+ * does not validate (wrong vault key or tampered ciphertext).
+ */
+export async function decryptMediaBlob(
+  ciphertext: Blob,
+  iv: string,
+  mimeType: string,
+  vaultKey: CryptoKey,
+): Promise<Blob> {
+  try {
+    const ivBytes = Uint8Array.from(atob(iv), c => c.charCodeAt(0))
+    const ctBytes = await ciphertext.arrayBuffer()
+    const plain = await crypto.subtle.decrypt(
+      { name: 'AES-GCM', iv: ivBytes },
+      vaultKey,
+      ctBytes,
+    )
+    return new Blob([plain], { type: mimeType || 'application/octet-stream' })
+  } catch {
+    throw new SyncError('Media-Entschlüsselung fehlgeschlagen', 'decrypt')
+  }
 }
 
 /**
