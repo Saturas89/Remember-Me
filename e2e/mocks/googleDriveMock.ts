@@ -25,14 +25,16 @@ export async function installGoogleDriveMock(
   context: BrowserContext,
   state: DriveMockState = createDriveMockState(),
 ): Promise<DriveMockState> {
-  // Use a predicate function instead of a RegExp / glob: on WebKit both
-  // forms have miss-rates against URLs with complex query strings, but
-  // the function predicate is evaluated on the full URL string and is
-  // reliably called for every request.
-  await context.route(
-    (url: URL) => url.hostname === 'www.googleapis.com',
-    route => handle(route, state),
-  )
+  // Catch-all route: WebKit's Playwright driver has miss-rates against
+  // both regex and glob patterns for URLs with single-quoted query
+  // strings (the Drive `q=name='…'` pattern). Routing every request and
+  // filtering in the handler is the only form that proves reliable
+  // across all five browser projects.
+  await context.route('**/*', route => {
+    const url = route.request().url()
+    if (url.includes('googleapis.com')) return handle(route, state)
+    return route.fallback()
+  })
   // OAuth GIS sources – stubbed so the script tag never tries to load real
   // Google code in CI.
   await context.route(
