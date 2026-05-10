@@ -29,13 +29,23 @@ function indexOfBytes(haystack: Uint8Array, needleHex: string): number {
 
 test.describe('Privater Sync – Media-Verschlüsselung Google Drive (H1)', () => {
   test('Push lädt Ciphertext hoch, niemals Plaintext-Bilder', async ({ context, page }) => {
-    // Capture page-level errors so a failing assertion has actionable info
-    // instead of just "timed out waiting for predicate".
+    // Capture page-level errors and the network responses to googleapis.com
+    // — the last diag round showed a 401 SyncError raised by driveGet, but
+    // an empty mock log, which means the request didn't actually hit our
+    // context.route handler. Logging the real URLs + statuses tells us what
+    // Playwright saw on the wire.
     const pageErrors: string[] = []
+    const driveRequests: Array<{ method: string; url: string; status?: number }> = []
     page.on('pageerror', e => pageErrors.push(`pageerror: ${e.message}`))
     page.on('console', m => {
       if (m.type() === 'error' || m.type() === 'warning') {
         pageErrors.push(`console.${m.type()}: ${m.text()}`)
+      }
+    })
+    page.on('response', async res => {
+      const url = res.url()
+      if (url.includes('googleapis.com') || url.includes('drive')) {
+        driveRequests.push({ method: res.request().method(), url, status: res.status() })
       }
     })
 
@@ -241,7 +251,8 @@ test.describe('Privater Sync – Media-Verschlüsselung Google Drive (H1)', () =
         `DIAG: ${JSON.stringify(diag)}\n` +
         `ERRORS: ${JSON.stringify(pageErrors)}\n` +
         `DRIVE FILES: ${JSON.stringify(driveFiles)}\n` +
-        `DRIVE LOG: ${JSON.stringify(drive.log)}`,
+        `DRIVE LOG: ${JSON.stringify(drive.log)}\n` +
+        `NETWORK: ${JSON.stringify(driveRequests)}`,
       )
     }
 
