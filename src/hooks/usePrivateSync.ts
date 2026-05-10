@@ -208,6 +208,12 @@ export function usePrivateSync(
   useEffect(() => {
     if (import.meta.env.VITE_E2E !== 'true') return
     if (typeof window === 'undefined') return
+    // Defer binding until state hydration finishes — `providerType` derives
+    // from `appState.privateSync?.providerType`, which is null until
+    // useAnswers' loadStoredState resolves. Binding earlier would expose
+    // a runSync closure that no-ops on `if (!provider) return` because
+    // getProvider also sees providerType=null.
+    if (!providerType) return
     type Bridge = {
       __rmSyncNow?: () => Promise<void>
       __rmSyncStatus?: () => { status: SyncStatus; errorMessage: string | null; errorCode: SyncErrorCode | null; lastSyncAt: string | null }
@@ -220,7 +226,7 @@ export function usePrivateSync(
       errorCode: errorCodeRef.current,
       lastSyncAt: lastSyncAtRef.current,
     })
-  }, [syncNow])
+  }, [syncNow, providerType])
 
   const reauthenticate = useCallback(async () => {
     const provider = await getProvider()

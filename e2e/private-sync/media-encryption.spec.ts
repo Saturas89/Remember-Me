@@ -96,6 +96,14 @@ test.describe('Privater Sync – Media-Verschlüsselung Google Drive (H1)', () =
     // already in place.
     await page.goto('/sync')
 
+    // Wait for the Hub view to render — it only mounts after `useAnswers`
+    // finishes hydrating localStorage into React state. On WebKit that
+    // hydration is noticeably slower than Chromium, and without this wait
+    // the bridge useEffect runs with providerType=null and binds a
+    // closure that no-ops in runSync (DRIVE LOG stays empty).
+    await expect(page.getByRole('heading', { name: 'Privater Sync', exact: true }))
+      .toBeVisible({ timeout: 15_000 })
+
     // Trigger a deterministic sync via the VITE_E2E bridge and capture
     // diagnostic state so a Safari-specific failure surfaces actionable
     // detail instead of an opaque poll timeout.
