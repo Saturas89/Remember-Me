@@ -115,6 +115,7 @@ test.describe('Privater Sync – Media-Verschlüsselung Google Drive (H1)', () =
       after?: unknown
       hookStatus?: unknown
       syncOutcome?: string
+      importKeyProbe?: unknown
       image?: unknown
       tokenInIdb?: unknown
       vaultKeyInIdb?: unknown
@@ -147,8 +148,48 @@ test.describe('Privater Sync – Media-Verschlüsselung Google Drive (H1)', () =
         })(),
         new Promise<string>(r => setTimeout(() => r('timed-out-25s'), 25_000)),
       ])
+      // Give React 500 ms to flush the setStatus('success' / 'error') that
+      // ran inside runSync's finally — without this the refs are stale and
+      // hookStatus still shows the mid-flight 'syncing'.
+      await new Promise(r => setTimeout(r, 500))
       const after = (w.__rmState?.get() as { privateSync?: unknown } | null)?.privateSync ?? null
       const hookStatus = w.__rmSyncStatus?.() ?? null
+
+      // Independent probe: can WebKit actually round-trip the stored JWK
+      // back into a CryptoKey? loadCachedVaultKey silently returns null
+      // on importKey failure, which would make _requireVaultKey throw
+      // 'Kein Vault-Key' — the runSync.catch swallows that and the test
+      // sees an empty DRIVE LOG.
+      const importKeyProbe = await (async () => {
+        try {
+          const db = await new Promise<IDBDatabase>((res, rej) => {
+            const r = indexedDB.open('rm-sync-vault-db', 1)
+            r.onsuccess = () => res(r.result)
+            r.onerror = () => rej(r.error)
+          })
+          const jwk = await new Promise<unknown>((res, rej) => {
+            const tx = db.transaction('rm-sync-vault', 'readonly')
+            const g = tx.objectStore('rm-sync-vault').get('00000000-0000-4000-8000-000000000001')
+            g.onsuccess = () => res(g.result)
+            g.onerror = () => rej(g.error)
+          })
+          if (!jwk) return { stage: 'no-jwk' }
+          try {
+            const k = await crypto.subtle.importKey(
+              'jwk',
+              jwk as JsonWebKey,
+              { name: 'AES-GCM', length: 256 },
+              true,
+              ['encrypt', 'decrypt'],
+            )
+            return { stage: 'ok', keyType: k.type, alg: (jwk as { alg?: string }).alg, keyOps: (jwk as { key_ops?: string[] }).key_ops }
+          } catch (e) {
+            return { stage: 'importKey-threw', error: String(e), alg: (jwk as { alg?: string }).alg, keyOps: (jwk as { key_ops?: string[] }).key_ops }
+          }
+        } catch (e) {
+          return { stage: 'idb-error', error: String(e) }
+        }
+      })()
       const idbProbe = (db: string, store: string, key: string) => new Promise(resolve => {
         const r = indexedDB.open(db, 1)
         r.onsuccess = () => {
@@ -174,6 +215,7 @@ test.describe('Privater Sync – Media-Verschlüsselung Google Drive (H1)', () =
         after,
         hookStatus,
         syncOutcome,
+        importKeyProbe,
         image: await idbProbe('rm-images', 'images', 'img-1'),
         tokenInIdb: await idbProbe('rm-sync-auth', 'tokens', 'rm-sync-gdrive-token'),
         vaultKeyInIdb: await idbProbe('rm-sync-vault-db', 'rm-sync-vault', '00000000-0000-4000-8000-000000000001'),
