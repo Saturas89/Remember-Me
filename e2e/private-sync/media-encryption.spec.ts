@@ -96,15 +96,6 @@ test.describe('Privater Sync – Media-Verschlüsselung Google Drive (H1)', () =
     // already in place.
     await page.goto('/sync')
 
-    // WebKit headless reports `navigator.onLine === false` by default,
-    // which makes runSync's `if (!navigator.onLine) return` short-circuit
-    // before any HTTP request is made — drove the previous diag round's
-    // "syncOutcome: resolved, DRIVE LOG: []" result. Force it true for
-    // the duration of the test.
-    await page.evaluate(() => {
-      Object.defineProperty(navigator, 'onLine', { configurable: true, get: () => true })
-    })
-
     // Trigger a deterministic sync via the VITE_E2E bridge and capture
     // diagnostic state so a Safari-specific failure surfaces actionable
     // detail instead of an opaque poll timeout.

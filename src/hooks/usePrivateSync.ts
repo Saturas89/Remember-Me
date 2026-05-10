@@ -77,7 +77,12 @@ export function usePrivateSync(
 
   const runSync = useCallback(async () => {
     if (syncingRef.current) return
-    if (!navigator.onLine) return
+    // headless WebKit reports `navigator.onLine === false` and the
+    // property cannot be overridden via Object.defineProperty on Safari
+    // (non-configurable), so the E2E suite would otherwise be unable to
+    // exercise the sync pipeline at all. The VITE_E2E gate keeps the
+    // production guard intact for real users.
+    if (!navigator.onLine && import.meta.env.VITE_E2E !== 'true') return
     const provider = await getProvider()
     if (!provider) return
 
