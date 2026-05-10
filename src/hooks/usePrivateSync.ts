@@ -182,6 +182,17 @@ export function usePrivateSync(
     await runSync()
   }, [runSync])
 
+  // E2E bridge: Playwright deterministically triggers a sync without going
+  // through the wizard or the 5s auto-debounce. Gated by VITE_E2E so the
+  // hook is invisible in production builds. No cleanup — we always want
+  // the latest closure on the window so the bridge can't fall into a gap
+  // between unmount and re-mount.
+  useEffect(() => {
+    if (import.meta.env.VITE_E2E !== 'true') return
+    if (typeof window === 'undefined') return
+    ;(window as Window & { __rmSyncNow?: () => Promise<void> }).__rmSyncNow = syncNow
+  }, [syncNow])
+
   const reauthenticate = useCallback(async () => {
     const provider = await getProvider()
     if (!provider) return

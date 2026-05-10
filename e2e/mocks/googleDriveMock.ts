@@ -9,7 +9,11 @@ import type { BrowserContext, Route, Request as PWRequest } from '@playwright/te
 // Anything else returns 501 so unexpected calls are loud.
 
 export interface DriveMockState {
-  files: Map<string, { name: string; content: string; mimeType: string }>
+  // `content` is a UTF-8 string view of the body — preserved for the
+  // existing setup tests that JSON.parse it. `body` is the raw bytes,
+  // populated for media uploads where the body is encrypted ciphertext
+  // and a string view would mangle non-UTF-8 byte runs.
+  files: Map<string, { name: string; content: string; mimeType: string; body?: Uint8Array }>
   log: { method: string; url: string }[]
 }
 
@@ -67,7 +71,7 @@ async function handle(route: Route, state: DriveMockState) {
     return route.fulfill({
       status: 200,
       contentType: file.mimeType,
-      body: file.content,
+      body: file.body ? Buffer.from(file.body) : file.content,
     })
   }
 
@@ -77,17 +81,28 @@ async function handle(route: Route, state: DriveMockState) {
     url.pathname.includes('/upload/drive/v3/files')
   ) {
     const id = parseUpdateId(url.pathname) ?? `mock-${state.files.size + 1}`
-    const body = req.postData() ?? ''
-    const { name, content, mimeType } = parseMultipart(body)
+    // Bytes-aware path: media uploads are AES-GCM ciphertext that round-trips
+    // through the same multipart wrapper as the JSON envelope. We grab the
+    // raw body via postDataBuffer() and pull the file payload out as bytes;
+    // the existing string-based parse is kept for the envelope so the older
+    // setup tests keep working unchanged.
+    const buf = req.postDataBuffer()
+    const ctHeader = req.headers()['content-type'] ?? ''
+    const boundary = ctHeader.match(/boundary=([^;]+)/)?.[1] ?? ''
+    const bytesParse = buf && boundary
+      ? parseMultipartBytes(new Uint8Array(buf), boundary)
+      : { name: undefined, mimeType: undefined, payload: new Uint8Array() }
+    const stringParse = parseMultipart(req.postData() ?? '')
     state.files.set(id, {
-      name: name ?? state.files.get(id)?.name ?? 'remember-me-sync.json',
-      content,
-      mimeType: mimeType ?? 'application/json',
+      name: bytesParse.name ?? stringParse.name ?? state.files.get(id)?.name ?? 'remember-me-sync.json',
+      content: stringParse.content,
+      mimeType: bytesParse.mimeType ?? stringParse.mimeType ?? 'application/json',
+      body: bytesParse.payload,
     })
     return route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ id, name }),
+      body: JSON.stringify({ id, name: bytesParse.name ?? stringParse.name }),
     })
   }
 
@@ -113,4 +128,47 @@ function parseMultipart(body: string): { name?: string; content: string; mimeTyp
   const parts = body.split(/\r?\n\r?\n/)
   const content = parts[parts.length - 1] ?? ''
   return { name: nameMatch?.[1], mimeType: mimeMatch?.[1], content }
+}
+
+function parseMultipartBytes(bytes: Uint8Array, boundary: string): {
+  name?: string
+  mimeType?: string
+  payload: Uint8Array
+} {
+  const enc = new TextEncoder()
+  const sep = enc.encode('\r\n\r\n')
+  const closing = enc.encode(`\r\n--${boundary}--`)
+  const firstSep = indexOfBytes(bytes, sep, 0)
+  if (firstSep < 0) return { payload: new Uint8Array() }
+  const secondSep = indexOfBytes(bytes, sep, firstSep + sep.length)
+  if (secondSep < 0) return { payload: new Uint8Array() }
+  // Headers between firstSep and secondSep belong to part 2 — pull MIME from
+  // them; the JSON metadata in part 1 holds the file name.
+  const part1Json = new TextDecoder().decode(bytes.slice(firstSep + sep.length, secondSep))
+  const name = part1Json.match(/"name"\s*:\s*"([^"]+)"/)?.[1]
+  const mimeType = part1Json.match(/Content-Type:\s*([^\r\n]+)/i)?.[1]
+  const payloadStart = secondSep + sep.length
+  const payloadEnd = lastIndexOfBytes(bytes, closing)
+  const payload = bytes.slice(payloadStart, payloadEnd >= 0 ? payloadEnd : bytes.length)
+  return { name, mimeType, payload }
+}
+
+function indexOfBytes(haystack: Uint8Array, needle: Uint8Array, from: number): number {
+  outer: for (let i = from; i <= haystack.length - needle.length; i++) {
+    for (let j = 0; j < needle.length; j++) {
+      if (haystack[i + j] !== needle[j]) continue outer
+    }
+    return i
+  }
+  return -1
+}
+
+function lastIndexOfBytes(haystack: Uint8Array, needle: Uint8Array): number {
+  outer: for (let i = haystack.length - needle.length; i >= 0; i--) {
+    for (let j = 0; j < needle.length; j++) {
+      if (haystack[i + j] !== needle[j]) continue outer
+    }
+    return i
+  }
+  return -1
 }
