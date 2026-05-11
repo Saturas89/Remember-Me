@@ -29,12 +29,17 @@ test.describe('Privater Sync – Setup-Wizard Server (E2E-01)', () => {
     await page.getByRole('button', { name: /Storyhold Server/ }).click()
     await page.getByRole('button', { name: 'Weiter' }).click()
 
-    // S3: E-Mail-Login (mocked via installPrivateSyncSupabaseMock)
+    // S3: Konto-Modus (H4: explicit sign-up choice).
+    await expect(page.getByRole('heading', { name: /Hast du schon ein Konto/ })).toBeVisible()
+    await page.getByRole('button', { name: /Nein, neues Konto erstellen/ }).click()
+
+    // S4: E-Mail-Registrierung (mocked via installPrivateSyncSupabaseMock).
+    await expect(page.getByRole('heading', { name: 'Konto erstellen', exact: true })).toBeVisible()
     await page.getByLabel('E-Mail').fill('test@example.com')
     await page.getByLabel('Passwort').fill('passw0rd!')
-    await page.getByRole('button', { name: 'Anmelden', exact: true }).click()
+    await page.getByRole('button', { name: 'Konto erstellen', exact: true }).click()
 
-    // S4: Recovery Code
+    // S5: Recovery Code
     await expect(page.getByRole('heading', { name: 'Dein Sicherheitsschlüssel' })).toBeVisible()
     const code = page.locator('.private-sync-view__code')
     await expect(code).toBeVisible()

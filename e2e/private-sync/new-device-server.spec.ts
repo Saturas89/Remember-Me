@@ -32,21 +32,22 @@ test.describe('Privater Sync – Recovery-Code auf neuem Gerät (E2E-05)', () =>
     await completeOnboarding(page, 'Eva')
     await openSyncTab(page)
 
-    // Walk the wizard: Server → Login.
+    // Walk the wizard: Server → Account-Mode → Sign-In → Enter-Code.
     await page.getByRole('button', { name: 'Einrichten' }).click()
     await page.getByRole('button', { name: /Storyhold Server/ }).click()
     await page.getByRole('button', { name: 'Weiter' }).click()
+
+    // H4: returning user picks "Anmelden" explicitly.
+    await expect(page.getByRole('heading', { name: /Hast du schon ein Konto/ })).toBeVisible()
+    await page.getByRole('button', { name: /Ja, ich melde mich an/ }).click()
 
     await page.getByLabel('E-Mail').fill('returning@example.com')
     await page.getByLabel('Passwort').fill('passw0rd!')
     await page.getByRole('button', { name: 'Anmelden', exact: true }).click()
 
-    // The wizard either lands on the Recovery-Code or Enter-Code screen
-    // depending on whether sign-in vs. sign-up succeeded first. Both paths
-    // exercise the visible recovery-code UX.
-    const heading = page.getByRole('heading', {
-      name: /Sicherheitsschlüssel|Dein Sicherheitsschlüssel/,
-    })
-    await expect(heading).toBeVisible()
+    // With a row pre-seeded for this user, the wizard lands on Enter-Code.
+    await expect(page.getByRole('heading', {
+      name: /Sicherheitsschlüssel eingeben|Dein Sicherheitsschlüssel/,
+    })).toBeVisible()
   })
 })

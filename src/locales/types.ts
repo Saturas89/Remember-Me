@@ -639,6 +639,15 @@ export interface Translations {
     passwordPlaceholder: string
     signInButton: string
     signingIn: string
+    accountModeTitle: string
+    accountModeDesc: string
+    accountModeExistingTitle: string
+    accountModeExistingDesc: string
+    accountModeNewTitle: string
+    accountModeNewDesc: string
+    signUpTitle: string
+    signUpButton: string
+    signingUp: string
     recoveryCodeTitle: string
     recoveryCodeDesc: string
     recoveryCodeWarning: string

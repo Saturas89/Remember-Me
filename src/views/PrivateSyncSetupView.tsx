@@ -7,10 +7,13 @@ import type { SyncProviderType } from '../types'
 type Step =
   | 'intro'
   | 'provider-choice'
+  | 'account-mode'
   | 'login'
   | 'recovery-code'
   | 'enter-code'
   | 'success'
+
+type AuthMode = 'signin' | 'signup'
 
 interface Props {
   onComplete: (provider: SyncProviderType, userId: string) => void
@@ -22,6 +25,7 @@ export function PrivateSyncSetupView({ onComplete }: Props) {
 
   const [step, setStep] = useState<Step>('intro')
   const [provider, setProvider] = useState<SyncProviderType | null>(null)
+  const [authMode, setAuthMode] = useState<AuthMode | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -134,27 +138,39 @@ export function PrivateSyncSetupView({ onComplete }: Props) {
     try {
       const supabase = getSyncSupabaseClient()
       const { data, error: signInError } = await supabase.auth.signInWithPassword({ email, password })
-      if (signInError) {
-        // Try sign-up if sign-in fails (new account)
-        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({ email, password })
-        if (signUpError) throw signUpError
-        const uid = signUpData.user?.id
-        if (!uid) throw new Error('Kein User-ID nach Registrierung')
-        setUserId(uid)
-      } else {
-        const uid = data.user?.id
-        if (!uid) throw new Error('Kein User-ID nach Anmeldung')
-        setUserId(uid)
-        // Existing account → needs code entry
-        setStep('enter-code')
-        return
-      }
-      // New account → show recovery code
+      // H4: NO fallback to signUp. A failed sign-in surfaces an error and
+      // stays on the form; the user must explicitly switch to "Create
+      // account" if they really want a new one.
+      if (signInError) throw signInError
+      const uid = data.user?.id
+      if (!uid) throw new Error('Kein User-ID nach Anmeldung')
+      setUserId(uid)
+      setStep('enter-code')
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Anmeldung fehlgeschlagen')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function handleEmailSignUp() {
+    setLoading(true)
+    setError(null)
+    try {
+      const supabase = getSyncSupabaseClient()
+      const { data, error: signUpError } = await supabase.auth.signUp({ email, password })
+      // H4: NO fallback to signIn. If the account already exists, Supabase
+      // returns an error and the user is told to switch to "Sign in" — no
+      // silent re-use of an existing account.
+      if (signUpError) throw signUpError
+      const uid = data.user?.id
+      if (!uid) throw new Error('Kein User-ID nach Registrierung')
+      setUserId(uid)
       const code = generateRecoveryCode()
       setRecoveryCode(code)
       setStep('recovery-code')
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Anmeldung fehlgeschlagen')
+      setError(e instanceof Error ? e.message : 'Registrierung fehlgeschlagen')
     } finally {
       setLoading(false)
     }
@@ -281,7 +297,14 @@ export function PrivateSyncSetupView({ onComplete }: Props) {
     const handleContinue = () => {
       if (provider === 'google-drive') return handleGoogleSignIn()
       if (provider === 'onedrive') return handleMicrosoftSignIn()
-      if (provider === 'supabase') setStep('login')
+      if (provider === 'supabase') {
+        // H4: explicit sign-up vs sign-in step. Without it, a typo'd password
+        // on sign-in used to auto-create a brand-new account and orphan the
+        // existing vault (plus a User-Enumeration side-channel).
+        setAuthMode(null)
+        setError(null)
+        setStep('account-mode')
+      }
     }
     return (
       <div className="private-sync-view">
@@ -327,7 +350,12 @@ export function PrivateSyncSetupView({ onComplete }: Props) {
     )
   }
 
-  if (step === 'login') {
+  if (step === 'account-mode') {
+    const pick = (mode: AuthMode) => {
+      setAuthMode(mode)
+      setError(null)
+      setStep('login')
+    }
     return (
       <div className="private-sync-view">
         <div className="private-sync-view__topbar">
@@ -336,7 +364,56 @@ export function PrivateSyncSetupView({ onComplete }: Props) {
           </button>
         </div>
         <div className="private-sync-view__content">
-          <h2 className="private-sync-view__title">{s.loginTitle}</h2>
+          <h2 className="private-sync-view__title">{s.accountModeTitle}</h2>
+          <p className="private-sync-view__desc">{s.accountModeDesc}</p>
+          {error && <p className="private-sync-view__error">{error}</p>}
+          <div className="private-sync-view__provider-list">
+            <button
+              type="button"
+              className="provider-card"
+              onClick={() => pick('signin')}
+              disabled={loading}
+            >
+              <span className="provider-card__icon provider-card__icon--server" aria-hidden="true">🔑</span>
+              <div className="provider-card__body">
+                <p className="provider-card__title">{s.accountModeExistingTitle}</p>
+                <p className="provider-card__desc">{s.accountModeExistingDesc}</p>
+              </div>
+            </button>
+            <button
+              type="button"
+              className="provider-card"
+              onClick={() => pick('signup')}
+              disabled={loading}
+            >
+              <span className="provider-card__icon provider-card__icon--server" aria-hidden="true">✨</span>
+              <div className="provider-card__body">
+                <p className="provider-card__title">{s.accountModeNewTitle}</p>
+                <p className="provider-card__desc">{s.accountModeNewDesc}</p>
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (step === 'login') {
+    const isSignUp = authMode === 'signup'
+    const handler = isSignUp ? handleEmailSignUp : handleEmailSignIn
+    const title = isSignUp ? s.signUpTitle : s.loginTitle
+    const buttonLabel = loading
+      ? (isSignUp ? s.signingUp : s.signingIn)
+      : (isSignUp ? s.signUpButton : s.signInButton)
+    return (
+      <div className="private-sync-view">
+        <div className="private-sync-view__topbar">
+          <button className="btn btn--ghost btn--sm" onClick={() => setStep('account-mode')} type="button">
+            {s.back}
+          </button>
+        </div>
+        <div className="private-sync-view__content">
+          <h2 className="private-sync-view__title">{title}</h2>
           {error && <p className="private-sync-view__error">{error}</p>}
 
           <div className="private-sync-view__form">
@@ -359,16 +436,16 @@ export function PrivateSyncSetupView({ onComplete }: Props) {
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 placeholder={s.passwordPlaceholder}
-                autoComplete="current-password"
+                autoComplete={isSignUp ? 'new-password' : 'current-password'}
               />
             </label>
             <button
               className="btn btn--primary btn--full"
-              onClick={handleEmailSignIn}
+              onClick={handler}
               disabled={loading || !email || !password}
               type="button"
             >
-              {loading ? s.signingIn : s.signInButton}
+              {buttonLabel}
             </button>
           </div>
         </div>
