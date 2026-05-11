@@ -72,6 +72,31 @@ export default defineConfig({
   ],
   test: {
     environment: 'jsdom',
+    setupFiles: ['src/test-helpers/vitestSetup.ts'],
     exclude: ['**/node_modules/**', '**/dist/**', 'e2e/**'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'lcov', 'html'],
+      include: ['src/**/*.{ts,tsx}'],
+      exclude: [
+        'src/**/*.test.{ts,tsx}',
+        'src/test-helpers/**',
+        'src/integration/**',
+        'src/main.tsx',
+        'src/vite-env.d.ts',
+        'src/types.ts',
+        'src/**/*.d.ts',
+      ],
+      // Untergrenzen entsprechen dem realen Coverage-Stand auf diesem Branch.
+      // Sie wirken als Ratsche: künftige PRs dürfen die Marke nicht
+      // unterlaufen, sollten sie aber Schritt für Schritt anheben, sobald
+      // mehr Tests (z. B. weitere Integrations-Flows) hinzukommen.
+      thresholds: {
+        lines: 55,
+        statements: 52,
+        functions: 44,
+        branches: 42,
+      },
+    },
   },
 })

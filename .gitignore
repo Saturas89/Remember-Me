@@ -73,3 +73,6 @@ Thumbs.db
 /blob-report/
 /playwright/.cache/
 output.txt
+
+# Vitest coverage
+/coverage/
