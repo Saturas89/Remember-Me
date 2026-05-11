@@ -212,7 +212,7 @@ export const RELEASE_NOTES: ReleaseNote[] = [
     version: '1.0.0',
     date: '2026-04-10',
     highlights: [
-      '🚀 Remember Me gestartet – 6 Kategorien, 50+ Fragen, offline-fähig',
+      '🚀 Storyhold gestartet – 6 Kategorien, 50+ Fragen, offline-fähig',
       '📴 Vollständig offline nutzbar (PWA)',
     ],
   },

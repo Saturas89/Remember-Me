@@ -25,7 +25,7 @@ async function completeOnboarding(page: Page, name: string) {
   await expect(page.getByText(new RegExp(`Hallo,\\s*${name}`))).toBeVisible()
 }
 
-test.describe('Remember Me – Onboarding & Home', () => {
+test.describe('Storyhold – Onboarding & Home', () => {
   test('fresh visitor sees onboarding and can create a profile', async ({ page }) => {
     await page.goto('/')
 
@@ -71,7 +71,7 @@ test.describe('Remember Me – Onboarding & Home', () => {
   })
 })
 
-test.describe('Remember Me – Bottom navigation', () => {
+test.describe('Storyhold – Bottom navigation', () => {
   test.beforeEach(async ({ page }) => {
     await completeOnboarding(page, 'Navigator')
   })
@@ -88,7 +88,7 @@ test.describe('Remember Me – Bottom navigation', () => {
   }
 })
 
-test.describe('Remember Me – Simple Mode (mode-choice flow)', () => {
+test.describe('Storyhold – Simple Mode (mode-choice flow)', () => {
   // Override the parent pre-seed so the mode-choice step is actually shown
   // on the FIRST navigation – but preserve any state the test itself has
   // produced (mode pick, name, profile) on subsequent navigations like
@@ -200,7 +200,7 @@ test.describe('Remember Me – Simple Mode (mode-choice flow)', () => {
   })
 })
 
-test.describe('Remember Me – Eigene Erinnerung (custom questions)', () => {
+test.describe('Storyhold – Eigene Erinnerung (custom questions)', () => {
   test('user can add a custom question and see it listed', async ({ page }) => {
     await completeOnboarding(page, 'Custom')
 

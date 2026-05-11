@@ -495,7 +495,7 @@ export function useAnswers() {
     try {
       const parsed = JSON.parse(json) as Record<string, unknown>
       if (parsed.$type !== BACKUP_TYPE) {
-        return { ok: false, error: 'Unbekanntes Dateiformat. Bitte eine Backup-Datei von Remember Me verwenden.' }
+        return { ok: false, error: 'Unbekanntes Dateiformat. Bitte eine Backup-Datei von Storyhold verwenden.' }
       }
       const s = (parsed.state ?? {}) as Partial<AppState>
       setState(prev => {

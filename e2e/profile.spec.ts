@@ -27,7 +27,7 @@ async function openProfileTab(page: Page) {
   await expect(page.getByRole('heading', { name: 'Fortschritt' })).toBeVisible()
 }
 
-test.describe('Remember Me – Profile', () => {
+test.describe('Storyhold – Profile', () => {
   test('renders the tree progress logo with an empty archive', async ({ page }) => {
     await completeOnboarding(page)
     await openProfileTab(page)

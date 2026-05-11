@@ -41,7 +41,7 @@ vi.mock('../utils/privateSyncClient', () => ({
 
 const RX = {
   setupButton: /Einrichten|Set up/,
-  supabaseTitle: /Remember Me Server/,
+  supabaseTitle: /Storyhold Server/,
   continueButton: /Weiter|Continue/,
   emailLabel: /E-?Mail|Email/i,
   passwordLabel: /Passwort|Password/,

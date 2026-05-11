@@ -27,7 +27,7 @@ async function openFriendsTab(page: Page) {
   await expect(page.getByRole('heading', { name: /Erinnerung einsammeln/ })).toBeVisible()
 }
 
-test.describe('Remember Me – Freunde-Einladung', () => {
+test.describe('Storyhold – Freunde-Einladung', () => {
   test('shows share button and invitation explainer', async ({ page }) => {
     await completeOnboarding(page, 'Anna')
     await openFriendsTab(page)

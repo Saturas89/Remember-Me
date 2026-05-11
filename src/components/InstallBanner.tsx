@@ -39,7 +39,7 @@ export function InstallBanner({ state, onInstall, onDismiss }: Props) {
         </button>
         <div className="install-modal__brand">
           <HeartIcon />
-          <span className="install-modal__app-name">Remember Me</span>
+          <span className="install-modal__app-name">Storyhold</span>
         </div>
 
         {state.type === 'android' && (

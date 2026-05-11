@@ -82,7 +82,7 @@ Der Unterschied zum bestehenden Markdown-Export: Dieser gibt Frage + Antwort sti
 
 ### 4.1 API-Key-Verwaltung
 
-Da Remember Me aktuell kein Backend hat, stehen zwei Optionen offen:
+Da Storyhold aktuell kein Backend hat, stehen zwei Optionen offen:
 
 **Option A – Benutzer-eigener API-Key (v2.1.0)**
 - Benutzer trägt seinen Anthropic API-Key in den Einstellungen ein

@@ -30,7 +30,7 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, info: ErrorInfo): void {
-    console.error('[Remember Me] render error:', error, info.componentStack)
+    console.error('[Storyhold] render error:', error, info.componentStack)
   }
 
   private handleReload = (): void => {

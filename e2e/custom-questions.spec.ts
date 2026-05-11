@@ -26,7 +26,7 @@ async function openCustomQuestions(page: Page) {
   await expect(page.getByPlaceholder('Titel der Erinnerung...')).toBeVisible()
 }
 
-test.describe('Remember Me – Eigene Erinnerungen', () => {
+test.describe('Storyhold – Eigene Erinnerungen', () => {
   test('share section is hidden until at least one memory exists', async ({ page }) => {
     await completeOnboarding(page)
     await openCustomQuestions(page)

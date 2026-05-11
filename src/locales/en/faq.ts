@@ -5,7 +5,7 @@ export const FAQ_EN = [
     items: [
       {
         q: 'Are my memories uploaded to a server?',
-        a: 'No – and that is exactly the intention. Your story belongs to you alone. All answers, photos and voice recordings stay exclusively on your device. Remember Me works completely without its own servers – your memories go nowhere you haven\'t sent them.',
+        a: 'No – and that is exactly the intention. Your story belongs to you alone. All answers, photos and voice recordings stay exclusively on your device. Storyhold works completely without its own servers – your memories go nowhere you haven\'t sent them.',
       },
       {
         q: 'Who can see my memories?',
@@ -31,7 +31,7 @@ export const FAQ_EN = [
     items: [
       {
         q: 'How do I import my Instagram data?',
-        a: 'Go to Profile → Import → Social Media. There you will find a simple step-by-step guide on how to request and upload your Instagram data. Remember Me reads your posts and suggests turning them into answers – old moments become lasting memories.',
+        a: 'Go to Profile → Import → Social Media. There you will find a simple step-by-step guide on how to request and upload your Instagram data. Storyhold reads your posts and suggests turning them into answers – old moments become lasting memories.',
       },
       {
         q: 'How do I restore saved memories?',
@@ -61,7 +61,7 @@ export const FAQ_EN = [
       },
       {
         q: 'How do I transfer my memories to a new device?',
-        a: 'Create a memory archive under Profile → Back up & share. Transfer the file to the new device (via AirDrop, email, or cloud). Open Remember Me on the new device and load the archive – all your memories are back, as if you never left.',
+        a: 'Create a memory archive under Profile → Back up & share. Transfer the file to the new device (via AirDrop, email, or cloud). Open Storyhold on the new device and load the archive – all your memories are back, as if you never left.',
       },
       {
         q: 'Can I use my memories in other apps?',

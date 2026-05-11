@@ -51,7 +51,7 @@ export async function generateShareCard(
     ctx.textAlign = 'center'
     ctx.fillStyle = '#2d1a08'
     ctx.font = `bold 56px system-ui, -apple-system, sans-serif`
-    ctx.fillText('Remember Me', SIZE / 2, 320)
+    ctx.fillText('Storyhold', SIZE / 2, 320)
 
     ctx.fillStyle = '#9e7a5a'
     ctx.font = `28px system-ui, -apple-system, sans-serif`

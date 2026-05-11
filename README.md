@@ -1,8 +1,8 @@
-# Remember Me
+# Storyhold
 
 *Digitale Erinnerung + persönliche Biografie + kontrolliertes Vermächtnis*
 
-**Remember Me** ist eine Progressive Web App (PWA), mit der Menschen ihre Lebensgeschichte, Erinnerungen, Werte und persönliche Informationen spielerisch für die Nachwelt festhalten.
+**Storyhold** ist eine Progressive Web App (PWA), mit der Menschen ihre Lebensgeschichte, Erinnerungen, Werte und persönliche Informationen spielerisch für die Nachwelt festhalten.
 
 ## Wie es funktioniert
 
@@ -23,7 +23,7 @@
 
 ## Privacy by default
 
-Remember Me arbeitet standardmäßig **komplett offline**. Keine Accounts,
+Storyhold arbeitet standardmäßig **komplett offline**. Keine Accounts,
 keine Server-Kommunikation, keine Tracker. Wer eigene Erinnerungen
 online mit bestimmten Kontakten teilen möchte, kann das optionale
 Online-Teilen aktivieren – es ist Ende-zu-Ende-verschlüsselt (ECDH P-256

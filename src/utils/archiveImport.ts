@@ -46,7 +46,7 @@ function validateBackupText(text: string): { ok: true } | { ok: false; error: st
   try {
     const parsed = JSON.parse(text) as Record<string, unknown>
     if (parsed.$type !== BACKUP_TYPE) {
-      return { ok: false, error: 'Unbekanntes Dateiformat. Bitte eine Backup-Datei von Remember Me verwenden.' }
+      return { ok: false, error: 'Unbekanntes Dateiformat. Bitte eine Backup-Datei von Storyhold verwenden.' }
     }
     return { ok: true }
   } catch {

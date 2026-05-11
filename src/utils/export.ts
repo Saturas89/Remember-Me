@@ -77,7 +77,7 @@ export function exportAsBackup(data: ExportData): string {
     $type: BACKUP_TYPE,
     version: 2,
     exportedAt: new Date().toISOString(),
-    app: 'Remember Me',
+    app: 'Storyhold',
     state: {
       profile: data.profile,
       answers: data.answers,
@@ -101,7 +101,7 @@ export function exportAsMarkdown(data: ExportData): string {
 
   lines.push(`# Lebensgeschichte von ${name}${year}`)
   lines.push('')
-  lines.push(`*Exportiert am ${today} · Remember Me*`)
+  lines.push(`*Exportiert am ${today} · Storyhold*`)
   lines.push('')
   lines.push('---')
 
@@ -206,7 +206,7 @@ export function exportAsMarkdown(data: ExportData): string {
   }
 
   lines.push('')
-  lines.push('*Erstellt mit Remember Me – Lebensgeschichten für die Nachwelt.*')
+  lines.push('*Erstellt mit Storyhold – Lebensgeschichten für die Nachwelt.*')
 
   return lines.join('\n')
 }
@@ -259,7 +259,7 @@ export function exportAsEnrichedJSON(data: ExportData): string {
     $schema: 'https://remember-me.app/schema/export/v1.json',
     exportVersion: '1',
     exportedAt: new Date().toISOString(),
-    app: 'Remember Me',
+    app: 'Storyhold',
     profile: {
       name: profile?.name ?? null,
       birthYear: profile?.birthYear ?? null,

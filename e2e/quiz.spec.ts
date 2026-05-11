@@ -21,7 +21,7 @@ async function completeOnboarding(page: Page, name = 'Quizer') {
   await expect(page.getByText(new RegExp(`Hallo,\\s*${name}`))).toBeVisible()
 }
 
-test.describe('Remember Me – Answering a category', () => {
+test.describe('Storyhold – Answering a category', () => {
   test('entering an answer updates the overall progress headline', async ({ page }) => {
     await completeOnboarding(page)
 

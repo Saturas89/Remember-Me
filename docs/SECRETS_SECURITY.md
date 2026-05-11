@@ -1,4 +1,4 @@
-# Secrets & Security – Remember Me
+# Secrets & Security – Storyhold
 
 ---
 
@@ -37,7 +37,7 @@
 
 ## Optionales Online-Teilen (E2E-verschlüsselt)
 
-Remember Me enthält ein optionales, standardmäßig deaktiviertes Feature, das
+Storyhold enthält ein optionales, standardmäßig deaktiviertes Feature, das
 Erinnerungen Ende-zu-Ende-verschlüsselt mit ausgewählten Kontakten teilt.
 Details zur Datenarchitektur: [`docs/DATA_STORAGE.md`](./DATA_STORAGE.md).
 

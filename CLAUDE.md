@@ -1,4 +1,4 @@
-# Remember Me – Repo-Anweisungen für Claude
+# Storyhold – Repo-Anweisungen für Claude
 
 ## Git-Workflow: immer Pull Requests, nie direkte Merges
 

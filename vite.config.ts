@@ -25,8 +25,8 @@ export default defineConfig({
       registerType: 'prompt',
       includeAssets: ['favicon.svg', 'apple-touch-icon.png', 'pwa-192x192.png', 'pwa-512x512.png'],
       manifest: {
-        name: 'Remember Me',
-        short_name: 'Remember Me',
+        name: 'Storyhold',
+        short_name: 'Storyhold',
         description: 'Halte deine Lebensgeschichte für die Nachwelt und deine Familie fest.',
         lang: 'de',
         theme_color: '#1a1a2e',
