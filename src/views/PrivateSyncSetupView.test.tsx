@@ -19,16 +19,30 @@ vi.mock('../utils/recoveryCode', () => ({
 // the SAME `auth.signInWithPassword` / `auth.signUp` spies so per-test
 // `mockResolvedValueOnce` overrides actually stick (H4 needs the spies to
 // survive across the multi-step wizard).
+// Captures the latest auth-state listener so tests can simulate the
+// "user clicked the email link → SIGNED_IN" event without going through
+// the Supabase SDK's real redirect plumbing.
+type AuthCb = (event: string, session: { user?: { id: string } } | null) => void
+let lastAuthCb: AuthCb | null = null
+
 const mockSupabase = {
   auth: {
     signInWithPassword: vi.fn(async () => ({
-      data: { user: { id: 'test-user-id' } },
+      data: { user: { id: 'test-user-id' }, session: { user: { id: 'test-user-id' } } },
       error: null,
     })),
     signUp: vi.fn(async () => ({
-      data: { user: { id: 'test-user-id' } },
+      // Default: a session is returned, so the wizard skips the
+      // pending-email-confirmation step. Tests that need the wait state
+      // override this with `mockResolvedValueOnce({ session: null })`.
+      data: { user: { id: 'test-user-id' }, session: { user: { id: 'test-user-id' } } },
       error: null,
     })),
+    resend: vi.fn(async () => ({ data: {}, error: null })),
+    onAuthStateChange: vi.fn((cb: AuthCb) => {
+      lastAuthCb = cb
+      return { data: { subscription: { unsubscribe: vi.fn() } } }
+    }),
   },
   from: () => ({
     select: () => ({
@@ -67,6 +81,7 @@ const RX = {
 beforeEach(() => {
   cleanup()
   vi.clearAllMocks()
+  lastAuthCb = null
 })
 
 /**
@@ -156,7 +171,7 @@ describe('PrivateSyncSetupView – H4 sign-up vs sign-in', () => {
       }
     }
     supabase.auth.signUp.mockResolvedValueOnce({
-      data: { user: { id: 'new-user-id' } },
+      data: { user: { id: 'new-user-id' }, session: { user: { id: 'new-user-id' } } },
       error: null,
     })
 
@@ -226,5 +241,125 @@ describe('PrivateSyncSetupView – Lost-Key reset (REQ-018)', () => {
     expect(
       screen.queryByRole('button', { name: RX.lostKeyLink }),
     ).toBeNull()
+  })
+})
+
+// ── Pending email confirmation flow ─────────────────────────────────────────
+
+const RX_PENDING = {
+  title: /Bestätige deine E-Mail|Confirm your email/,
+  resend: /Bestätigungs-Mail erneut senden|Resend confirmation email/,
+  resendSuccess: /Mail wurde erneut gesendet|Email was sent again/,
+  backToLogin: /Anders anmelden|Use a different account/,
+  recoveryCodeTitle: /Dein Sicherheitsschlüssel|Your security key/,
+  enterCodeTitle: /Sicherheitsschlüssel eingeben|Enter security key/,
+}
+
+async function gotoSignUpForm() {
+  render(<PrivateSyncSetupView onComplete={vi.fn()} />)
+  fireEvent.click(await screen.findByRole('button', { name: RX.setupButton }))
+  fireEvent.click(await screen.findByRole('button', { name: new RegExp(RX.supabaseTitle.source) }))
+  fireEvent.click(await screen.findByRole<HTMLButtonElement>('button', { name: RX.continueButton }))
+  fireEvent.click(await screen.findByRole<HTMLButtonElement>(
+    'button', { name: /Nein, neues Konto erstellen|No, create a new account/ },
+  ))
+  fireEvent.change(await screen.findByLabelText(RX.emailLabel), { target: { value: 'new@example.com' } })
+  fireEvent.change(await screen.findByLabelText(RX.passwordLabel), { target: { value: 'a-fresh-password' } })
+}
+
+describe('PrivateSyncSetupView – pending email confirmation', () => {
+  it('P-01: signUp with no session lands on the wait screen, not on recovery-code', async () => {
+    const { getSyncSupabaseClient } = await import('../utils/privateSyncClient')
+    const supabase = getSyncSupabaseClient() as unknown as {
+      auth: { signUp: ReturnType<typeof vi.fn> }
+    }
+    supabase.auth.signUp.mockResolvedValueOnce({
+      data: { user: { id: 'new-user-id' }, session: null },
+      error: null,
+    })
+
+    await gotoSignUpForm()
+    fireEvent.click(await screen.findByRole('button', { name: /^Konto erstellen$|^Create account$/ }))
+
+    await screen.findByText(RX_PENDING.title)
+    // Recovery code must NOT be shown — that step is gated on a real session.
+    expect(screen.queryByText(RX_PENDING.recoveryCodeTitle)).toBeNull()
+  })
+
+  it('P-02: resend button calls supabase.auth.resend and shows success notice', async () => {
+    const { getSyncSupabaseClient } = await import('../utils/privateSyncClient')
+    const supabase = getSyncSupabaseClient() as unknown as {
+      auth: { signUp: ReturnType<typeof vi.fn>; resend: ReturnType<typeof vi.fn> }
+    }
+    supabase.auth.signUp.mockResolvedValueOnce({
+      data: { user: { id: 'new-user-id' }, session: null },
+      error: null,
+    })
+
+    await gotoSignUpForm()
+    fireEvent.click(await screen.findByRole('button', { name: /^Konto erstellen$|^Create account$/ }))
+    await screen.findByText(RX_PENDING.title)
+
+    fireEvent.click(screen.getByRole('button', { name: RX_PENDING.resend }))
+
+    await waitFor(() => {
+      expect(supabase.auth.resend).toHaveBeenCalledWith({
+        type: 'signup',
+        email: 'new@example.com',
+      })
+    })
+    expect(await screen.findByText(RX_PENDING.resendSuccess)).not.toBeNull()
+  })
+
+  it('P-03: SIGNED_IN event auto-advances from wait screen to recovery-code', async () => {
+    const { getSyncSupabaseClient } = await import('../utils/privateSyncClient')
+    const supabase = getSyncSupabaseClient() as unknown as {
+      auth: { signUp: ReturnType<typeof vi.fn> }
+    }
+    supabase.auth.signUp.mockResolvedValueOnce({
+      data: { user: { id: 'new-user-id' }, session: null },
+      error: null,
+    })
+
+    await gotoSignUpForm()
+    fireEvent.click(await screen.findByRole('button', { name: /^Konto erstellen$|^Create account$/ }))
+    await screen.findByText(RX_PENDING.title)
+
+    expect(lastAuthCb).not.toBeNull()
+    // Simulate the user clicking the verification link → SDK fires SIGNED_IN.
+    lastAuthCb!('SIGNED_IN', { user: { id: 'new-user-id' } })
+
+    expect(await screen.findByText(RX_PENDING.recoveryCodeTitle)).not.toBeNull()
+  })
+
+  it('P-04: signIn with email_not_confirmed routes to the wait screen', async () => {
+    const { getSyncSupabaseClient } = await import('../utils/privateSyncClient')
+    const supabase = getSyncSupabaseClient() as unknown as {
+      auth: { signInWithPassword: ReturnType<typeof vi.fn> }
+    }
+    const err: Error & { code?: string } = new Error('Email not confirmed')
+    err.code = 'email_not_confirmed'
+    supabase.auth.signInWithPassword.mockResolvedValueOnce({
+      data: { user: null, session: null },
+      error: err,
+    })
+
+    render(<PrivateSyncSetupView onComplete={vi.fn()} />)
+    fireEvent.click(await screen.findByRole('button', { name: RX.setupButton }))
+    fireEvent.click(await screen.findByRole('button', { name: new RegExp(RX.supabaseTitle.source) }))
+    fireEvent.click(await screen.findByRole<HTMLButtonElement>('button', { name: RX.continueButton }))
+    fireEvent.click(await screen.findByRole<HTMLButtonElement>(
+      'button', { name: /Ja, ich melde mich an|Yes, sign me in/ },
+    ))
+
+    fireEvent.change(await screen.findByLabelText(RX.emailLabel), { target: { value: 'foo@example.com' } })
+    fireEvent.change(await screen.findByLabelText(RX.passwordLabel), { target: { value: 'hunter2hunter2' } })
+    fireEvent.click(await screen.findByRole('button', { name: RX.signInButton }))
+
+    await screen.findByText(RX_PENDING.title)
+    // After verification, signIn-originated flow should land on enter-code, not recovery-code.
+    expect(lastAuthCb).not.toBeNull()
+    lastAuthCb!('SIGNED_IN', { user: { id: 'existing-user-id' } })
+    expect(await screen.findByText(RX_PENDING.enterCodeTitle)).not.toBeNull()
   })
 })

@@ -6,6 +6,15 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '2.6.0',
+    date: '2026-05-11',
+    highlights: [
+      '✉️ Sync-Setup zeigt jetzt deutlich an, wenn auf deinen Klick im Bestätigungs-E-Mail-Link gewartet wird – inklusive deiner Adresse',
+      '🔁 Neuer „Bestätigungs-Mail erneut senden"-Button für den Fall, dass die erste Mail nicht ankommt',
+      '⚡ Nach dem Klick auf den Link geht es automatisch weiter – kein erneutes Tippen mehr nötig',
+    ],
+  },
+  {
     version: '2.5.0',
     date: '2026-05-10',
     highlights: [

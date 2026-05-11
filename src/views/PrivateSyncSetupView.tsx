@@ -19,11 +19,17 @@ type Step =
   | 'provider-choice'
   | 'account-mode'
   | 'login'
+  | 'pending-email-confirmation'
   | 'recovery-code'
   | 'enter-code'
   | 'success'
 
 type AuthMode = 'signin' | 'signup'
+
+// Supabase returns this error code on signInWithPassword when the user exists
+// but never clicked the verification link. We route those users to the same
+// waiting screen as a fresh signUp so the next step is obvious.
+const EMAIL_NOT_CONFIRMED_CODE = 'email_not_confirmed'
 
 interface Props {
   onComplete: (provider: SyncProviderType, userId: string) => void
@@ -52,6 +58,15 @@ export function PrivateSyncSetupView({ onComplete }: Props) {
 
   // userId after login
   const [userId, setUserId] = useState('')
+
+  // Pending-email-confirmation state. `pendingUserId` is set when Supabase
+  // creates the user but withholds a session until the email link is clicked;
+  // we keep it separate from `userId` so we don't try to derive a vault key
+  // before there's an authenticated session. `resendNotice` powers the small
+  // status line under the resend button (success / cooldown / error).
+  const [pendingUserId, setPendingUserId] = useState<string | null>(null)
+  const [resendNotice, setResendNotice] = useState<{ kind: 'sent' | 'error'; text: string } | null>(null)
+  const [resending, setResending] = useState(false)
 
   // Resume Google Drive setup after Supabase OAuth redirect returns to /sync
   useEffect(() => {
@@ -151,7 +166,19 @@ export function PrivateSyncSetupView({ onComplete }: Props) {
       // H4: NO fallback to signUp. A failed sign-in surfaces an error and
       // stays on the form; the user must explicitly switch to "Create
       // account" if they really want a new one.
-      if (signInError) throw signInError
+      if (signInError) {
+        // Supabase rejects an unconfirmed-email login with this exact code.
+        // Send those users to the same waiting screen as a fresh sign-up so
+        // they see "check your mail" instead of an opaque "Anmeldung
+        // fehlgeschlagen".
+        const code = (signInError as { code?: string }).code
+        if (code === EMAIL_NOT_CONFIRMED_CODE) {
+          setResendNotice(null)
+          setStep('pending-email-confirmation')
+          return
+        }
+        throw signInError
+      }
       const uid = data.user?.id
       if (!uid) throw new Error('Kein User-ID nach Anmeldung')
       setUserId(uid)
@@ -175,9 +202,22 @@ export function PrivateSyncSetupView({ onComplete }: Props) {
       if (signUpError) throw signUpError
       const uid = data.user?.id
       if (!uid) throw new Error('Kein User-ID nach Registrierung')
+
+      // When the Supabase project has "Confirm email" turned on, signUp
+      // returns a user but no session — the user must click a link in the
+      // verification email before we can derive a vault key or push state.
+      // Park them on a dedicated wait screen; an onAuthStateChange listener
+      // moves them on once the link is clicked and a SIGNED_IN event fires.
+      if (!data.session) {
+        setPendingUserId(uid)
+        setResendNotice(null)
+        setStep('pending-email-confirmation')
+        return
+      }
+
       setUserId(uid)
-      const code = generateRecoveryCode()
-      setRecoveryCode(code)
+      const recoveryCodeValue = generateRecoveryCode()
+      setRecoveryCode(recoveryCodeValue)
       setStep('recovery-code')
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Registrierung fehlgeschlagen')
@@ -185,6 +225,52 @@ export function PrivateSyncSetupView({ onComplete }: Props) {
       setLoading(false)
     }
   }
+
+  async function handleResendConfirmation() {
+    if (!email || resending) return
+    setResending(true)
+    setResendNotice(null)
+    try {
+      const supabase = getSyncSupabaseClient()
+      const { error: resendError } = await supabase.auth.resend({ type: 'signup', email })
+      if (resendError) throw resendError
+      setResendNotice({ kind: 'sent', text: s.resendSuccess })
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : s.resendError
+      setResendNotice({ kind: 'error', text: msg })
+    } finally {
+      setResending(false)
+    }
+  }
+
+  // Auto-advance from the wait screen once the Supabase email link is clicked.
+  // With the PKCE flow the verification redirect lands back on /sync with a
+  // `?code=...` that the SDK exchanges for a session and emits SIGNED_IN. We
+  // only subscribe while on the wait screen so the listener is cheap and
+  // self-contained.
+  useEffect(() => {
+    if (step !== 'pending-email-confirmation') return
+    const supabase = getSyncSupabaseClient()
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event !== 'SIGNED_IN' || !session?.user?.id) return
+      // signUp path: user has not yet seen a recovery code — generate one
+      // now and route through `recovery-code`. signIn path (came here from
+      // email_not_confirmed): we go straight to `enter-code` because the
+      // user already has an existing code.
+      const uid = session.user.id
+      setUserId(uid)
+      if (pendingUserId) {
+        const recoveryCodeValue = generateRecoveryCode()
+        setRecoveryCode(recoveryCodeValue)
+        setStep('recovery-code')
+      } else {
+        setStep('enter-code')
+      }
+      setPendingUserId(null)
+      setResendNotice(null)
+    })
+    return () => { subscription.unsubscribe() }
+  }, [step, pendingUserId])
 
   async function handleRecoveryCodeConfirm() {
     if (!provider) return
@@ -499,6 +585,55 @@ export function PrivateSyncSetupView({ onComplete }: Props) {
               {buttonLabel}
             </button>
           </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (step === 'pending-email-confirmation') {
+    return (
+      <div className="private-sync-view">
+        <div className="private-sync-view__content">
+          <h2 className="private-sync-view__title">{s.pendingEmailTitle}</h2>
+          <p className="private-sync-view__desc">
+            {s.pendingEmailDescPrefix}
+            <strong>{email}</strong>
+            {s.pendingEmailDescSuffix}
+          </p>
+          <p className="friends-hint friends-hint--warn">{s.pendingEmailHint}</p>
+
+          <button
+            className="share-cta-btn"
+            onClick={handleResendConfirmation}
+            disabled={resending || !email}
+            type="button"
+          >
+            {resending ? s.pendingEmailResending : s.pendingEmailResendButton}
+          </button>
+
+          {resendNotice && (
+            <p
+              className={
+                resendNotice.kind === 'error'
+                  ? 'friends-hint friends-hint--warn'
+                  : 'friends-hint'
+              }
+            >
+              {resendNotice.text}
+            </p>
+          )}
+
+          <button
+            type="button"
+            className="btn btn--ghost btn--full"
+            onClick={() => {
+              setResendNotice(null)
+              setPendingUserId(null)
+              setStep('account-mode')
+            }}
+          >
+            {s.pendingEmailBackToLogin}
+          </button>
         </div>
       </div>
     )

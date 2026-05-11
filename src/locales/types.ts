@@ -648,6 +648,15 @@ export interface Translations {
     signUpTitle: string
     signUpButton: string
     signingUp: string
+    pendingEmailTitle: string
+    pendingEmailDescPrefix: string
+    pendingEmailDescSuffix: string
+    pendingEmailHint: string
+    pendingEmailResendButton: string
+    pendingEmailResending: string
+    pendingEmailBackToLogin: string
+    resendSuccess: string
+    resendError: string
     recoveryCodeTitle: string
     recoveryCodeDesc: string
     recoveryCodeWarning: string
