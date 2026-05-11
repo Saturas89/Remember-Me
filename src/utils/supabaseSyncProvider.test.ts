@@ -179,6 +179,79 @@ describe('SupabaseSyncProvider', () => {
     expect((captured as SyncError).code).toBe('decrypt')
   })
 
+  // ── H5: monotonic envelope version + rollback rejection ────────────────
+
+  it('SP-06: pull rejects an envelope whose version is lower than lastSeen', async () => {
+    const key = await deriveVaultKey(RECOVERY_CODE, legacyKdfParams(USER_ID))
+    await cacheVaultKey(USER_ID, key)
+    const { saveLastSeenVersion } = await import('./recoveryCode')
+    // Pretend the device has already accepted version=10.
+    await saveLastSeenVersion(USER_ID, 10)
+
+    const remoteState = makeAppState()
+    // Server (malicious or just stale) serves a version=5 envelope.
+    const { ct, iv } = await encryptText(
+      JSON.stringify({ state: remoteState, envelopeVersion: 5 }),
+      key,
+    )
+    recorder.selectScript = { data: { state_ct: ct, state_iv: iv }, error: null }
+
+    const provider = new SupabaseSyncProvider(USER_ID)
+    let captured: unknown
+    try {
+      await provider.pull(makeAppState(), noopMedia)
+    } catch (err) {
+      captured = err
+    }
+    expect(captured).toBeInstanceOf(SyncError)
+    expect((captured as Error).message).toMatch(/Veralteter Sync-Stand/i)
+  })
+
+  it('SP-07: pull accepts an envelope with version > lastSeen and bumps the high-water mark', async () => {
+    const key = await deriveVaultKey(RECOVERY_CODE, legacyKdfParams(USER_ID))
+    await cacheVaultKey(USER_ID, key)
+    const { saveLastSeenVersion, loadLastSeenVersion } = await import('./recoveryCode')
+    await saveLastSeenVersion(USER_ID, 3)
+
+    const remoteState = makeAppState()
+    const { ct, iv } = await encryptText(
+      JSON.stringify({ state: remoteState, envelopeVersion: 99 }),
+      key,
+    )
+    recorder.selectScript = { data: { state_ct: ct, state_iv: iv }, error: null }
+
+    const provider = new SupabaseSyncProvider(USER_ID)
+    const result = await provider.pull(makeAppState(), noopMedia)
+    expect(result).not.toBeNull()
+    expect(await loadLastSeenVersion(USER_ID)).toBe(99)
+  })
+
+  it('SP-08: pull accepts legacy payload (no envelopeVersion wrapper) as version=0', async () => {
+    const key = await deriveVaultKey(RECOVERY_CODE, legacyKdfParams(USER_ID))
+    await cacheVaultKey(USER_ID, key)
+    // Pre-H5 payloads serialize the AppState directly.
+    const { ct, iv } = await encryptText(JSON.stringify(makeAppState()), key)
+    recorder.selectScript = { data: { state_ct: ct, state_iv: iv }, error: null }
+
+    const provider = new SupabaseSyncProvider(USER_ID)
+    const result = await provider.pull(makeAppState(), noopMedia)
+    expect(result).not.toBeNull()
+  })
+
+  it('SP-09: push increments envelopeVersion + caches the new high-water mark', async () => {
+    const key = await deriveVaultKey(RECOVERY_CODE, legacyKdfParams(USER_ID))
+    await cacheVaultKey(USER_ID, key)
+    const { saveLastSeenVersion, loadLastSeenVersion } = await import('./recoveryCode')
+    await saveLastSeenVersion(USER_ID, 7)
+
+    const provider = new SupabaseSyncProvider(USER_ID)
+    await provider.push(makeAppState(), noopMedia)
+    expect(await loadLastSeenVersion(USER_ID)).toBe(8)
+
+    // The upsert payload's `version` column also moved with it.
+    expect((recorder.upserts[0]?.payload as { version: number }).version).toBe(8)
+  })
+
   it('SP-05: push → Auth-Fehler (401) → SyncError("auth")', async () => {
     const key = await deriveVaultKey(RECOVERY_CODE, legacyKdfParams(USER_ID))
     await cacheVaultKey(USER_ID, key)

@@ -55,6 +55,10 @@ export interface EncryptedSyncEnvelope {
 interface EncryptedPayload<TManifest> {
   state: AppState
   mediaManifest: TManifest
+  /** H5: monotonically increasing per-syncId counter, embedded in the
+   *  encrypted payload so a malicious server cannot forge a high value to
+   *  bypass the local replay check. Absent (= 0) on legacy v2 payloads. */
+  envelopeVersion?: number
 }
 
 export async function encryptSyncEnvelope<TManifest>(opts: {
@@ -67,10 +71,16 @@ export async function encryptSyncEnvelope<TManifest>(opts: {
    *  with the envelope so a new device can re-derive the same key from
    *  the recovery code. Omit only when emitting a legacy v2 envelope. */
   kdf?: { salt: string; iterations: number }
+  /** H5: monotonic version embedded inside the AES-GCM payload so the
+   *  server cannot tamper with it. Pull-side replay check rejects any
+   *  remote payload whose version is below the locally cached high-water
+   *  mark. */
+  envelopeVersion?: number
 }): Promise<EncryptedSyncEnvelope> {
   const payload: EncryptedPayload<TManifest> = {
     state: opts.state,
     mediaManifest: opts.mediaManifest,
+    ...(typeof opts.envelopeVersion === 'number' ? { envelopeVersion: opts.envelopeVersion } : {}),
   }
   const { ct, iv } = await encryptText(JSON.stringify(payload), opts.vaultKey)
   return {

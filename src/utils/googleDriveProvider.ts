@@ -510,11 +510,15 @@ export class GoogleDriveProvider implements SyncProvider {
     // (single-device users who never re-cached after the H7 upgrade) →
     // envelope falls back to schemaVersion=2, decrypt path treats it as
     // "salt = syncId, iter = 200_000".
-    const { loadKdfParams } = await import('./recoveryCode')
+    const { loadKdfParams, loadLastSeenVersion, saveLastSeenVersion } =
+      await import('./recoveryCode')
     const cachedKdf = await loadKdfParams(syncId)
     const kdfMeta = cachedKdf
       ? { salt: btoa(String.fromCharCode(...cachedKdf.salt)), iterations: cachedKdf.iterations }
       : undefined
+    // H5: bump the monotonic envelope version so pulls from this row are
+    // strictly later than any prior state we've written or accepted.
+    const nextVersion = (await loadLastSeenVersion(syncId)) + 1
     const envelope = await encryptSyncEnvelope({
       state,
       mediaManifest: manifest,
@@ -522,7 +526,9 @@ export class GoogleDriveProvider implements SyncProvider {
       syncId,
       appVersion: APP_VERSION,
       kdf: kdfMeta,
+      envelopeVersion: nextVersion,
     })
+    await saveLastSeenVersion(syncId, nextVersion)
     const body = JSON.stringify(envelope)
 
     if (fileId) {
@@ -543,7 +549,7 @@ export class GoogleDriveProvider implements SyncProvider {
   }
 
   async pull(localState: AppState, media: MediaStoreAccessor): Promise<PullResult | null> {
-    const { key: vaultKey } = await this._requireVaultKey()
+    const { key: vaultKey, syncId } = await this._requireVaultKey()
     const token = await getValidToken()
     let fileId = await loadFileId()
     if (!fileId) fileId = await findSyncFile(token)
@@ -556,6 +562,22 @@ export class GoogleDriveProvider implements SyncProvider {
     const decrypted = await decryptSyncEnvelope<Record<string, MediaManifestEntry>>(envelope, vaultKey)
     const remote = decrypted.state
     const manifest = decrypted.mediaManifest ?? {}
+
+    // H5: reject a remote envelope whose version is below the locally
+    // cached high-water mark — that signals a replay of a stale backup
+    // (malicious server, recovered cached file, etc.).
+    const { loadLastSeenVersion, saveLastSeenVersion } = await import('./recoveryCode')
+    const remoteVersion = typeof decrypted.envelopeVersion === 'number' ? decrypted.envelopeVersion : 0
+    const lastSeen = await loadLastSeenVersion(syncId)
+    if (remoteVersion < lastSeen) {
+      throw new SyncError(
+        `Veralteter Sync-Stand erkannt (Version ${remoteVersion} < ${lastSeen}) — möglicher Replay.`,
+        'unknown',
+      )
+    }
+    if (remoteVersion > lastSeen) {
+      await saveLastSeenVersion(syncId, remoteVersion)
+    }
 
     const localIds = await media.listLocalMediaIds()
     const localAllIds = new Set([...localIds.images, ...localIds.audio, ...localIds.videos])

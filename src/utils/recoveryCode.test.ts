@@ -27,6 +27,9 @@ import {
   generateKdfSalt,
   KDF_V3_ITERATIONS,
   KDF_V3_SALT_BYTES,
+  loadLastSeenVersion,
+  saveLastSeenVersion,
+  clearLastSeenVersion,
 } from './recoveryCode'
 import { SyncError } from './privateSyncProvider'
 
@@ -126,15 +129,18 @@ const VAULT_DB = 'rm-sync-vault-db'
 const VAULT_STORE = 'rm-sync-vault'
 const KDF_STORE = 'rm-sync-kdf'
 
+const VERSION_STORE = 'rm-sync-version'
+
 function openVaultIdbRaw(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
-    // H7: production code opens at v2 with both stores. Match here so
-    // fake-indexeddb doesn't reject a "downgrade" in the H3 tests.
-    const req = indexedDB.open(VAULT_DB, 2)
+    // Production code opens at v3 (H5). Match here so fake-indexeddb
+    // doesn't reject a "downgrade" in the H3 tests that touch this helper.
+    const req = indexedDB.open(VAULT_DB, 3)
     req.onupgradeneeded = () => {
       const db = req.result
       if (!db.objectStoreNames.contains(VAULT_STORE)) db.createObjectStore(VAULT_STORE)
       if (!db.objectStoreNames.contains(KDF_STORE)) db.createObjectStore(KDF_STORE)
+      if (!db.objectStoreNames.contains(VERSION_STORE)) db.createObjectStore(VERSION_STORE)
     }
     req.onsuccess = () => resolve(req.result)
     req.onerror = () => reject(req.error)
@@ -279,5 +285,31 @@ describe('H7: KDF v3 — 600k iterations + random salt', () => {
     expect(await loadKdfParams('h7-user')).not.toBeNull()
     await clearCachedVaultKey('h7-user')
     expect(await loadKdfParams('h7-user')).toBeNull()
+  })
+})
+
+// ── H5: monotonic envelope version + rollback rejection ───────────────────
+
+describe('H5: monotonic envelope version', () => {
+  beforeEach(async () => {
+    await clearLastSeenVersion('h5-user')
+  })
+
+  it('V-01: unseen syncId returns 0', async () => {
+    expect(await loadLastSeenVersion('h5-unknown')).toBe(0)
+  })
+
+  it('V-02: save + load round-trips', async () => {
+    await saveLastSeenVersion('h5-user', 42)
+    expect(await loadLastSeenVersion('h5-user')).toBe(42)
+    await saveLastSeenVersion('h5-user', 100)
+    expect(await loadLastSeenVersion('h5-user')).toBe(100)
+  })
+
+  it('V-03: clearCachedVaultKey also clears the version high-water mark', async () => {
+    await saveLastSeenVersion('h5-user', 17)
+    expect(await loadLastSeenVersion('h5-user')).toBe(17)
+    await clearCachedVaultKey('h5-user')
+    expect(await loadLastSeenVersion('h5-user')).toBe(0)
   })
 })

@@ -126,12 +126,14 @@ export async function decryptText(
 
 const IDB_VAULT_KEY_STORE = 'rm-sync-vault'
 const IDB_KDF_STORE = 'rm-sync-kdf'
+const IDB_VERSION_STORE = 'rm-sync-version'
 
 async function openVaultIdb(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
-    // H7: DB bumped to v2 alongside the new `rm-sync-kdf` store. The
-    // upgrade is additive — `rm-sync-vault` rows survive.
-    const req = indexedDB.open('rm-sync-vault-db', 2)
+    // DB bumped: v1 = vault only, v2 (H7) = +kdf store, v3 (H5) = +version
+    // store for monotonic-rollback rejection. All upgrades are additive
+    // and idempotent — existing rows survive each step.
+    const req = indexedDB.open('rm-sync-vault-db', 3)
     req.onupgradeneeded = () => {
       const db = req.result
       if (!db.objectStoreNames.contains(IDB_VAULT_KEY_STORE)) {
@@ -139,6 +141,9 @@ async function openVaultIdb(): Promise<IDBDatabase> {
       }
       if (!db.objectStoreNames.contains(IDB_KDF_STORE)) {
         db.createObjectStore(IDB_KDF_STORE)
+      }
+      if (!db.objectStoreNames.contains(IDB_VERSION_STORE)) {
+        db.createObjectStore(IDB_VERSION_STORE)
       }
     }
     req.onsuccess = () => resolve(req.result)
@@ -222,6 +227,7 @@ export async function clearCachedVaultKey(userId: string): Promise<void> {
     })
   } catch { /* best-effort */ }
   await clearKdfParams(userId).catch(() => { /* best-effort */ })
+  await clearLastSeenVersion(userId).catch(() => { /* best-effort */ })
 }
 
 // ── KDF params cache ────────────────────────────────────────────────────
@@ -275,6 +281,55 @@ export async function clearKdfParams(userId: string): Promise<void> {
     await new Promise<void>((resolve, reject) => {
       const tx = db.transaction(IDB_KDF_STORE, 'readwrite')
       tx.objectStore(IDB_KDF_STORE).delete(userId)
+      tx.oncomplete = () => resolve()
+      tx.onerror = () => reject(tx.error)
+    })
+  } catch { /* best-effort */ }
+}
+
+// ── H5: monotonic envelope version + rollback rejection ───────────────────
+//
+// Each successful push embeds a monotonically increasing `envelopeVersion`
+// inside the encrypted payload. The local device caches the highest version
+// it has accepted; any subsequent pull whose decrypted version is *lower*
+// is rejected as a replay (a stale backup served by a malicious server, an
+// outdated cached file accidentally promoted to "current", etc.).
+//
+// The counter lives inside the encrypted payload so a server-controlled
+// attacker can't forge a high version: AES-GCM's auth tag binds the value
+// to the same ciphertext that carries the state.
+
+export async function loadLastSeenVersion(syncId: string): Promise<number> {
+  try {
+    const db = await openVaultIdb()
+    const stored = await new Promise<unknown>((resolve, reject) => {
+      const tx = db.transaction(IDB_VERSION_STORE, 'readonly')
+      const req = tx.objectStore(IDB_VERSION_STORE).get(syncId)
+      req.onsuccess = () => resolve(req.result)
+      req.onerror = () => reject(req.error)
+    })
+    return typeof stored === 'number' ? stored : 0
+  } catch {
+    return 0
+  }
+}
+
+export async function saveLastSeenVersion(syncId: string, version: number): Promise<void> {
+  const db = await openVaultIdb()
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(IDB_VERSION_STORE, 'readwrite')
+    tx.objectStore(IDB_VERSION_STORE).put(version, syncId)
+    tx.oncomplete = () => resolve()
+    tx.onerror = () => reject(tx.error)
+  })
+}
+
+export async function clearLastSeenVersion(syncId: string): Promise<void> {
+  try {
+    const db = await openVaultIdb()
+    await new Promise<void>((resolve, reject) => {
+      const tx = db.transaction(IDB_VERSION_STORE, 'readwrite')
+      tx.objectStore(IDB_VERSION_STORE).delete(syncId)
       tx.oncomplete = () => resolve()
       tx.onerror = () => reject(tx.error)
     })
