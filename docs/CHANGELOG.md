@@ -10,6 +10,24 @@ Versionierung folgt [Semantic Versioning](https://semver.org/lang/de/).
 > Der Check `npm run check:changelog` (Teil von `npm test`) bricht sonst ab.
 > Details: `CLAUDE.md` → „Changelog-Pflicht".
 
+## [2.6.0] – 2026-05-11
+
+### Hinzugefügt
+
+- **Sync-Setup: Wartebildschirm für E-Mail-Bestätigung.** Wenn beim Storyhold-
+  Server-Sync ein neues Konto angelegt wird und Supabase erst auf den Klick im
+  Verifikationslink wartet, springt der Wizard nicht mehr stumm zum Recovery-
+  Code, sondern zeigt einen eigenen Schritt: Hinweistext mit der eigenen
+  E-Mail-Adresse, „Bestätigungs-Mail erneut senden"-Button (`supabase.auth.
+  resend`) und eine Notiz, wenn das Senden geklappt hat oder fehlschlug. Sobald
+  der User den Link klickt und die SDK ein `SIGNED_IN`-Event feuert, geht es
+  automatisch weiter (Recovery-Code-Generierung beim Neuanlegen, Entschlüsselung
+  beim Wiederanmelden auf einem neuen Gerät). Auch ein Login-Versuch mit
+  unbestätigter E-Mail (Supabase-Fehlercode `email_not_confirmed`) landet jetzt
+  auf demselben Wartebildschirm statt auf einer kryptischen Fehlermeldung.
+
+---
+
 ## [2.5.0] – 2026-05-10
 
 ### Hinzugefügt
@@ -890,6 +908,7 @@ Wenn im Hintergrund eine neue Version der App als Service Worker bereit steht, e
 | **2.3.0** | Sync-Login: „Schlüssel verloren?"-Option mit Neustart per frischem Sicherheitsschlüssel (REQ-018) | ✔️ Fertig |
 | **2.4.0** | Vereinfachter Bedienmodus für ältere Nutzer (Mode-Auswahl im Onboarding & Profil, große Buttons, reduzierte UI) | ✔️ Fertig |
 | **2.5.0** | Impressum-Seite (§ 5 DDG, § 18 MStV) im Profil – Anbieter, Kontakt, Streitbeilegung, Haftung, Urheberrecht | ✔️ Fertig |
+| **2.6.0** | Sync-Setup: Wartebildschirm für E-Mail-Bestätigung + Resend-Button, automatischer Sprung nach Verifikation | ✔️ Fertig |
 | — | **Geplante Features** | — |
 | **TBD** | Lebenszeitlinie – chronologische visuelle Ansicht | Geplant |
 | **TBD** | Import bestehender Erinnerungen (Social Media, Clouds) | Geplant |
