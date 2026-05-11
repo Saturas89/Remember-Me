@@ -77,13 +77,23 @@ Alle neuen Views, Modals, Sektionen und UI-Komponenten **müssen sich am Friends
 
 Ausnahme: Der Nutzer fordert für eine konkrete View bewusst ein abweichendes Design.
 
-## CI-Polling nach PR-Erstellung
+## CI-Wakeup nach PR-Erstellung
 
-GitHub-Webhooks erreichen die Session nicht zuverlässig. Nach jedem `mcp__github__create_pull_request` deshalb **Monitor-Heartbeat im 3,5-min-Takt** (≈ Dauer der Playwright-Matrix) starten und bei jedem Tick die Check-Runs via `mcp__github__pull_request_read` (method `get_check_runs`) abfragen. Loop beenden, sobald alle Checks `completed` sind; Ergebnis zusammenfassen.
+`.github/workflows/e2e.yml` enthält einen `notify`-Job, der nach Abschluss aller Matrix-Jobs **einen** PR-Kommentar als `github-actions[bot]` postet (Marker `<!-- claude-ci-ping -->`, Edit-in-Place bei Re-Runs). Dieser Kommentar weckt die Claude-Sandbox-Session zuverlässig auf – Wake-Latenz typisch ≤ 15 s nach Comment-Posting, gesamt ~6 min nach Push.
 
-**Setup:**
+**Vorgehen nach `mcp__github__create_pull_request`:**
+
+1. Subscription wird vom System automatisch gesetzt – kein expliziter `subscribe_pr_activity`-Call nötig.
+2. Turn beenden und auf das `<github-webhook-activity>`-Event warten. **Kein aktives Polling.**
+3. Wenn der Wakeup-Comment ankommt: Status aus dem Comment-Body parsen (`unit`/`build`/`e2e` success/failure) und entsprechend reagieren.
+
+**Self-Filter beachten:** Events, die diese Session selbst über MCP-Tool-Calls auslöst (eigene Kommentare, eigene Reviews), wecken die Session **nicht** zurück. Externe Bot-Comments (`github-actions[bot]`, `vercel[bot]`) und Aktionen anderer GitHub-User wecken zuverlässig. Der `notify`-Job nutzt genau diese Eigenschaft.
+
+**Fallback (nur falls `notify`-Job fehlt, bricht oder die Matrix bei einem `needs:`-Job hängt):** Monitor-Heartbeat im 3,5-min-Takt mit `mcp__github__pull_request_read` (method `get_check_runs`):
+
 ```
 Monitor command: i=1; while :; do echo "tick $i $(date -u +%H:%M:%SZ)"; i=$((i+1)); [ "$i" -gt 15 ] && { echo "giving-up"; exit 0; }; sleep 210; done
 persistent: true
 ```
-Bei grüner CI Monitor per `kill <pid>` stoppen (kein `TaskStop` in dieser Harness).
+
+Bei grüner CI Monitor per `kill <pid>` stoppen.
