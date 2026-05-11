@@ -77,7 +77,12 @@ export function usePrivateSync(
 
   const runSync = useCallback(async () => {
     if (syncingRef.current) return
-    if (!navigator.onLine) return
+    // headless WebKit reports `navigator.onLine === false` and the
+    // property cannot be overridden via Object.defineProperty on Safari
+    // (non-configurable), so the E2E suite would otherwise be unable to
+    // exercise the sync pipeline at all. The VITE_E2E gate keeps the
+    // production guard intact for real users.
+    if (!navigator.onLine && import.meta.env.VITE_E2E !== 'true') return
     const provider = await getProvider()
     if (!provider) return
 
@@ -181,6 +186,47 @@ export function usePrivateSync(
     retryCountRef.current = 0
     await runSync()
   }, [runSync])
+
+  // E2E bridge: Playwright deterministically triggers a sync without going
+  // through the wizard or the 30s auto-debounce, and reads the hook's
+  // internal status / error so a failing test can pin down whether sync
+  // never started, threw, or completed. Gated by VITE_E2E so neither hook
+  // is visible in production builds.
+  //
+  // Status fields are read through refs that update on every render so
+  // __rmSyncStatus always returns the latest value — capturing them in a
+  // useEffect closure leaves the test reading stale "syncing" state when
+  // the actual status has already advanced to "error" / "success".
+  const statusRef = useRef(status)
+  const errorMessageRef = useRef(errorMessage)
+  const errorCodeRef = useRef(errorCode)
+  const lastSyncAtRef = useRef(lastSyncAt)
+  statusRef.current = status
+  errorMessageRef.current = errorMessage
+  errorCodeRef.current = errorCode
+  lastSyncAtRef.current = lastSyncAt
+  useEffect(() => {
+    if (import.meta.env.VITE_E2E !== 'true') return
+    if (typeof window === 'undefined') return
+    // Defer binding until state hydration finishes — `providerType` derives
+    // from `appState.privateSync?.providerType`, which is null until
+    // useAnswers' loadStoredState resolves. Binding earlier would expose
+    // a runSync closure that no-ops on `if (!provider) return` because
+    // getProvider also sees providerType=null.
+    if (!providerType) return
+    type Bridge = {
+      __rmSyncNow?: () => Promise<void>
+      __rmSyncStatus?: () => { status: SyncStatus; errorMessage: string | null; errorCode: SyncErrorCode | null; lastSyncAt: string | null }
+    }
+    const w = window as Window & Bridge
+    w.__rmSyncNow = syncNow
+    w.__rmSyncStatus = () => ({
+      status: statusRef.current,
+      errorMessage: errorMessageRef.current,
+      errorCode: errorCodeRef.current,
+      lastSyncAt: lastSyncAtRef.current,
+    })
+  }, [syncNow, providerType])
 
   const reauthenticate = useCallback(async () => {
     const provider = await getProvider()

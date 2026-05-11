@@ -7,6 +7,8 @@ import {
   encryptSyncEnvelope,
   decryptSyncEnvelope,
   parseEncryptedSyncEnvelope,
+  encryptMediaBlob,
+  decryptMediaBlob,
 } from './syncEncryption'
 
 const TOKEN_KEY = 'rm-sync-gdrive-token'
@@ -15,7 +17,17 @@ const SYNC_FILE_NAME = 'remember-me-sync.json'
 const MEDIA_FOLDER_NAME = 'remember-me-media'
 const APP_VERSION = '2.0.1'
 
-type MediaManifestEntry = { type: 'image' | 'audio' | 'video'; syncedAt: string; driveFileId: string }
+// Manifest entries written after the H1 media-encryption rollout carry `iv`
+// and `mimeType` so that pull() can decrypt the AES-GCM ciphertext back into
+// a typed Blob. Old entries (pre-H1) lack both fields and are treated as
+// legacy plaintext on download.
+type MediaManifestEntry = {
+  type: 'image' | 'audio' | 'video'
+  syncedAt: string
+  driveFileId: string
+  iv?: string
+  mimeType?: string
+}
 
 interface StoredToken {
   accessToken: string
@@ -426,24 +438,47 @@ export class GoogleDriveProvider implements SyncProvider {
 
     const folderId = await findOrCreateMediaFolder(token)
 
+    // Each blob is sealed with a fresh AES-GCM nonce under the vault key
+    // before upload. IV + original MIME live inside the encrypted manifest;
+    // Drive only ever sees `application/octet-stream` ciphertext.
+    const uploadEncrypted = async (
+      id: string,
+      blob: Blob,
+      kind: 'image' | 'audio' | 'video',
+    ): Promise<void> => {
+      const sealed = await encryptMediaBlob(blob, vaultKey)
+      const driveId = await driveUpload(
+        'POST',
+        null,
+        { name: `${id}.bin`, parents: [folderId] },
+        sealed.ciphertext,
+        'application/octet-stream',
+        token,
+      )
+      manifest[id] = {
+        type: kind,
+        syncedAt: new Date().toISOString(),
+        driveFileId: driveId,
+        iv: sealed.iv,
+        mimeType: sealed.mimeType,
+      }
+    }
+
     await Promise.all([
       ...localMediaIds.images.map(async id => {
         const blob = await media.getImageBlob(id)
         if (!blob) return
-        const driveId = await driveUpload('POST', null, { name: `${id}.bin`, parents: [folderId] }, blob, blob.type, token)
-        manifest[id] = { type: 'image', syncedAt: new Date().toISOString(), driveFileId: driveId }
+        await uploadEncrypted(id, blob, 'image')
       }),
       ...localMediaIds.audio.map(async id => {
         const blob = await media.getAudioBlob(id)
         if (!blob) return
-        const driveId = await driveUpload('POST', null, { name: `${id}.bin`, parents: [folderId] }, blob, blob.type, token)
-        manifest[id] = { type: 'audio', syncedAt: new Date().toISOString(), driveFileId: driveId }
+        await uploadEncrypted(id, blob, 'audio')
       }),
       ...localMediaIds.videos.map(async id => {
         const blob = await media.getVideoBlob(id)
         if (!blob) return
-        const driveId = await driveUpload('POST', null, { name: `${id}.bin`, parents: [folderId] }, blob, blob.type, token)
-        manifest[id] = { type: 'video', syncedAt: new Date().toISOString(), driveFileId: driveId }
+        await uploadEncrypted(id, blob, 'video')
       }),
     ])
 
@@ -497,7 +532,14 @@ export class GoogleDriveProvider implements SyncProvider {
         if (localAllIds.has(id)) return
         const mediaRes = await driveGet(`/drive/v3/files/${entry.driveFileId}?alt=media`, token)
         if (!mediaRes.ok) return
-        const blob = await mediaRes.blob()
+        const ct = await mediaRes.blob()
+        // Manifest entries with `iv` are sealed under the vault key (post-H1
+        // format). Entries without `iv` are legacy plaintext blobs and are
+        // restored verbatim — this is the upgrade path for sync files
+        // written by older clients.
+        const blob = entry.iv
+          ? await decryptMediaBlob(ct, entry.iv, entry.mimeType ?? '', vaultKey)
+          : ct
         if (entry.type === 'image') await media.putImage(id, blob)
         else if (entry.type === 'audio') await media.putAudio(id, blob)
         else await media.putVideo(id, blob)
