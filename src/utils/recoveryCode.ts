@@ -30,9 +30,38 @@ export function normalizeRecoveryCode(input: string): string {
   return input.replace(/-/g, '').trim()
 }
 
+export interface KdfParams {
+  /** PBKDF2 salt. v2 (legacy): userId UTF-8 bytes. v3: 16 random bytes. */
+  salt: Uint8Array
+  /** PBKDF2 iteration count. v2: 200_000. v3: 600_000. */
+  iterations: number
+}
+
+/** H7: OWASP-2023 recommends ≥ 600 000 iterations for PBKDF2-SHA256. */
+export const KDF_V3_ITERATIONS = 600_000 as const
+
+/** H7: 128-bit random salt makes pre-computed rainbow tables useless. */
+export const KDF_V3_SALT_BYTES = 16 as const
+
+export function generateKdfSalt(): Uint8Array {
+  return crypto.getRandomValues(new Uint8Array(KDF_V3_SALT_BYTES))
+}
+
+/** Pre-H7 derivation parameters. Used only on the read path when an
+ *  existing v2 envelope/row has no explicit `salt` field. */
+export function legacyKdfParams(userId: string): KdfParams {
+  return { salt: new TextEncoder().encode(userId), iterations: 200_000 }
+}
+
+/** Default derivation parameters for new setups. Pairs with a fresh
+ *  random salt — call `generateKdfSalt()` and pass the result. */
+export function freshKdfParams(): KdfParams {
+  return { salt: generateKdfSalt(), iterations: KDF_V3_ITERATIONS }
+}
+
 export async function deriveVaultKey(
   recoveryCode: string,
-  userId: string,
+  params: KdfParams,
 ): Promise<CryptoKey> {
   const enc = new TextEncoder()
   const keyMaterial = await crypto.subtle.importKey(
@@ -45,8 +74,8 @@ export async function deriveVaultKey(
   return crypto.subtle.deriveKey(
     {
       name: 'PBKDF2',
-      salt: enc.encode(userId),
-      iterations: 200_000,
+      salt: params.salt.buffer as ArrayBuffer,
+      iterations: params.iterations,
       hash: 'SHA-256',
     },
     keyMaterial,
@@ -96,11 +125,22 @@ export async function decryptText(
 }
 
 const IDB_VAULT_KEY_STORE = 'rm-sync-vault'
+const IDB_KDF_STORE = 'rm-sync-kdf'
 
 async function openVaultIdb(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
-    const req = indexedDB.open('rm-sync-vault-db', 1)
-    req.onupgradeneeded = () => req.result.createObjectStore(IDB_VAULT_KEY_STORE)
+    // H7: DB bumped to v2 alongside the new `rm-sync-kdf` store. The
+    // upgrade is additive — `rm-sync-vault` rows survive.
+    const req = indexedDB.open('rm-sync-vault-db', 2)
+    req.onupgradeneeded = () => {
+      const db = req.result
+      if (!db.objectStoreNames.contains(IDB_VAULT_KEY_STORE)) {
+        db.createObjectStore(IDB_VAULT_KEY_STORE)
+      }
+      if (!db.objectStoreNames.contains(IDB_KDF_STORE)) {
+        db.createObjectStore(IDB_KDF_STORE)
+      }
+    }
     req.onsuccess = () => resolve(req.result)
     req.onerror = () => reject(req.error)
   })
@@ -177,6 +217,64 @@ export async function clearCachedVaultKey(userId: string): Promise<void> {
     await new Promise<void>((resolve, reject) => {
       const tx = db.transaction(IDB_VAULT_KEY_STORE, 'readwrite')
       tx.objectStore(IDB_VAULT_KEY_STORE).delete(userId)
+      tx.oncomplete = () => resolve()
+      tx.onerror = () => reject(tx.error)
+    })
+  } catch { /* best-effort */ }
+  await clearKdfParams(userId).catch(() => { /* best-effort */ })
+}
+
+// ── KDF params cache ────────────────────────────────────────────────────
+//
+// The PBKDF2 salt + iteration count travel with the encrypted envelope so a
+// new device can re-derive the vault key from the recovery code. The active
+// device additionally caches them here so push() can re-write the envelope's
+// KDF metadata consistently without having to re-read the existing row each
+// time. Shares the same IDB as the vault key, with its own store.
+
+interface SerializedKdfParams {
+  salt: number[]
+  iterations: number
+}
+
+export async function cacheKdfParams(userId: string, params: KdfParams): Promise<void> {
+  const db = await openVaultIdb()
+  const serialized: SerializedKdfParams = {
+    salt: Array.from(params.salt),
+    iterations: params.iterations,
+  }
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(IDB_KDF_STORE, 'readwrite')
+    tx.objectStore(IDB_KDF_STORE).put(serialized, userId)
+    tx.oncomplete = () => resolve()
+    tx.onerror = () => reject(tx.error)
+  })
+}
+
+export async function loadKdfParams(userId: string): Promise<KdfParams | null> {
+  try {
+    const db = await openVaultIdb()
+    const stored = await new Promise<unknown>((resolve, reject) => {
+      const tx = db.transaction(IDB_KDF_STORE, 'readonly')
+      const req = tx.objectStore(IDB_KDF_STORE).get(userId)
+      req.onsuccess = () => resolve(req.result)
+      req.onerror = () => reject(req.error)
+    })
+    if (!stored || typeof stored !== 'object') return null
+    const s = stored as SerializedKdfParams
+    if (!Array.isArray(s.salt) || typeof s.iterations !== 'number') return null
+    return { salt: new Uint8Array(s.salt), iterations: s.iterations }
+  } catch {
+    return null
+  }
+}
+
+export async function clearKdfParams(userId: string): Promise<void> {
+  try {
+    const db = await openVaultIdb()
+    await new Promise<void>((resolve, reject) => {
+      const tx = db.transaction(IDB_KDF_STORE, 'readwrite')
+      tx.objectStore(IDB_KDF_STORE).delete(userId)
       tx.oncomplete = () => resolve()
       tx.onerror = () => reject(tx.error)
     })

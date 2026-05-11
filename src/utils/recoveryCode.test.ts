@@ -19,6 +19,14 @@ import {
   cacheVaultKey,
   loadCachedVaultKey,
   clearCachedVaultKey,
+  cacheKdfParams,
+  loadKdfParams,
+  clearKdfParams,
+  freshKdfParams,
+  legacyKdfParams,
+  generateKdfSalt,
+  KDF_V3_ITERATIONS,
+  KDF_V3_SALT_BYTES,
 } from './recoveryCode'
 import { SyncError } from './privateSyncProvider'
 
@@ -58,13 +66,13 @@ describe('formatRecoveryCode / normalizeRecoveryCode', () => {
 
 describe('deriveVaultKey + encrypt/decryptText', () => {
   it('R-06: liefert AES-GCM CryptoKey', async () => {
-    const key = await deriveVaultKey('ABCDEFGHIJKLMNOPQRSTUVWX', 'user-1')
+    const key = await deriveVaultKey('ABCDEFGHIJKLMNOPQRSTUVWX', legacyKdfParams('user-1'))
     expect(key.algorithm.name).toBe('AES-GCM')
     expect((key.algorithm as AesKeyAlgorithm).length).toBe(256)
   })
 
   it('R-07: encrypt → decrypt Roundtrip rekonstruiert das Plaintext', async () => {
-    const key = await deriveVaultKey('ABCDEFGHIJKLMNOPQRSTUVWX', 'user-1')
+    const key = await deriveVaultKey('ABCDEFGHIJKLMNOPQRSTUVWX', legacyKdfParams('user-1'))
     const plaintext = JSON.stringify({ hello: 'world', n: 42, ä: 'ü' })
     const { ct, iv } = await encryptText(plaintext, key)
     expect(ct).not.toBe(plaintext)
@@ -73,8 +81,8 @@ describe('deriveVaultKey + encrypt/decryptText', () => {
   })
 
   it('R-08: Falscher Key → SyncError mit code "decrypt"', async () => {
-    const goodKey = await deriveVaultKey('ABCDEFGHIJKLMNOPQRSTUVWX', 'user-1')
-    const wrongKey = await deriveVaultKey('YZABCDEFGHIJKLMNOPQRSTUV', 'user-1')
+    const goodKey = await deriveVaultKey('ABCDEFGHIJKLMNOPQRSTUVWX', legacyKdfParams('user-1'))
+    const wrongKey = await deriveVaultKey('YZABCDEFGHIJKLMNOPQRSTUV', legacyKdfParams('user-1'))
 
     const { ct, iv } = await encryptText('secret', goodKey)
     let captured: unknown
@@ -88,8 +96,8 @@ describe('deriveVaultKey + encrypt/decryptText', () => {
   })
 
   it('R-09: deriveVaultKey deterministisch (gleicher code+userId → kompatible Keys)', async () => {
-    const k1 = await deriveVaultKey('ABCDEFGHIJKLMNOPQRSTUVWX', 'user-42')
-    const k2 = await deriveVaultKey('ABCDEFGHIJKLMNOPQRSTUVWX', 'user-42')
+    const k1 = await deriveVaultKey('ABCDEFGHIJKLMNOPQRSTUVWX', legacyKdfParams('user-42'))
+    const k2 = await deriveVaultKey('ABCDEFGHIJKLMNOPQRSTUVWX', legacyKdfParams('user-42'))
     const { ct, iv } = await encryptText('hello-determinism', k1)
     const plain = await decryptText(ct, iv, k2)
     expect(plain).toBe('hello-determinism')
@@ -97,8 +105,8 @@ describe('deriveVaultKey + encrypt/decryptText', () => {
 
   it('R-10: Verschiedene userId → verschiedener Key (decrypt schlägt fehl)', async () => {
     const code = 'ABCDEFGHIJKLMNOPQRSTUVWX'
-    const keyA = await deriveVaultKey(code, 'user-A')
-    const keyB = await deriveVaultKey(code, 'user-B')
+    const keyA = await deriveVaultKey(code, legacyKdfParams('user-A'))
+    const keyB = await deriveVaultKey(code, legacyKdfParams('user-B'))
     const { ct, iv } = await encryptText('cross-user', keyA)
 
     let captured: unknown
@@ -116,11 +124,18 @@ describe('deriveVaultKey + encrypt/decryptText', () => {
 
 const VAULT_DB = 'rm-sync-vault-db'
 const VAULT_STORE = 'rm-sync-vault'
+const KDF_STORE = 'rm-sync-kdf'
 
 function openVaultIdbRaw(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
-    const req = indexedDB.open(VAULT_DB, 1)
-    req.onupgradeneeded = () => req.result.createObjectStore(VAULT_STORE)
+    // H7: production code opens at v2 with both stores. Match here so
+    // fake-indexeddb doesn't reject a "downgrade" in the H3 tests.
+    const req = indexedDB.open(VAULT_DB, 2)
+    req.onupgradeneeded = () => {
+      const db = req.result
+      if (!db.objectStoreNames.contains(VAULT_STORE)) db.createObjectStore(VAULT_STORE)
+      if (!db.objectStoreNames.contains(KDF_STORE)) db.createObjectStore(KDF_STORE)
+    }
     req.onsuccess = () => resolve(req.result)
     req.onerror = () => reject(req.error)
   })
@@ -153,7 +168,7 @@ describe('H3: non-extractable vault key + no JWK in IDB', () => {
   })
 
   it('R-11: deriveVaultKey returns a non-extractable key (exportKey rejects)', async () => {
-    const key = await deriveVaultKey('ABCDEFGHIJKLMNOPQRSTUVWX', 'h3-user')
+    const key = await deriveVaultKey('ABCDEFGHIJKLMNOPQRSTUVWX', legacyKdfParams('h3-user'))
     expect(key.extractable).toBe(false)
     await expect(
       crypto.subtle.exportKey('jwk', key),
@@ -161,7 +176,7 @@ describe('H3: non-extractable vault key + no JWK in IDB', () => {
   })
 
   it('R-12: cacheVaultKey stores a CryptoKey reference, NOT a JWK', async () => {
-    const key = await deriveVaultKey('ABCDEFGHIJKLMNOPQRSTUVWX', 'h3-user')
+    const key = await deriveVaultKey('ABCDEFGHIJKLMNOPQRSTUVWX', legacyKdfParams('h3-user'))
     await cacheVaultKey('h3-user', key)
 
     const raw = await readRawIdb('h3-user')
@@ -172,7 +187,7 @@ describe('H3: non-extractable vault key + no JWK in IDB', () => {
   })
 
   it('R-12b: round-trip preserves AES semantics', async () => {
-    const key = await deriveVaultKey('ABCDEFGHIJKLMNOPQRSTUVWX', 'h3-user')
+    const key = await deriveVaultKey('ABCDEFGHIJKLMNOPQRSTUVWX', legacyKdfParams('h3-user'))
     await cacheVaultKey('h3-user', key)
     const reloaded = await loadCachedVaultKey('h3-user')
     expect(reloaded).not.toBeNull()
@@ -207,5 +222,62 @@ describe('H3: non-extractable vault key + no JWK in IDB', () => {
 
   it('R-13b: loadCachedVaultKey returns null for an empty row', async () => {
     expect(await loadCachedVaultKey('h3-user-empty')).toBeNull()
+  })
+})
+
+// ── H7: PBKDF2 600k iterations + 16-byte random salt ──────────────────────
+
+describe('H7: KDF v3 — 600k iterations + random salt', () => {
+  beforeEach(async () => {
+    await clearKdfParams('h7-user')
+  })
+
+  it('K-01: freshKdfParams emits a 16-byte random salt and 600k iterations', () => {
+    const a = freshKdfParams()
+    expect(a.iterations).toBe(KDF_V3_ITERATIONS)
+    expect(a.salt.length).toBe(KDF_V3_SALT_BYTES)
+
+    // Two consecutive calls yield distinct salts (no PRNG reuse).
+    const b = freshKdfParams()
+    expect(Array.from(a.salt)).not.toEqual(Array.from(b.salt))
+  })
+
+  it('K-02: legacyKdfParams reproduces the pre-H7 derivation parameters', () => {
+    const p = legacyKdfParams('user-1')
+    expect(p.iterations).toBe(200_000)
+    expect(new TextDecoder().decode(p.salt)).toBe('user-1')
+  })
+
+  it('K-03: same code under fresh vs legacy params yields incompatible keys', async () => {
+    const code = 'ABCDEFGHIJKLMNOPQRSTUVWX'
+    const userId = 'k03-user'
+    const legacy = legacyKdfParams(userId)
+    const fresh = { salt: generateKdfSalt(), iterations: KDF_V3_ITERATIONS }
+
+    const legacyKey = await deriveVaultKey(code, legacy)
+    const freshKey = await deriveVaultKey(code, fresh)
+
+    const { ct, iv } = await encryptText('crossover-test', legacyKey)
+    await expect(decryptText(ct, iv, freshKey)).rejects.toBeInstanceOf(SyncError)
+  })
+
+  it('K-04: cacheKdfParams + loadKdfParams round-trip preserves salt + iterations', async () => {
+    const params = freshKdfParams()
+    await cacheKdfParams('h7-user', params)
+    const loaded = await loadKdfParams('h7-user')
+    expect(loaded).not.toBeNull()
+    expect(loaded!.iterations).toBe(params.iterations)
+    expect(Array.from(loaded!.salt)).toEqual(Array.from(params.salt))
+  })
+
+  it('K-05: loadKdfParams returns null for an unseen user', async () => {
+    expect(await loadKdfParams('h7-unknown')).toBeNull()
+  })
+
+  it('K-06: clearCachedVaultKey also wipes the KDF cache (defense-in-depth)', async () => {
+    await cacheKdfParams('h7-user', freshKdfParams())
+    expect(await loadKdfParams('h7-user')).not.toBeNull()
+    await clearCachedVaultKey('h7-user')
+    expect(await loadKdfParams('h7-user')).toBeNull()
   })
 })

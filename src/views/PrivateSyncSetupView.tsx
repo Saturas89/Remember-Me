@@ -1,6 +1,16 @@
 import { useState, useEffect } from 'react'
 import { useTranslation } from '../locales'
-import { formatRecoveryCode, generateRecoveryCode, deriveVaultKey, cacheVaultKey, clearCachedVaultKey } from '../utils/recoveryCode'
+import {
+  formatRecoveryCode,
+  generateRecoveryCode,
+  deriveVaultKey,
+  cacheVaultKey,
+  clearCachedVaultKey,
+  cacheKdfParams,
+  freshKdfParams,
+  legacyKdfParams,
+  type KdfParams,
+} from '../utils/recoveryCode'
 import { getSyncSupabaseClient } from '../utils/privateSyncClient'
 import type { SyncProviderType } from '../types'
 
@@ -180,8 +190,13 @@ export function PrivateSyncSetupView({ onComplete }: Props) {
     if (!provider) return
     setLoading(true)
     try {
-      const key = await deriveVaultKey(recoveryCode, userId)
+      // H7: fresh random 16-byte salt + 600k iterations for any new setup.
+      // The salt travels with the next sync envelope so a new device can
+      // re-derive the same key from the recovery code.
+      const params = freshKdfParams()
+      const key = await deriveVaultKey(recoveryCode, params)
       await cacheVaultKey(userId, key)
+      await cacheKdfParams(userId, params)
       onComplete(provider, userId)
     } catch {
       setError('Schlüssel konnte nicht gespeichert werden')
@@ -196,12 +211,46 @@ export function PrivateSyncSetupView({ onComplete }: Props) {
     setLoading(true)
     try {
       const normalized = enteredCode.replace(/-/g, '').trim()
-      const key = await deriveVaultKey(normalized, userId)
+
+      // H7: fetch the envelope's kdf params first so we re-derive with the
+      // same salt + iterations that the first device used. Legacy v2 rows
+      // / envelopes (no salt) fall back to the old `salt = userId, 200_000`
+      // params via `legacyKdfParams`.
+      let params: KdfParams
+      if (provider === 'supabase') {
+        const supabase = getSyncSupabaseClient()
+        const { data } = await supabase
+          .from('private_sync_state')
+          .select('salt')
+          .eq('user_id', userId)
+          .maybeSingle()
+        if (data?.salt) {
+          const saltBytes = Uint8Array.from(atob(data.salt as string), c => c.charCodeAt(0))
+          params = { salt: saltBytes, iterations: 600_000 }
+        } else {
+          params = legacyKdfParams(userId)
+        }
+      } else if (provider === 'google-drive') {
+        const { GoogleDriveProvider } = await import('../utils/googleDriveProvider')
+        const probe = new GoogleDriveProvider(userId)
+        const remoteKdf = await probe.readExistingKdfParams()
+        params = remoteKdf ?? legacyKdfParams(userId)
+      } else if (provider === 'onedrive') {
+        const { OneDriveProvider } = await import('../utils/oneDriveProvider')
+        const probe = new OneDriveProvider(userId)
+        const remoteKdf = await probe.readExistingKdfParams()
+        params = remoteKdf ?? legacyKdfParams(userId)
+      } else {
+        params = legacyKdfParams(userId)
+      }
+
+      const key = await deriveVaultKey(normalized, params)
 
       // Verify the entered code by trying to decrypt the existing payload.
       // Each provider has its own canonical "is this code right?" probe.
       if (provider === 'supabase') {
         await cacheVaultKey(userId, key)
+        await cacheKdfParams(userId, params)
         const supabase = getSyncSupabaseClient()
         const { data } = await supabase
           .from('private_sync_state')
@@ -215,6 +264,7 @@ export function PrivateSyncSetupView({ onComplete }: Props) {
         }
       } else if (provider === 'google-drive') {
         await cacheVaultKey(userId, key)
+        await cacheKdfParams(userId, params)
         const { GoogleDriveProvider } = await import('../utils/googleDriveProvider')
         const p = new GoogleDriveProvider(userId)
         // Pull will throw SyncError('decrypt') on a wrong code.
@@ -232,6 +282,7 @@ export function PrivateSyncSetupView({ onComplete }: Props) {
         )
       } else if (provider === 'onedrive') {
         await cacheVaultKey(userId, key)
+        await cacheKdfParams(userId, params)
         const { OneDriveProvider } = await import('../utils/oneDriveProvider')
         const p = new OneDriveProvider(userId)
         await p.pull(

@@ -53,6 +53,7 @@ vi.mock('./privateSyncClient', () => ({
 vi.mock('./recoveryCode', () => ({
   loadCachedVaultKey: vi.fn(),
   clearCachedVaultKey: vi.fn(async () => {}),
+  loadKdfParams: vi.fn(async () => null),
 }))
 vi.mock('./syncEncryption', () => ({
   encryptSyncEnvelope: vi.fn(async () => ({ v: 2, ciphertext: 'mock', iv: 'mock', salt: 'mock' })),

@@ -48,6 +48,15 @@ export class SupabaseSyncProvider implements SyncProvider {
     const json = JSON.stringify(state)
     const { ct, iv } = await encryptText(json, key)
 
+    // H7: forward the locally cached PBKDF2 salt + iterations so a new
+    // device can re-derive the vault key from the recovery code. NULL salt
+    // marks legacy v2 rows (salt = userId, 200_000 iter).
+    const { loadKdfParams } = await import('./recoveryCode')
+    const cachedKdf = await loadKdfParams(userId)
+    const saltB64 = cachedKdf
+      ? btoa(String.fromCharCode(...cachedKdf.salt))
+      : null
+
     const supabase = getSyncSupabaseClient()
     const { error } = await supabase.from('private_sync_state').upsert({
       user_id: userId,
@@ -56,6 +65,7 @@ export class SupabaseSyncProvider implements SyncProvider {
       encryption: 'recovery-code',
       version: Date.now(),
       updated_at: new Date().toISOString(),
+      salt: saltB64,
     })
     if (error) {
       if (error.code === 'PGRST301' || String(error.message).includes('401')) {
@@ -101,9 +111,35 @@ export class SupabaseSyncProvider implements SyncProvider {
   }
 
   async setupVaultKey(recoveryCode: string, userId: string): Promise<void> {
-    const { deriveVaultKey } = await import('./recoveryCode')
-    const key = await deriveVaultKey(recoveryCode, userId)
+    const { deriveVaultKey, freshKdfParams, legacyKdfParams, cacheKdfParams } =
+      await import('./recoveryCode')
+
+    // H7: try to read an existing row's salt first — covers the "returning
+    // user on a new device" case where we must use the same params the
+    // first device generated. If the row is absent (first-ever setup) we
+    // generate a fresh random salt; if the row has no salt (legacy v2) we
+    // fall back to the old derivation so existing data stays readable.
+    const supabase = getSyncSupabaseClient()
+    const { data } = await supabase
+      .from('private_sync_state')
+      .select('salt')
+      .eq('user_id', userId)
+      .maybeSingle()
+
+    let params
+    if (data?.salt) {
+      const saltBytes = Uint8Array.from(atob(data.salt as string), c => c.charCodeAt(0))
+      params = { salt: saltBytes, iterations: 600_000 }
+    } else if (data) {
+      // Row exists but salt column is NULL → v2 legacy.
+      params = legacyKdfParams(userId)
+    } else {
+      params = freshKdfParams()
+    }
+
+    const key = await deriveVaultKey(recoveryCode, params)
     await cacheVaultKey(userId, key)
+    await cacheKdfParams(userId, params)
     this._userId = userId
   }
 

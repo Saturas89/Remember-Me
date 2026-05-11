@@ -427,6 +427,29 @@ export class GoogleDriveProvider implements SyncProvider {
     }
   }
 
+  /**
+   * H7: fetch kdfSalt + kdfIterations from the existing sync envelope so
+   * the wizard can re-derive the vault key under the same params used at
+   * setup. Returns null for legacy v2 envelopes (no kdf* fields) — caller
+   * falls back to `legacyKdfParams(syncId)`.
+   */
+  async readExistingKdfParams(): Promise<{ salt: Uint8Array; iterations: number } | null> {
+    try {
+      const token = await getValidToken()
+      let fileId = await loadFileId()
+      if (!fileId) fileId = await findSyncFile(token)
+      if (!fileId) return null
+      const res = await driveGet(`/drive/v3/files/${fileId}?alt=media`, token)
+      if (!res.ok) return null
+      const raw = await res.json() as Record<string, unknown>
+      if (typeof raw.kdfSalt !== 'string' || typeof raw.kdfIterations !== 'number') return null
+      const saltBytes = Uint8Array.from(atob(raw.kdfSalt), c => c.charCodeAt(0))
+      return { salt: saltBytes, iterations: raw.kdfIterations }
+    } catch {
+      return null
+    }
+  }
+
   async push(state: AppState, media: MediaStoreAccessor): Promise<void> {
     const { key: vaultKey, syncId } = await this._requireVaultKey()
     const token = await getValidToken()
@@ -482,12 +505,23 @@ export class GoogleDriveProvider implements SyncProvider {
       }),
     ])
 
+    // H7: forward the locally cached PBKDF2 params into the envelope so a
+    // new device can re-derive the vault key. Absent for legacy setups
+    // (single-device users who never re-cached after the H7 upgrade) →
+    // envelope falls back to schemaVersion=2, decrypt path treats it as
+    // "salt = syncId, iter = 200_000".
+    const { loadKdfParams } = await import('./recoveryCode')
+    const cachedKdf = await loadKdfParams(syncId)
+    const kdfMeta = cachedKdf
+      ? { salt: btoa(String.fromCharCode(...cachedKdf.salt)), iterations: cachedKdf.iterations }
+      : undefined
     const envelope = await encryptSyncEnvelope({
       state,
       mediaManifest: manifest,
       vaultKey,
       syncId,
       appVersion: APP_VERSION,
+      kdf: kdfMeta,
     })
     const body = JSON.stringify(envelope)
 
