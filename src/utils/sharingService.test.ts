@@ -177,7 +177,6 @@ describe('sharingService', () => {
 
   it('shareMemory uploads one encrypted blob per image and inserts a share_media row', async () => {
     await svc.bootstrapSession()
-    recorder.nextInsertedId = t => t === 'shares' ? { id: 'share-xyz' } : { id: 'x' }
 
     await svc.shareMemory({
       body: {
@@ -189,9 +188,15 @@ describe('sharingService', () => {
       images: [new Uint8Array([9, 9, 9])],
     })
 
+    // H2: shareMemory now generates the row id client-side and embeds it in
+    // the insert payload (so AES-GCM's AAD can bind to it). The storage
+    // path uses that same client-generated id, not a server return value.
+    const shareInsert = recorder.inserts.find(i => i.table === 'shares')
+    const shareId = (shareInsert!.payload as { id: string }).id
+    expect(shareId).toMatch(/^[0-9a-f-]{36}$/i)
     expect(recorder.storageUploads).toHaveLength(1)
     expect(recorder.storageUploads[0].bucket).toBe('share-media')
-    expect(recorder.storageUploads[0].path).toMatch(/^share-xyz\/.+\.bin$/)
+    expect(recorder.storageUploads[0].path).toMatch(new RegExp(`^${shareId}/.+\\.bin$`))
     expect(recorder.inserts.filter(i => i.table === 'share_media')).toHaveLength(1)
   })
 
@@ -207,14 +212,17 @@ describe('sharingService', () => {
 
   it('addAnnotation inserts an encrypted row after bootstrap', async () => {
     await svc.bootstrapSession()
-    recorder.nextInsertedId = () => ({ id: 'anno-1' })
     const res = await svc.addAnnotation({
       shareId: 's1',
       body: { $type: 'remember-me-annotation', version: 1, authorName: 'Ben', text: 'hi', imageCount: 0, createdAt: '2024-01-01T00:00:00.000Z' },
       audience: [],
     })
-    expect(res.annotationId).toBe('anno-1')
-    expect(recorder.inserts.find(i => i.table === 'annotations')).toBeDefined()
+    // H2: annotation id is generated client-side and embedded in the insert
+    // payload so AES-GCM's AAD binds the ciphertext to it.
+    expect(res.annotationId).toMatch(/^[0-9a-f-]{36}$/i)
+    const annoInsert = recorder.inserts.find(i => i.table === 'annotations')
+    expect(annoInsert).toBeDefined()
+    expect((annoInsert!.payload as { id: string }).id).toBe(res.annotationId)
   })
 
   it('deactivateOnlineSharing deletes the device row, clears local keys and nulls the session', async () => {

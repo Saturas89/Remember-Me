@@ -37,10 +37,33 @@ export interface Recipient {
 // ── Share envelope stored on the server ──────────────────────────────────────
 
 export interface ShareEnvelope {
+  /** Envelope format version.
+   *
+   *  - undefined / 1: legacy. AES-GCM ciphertext binds only to the random
+   *    content-key. The server can in principle re-label which device-id
+   *    authored the envelope — decryption still works but the recipient
+   *    has no cryptographic proof of the sender beyond the implicit ECDH
+   *    wrap binding.
+   *  - 2: AES-GCM ciphertext is additionally bound to
+   *    `senderDeviceId | envelopeId` via AAD. Any mismatch on decrypt
+   *    (server lying about sender, swapping ciphertext between rows)
+   *    fails the GCM auth tag and rejects the envelope.
+   */
+  v?: number
   ciphertext: string     // base64url AES-GCM(compressed JSON)
   iv: string             // base64url 12 bytes
   /** deviceId → wrapped content-key */
   encryptedKeys: Record<string, WrappedKey>
+}
+
+const AAD_VERSION = 'v2'
+
+/** Build the AAD that binds the ciphertext to its sender + envelope row.
+ *  Domain-separated by `"v2|"` so future schema versions don't collide. */
+function makeAad(senderDeviceId: string, envelopeId: string, kind: 'share' | 'annotation'): Uint8Array {
+  return new TextEncoder().encode(
+    `${AAD_VERSION}|${kind}|${senderDeviceId}|${envelopeId}`,
+  )
 }
 
 export interface EncryptedImage {
@@ -132,13 +155,20 @@ export async function encryptShare(
   owner: DeviceKeyPair,
   ownerDeviceId: string,
   recipients: Recipient[],
+  /** Client-generated UUID for the share row. Pinning the id pre-encrypt
+   *  lets us bind the ciphertext to its eventual storage location via AAD,
+   *  so a server that re-shuffles rows can't pass another row's payload
+   *  off as this one. */
+  envelopeId: string,
 ): Promise<ShareEnvelope> {
   const contentKey = generateContentKeyBytes()
   const compressed = await compress(JSON.stringify(body))
-  const blob = await encryptWithContentKey(compressed, contentKey)
+  const aad = makeAad(ownerDeviceId, envelopeId, 'share')
+  const blob = await encryptWithContentKey(compressed, contentKey, aad)
   const encryptedKeys = await wrapForRecipients(contentKey, owner, ownerDeviceId, recipients)
 
   return {
+    v: 2,
     ciphertext: toB64u(blob.ciphertext),
     iv: toB64u(blob.iv),
     encryptedKeys,
@@ -150,13 +180,22 @@ export async function decryptShare(
   self: DeviceKeyPair,
   selfDeviceId: string,
   senderPublicKey: string,
+  /** Claimed sender + envelope-row id. For v2 envelopes both pieces are
+   *  fed into AES-GCM as additional authenticated data, so a server
+   *  lying about either fails the auth tag check. For legacy v1 the
+   *  parameters are accepted but unused. */
+  senderDeviceId: string,
+  envelopeId: string,
 ): Promise<{ body: ShareBody; contentKey: Uint8Array }> {
   const contentKey = await unwrapForSelf(envelope, self, selfDeviceId, senderPublicKey)
   const blob: EncryptedBlob = {
     iv: fromB64u(envelope.iv),
     ciphertext: fromB64u(envelope.ciphertext),
   }
-  const compressed = await decryptWithContentKey(blob, contentKey)
+  const aad = envelope.v === 2
+    ? makeAad(senderDeviceId, envelopeId, 'share')
+    : undefined
+  const compressed = await decryptWithContentKey(blob, contentKey, aad)
   const json = await decompress(compressed)
   const body = JSON.parse(json) as ShareBody
   if (body.$type !== 'remember-me-share') {
@@ -176,12 +215,16 @@ export async function encryptAnnotation(
   author: DeviceKeyPair,
   authorDeviceId: string,
   audience: Recipient[],
+  /** Client-generated UUID for the annotation row. See encryptShare. */
+  envelopeId: string,
 ): Promise<ShareEnvelope> {
   const contentKey = generateContentKeyBytes()
   const compressed = await compress(JSON.stringify(body))
-  const blob = await encryptWithContentKey(compressed, contentKey)
+  const aad = makeAad(authorDeviceId, envelopeId, 'annotation')
+  const blob = await encryptWithContentKey(compressed, contentKey, aad)
   const encryptedKeys = await wrapForRecipients(contentKey, author, authorDeviceId, audience)
   return {
+    v: 2,
     ciphertext: toB64u(blob.ciphertext),
     iv: toB64u(blob.iv),
     encryptedKeys,
@@ -193,13 +236,18 @@ export async function decryptAnnotation(
   self: DeviceKeyPair,
   selfDeviceId: string,
   authorPublicKey: string,
+  authorDeviceId: string,
+  envelopeId: string,
 ): Promise<AnnotationBody> {
   const contentKey = await unwrapForSelf(envelope, self, selfDeviceId, authorPublicKey)
   const blob: EncryptedBlob = {
     iv: fromB64u(envelope.iv),
     ciphertext: fromB64u(envelope.ciphertext),
   }
-  const compressed = await decryptWithContentKey(blob, contentKey)
+  const aad = envelope.v === 2
+    ? makeAad(authorDeviceId, envelopeId, 'annotation')
+    : undefined
+  const compressed = await decryptWithContentKey(blob, contentKey, aad)
   const json = await decompress(compressed)
   const body = JSON.parse(json) as AnnotationBody
   if (body.$type !== 'remember-me-annotation') {
