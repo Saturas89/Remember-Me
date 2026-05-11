@@ -51,7 +51,10 @@ export async function deriveVaultKey(
     },
     keyMaterial,
     { name: 'AES-GCM', length: 256 },
-    true,
+    // H3: non-extractable. The vault key never leaves Web Crypto's
+    // internal heap — `exportKey` rejects, so XSS can't dump the raw
+    // bytes out of IndexedDB even with full DOM access.
+    false,
     ['encrypt', 'decrypt'],
   )
 }
@@ -104,27 +107,65 @@ async function openVaultIdb(): Promise<IDBDatabase> {
 }
 
 export async function cacheVaultKey(userId: string, key: CryptoKey): Promise<void> {
-  const exported = await crypto.subtle.exportKey('jwk', key)
+  // H3: store the CryptoKey object directly via IndexedDB's structured
+  // clone — the previous JWK export wrote the raw key bytes into IDB,
+  // where any XSS with DOM access could read them out. CryptoKey survives
+  // structured-clone but the underlying key material stays inside Web
+  // Crypto's heap, so `exportKey` is the only way back out — and
+  // non-extractable keys (see deriveVaultKey) reject that.
   const db = await openVaultIdb()
   return new Promise((resolve, reject) => {
     const tx = db.transaction(IDB_VAULT_KEY_STORE, 'readwrite')
-    tx.objectStore(IDB_VAULT_KEY_STORE).put(exported, userId)
+    tx.objectStore(IDB_VAULT_KEY_STORE).put(key, userId)
     tx.oncomplete = () => resolve()
     tx.onerror = () => reject(tx.error)
   })
 }
 
+/** Best-effort detector for the pre-H3 storage shape: a JWK object dumped
+ *  into IDB by `exportKey('jwk', key)`. Symmetric AES-GCM JWKs always
+ *  carry `kty: 'oct'` and a base64url `k`. */
+function isLegacyJwk(value: unknown): value is JsonWebKey {
+  return (
+    typeof value === 'object'
+    && value !== null
+    && 'kty' in value
+    && 'k' in value
+  )
+}
+
 export async function loadCachedVaultKey(userId: string): Promise<CryptoKey | null> {
   try {
     const db = await openVaultIdb()
-    const jwk = await new Promise<JsonWebKey | undefined>((resolve, reject) => {
+    const stored = await new Promise<unknown>((resolve, reject) => {
       const tx = db.transaction(IDB_VAULT_KEY_STORE, 'readonly')
       const req = tx.objectStore(IDB_VAULT_KEY_STORE).get(userId)
-      req.onsuccess = () => resolve(req.result as JsonWebKey | undefined)
+      req.onsuccess = () => resolve(req.result)
       req.onerror = () => reject(req.error)
     })
-    if (!jwk) return null
-    return crypto.subtle.importKey('jwk', jwk, { name: 'AES-GCM', length: 256 }, true, ['encrypt', 'decrypt'])
+    if (stored === undefined || stored === null) return null
+
+    // Fast path: post-H3 row is a CryptoKey reference reconstructed by
+    // IDB's structured-clone.
+    if (stored instanceof CryptoKey) return stored
+
+    // Legacy path: pre-H3 row is a JWK with the raw key bytes. Re-import
+    // it as non-extractable and overwrite the IDB row with the CryptoKey
+    // reference, so the raw bytes vanish on the very next storage write
+    // and subsequent loads take the fast path.
+    if (isLegacyJwk(stored)) {
+      const key = await crypto.subtle.importKey(
+        'jwk',
+        stored,
+        { name: 'AES-GCM', length: 256 },
+        false,
+        ['encrypt', 'decrypt'],
+      )
+      await cacheVaultKey(userId, key)
+      return key
+    }
+
+    return null
   } catch {
     return null
   }
