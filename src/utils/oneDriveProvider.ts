@@ -241,11 +241,14 @@ export class OneDriveProvider implements SyncProvider {
 
     // H7: same as Drive — forward locally cached PBKDF2 params so a new
     // device can re-derive the vault key from the recovery code.
-    const { loadKdfParams } = await import('./recoveryCode')
+    const { loadKdfParams, loadLastSeenVersion, saveLastSeenVersion } =
+      await import('./recoveryCode')
     const cachedKdf = await loadKdfParams(syncId)
     const kdfMeta = cachedKdf
       ? { salt: btoa(String.fromCharCode(...cachedKdf.salt)), iterations: cachedKdf.iterations }
       : undefined
+    // H5: monotonic version — see GoogleDriveProvider.push.
+    const nextVersion = (await loadLastSeenVersion(syncId)) + 1
     const envelope = await encryptSyncEnvelope({
       state,
       mediaManifest: manifest,
@@ -253,12 +256,14 @@ export class OneDriveProvider implements SyncProvider {
       syncId,
       appVersion: APP_VERSION,
       kdf: kdfMeta,
+      envelopeVersion: nextVersion,
     })
+    await saveLastSeenVersion(syncId, nextVersion)
     await graphPut('remember-me-sync.json', JSON.stringify(envelope), 'application/json', token)
   }
 
   async pull(localState: AppState, media: MediaStoreAccessor): Promise<PullResult | null> {
-    const { key: vaultKey } = await this._requireVaultKey()
+    const { key: vaultKey, syncId } = await this._requireVaultKey()
     const token = await getValidToken()
     const res = await graphGet('remember-me-sync.json', token)
     if (res.status === 404 || !res.ok) return null
@@ -268,6 +273,20 @@ export class OneDriveProvider implements SyncProvider {
     const decrypted = await decryptSyncEnvelope<Record<string, MediaManifestEntry>>(envelope, vaultKey)
     const remote = decrypted.state
     const manifest = decrypted.mediaManifest ?? {}
+
+    // H5: see GoogleDriveProvider.pull — same replay guard.
+    const { loadLastSeenVersion, saveLastSeenVersion } = await import('./recoveryCode')
+    const remoteVersion = typeof decrypted.envelopeVersion === 'number' ? decrypted.envelopeVersion : 0
+    const lastSeen = await loadLastSeenVersion(syncId)
+    if (remoteVersion < lastSeen) {
+      throw new SyncError(
+        `Veralteter Sync-Stand erkannt (Version ${remoteVersion} < ${lastSeen}) — möglicher Replay.`,
+        'unknown',
+      )
+    }
+    if (remoteVersion > lastSeen) {
+      await saveLastSeenVersion(syncId, remoteVersion)
+    }
 
     const localIds = await media.listLocalMediaIds()
     const localAllIds = new Set([...localIds.images, ...localIds.audio, ...localIds.videos])
