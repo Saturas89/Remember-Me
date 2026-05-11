@@ -64,6 +64,7 @@ import {
   encryptText,
   cacheVaultKey,
   clearCachedVaultKey,
+  legacyKdfParams,
 } from './recoveryCode'
 import type { AppState } from '../types'
 
@@ -109,7 +110,7 @@ describe('SupabaseSyncProvider', () => {
   })
 
   it('SP-01: push → Upsert ist verschlüsselt + recovery-code-Encryption-Tag', async () => {
-    const key = await deriveVaultKey(RECOVERY_CODE, USER_ID)
+    const key = await deriveVaultKey(RECOVERY_CODE, legacyKdfParams(USER_ID))
     await cacheVaultKey(USER_ID, key)
 
     const provider = new SupabaseSyncProvider(USER_ID)
@@ -128,7 +129,7 @@ describe('SupabaseSyncProvider', () => {
   })
 
   it('SP-02: pull → entschlüsselt Remote-State und liefert merged AppState', async () => {
-    const key = await deriveVaultKey(RECOVERY_CODE, USER_ID)
+    const key = await deriveVaultKey(RECOVERY_CODE, legacyKdfParams(USER_ID))
     await cacheVaultKey(USER_ID, key)
 
     const remoteState = makeAppState()
@@ -147,7 +148,7 @@ describe('SupabaseSyncProvider', () => {
   })
 
   it('SP-03: pull → leere Tabelle (PGRST116) → null', async () => {
-    const key = await deriveVaultKey(RECOVERY_CODE, USER_ID)
+    const key = await deriveVaultKey(RECOVERY_CODE, legacyKdfParams(USER_ID))
     await cacheVaultKey(USER_ID, key)
 
     recorder.selectScript = {
@@ -161,8 +162,8 @@ describe('SupabaseSyncProvider', () => {
 
   it('SP-04: pull → falscher Vault-Key → SyncError("decrypt")', async () => {
     // Encrypt with the *correct* key, then cache a different one.
-    const correct = await deriveVaultKey(RECOVERY_CODE, USER_ID)
-    const wrong = await deriveVaultKey('YZABCDEFGHIJKLMNOPQRSTUV', USER_ID)
+    const correct = await deriveVaultKey(RECOVERY_CODE, legacyKdfParams(USER_ID))
+    const wrong = await deriveVaultKey('YZABCDEFGHIJKLMNOPQRSTUV', legacyKdfParams(USER_ID))
     const { ct, iv } = await encryptText(JSON.stringify(makeAppState()), correct)
     recorder.selectScript = { data: { state_ct: ct, state_iv: iv }, error: null }
     await cacheVaultKey(USER_ID, wrong)
@@ -179,7 +180,7 @@ describe('SupabaseSyncProvider', () => {
   })
 
   it('SP-05: push → Auth-Fehler (401) → SyncError("auth")', async () => {
-    const key = await deriveVaultKey(RECOVERY_CODE, USER_ID)
+    const key = await deriveVaultKey(RECOVERY_CODE, legacyKdfParams(USER_ID))
     await cacheVaultKey(USER_ID, key)
     recorder.upsertResult.error = { message: 'JWT expired (401)' }
 

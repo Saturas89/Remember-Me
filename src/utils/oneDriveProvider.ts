@@ -185,6 +185,21 @@ export class OneDriveProvider implements SyncProvider {
     }
   }
 
+  /** H7: see GoogleDriveProvider.readExistingKdfParams. */
+  async readExistingKdfParams(): Promise<{ salt: Uint8Array; iterations: number } | null> {
+    try {
+      const token = await getValidToken()
+      const res = await graphGet('remember-me-sync.json', token)
+      if (res.status === 404 || !res.ok) return null
+      const raw = await res.json() as Record<string, unknown>
+      if (typeof raw.kdfSalt !== 'string' || typeof raw.kdfIterations !== 'number') return null
+      const saltBytes = Uint8Array.from(atob(raw.kdfSalt), c => c.charCodeAt(0))
+      return { salt: saltBytes, iterations: raw.kdfIterations }
+    } catch {
+      return null
+    }
+  }
+
   async push(state: AppState, media: MediaStoreAccessor): Promise<void> {
     const { key: vaultKey, syncId } = await this._requireVaultKey()
     const token = await getValidToken()
@@ -224,12 +239,20 @@ export class OneDriveProvider implements SyncProvider {
       }),
     ])
 
+    // H7: same as Drive — forward locally cached PBKDF2 params so a new
+    // device can re-derive the vault key from the recovery code.
+    const { loadKdfParams } = await import('./recoveryCode')
+    const cachedKdf = await loadKdfParams(syncId)
+    const kdfMeta = cachedKdf
+      ? { salt: btoa(String.fromCharCode(...cachedKdf.salt)), iterations: cachedKdf.iterations }
+      : undefined
     const envelope = await encryptSyncEnvelope({
       state,
       mediaManifest: manifest,
       vaultKey,
       syncId,
       appVersion: APP_VERSION,
+      kdf: kdfMeta,
     })
     await graphPut('remember-me-sync.json', JSON.stringify(envelope), 'application/json', token)
   }
