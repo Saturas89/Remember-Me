@@ -25,6 +25,7 @@ jobs:
       feature_branch: ${{ steps.vars.outputs.branch }}
       spec_file:     ${{ steps.vars.outputs.spec_file }}
       spec_slug:     ${{ steps.vars.outputs.slug }}
+      skip:          ${{ steps.vars.outputs.skip }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -53,13 +54,19 @@ jobs:
             else
               RANGE="$PUSH_BEFORE..$PUSH_AFTER"
             fi
-            CHANGED=$(git log --name-only --pretty=format: "$RANGE" 2>/dev/null | sort -u || true)
-            echo "Changed files in $RANGE:"
-            printf '%s\n' "$CHANGED"
-            SPEC_FILE=$(printf '%s\n' "$CHANGED" | grep -E '^docs/requirements/REQ-.*\.md$' | head -n1 || true)
+            # Nur NEU hinzugefügte REQ-*.md sollen den Workflow triggern.
+            # Reine Modifikationen an existierenden Specs (Locale-Update,
+            # Tippfehler, Rename) starten die Agents nicht erneut – die wurden
+            # für ihre Original-Spec schon einmal ausgeführt.
+            ADDED=$(git diff --diff-filter=A --name-only "$RANGE" 2>/dev/null \
+              | grep -E '^docs/requirements/REQ-.*\.md$' | sort -u || true)
+            echo "Newly added REQ specs in $RANGE:"
+            printf '%s\n' "$ADDED"
+            SPEC_FILE=$(printf '%s\n' "$ADDED" | head -n1 || true)
             if [ -z "$SPEC_FILE" ]; then
-              echo "Path filter matched but no docs/requirements/REQ-*.md in range $RANGE — aborting." >&2
-              exit 1
+              echo "Push touched REQ files but none were newly added — skipping generation."
+              echo "skip=true" >> "$GITHUB_OUTPUT"
+              exit 0
             fi
             SPEC_FILE="$(basename "$SPEC_FILE")"
           fi
@@ -75,6 +82,7 @@ jobs:
 
   generate:
     needs: prepare
+    if: ${{ needs.prepare.outputs.skip != 'true' }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -151,6 +159,7 @@ jobs:
 
   open_pr:
     needs: [prepare, generate]
+    if: ${{ needs.prepare.outputs.skip != 'true' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
