@@ -102,12 +102,16 @@ export interface EncryptedBlob {
 export async function encryptWithContentKey(
   data: Uint8Array,
   contentKey: Uint8Array,
+  additionalData?: Uint8Array,
 ): Promise<EncryptedBlob> {
   const iv = crypto.getRandomValues(new Uint8Array(12))
   const key = await importAesGcm(contentKey)
+  const params: AesGcmParams = additionalData
+    ? { name: 'AES-GCM', iv: iv.buffer as ArrayBuffer, additionalData: additionalData.buffer as ArrayBuffer }
+    : { name: 'AES-GCM', iv: iv.buffer as ArrayBuffer }
   const ct = new Uint8Array(
     await crypto.subtle.encrypt(
-      { name: 'AES-GCM', iv: iv.buffer as ArrayBuffer },
+      params,
       key,
       data.buffer as ArrayBuffer,
     ),
@@ -118,11 +122,15 @@ export async function encryptWithContentKey(
 export async function decryptWithContentKey(
   blob: EncryptedBlob,
   contentKey: Uint8Array,
+  additionalData?: Uint8Array,
 ): Promise<Uint8Array<ArrayBuffer>> {
   const key = await importAesGcm(contentKey)
+  const params: AesGcmParams = additionalData
+    ? { name: 'AES-GCM', iv: blob.iv.buffer as ArrayBuffer, additionalData: additionalData.buffer as ArrayBuffer }
+    : { name: 'AES-GCM', iv: blob.iv.buffer as ArrayBuffer }
   return new Uint8Array(
     await crypto.subtle.decrypt(
-      { name: 'AES-GCM', iv: blob.iv.buffer as ArrayBuffer },
+      params,
       key,
       blob.ciphertext.buffer as ArrayBuffer,
     ),

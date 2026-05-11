@@ -9,6 +9,7 @@ import {
   encryptImage,
   decryptImage,
   type Recipient,
+  type ShareEnvelope,
 } from './shareEncryption'
 import {
   generateDeviceKeyPair,
@@ -41,8 +42,9 @@ const sampleBody: ShareBody = {
 describe('encryptShare / decryptShare', () => {
   it('owner can decrypt their own share', async () => {
     const owner = await makeDevice()
-    const envelope = await encryptShare(sampleBody, owner.kp, owner.deviceId, [])
-    const { body } = await decryptShare(envelope, owner.kp, owner.deviceId, owner.publicKey)
+    const envelopeId = crypto.randomUUID()
+    const envelope = await encryptShare(sampleBody, owner.kp, owner.deviceId, [], envelopeId)
+    const { body } = await decryptShare(envelope, owner.kp, owner.deviceId, owner.publicKey, owner.deviceId, envelopeId)
     expect(body).toEqual(sampleBody)
   })
 
@@ -50,14 +52,15 @@ describe('encryptShare / decryptShare', () => {
     const owner = await makeDevice()
     const bob = await makeDevice()
     const recipients: Recipient[] = [{ deviceId: bob.deviceId, publicKey: bob.publicKey }]
+    const envelopeId = crypto.randomUUID()
 
-    const envelope = await encryptShare(sampleBody, owner.kp, owner.deviceId, recipients)
+    const envelope = await encryptShare(sampleBody, owner.kp, owner.deviceId, recipients, envelopeId)
 
     expect(Object.keys(envelope.encryptedKeys).sort()).toEqual(
       [owner.deviceId, bob.deviceId].sort(),
     )
 
-    const { body } = await decryptShare(envelope, bob.kp, bob.deviceId, owner.publicKey)
+    const { body } = await decryptShare(envelope, bob.kp, bob.deviceId, owner.publicKey, owner.deviceId, envelopeId)
     expect(body).toEqual(sampleBody)
   })
 
@@ -65,14 +68,15 @@ describe('encryptShare / decryptShare', () => {
     const owner = await makeDevice()
     const bob = await makeDevice()
     const charlie = await makeDevice()
+    const envelopeId = crypto.randomUUID()
 
     const envelope = await encryptShare(sampleBody, owner.kp, owner.deviceId, [
       { deviceId: bob.deviceId, publicKey: bob.publicKey },
       { deviceId: charlie.deviceId, publicKey: charlie.publicKey },
-    ])
+    ], envelopeId)
 
-    const bobResult = await decryptShare(envelope, bob.kp, bob.deviceId, owner.publicKey)
-    const charlieResult = await decryptShare(envelope, charlie.kp, charlie.deviceId, owner.publicKey)
+    const bobResult = await decryptShare(envelope, bob.kp, bob.deviceId, owner.publicKey, owner.deviceId, envelopeId)
+    const charlieResult = await decryptShare(envelope, charlie.kp, charlie.deviceId, owner.publicKey, owner.deviceId, envelopeId)
 
     expect(bobResult.body).toEqual(sampleBody)
     expect(charlieResult.body).toEqual(sampleBody)
@@ -86,44 +90,130 @@ describe('encryptShare / decryptShare', () => {
     const owner = await makeDevice()
     const bob = await makeDevice()
     const eve = await makeDevice()
+    const envelopeId = crypto.randomUUID()
 
     const envelope = await encryptShare(sampleBody, owner.kp, owner.deviceId, [
       { deviceId: bob.deviceId, publicKey: bob.publicKey },
-    ])
+    ], envelopeId)
 
     await expect(
-      decryptShare(envelope, eve.kp, eve.deviceId, owner.publicKey),
+      decryptShare(envelope, eve.kp, eve.deviceId, owner.publicKey, owner.deviceId, envelopeId),
     ).rejects.toBeDefined()
   })
 
   it('tampering with ciphertext is detected', async () => {
     const owner = await makeDevice()
     const bob = await makeDevice()
+    const envelopeId = crypto.randomUUID()
     const envelope = await encryptShare(sampleBody, owner.kp, owner.deviceId, [
       { deviceId: bob.deviceId, publicKey: bob.publicKey },
-    ])
+    ], envelopeId)
     // Flip a bit in the ciphertext body
     const ctBytes = Array.from(envelope.ciphertext)
     ctBytes[5] = ctBytes[5] === 'A' ? 'B' : 'A'
     envelope.ciphertext = ctBytes.join('')
 
     await expect(
-      decryptShare(envelope, bob.kp, bob.deviceId, owner.publicKey),
+      decryptShare(envelope, bob.kp, bob.deviceId, owner.publicKey, owner.deviceId, envelopeId),
     ).rejects.toBeDefined()
   })
 
   it('server (no keys) cannot see plaintext', async () => {
     const owner = await makeDevice()
     const bob = await makeDevice()
+    const envelopeId = crypto.randomUUID()
     const envelope = await encryptShare(sampleBody, owner.kp, owner.deviceId, [
       { deviceId: bob.deviceId, publicKey: bob.publicKey },
-    ])
+    ], envelopeId)
     // Serialize as the server would store it
     const stored = JSON.stringify(envelope)
     expect(stored).not.toContain('Oma')
     expect(stored).not.toContain('Sommer 1984')
     expect(stored).not.toContain('Anna')
     expect(stored).not.toContain('q-childhood-summer')
+  })
+
+  // ── H2: sender + envelope-id binding via AAD ──────────────────────────────
+
+  it('emits v=2 envelopes by default', async () => {
+    const owner = await makeDevice()
+    const envelope = await encryptShare(
+      sampleBody, owner.kp, owner.deviceId, [], crypto.randomUUID(),
+    )
+    expect(envelope.v).toBe(2)
+  })
+
+  it('rejects decrypt when the server lies about the sender device id', async () => {
+    const owner = await makeDevice()
+    const bob = await makeDevice()
+    const mallory = await makeDevice()
+    const envelopeId = crypto.randomUUID()
+    const envelope = await encryptShare(sampleBody, owner.kp, owner.deviceId, [
+      { deviceId: bob.deviceId, publicKey: bob.publicKey },
+    ], envelopeId)
+
+    // Server claims Mallory is the author but the AAD was computed with
+    // owner.deviceId on the encrypt side → AES-GCM tag must reject.
+    await expect(
+      decryptShare(envelope, bob.kp, bob.deviceId, owner.publicKey, mallory.deviceId, envelopeId),
+    ).rejects.toBeDefined()
+  })
+
+  it('rejects decrypt when the server moves the envelope to a different row', async () => {
+    const owner = await makeDevice()
+    const bob = await makeDevice()
+    const envelopeId = crypto.randomUUID()
+    const envelope = await encryptShare(sampleBody, owner.kp, owner.deviceId, [
+      { deviceId: bob.deviceId, publicKey: bob.publicKey },
+    ], envelopeId)
+
+    // Server presents the same ciphertext under a different row id →
+    // AAD differs → GCM tag must reject.
+    await expect(
+      decryptShare(envelope, bob.kp, bob.deviceId, owner.publicKey, owner.deviceId, crypto.randomUUID()),
+    ).rejects.toBeDefined()
+  })
+
+  it('accepts legacy v1 envelopes (no AAD) for backward compat', async () => {
+    // Hand-craft a v1 envelope by stripping the v field after encrypt with
+    // a mocked legacy encoder — easier: encrypt with v=2 then re-encrypt
+    // without AAD by calling the raw helpers. Simplest: monkey-patch
+    // envelope.v to undefined and re-encrypt without AAD.
+    //
+    // Instead, we round-trip through the new code path with v=2 and then
+    // verify the *legacy fallback*: if we drop the v field, decryptShare
+    // must NOT apply AAD — so a v1 envelope produced by the old release
+    // (which used no AAD) still works.
+    //
+    // We simulate "old release" by calling the AES-GCM helpers directly
+    // without AAD and assembling a ShareEnvelope by hand.
+    const owner = await makeDevice()
+    const bob = await makeDevice()
+    const { generateContentKeyBytes, encryptWithContentKey, toB64u } = await import('./crypto')
+    const { deriveWrappingKey, wrapContentKey, importPublicKey } = await import('./crypto')
+
+    const contentKey = generateContentKeyBytes()
+    const compressed = new TextEncoder().encode(JSON.stringify(sampleBody))
+    const blob = await encryptWithContentKey(compressed, contentKey)
+    const ownerWrap = await deriveWrappingKey(owner.kp.privateKey, owner.kp.publicKey)
+    const bobPub = await importPublicKey(bob.publicKey)
+    const bobWrap = await deriveWrappingKey(owner.kp.privateKey, bobPub)
+    const legacyEnvelope: ShareEnvelope = {
+      // v intentionally omitted — legacy shape
+      ciphertext: toB64u(blob.ciphertext),
+      iv: toB64u(blob.iv),
+      encryptedKeys: {
+        [owner.deviceId]: await wrapContentKey(contentKey, ownerWrap),
+        [bob.deviceId]: await wrapContentKey(contentKey, bobWrap),
+      },
+    }
+
+    // sender/envelope ids must be accepted but unused for v1.
+    const { body } = await decryptShare(
+      legacyEnvelope, bob.kp, bob.deviceId, owner.publicKey,
+      owner.deviceId, crypto.randomUUID(),
+    )
+    expect(body).toEqual(sampleBody)
   })
 })
 
@@ -141,16 +231,48 @@ describe('encryptAnnotation / decryptAnnotation', () => {
     const bob = await makeDevice()        // annotation author
     const anna = await makeDevice()       // original memory owner
     const charlie = await makeDevice()    // another audience member
+    const envelopeId = crypto.randomUUID()
 
     const envelope = await encryptAnnotation(annotation, bob.kp, bob.deviceId, [
       { deviceId: anna.deviceId, publicKey: anna.publicKey },
       { deviceId: charlie.deviceId, publicKey: charlie.publicKey },
-    ])
+    ], envelopeId)
 
-    const annaView = await decryptAnnotation(envelope, anna.kp, anna.deviceId, bob.publicKey)
-    const charlieView = await decryptAnnotation(envelope, charlie.kp, charlie.deviceId, bob.publicKey)
+    const annaView = await decryptAnnotation(envelope, anna.kp, anna.deviceId, bob.publicKey, bob.deviceId, envelopeId)
+    const charlieView = await decryptAnnotation(envelope, charlie.kp, charlie.deviceId, bob.publicKey, bob.deviceId, envelopeId)
     expect(annaView).toEqual(annotation)
     expect(charlieView).toEqual(annotation)
+  })
+
+  it('rejects decrypt when the server lies about the annotation author', async () => {
+    const bob = await makeDevice()
+    const anna = await makeDevice()
+    const mallory = await makeDevice()
+    const envelopeId = crypto.randomUUID()
+
+    const envelope = await encryptAnnotation(annotation, bob.kp, bob.deviceId, [
+      { deviceId: anna.deviceId, publicKey: anna.publicKey },
+    ], envelopeId)
+
+    await expect(
+      decryptAnnotation(envelope, anna.kp, anna.deviceId, bob.publicKey, mallory.deviceId, envelopeId),
+    ).rejects.toBeDefined()
+  })
+
+  it('share-AAD and annotation-AAD are domain-separated', async () => {
+    // Even with identical (senderId, envelopeId), a share envelope must not
+    // decrypt as an annotation and vice-versa — the AAD's `share`/`annotation`
+    // tag prevents type-confusion attacks.
+    const owner = await makeDevice()
+    const bob = await makeDevice()
+    const envelopeId = crypto.randomUUID()
+    const shareEnv = await encryptShare(sampleBody, owner.kp, owner.deviceId, [
+      { deviceId: bob.deviceId, publicKey: bob.publicKey },
+    ], envelopeId)
+
+    await expect(
+      decryptAnnotation(shareEnv, bob.kp, bob.deviceId, owner.publicKey, owner.deviceId, envelopeId),
+    ).rejects.toBeDefined()
   })
 })
 

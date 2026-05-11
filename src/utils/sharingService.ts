@@ -114,25 +114,31 @@ export async function shareMemory(input: ShareMemoryInput): Promise<{ shareId: s
   const session = requireSession()
   const supabase = getSupabaseClient()
 
+  // H2: pin the row id before encrypt so AES-GCM's AAD can bind the
+  // ciphertext to its eventual storage location. Without this the server
+  // could move a payload from one share row to another and the recipient
+  // would still decrypt it under whatever sender it claimed.
+  const shareId = crypto.randomUUID()
+
   const envelope = await encryptShare(
     input.body,
     session.keyPair,
     session.deviceId,
     input.recipients,
+    shareId,
   )
 
-  const { data: shareRow, error: shareErr } = await supabase
+  const { error: shareErr } = await supabase
     .from('shares')
     .insert({
+      id: shareId,
       owner_id: session.deviceId,
       ciphertext: toBytea(fromB64u(envelope.ciphertext)),
       iv: toBytea(fromB64u(envelope.iv)),
       encrypted_keys: envelope.encryptedKeys,
+      version: envelope.v ?? 1,
     })
-    .select('id')
-    .single()
-  if (shareErr || !shareRow) throw shareErr ?? new Error('failed to insert share')
-  const shareId = shareRow.id as string
+  if (shareErr) throw shareErr
 
   // ACL rows
   const acl = [
@@ -155,6 +161,8 @@ export async function shareMemory(input: ShareMemoryInput): Promise<{ shareId: s
       session.keyPair,
       session.deviceId,
       session.publicKeyB64,
+      session.deviceId,
+      shareId,
     )
 
     const uploadedPaths: string[] = []
@@ -207,7 +215,7 @@ export async function fetchIncomingShares(): Promise<{
   // RLS already filters to the shares this device may see.
   const { data: shareRows, error: shareErr } = await supabase
     .from('shares')
-    .select('id, owner_id, ciphertext, iv, encrypted_keys, created_at, updated_at')
+    .select('id, owner_id, ciphertext, iv, encrypted_keys, version, created_at, updated_at')
   if (shareErr) throw shareErr
 
   const memories: SharedMemory[] = []
@@ -233,6 +241,7 @@ export async function fetchIncomingShares(): Promise<{
       if (!ownerPub) continue
       try {
         const envelope: ShareEnvelope = {
+          v: typeof row.version === 'number' ? row.version : undefined,
           ciphertext: toB64u(coerceBytes(row.ciphertext)),
           iv: toB64u(coerceBytes(row.iv)),
           encryptedKeys: row.encrypted_keys,
@@ -242,6 +251,8 @@ export async function fetchIncomingShares(): Promise<{
           session.keyPair,
           session.deviceId,
           ownerPub,
+          row.owner_id as string,
+          row.id as string,
         )
         memories.push({
           shareId: row.id,
@@ -267,7 +278,7 @@ export async function fetchIncomingShares(): Promise<{
   if (shareIds.length > 0) {
     const { data: annoRows, error: annoErr } = await supabase
       .from('annotations')
-      .select('id, share_id, author_id, ciphertext, iv, encrypted_keys, created_at')
+      .select('id, share_id, author_id, ciphertext, iv, encrypted_keys, version, created_at')
       .in('share_id', shareIds)
     if (annoErr) throw annoErr
 
@@ -290,6 +301,7 @@ export async function fetchIncomingShares(): Promise<{
       if (!authorPub) continue
       try {
         const envelope: ShareEnvelope = {
+          v: typeof row.version === 'number' ? row.version : undefined,
           ciphertext: toB64u(coerceBytes(row.ciphertext)),
           iv: toB64u(coerceBytes(row.iv)),
           encryptedKeys: row.encrypted_keys,
@@ -299,6 +311,8 @@ export async function fetchIncomingShares(): Promise<{
           session.keyPair,
           session.deviceId,
           authorPub,
+          row.author_id as string,
+          row.id as string,
         )
         annotations.push({
           annotationId: row.id as string,
@@ -331,26 +345,31 @@ export async function addAnnotation(input: AddAnnotationInput): Promise<{ annota
   const session = requireSession()
   const supabase = getSupabaseClient()
 
+  // H2: pin the row id pre-encrypt so AES-GCM's AAD binds the ciphertext
+  // to (author, annotationId). See shareMemory.
+  const annotationId = crypto.randomUUID()
+
   const envelope = await encryptAnnotation(
     input.body,
     session.keyPair,
     session.deviceId,
     input.audience,
+    annotationId,
   )
 
-  const { data, error } = await supabase
+  const { error } = await supabase
     .from('annotations')
     .insert({
+      id: annotationId,
       share_id: input.shareId,
       author_id: session.deviceId,
       ciphertext: toBytea(fromB64u(envelope.ciphertext)),
       iv: toBytea(fromB64u(envelope.iv)),
       encrypted_keys: envelope.encryptedKeys,
+      version: envelope.v ?? 1,
     })
-    .select('id')
-    .single()
-  if (error || !data) throw error ?? new Error('failed to insert annotation')
-  return { annotationId: data.id as string }
+  if (error) throw error
+  return { annotationId }
 }
 
 // ── Deactivation ─────────────────────────────────────────────────────────────
