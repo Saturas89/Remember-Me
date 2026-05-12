@@ -15,11 +15,16 @@ import { join, resolve } from 'node:path'
 
 const SRC = resolve(__dirname, '..')
 
+// Verzeichnisse, die niemals ins Produktions-Bundle wandern (nur Vitest-Welt)
+// und deshalb für den Opt-In-Guard irrelevant sind.
+const TEST_ONLY_DIRS = new Set(['test-helpers', 'integration'])
+
 function walk(dir: string, out: string[] = []): string[] {
   for (const entry of readdirSync(dir)) {
     const full = join(dir, entry)
     const st = statSync(full)
     if (st.isDirectory()) {
+      if (TEST_ONLY_DIRS.has(entry)) continue
       walk(full, out)
     } else if (/\.(ts|tsx)$/.test(entry) && !/\.test\.(ts|tsx)$/.test(entry)) {
       out.push(full)

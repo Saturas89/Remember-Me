@@ -3,6 +3,17 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
+// Vitest: Wenn keine echten Supabase-Credentials im Env stehen, setzen wir
+// Platzhalter, damit `ONLINE_SHARING_CONFIGURED` in App.tsx auf `true`
+// flippt und Integrations-Tests den Online-Sharing-CTA rendern können.
+// Für echte Network-Calls greift in den Tests der `vi.mock`-Override auf
+// `supabaseClient`. Build/Dev sind nicht betroffen, weil VITEST dort nicht
+// gesetzt ist.
+if (process.env.VITEST === 'true') {
+  if (!process.env.VITE_SUPABASE_URL) process.env.VITE_SUPABASE_URL = 'http://supabase.test.local'
+  if (!process.env.VITE_SUPABASE_ANON_KEY) process.env.VITE_SUPABASE_ANON_KEY = 'test-anon-key'
+}
+
 export default defineConfig({
   // Vercels Supabase-Integration setzt Env-Vars als `SUPABASE_URL` /
   // `SUPABASE_ANON_KEY` (ohne Vite-Prefix). Vite exposed nur `VITE_*` ins
@@ -72,6 +83,31 @@ export default defineConfig({
   ],
   test: {
     environment: 'jsdom',
+    setupFiles: ['src/test-helpers/vitestSetup.ts'],
     exclude: ['**/node_modules/**', '**/dist/**', 'e2e/**'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'lcov', 'html'],
+      include: ['src/**/*.{ts,tsx}'],
+      exclude: [
+        'src/**/*.test.{ts,tsx}',
+        'src/test-helpers/**',
+        'src/integration/**',
+        'src/main.tsx',
+        'src/vite-env.d.ts',
+        'src/types.ts',
+        'src/**/*.d.ts',
+      ],
+      // Untergrenzen entsprechen dem realen Coverage-Stand auf diesem Branch.
+      // Sie wirken als Ratsche: künftige PRs dürfen die Marke nicht
+      // unterlaufen, sollten sie aber Schritt für Schritt anheben, sobald
+      // mehr Tests (z. B. weitere Integrations-Flows) hinzukommen.
+      thresholds: {
+        lines: 62,
+        statements: 59,
+        functions: 52,
+        branches: 49,
+      },
+    },
   },
 })
