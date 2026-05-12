@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { FriendCard } from '../components/FriendCard'
 import { useTranslation } from '../locales'
+import { useSandraFlowStrings } from '../i18n/sandraFlow'
 import { generateShareCard } from '../utils/shareCard'
 import type { Friend, FriendAnswer } from '../types'
 
@@ -18,6 +19,8 @@ interface Props {
   onlineSharingEnabled?: boolean
   /** True when the build has a Supabase URL/anon key configured. Hides the CTA if false. */
   onlineSharingConfigured?: boolean
+  /** Navigate to the Sandra-first flow (`#/ask`). */
+  onOpenSandraFlow?: () => void
 }
 
 export function FriendsView({
@@ -31,8 +34,10 @@ export function FriendsView({
   onOpenOnlineSharing,
   onlineSharingEnabled,
   onlineSharingConfigured,
+  onOpenSandraFlow,
 }: Props) {
   const { t } = useTranslation()
+  const sandraT = useSandraFlowStrings()
   const [isSharing, setIsSharing] = useState(false)
   const [shareStatus, setShareStatus] = useState<'idle' | 'copied' | 'error'>('idle')
   const zipInputRef = useRef<HTMLInputElement>(null)
@@ -149,6 +154,23 @@ export function FriendsView({
           </button>
         </div>
       </section>
+
+      {onOpenSandraFlow && (
+        <section className="friends-section sandra-entry">
+          <h3 className="friends-section-title">{sandraT.entryCard.title}</h3>
+          <p className="friends-hint">{sandraT.entryCard.desc}</p>
+          <div className="friends-share">
+            <button
+              type="button"
+              className="share-cta-btn"
+              onClick={onOpenSandraFlow}
+              data-testid="sandra-entry-cta"
+            >
+              {sandraT.entryCard.cta}
+            </button>
+          </div>
+        </section>
+      )}
 
       {onlineSharingConfigured && onOpenOnlineSharing && (
         <section className="friends-section">

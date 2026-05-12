@@ -1,4 +1,4 @@
-import type { InviteData, AnswerExport, MemorySharePayload, ContactHandshake } from '../types'
+import type { InviteData, AnswerExport, MemorySharePayload, ContactHandshake, QuestionPack } from '../types'
 import { toB64u, fromB64u } from './base64url'
 import {
   validateInviteData,
@@ -6,6 +6,9 @@ import {
   validateMemorySharePayload,
   validateContactHandshake,
 } from './payloadGuards'
+import { decodeQuestionPack, encodeQuestionPack } from './sharing'
+import type { PersonalQuestionPack } from '../lib/sandraFlow/packBuilder'
+import { isPersonalPack } from '../lib/sandraFlow/packBuilder'
 
 // ── Plain Base64 fallback (no crypto required) ────────────────────────────────
 
@@ -373,6 +376,103 @@ export function parseContactFromHash(): ContactHandshake | null {
   } catch {
     return null
   }
+}
+
+// ── Personal question-pack URLs (Sandra-first flow) ─────────────────────────
+//
+// Sandra's flow piggy-backs on the existing `QuestionPack` shape and shares
+// it as a URL so Ingrid only clicks a link, no copy-paste, no app, no setup.
+//
+// Compressed format:  {origin}/?qp={base64url(deflate-raw(JSON))}
+// Plain fallback:     {origin}/?qp-plain={base64url(JSON)}
+//
+// The receiver detects the URL synchronously via `isQuestionPackHash()` and
+// then resolves the pack asynchronously via `parseQuestionPackFromHash()`,
+// which falls back to the plain encoding if compression is unavailable.
+
+/** Synchronously detect whether the current URL is a personal-pack link. */
+export function isQuestionPackHash(): boolean {
+  const p = new URLSearchParams(window.location.search)
+  return p.has('qp') || p.has('qp-plain')
+}
+
+/**
+ * Generate a compressed pack URL. Falls back to plain base64url
+ * (`?qp-plain=…`) when `CompressionStream` is unavailable.
+ *
+ * The returned URL is ready to drop into Web-Share / clipboard – the
+ * pack-code itself is never shown as text.
+ */
+export async function generateQuestionPackUrl(pack: QuestionPack): Promise<string> {
+  if (typeof CompressionStream !== 'undefined') {
+    try {
+      const compressed = await compress(JSON.stringify(pack))
+      return `${window.location.origin}/?qp=${toB64u(compressed)}`
+    } catch {
+      // fall through
+    }
+  }
+  return `${window.location.origin}/?qp-plain=${encodeURIComponent(encodeQuestionPack(pack))}`
+}
+
+/**
+ * Synchronous plain-URL generator. Use when the URL must be available inside
+ * a `navigator.share()` click handler (Safari user-gesture rule).
+ */
+export function generateQuestionPackUrlSync(pack: QuestionPack): string {
+  return `${window.location.origin}/?qp-plain=${encodeURIComponent(encodeQuestionPack(pack))}`
+}
+
+/**
+ * Parse a question-pack from the current URL query string.
+ * Handles both `?qp=` (compressed) and `?qp-plain=` (plain) variants.
+ *
+ * Validation reuses the existing `decodeQuestionPack` schema guard so the
+ * Sandra path inherits the same per-field bounds (max 200 questions, etc.).
+ */
+export async function parseQuestionPackFromHash(): Promise<QuestionPack | null> {
+  const p = new URLSearchParams(window.location.search)
+
+  const qp = p.get('qp')
+  if (qp) {
+    try {
+      const json = await decompress(fromB64u(qp))
+      return decodeJsonAsPack(json)
+    } catch {
+      return null
+    }
+  }
+
+  const qpPlain = p.get('qp-plain')
+  if (qpPlain) {
+    return decodeQuestionPack(decodeURIComponent(qpPlain))
+  }
+
+  return null
+}
+
+/** Decode a plain JSON string into a validated `QuestionPack`. Used internally
+ *  by `parseQuestionPackFromHash` after decompression. */
+function decodeJsonAsPack(json: string): QuestionPack | null {
+  // Re-encode and run through the existing decoder so the schema bounds apply.
+  try {
+    const parsed = JSON.parse(json)
+    // Round-trip via base64 so we can reuse the validation function as-is
+    // without duplicating the bounds. `decodeQuestionPack` expects the
+    // base64-encoded form.
+    const reencoded = btoa(encodeURIComponent(JSON.stringify(parsed)))
+    return decodeQuestionPack(reencoded)
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Helper: is the parsed pack a Sandra-personal pack? Re-exported so callers
+ * don't need to import from two places.
+ */
+export function isPersonalQuestionPack(pack: QuestionPack | null): pack is PersonalQuestionPack {
+  return isPersonalPack(pack)
 }
 
 /**
