@@ -2,17 +2,20 @@
 
 **Status:** 🟡 PLANNED  
 **ID:** REQ-008  
-**Version:** 1.0.0  
-**Letzte Aktualisierung:** 2026-04-12  
+**Version:** 1.1.0  
+**Letzte Aktualisierung:** 2026-05-12  
 **Modul:** Biography  
 **Priorität:** High  
 **Geplante Version:** v2.1.0  
+**Architektur:** siehe [ADR-001 – Open-Source-Kern, proprietäre Premium-Features serverseitig](../architecture/ADR-001-open-source-vs-proprietary.md)
 
 ---
 
 ## 1. Zusammenfassung
 
-Aus den gespeicherten Antworten im Lebensarchiv wird per KI (Claude API) automatisch eine fertige, lesbare Lebensgeschichte generiert. Der Benutzer wählt Stil, Tonalität und Sprache – die KI fügt die Antworten zu einem zusammenhängenden, natürlichsprachlichen Text zusammen. Das Ergebnis kann vorgeschaut, bearbeitet, exportiert und geteilt werden.
+Aus den gespeicherten Antworten im Lebensarchiv wird per KI (Claude) automatisch eine fertige, lesbare Lebensgeschichte generiert. Der Benutzer wählt Stil, Tonalität und Sprache – die KI fügt die Antworten zu einem zusammenhängenden, natürlichsprachlichen Text zusammen. Das Ergebnis kann vorgeschaut, bearbeitet, exportiert und geteilt werden.
+
+Die Generierung läuft als **Premium-Feature über eine Supabase Edge Function** im privaten Pro-Repo (`saturas89/remember-me-pro`). Im OSS-Repo liegt ausschließlich ein dünner Client, der den Endpoint aufruft. Begründung und Vorgehen siehe ADR-001.
 
 ---
 
@@ -54,7 +57,7 @@ Der Unterschied zum bestehenden Markdown-Export: Dieser gibt Frage + Antwort sti
 
 ### 3.4 Generierung
 
-- [ ] **FR-8.10:** Generierung läuft über die Claude API (Anthropic) – erfordert API-Key des Benutzers oder optionalen Remember-Me-Backend-Proxy
+- [ ] **FR-8.10:** Generierung läuft primär über den Storyhold-Pro-Endpoint (Supabase Edge Function `generate-biography`); bei fehlender Pro-Subscription **und** fehlendem Bring-your-own-Key zeigt die UI einen Hinweis statt der Generierung zu starten
 - [ ] **FR-8.11:** Ladeanimation mit Fortschrittsanzeige während der Generierung
 - [ ] **FR-8.12:** Streaming-Anzeige: Text erscheint wortweise, sobald er generiert wird (kein Warten auf Vollständigkeit)
 - [ ] **FR-8.13:** Generierung kann abgebrochen werden
@@ -78,80 +81,72 @@ Der Unterschied zum bestehenden Markdown-Export: Dieser gibt Frage + Antwort sti
 
 ---
 
-## 4. API-Integration & Datenschutz
+## 4. Backend-Integration & Datenschutz
 
-### 4.1 API-Key-Verwaltung
+### 4.1 Pro-Endpoint (primär)
 
-Da Storyhold aktuell kein Backend hat, stehen zwei Optionen offen:
+Generierung läuft über die Supabase Edge Function `generate-biography` im privaten Pro-Repo `saturas89/remember-me-pro` (siehe ADR-001).
 
-**Option A – Benutzer-eigener API-Key (v2.1.0)**
-- Benutzer trägt seinen Anthropic API-Key in den Einstellungen ein
-- Key wird in localStorage gespeichert (niemals an Dritte übertragen)
-- Direkter API-Call vom Browser an `api.anthropic.com`
+- **Auth:** Supabase-JWT der eingeloggten Storyhold-User-Session.
+- **Subscription-Check:** Function prüft `profiles.has_pro = true`, bevor sie den Anthropic-Call ausführt.
+- **Anthropic-Key:** liegt als Supabase Function Secret, niemals im Client.
+- **Streaming:** Function streamt Token via SSE/ReadableStream zurück.
+- **Konfiguration im Client:** `VITE_PRO_ENDPOINT` Basis-URL (optional). Fehlt sie, wird die UI in den BYOK- oder Disabled-Modus geschaltet.
 
-**Option B – Remember-Me-Proxy-Backend (v2.x)**
-- Eigener Backend-Endpoint proxied den API-Call
-- Kein API-Key nötig für den Benutzer
-- Nutzungsbasierte Abrechnung (z. B. X freie Generierungen pro Monat)
+**Im OSS-Repo liegt explizit keine Prompt-Vorlage, Modell-Routing-Tabelle oder Anthropic-Auth-Logik.** Diese Bestandteile sind proprietär und werden im Pro-Repo gepflegt. Der OSS-Client kennt nur das HTTP-Schema des Endpoints.
 
-Für v2.1.0 wird **Option A** implementiert; Option B folgt mit dem Backend-Sync (v2.0.0).
+### 4.2 Bring-your-own-Key (Fallback für Selfhoster)
 
-### 4.2 Datenschutz
+Optionaler Fallback ohne Pro-Subscription:
+
+- Benutzer trägt eigenen Anthropic-API-Key in den Einstellungen ein.
+- Key wird ausschließlich in `localStorage` gespeichert (niemals an Storyhold-Backend gesendet).
+- Direkter Browser-Call an `api.anthropic.com` mit einem **generischen** Prompt (kein Storyhold-Tuning).
+- Wird die Funktion ohne Key und ohne Pro-Subscription aufgerufen, erscheint ein Hinweis-Modal mit Upgrade-CTA bzw. Anleitung zum Key-Eintragen.
+
+### 4.3 Datenschutz
 
 | Aspekt | Umsetzung |
 |--------|-----------|
-| Datenübertragung | Nur bei aktiver Generierung; Antworten werden als Prompt an die Claude API gesendet |
-| Einwilligung | Expliziter Hinweis + Bestätigung vor der ersten Generierung: „Deine Antworten werden einmalig an die Claude API übertragen" |
-| Keine Speicherung | Claude API speichert Prompts nicht (laut Anthropic-Datenschutzbedingungen) |
-| Opt-out | Benutzer kann den API-Key jederzeit löschen und die Funktion nie nutzen |
+| Datenübertragung | Nur bei aktiver Generierung; Antworten werden an den Pro-Endpoint (bzw. bei BYOK direkt an Anthropic) übertragen |
+| Einwilligung | Expliziter Hinweis + Bestätigung vor der ersten Generierung: „Deine Antworten werden zur Texterstellung an Anthropic übertragen" |
+| Speicherung beim Provider | Anthropic speichert Inhalte gemäß Anthropic-Datenschutzbedingungen nicht für Training |
+| Opt-out | Benutzer kann die Funktion ignorieren oder den Key löschen; lokale Antworten bleiben unangetastet |
+| Anonymisierung (optional) | Pro-Endpoint kann Klarnamen/Geburtsdaten vor dem Anthropic-Call entfernen (Detail im Pro-Repo) |
 
 ---
 
-## 5. Prompt-Design
+## 5. Prompt-Design (proprietär)
 
-### 5.1 System-Prompt (Beispiel, Stil: Autobiografie)
-
-```
-Du bist ein einfühlsamer Ghostwriter, der aus Interview-Antworten eine 
-Autobiografie verfasst. Schreibe in der Ich-Perspektive, fließend und 
-natürlich. Verbinde die Antworten zu einem zusammenhängenden Text – 
-erfinde nichts, aber formuliere ansprechend. Ziel: ~1.500 Wörter auf Deutsch.
-```
-
-### 5.2 User-Prompt-Struktur
+Die konkreten System-Prompts, Stil-Vorlagen, Längen-Targets und das Modell-Routing leben **im privaten Pro-Repo** als Teil der Edge Function. Im OSS-Repo wird bewusst nur das Funktions-Interface dokumentiert:
 
 ```
-Hier sind die Lebenserinnerungen von {name} (geb. {birthYear}):
+POST {VITE_PRO_ENDPOINT}/generate-biography
+Authorization: Bearer <Supabase-JWT>
+Content-Type: application/json
 
-## Kindheit & Jugend
-Frage: Wo bist du aufgewachsen?
-Antwort: Ich bin in München aufgewachsen, in einem kleinen Haus…
+{
+  "style": "autobiography" | "letter" | "narrative" | "portrait",
+  "length": "short" | "normal" | "long",
+  "language": "de" | "en",
+  "categories": string[],
+  "includeFriendPerspectives": boolean,
+  "includeOwnQuestions": boolean,
+  "answers": [{ "category": string, "question": string, "answer": string }, ...],
+  "friendPerspectives": [...],
+  "profile": { "name": string, "birthYear": number }
+}
 
-Frage: Was war deine früheste Erinnerung?
-Antwort: Ich erinnere mich noch genau an…
-
-## Familie & Beziehungen
-…
-
-Freundes-Perspektive von Klaus:
-„Was macht Anna als Freundin besonders?" – „Anna ist immer da, wenn man sie braucht."
-
-Bitte schreibe jetzt die Autobiografie.
+→ text/event-stream (Token-Stream) | application/json (Fehler)
 ```
 
-### 5.3 Modell-Empfehlung
-
-| Anforderung | Empfehlung |
-|-------------|-----------|
-| Standardgenerierung | `claude-sonnet-4-5` – gute Balance aus Qualität und Kosten |
-| Ausführliche Biografie | `claude-opus-4-5` – höchste Textqualität |
-| Schnelle Kurzversion | `claude-haiku-4-5` – kosteneffizient |
+Der BYOK-Fallback verwendet ein **generisches**, im OSS-Repo dokumentiertes Prompt (Platzhalter, kein Storyhold-Tuning). Ziel: funktional, aber sichtbar einfacher als die Pro-Variante.
 
 ---
 
 ## 6. Architektur
 
-### 6.1 Neue Dateien
+### 6.1 Neue Dateien (OSS-Repo)
 
 ```
 src/
@@ -161,22 +156,41 @@ src/
 ├── components/
 │   ├── BiographyConfig.tsx        # Stil, Länge, Sprache, Kategorien wählen
 │   ├── BiographyStreamViewer.tsx  # Streaming-Text-Anzeige (word by word)
-│   └── ApiKeySettings.tsx         # API-Key eingeben, speichern, löschen
+│   ├── BiographyUpgradeHint.tsx   # CTA für Pro bzw. Anleitung BYOK
+│   └── ApiKeySettings.tsx         # BYOK: Anthropic-Key eingeben/löschen
 ├── hooks/
-│   └── useBiographyGenerator.ts   # Anthropic API-Call, Streaming, Abbruch
+│   └── useBiographyGenerator.ts   # Dünner Client: ruft Pro-Endpoint oder BYOK
 └── utils/
-    └── biographyPrompt.ts         # Prompt-Bau aus ExportData + Konfiguration
+    └── biographyRequest.ts        # Request-Body bauen (kein Prompt-Tuning!)
 ```
 
-### 6.2 Datenfluss
+**Bewusst nicht im OSS-Repo:** Prompt-Vorlagen, Modell-Routing, Anthropic-Auth-Logik, Subscription-Check. Diese leben im privaten Pro-Repo.
+
+### 6.2 Neue Dateien (privates Pro-Repo `saturas89/remember-me-pro`)
+
+```
+supabase/functions/generate-biography/
+├── index.ts            # Edge Function Entry, Auth, Subscription-Check, Streaming
+├── prompts/
+│   ├── autobiography.ts
+│   ├── letter.ts
+│   ├── narrative.ts
+│   └── portrait.ts
+├── modelRouting.ts     # Längen-/Stil-abhängige Modellwahl
+└── anonymize.ts        # Optionale PII-Entfernung
+```
+
+### 6.3 Datenfluss
 
 ```
 BiographyConfig (Stil, Länge, Sprache, Kategorien)
     ↓
-biographyPrompt.ts: buildPrompt(exportData, config) → { system, user }
+biographyRequest.ts: buildRequest(exportData, config) → JSON Body
     ↓
-useBiographyGenerator: streamMessage(prompt, apiKey)
-    → Anthropic Messages API (claude-sonnet-4-5, stream: true)
+useBiographyGenerator:
+    if hasProSubscription → POST {VITE_PRO_ENDPOINT}/generate-biography
+    else if hasOwnKey     → POST api.anthropic.com mit generischem Prompt
+    else                  → BiographyUpgradeHint anzeigen, kein Call
     ↓
 BiographyStreamViewer: Token für Token anzeigen
     ↓
@@ -293,10 +307,12 @@ interface Biography {
 
 | Abhängigkeit | Grund |
 |--------------|-------|
-| Anthropic API / Claude | Textgenerierung |
-| `@anthropic-ai/sdk` (npm) | Offizieller Anthropic TypeScript-Client mit Streaming-Support |
+| ADR-001 | Architektur-Entscheidung: Pro-Features serverseitig |
+| Privates Pro-Repo `saturas89/remember-me-pro` | Edge Function + Prompt-Templates |
+| Supabase (Edge Functions, Auth, `profiles.has_pro`) | Hosting des Pro-Endpoints, JWT-Auth, Subscription-Check |
+| Anthropic API / Claude | Textgenerierung (Aufruf nur aus der Edge Function bzw. BYOK) |
+| `@anthropic-ai/sdk` (npm) | Nur im BYOK-Fallback bzw. in der Edge Function – nicht zwingend im OSS-Bundle |
 | REQ-003 (Story Storage) | Antworten als Grundlage der Generierung |
-| v2.0.0 Backend (optional) | Für Option B (Proxy ohne eigenen API-Key) |
 
 ---
 
@@ -305,3 +321,4 @@ interface Biography {
 | Version | Datum | Autor | Änderung |
 |---------|-------|-------|---------|
 | 1.0.0 | 2026-04-12 | Claude | Initiale Version |
+| 1.1.0 | 2026-05-12 | Claude | Umstellung auf Pro-Edge-Function-Architektur gemäß ADR-001; proprietäre Prompt-Templates aus OSS-Dokument entfernt; BYOK-Fallback dokumentiert |
