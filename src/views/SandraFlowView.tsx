@@ -58,6 +58,23 @@ function saveDraft(draft: SandraDraft): void {
   } catch { /* sessionStorage quota / privacy mode */ }
 }
 
+/**
+ * REQ-020.11: the draft only persists when it has meaningful content (anchor
+ * data or at least one question). An empty initial draft must NOT linger in
+ * sessionStorage – otherwise a fresh tab on `#/ask` would always see a
+ * "draft", which is both wasteful and breaks the spec's "vanishes when the
+ * tab is closed" guarantee from the user's perspective.
+ */
+function isEmptyDraft(draft: SandraDraft): boolean {
+  return (
+    draft.questions.length === 0 &&
+    !draft.anchor.relation &&
+    !draft.anchor.anrede &&
+    !draft.currentTriggerId &&
+    !draft.currentSeed
+  )
+}
+
 function clearDraft(): void {
   try { sessionStorage.removeItem(SESSION_KEY) } catch { /* noop */ }
 }
@@ -77,9 +94,14 @@ export function SandraFlowView({ profileName, onBack }: Props) {
   )
 
   // Persist draft to sessionStorage on every change. Survives reloads within
-  // the same tab; vanishes when the tab is closed (per spec).
+  // the same tab; vanishes when the tab is closed (per spec). Empty drafts
+  // never get written so a fresh tab on `#/ask` keeps sessionStorage clean.
   useEffect(() => {
-    saveDraft(draft)
+    if (isEmptyDraft(draft)) {
+      clearDraft()
+    } else {
+      saveDraft(draft)
+    }
   }, [draft])
 
   const updateAnchor = useCallback((anchor: SandraAnchor) => {
