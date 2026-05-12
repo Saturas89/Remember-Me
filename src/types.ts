@@ -260,3 +260,49 @@ export interface AnswerExport {
     questionText?: string
   }>
 }
+
+// ── Sandra Flow types ───────────────────────────────────────────────────────
+
+export interface PersonalPackMeta {
+  personalPack: true
+  senderName: string
+  recipientLabel: string
+  anrede: string
+}
+
+export type PersonalQuestionPack = QuestionPack & PersonalPackMeta
+
+export interface SandraDraft {
+  anchor: { relation: string; anrede: string; birthYear?: number }
+  questions: ComposedQuestion[]
+  currentTriggerId?: string
+  currentSeed?: string
+}
+
+export interface ComposedQuestion {
+  id: string
+  triggerId: string
+  group: 'biography' | 'relationship'
+  text: string
+  seed?: string
+  createdAt: number
+}
+
+export interface TemplateDef {
+  id: string
+  withoutSeed?: string
+  patterns: Array<{
+    seedPattern?: RegExp | string
+    text: string
+  }>
+}
+
+export interface TriggerDef {
+  id: string
+  title: string
+  emoji: string
+  group: 'biography' | 'relationship'
+  description: string
+  templates: TemplateDef[]
+  inspirations: string[]
+}
