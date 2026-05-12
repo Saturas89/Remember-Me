@@ -30,6 +30,12 @@
 | [REQ-012](requirements/REQ-012-video-attachments.md) | Video-Anhänge | ✔️ |
 | [REQ-013](requirements/REQ-013-archive-import.md) | Erinnerungs-Archiv-Import | ✔️ |
 
+## Architektur-Entscheidungen (ADRs)
+
+| ID | Titel | Status |
+|----|-------|--------|
+| [ADR-001](architecture/ADR-001-open-source-vs-proprietary.md) | Open-Source-Kern, proprietäre Premium-Features serverseitig | ✅ |
+
 ## Weitere Dokumentation
 
 - [DEPLOYMENT.md](DEPLOYMENT.md) – Vercel Setup
@@ -47,6 +53,8 @@ docs/
 ├── CHANGELOG.md           ← Versionshistorie
 ├── DEPLOYMENT.md          ← Vercel Deployment
 ├── SECRETS_SECURITY.md    ← Sicherheit
+├── architecture/
+│   └── ADR-001-open-source-vs-proprietary.md
 ├── design/
 │   └── AI_READABLE_EXPORT.md
 ├── guides/
@@ -55,5 +63,5 @@ docs/
 │   └── README.md          ← Architektur
 └── requirements/
     ├── README.md
-    └── REQ-001 … REQ-013
+    └── REQ-001 … REQ-019
 ```
