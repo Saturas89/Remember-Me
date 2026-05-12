@@ -5,7 +5,9 @@
 // Kette nach. Das wird vom Online-Sharing-Crypto-Code (`shareEncryption.ts`)
 // gebraucht, der per `Blob → stream → CompressionStream` deflate-raw fährt.
 //
-// Bewusst minimal: nur die eine Methode, keine Polyfill-Bibliothek.
+// Außerdem: ein paar Browser-APIs, die Komponenten/Hooks zur Render-Zeit
+// abfragen (matchMedia, IntersectionObserver, scrollTo) und die jsdom nicht
+// mitbringt. Bewusst minimal, kein Polyfill-Paket.
 
 if (typeof Blob !== 'undefined' && typeof Blob.prototype.stream !== 'function') {
   Object.defineProperty(Blob.prototype, 'stream', {
@@ -22,4 +24,48 @@ if (typeof Blob !== 'undefined' && typeof Blob.prototype.stream !== 'function') 
       })
     },
   })
+}
+
+// matchMedia: useInstallPrompt fragt `(display-mode: standalone)` direkt beim
+// Mount ab. Wir liefern einen permanent-„nicht installiert"-Stub.
+if (typeof window !== 'undefined' && typeof window.matchMedia !== 'function') {
+  Object.defineProperty(window, 'matchMedia', {
+    configurable: true,
+    writable: true,
+    value: (query: string): MediaQueryList => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: () => {},
+      removeListener: () => {},
+      addEventListener: () => {},
+      removeEventListener: () => {},
+      dispatchEvent: () => false,
+    } as MediaQueryList),
+  })
+}
+
+// IntersectionObserver / ResizeObserver: einige UI-Helfer (z. B. lazy
+// Render-Hooks) erwarten die Konstruktoren, brauchen aber kein echtes
+// Verhalten – ein No-op-Stub reicht.
+class NoopObserver {
+  observe(): void {}
+  unobserve(): void {}
+  disconnect(): void {}
+  takeRecords(): unknown[] { return [] }
+}
+if (typeof globalThis.IntersectionObserver === 'undefined') {
+  ;(globalThis as { IntersectionObserver: unknown }).IntersectionObserver = NoopObserver
+}
+if (typeof globalThis.ResizeObserver === 'undefined') {
+  ;(globalThis as { ResizeObserver: unknown }).ResizeObserver = NoopObserver
+}
+
+// scrollTo / scrollIntoView: einige Views rufen das beim View-Wechsel auf,
+// jsdom kennt es nicht. No-op reicht.
+if (typeof window !== 'undefined' && typeof window.scrollTo !== 'function') {
+  ;(window as { scrollTo: () => void }).scrollTo = () => {}
+}
+if (typeof Element !== 'undefined' && !Element.prototype.scrollIntoView) {
+  Element.prototype.scrollIntoView = function () {}
 }
