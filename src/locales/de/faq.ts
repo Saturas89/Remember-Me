@@ -64,6 +64,10 @@ export const FAQ_DE = [
         a: 'Erstelle ein Erinnerungs-Archiv unter Profil → Sichern & Teilen. Übertrage die Datei auf das neue Gerät (per AirDrop, E-Mail oder Cloud). Öffne Storyhold auf dem neuen Gerät und lade das Archiv – alle deine Erinnerungen sind wieder da, als wärst du nie weg gewesen.',
       },
       {
+        q: 'Wie öffne ich meinen Stand per Sync auf einem zweiten Gerät (z. B. PC)?',
+        a: 'Voraussetzung: Du hast Sync auf dem ersten Gerät eingerichtet und kennst deinen Recovery-Code. So gehst du auf dem neuen Gerät vor: 1) Storyhold im Browser öffnen (gleiche Adresse wie am Handy). 2) Auf „Sync einrichten" tippen und denselben Anbieter wählen wie auf dem ersten Gerät (Google Drive, OneDrive oder Storyhold Server). 3) Mit dem gleichen Konto wie zuvor anmelden. 4) Kurz warten – Storyhold sucht automatisch deinen vorhandenen Stand. 5) Wenn das Feld „Recovery-Code eingeben" erscheint, den Code vom ersten Gerät eintippen und bestätigen. Fertig – deine Erinnerungen sind jetzt auch auf dem neuen Gerät. ⚠️ Wichtig: Zeigt das neue Gerät stattdessen einen neuen Recovery-Code an, brich ab – du bist mit dem falschen Konto angemeldet. Sonst überschreibst du deinen bestehenden Stand.',
+      },
+      {
         q: 'Kann ich meine Erinnerungen auch in anderen Apps nutzen?',
         a: 'Ja. Der Markdown-Export lässt sich in Notiz-Apps, Word oder als Input für KI-Assistenten (z. B. ChatGPT) verwenden. Der JSON-Export eignet sich für strukturierte Weiterverarbeitung oder für Entwickler, die auf deinen Inhalten aufbauen möchten.',
       },

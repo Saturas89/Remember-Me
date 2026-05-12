@@ -64,6 +64,10 @@ export const FAQ_EN = [
         a: 'Create a memory archive under Profile → Back up & share. Transfer the file to the new device (via AirDrop, email, or cloud). Open Storyhold on the new device and load the archive – all your memories are back, as if you never left.',
       },
       {
+        q: 'How do I open my data via Sync on a second device (e.g. PC)?',
+        a: 'Prerequisite: You\'ve set up Sync on your first device and know your recovery code. On the new device: 1) Open Storyhold in your browser (same address as on your phone). 2) Tap "Set up sync" and choose the same provider as on the first device (Google Drive, OneDrive, or Storyhold Server). 3) Sign in with the same account as before. 4) Wait briefly – Storyhold automatically looks for your existing data. 5) When the "Enter recovery code" field appears, type the code from your first device and confirm. Done – your memories are now on the new device too. ⚠️ Important: If the new device shows a new recovery code instead, cancel – you\'re signed in with the wrong account. Otherwise you\'ll overwrite your existing data.',
+      },
+      {
         q: 'Can I use my memories in other apps?',
         a: 'Yes. The Markdown export can be used in note apps, Word, or as input for AI assistants (e.g. ChatGPT). The JSON export is suitable for structured further processing or for developers who want to build on your content.',
       },
