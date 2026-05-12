@@ -27,6 +27,7 @@ Alle funktionalen und nicht-funktionalen Anforderungen des Projekts.
 | [REQ-017](./REQ-017-privater-sync.md) | Privater Sync (geräteübergreifend, 3 Provider) | Sync | High | ✔️ COMPLETED |
 | [REQ-018](./REQ-018-sync-key-loss-reset.md) | Sync-Login: „Schlüssel verloren?"-Reset | Sync | Medium | ✔️ COMPLETED |
 | [REQ-019](./REQ-019-einfach-modus.md) | Einfach-Modus (vereinfachter Bedienmodus) | UX | Medium | ✔️ COMPLETED |
+| [REQ-020](./REQ-020-sandra-flow.md) | Sandra-First Flow (persönliche Fragen formulieren, Empfänger-Soft-Receive) | Sharing | Medium | ✔️ COMPLETED |
 
 ---
 
@@ -46,6 +47,7 @@ Alle funktionalen und nicht-funktionalen Anforderungen des Projekts.
 - [x] Responsive Design (Mobile-first, 1-/2-Spalten-Grid)
 - [x] Freunde einladen, Fragen beantworten und Antworten automatisch per Share-Link importieren
 - [x] Eigene Fragen erstellen und teilen
+- [x] Eigene Fragen an Verwandte formulieren und per Link schicken (Sandra-First Flow) → [REQ-020](./REQ-020-sandra-flow.md)
 
 ### COULD – Geplant 📋 / Umgesetzt ✔️
 - [x] KI-lesbarer Export (Markdown + Enriched JSON) → REQ-006, v1.4.0
