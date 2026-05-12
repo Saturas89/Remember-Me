@@ -148,6 +148,78 @@ jobs:
           path: playwright-report/
           retention-days: 14
 
+  notify-stage1:
+    name: Notify PR (CI stage 1 ping)
+    if: github.event_name == 'pull_request' && always()
+    needs: [unit, build]
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const unit = '${{ needs.unit.result }}';
+            const build = '${{ needs.build.result }}';
+            const marker = '<!-- claude-ci-stage1 -->';
+            const body = `${marker}\n⏳ CI stage 1 — unit: \`${unit}\`, build: \`${build}\`, e2e: running…\n\n_Heartbeat keeps the Claude sandbox session warm; final result follows._`;
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            for (const c of comments) {
+              if (c.body?.startsWith(marker)) {
+                await github.rest.issues.deleteComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  comment_id: c.id,
+                });
+              }
+            }
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body,
+            });
+
+  notify-midway:
+    name: Notify PR (CI midway ping)
+    if: github.event_name == 'pull_request' && always()
+    needs: [unit, build]
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Wait until mid-CI (~3 min after unit+build)
+        run: sleep 180
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const marker = '<!-- claude-ci-midway -->';
+            const body = `${marker}\n⏳ CI mid-run — e2e still running…\n\n_Heartbeat keeps the Claude sandbox session warm; final result follows._`;
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            for (const c of comments) {
+              if (c.body?.startsWith(marker)) {
+                await github.rest.issues.deleteComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  comment_id: c.id,
+                });
+              }
+            }
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body,
+            });
+
   notify:
     name: Notify PR (Claude wakeup ping)
     if: github.event_name == 'pull_request' && always()
@@ -164,17 +236,20 @@ jobs:
             const e2e = '${{ needs.e2e.result }}';
             const allGreen = unit === 'success' && build === 'success' && e2e === 'success';
             const status = allGreen ? '✅' : '❌';
-            const marker = '<!-- claude-ci-ping -->';
-            const body = `${marker}\n${status} CI run finished — unit: \`${unit}\`, build: \`${build}\`, e2e: \`${e2e}\`\n\n_This comment exists so the Claude sandbox session receives a webhook on CI completion._`;
+            const finalMarker = '<!-- claude-ci-ping -->';
+            const heartbeatMarkers = ['<!-- claude-ci-stage1 -->', '<!-- claude-ci-midway -->'];
+            const allMarkers = [finalMarker, ...heartbeatMarkers];
+            const body = `${finalMarker}\n${status} CI run finished — unit: \`${unit}\`, build: \`${build}\`, e2e: \`${e2e}\`\n\n_This comment exists so the Claude sandbox session receives a webhook on CI completion._`;
             const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number,
             });
-            // Delete any existing marker comments so the next post is a fresh
-            // `issue_comment.created` event (edits do not wake the Claude session).
+            // Delete any existing marker comments (final + heartbeats) so the next
+            // post is a fresh `issue_comment.created` event (edits do not wake the
+            // Claude session) and so the PR view shows only the final result.
             for (const c of comments) {
-              if (c.body?.startsWith(marker)) {
+              if (allMarkers.some((m) => c.body?.startsWith(m))) {
                 await github.rest.issues.deleteComment({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
