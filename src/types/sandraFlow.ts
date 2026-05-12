@@ -6,6 +6,8 @@
 // the same question-pack shape used elsewhere in the app, only with a handful
 // of optional metadata fields so the receiver side can detect and adapt.
 
+import type { QuestionPack } from '../types'
+
 export type TriggerGroup = 'biography' | 'relationship'
 
 /**
@@ -89,3 +91,10 @@ export interface PersonalPackMeta {
   recipientLabel: string
   anrede: string
 }
+
+/**
+ * REQ-020 §4: a Sandra-built pack is the regular QuestionPack shape plus the
+ * personal-pack metadata. Declared here (next to PersonalPackMeta) so callers
+ * have a single canonical import location.
+ */
+export type PersonalQuestionPack = QuestionPack & PersonalPackMeta

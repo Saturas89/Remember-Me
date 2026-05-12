@@ -11,9 +11,9 @@
 // A pack with `personalPack` absent stays an ordinary custom-questions pack.
 
 import type { CustomQuestion, QuestionPack } from '../../types'
-import type { PersonalPackMeta, SandraDraft } from '../../types/sandraFlow'
+import type { PersonalPackMeta, PersonalQuestionPack, SandraDraft } from '../../types/sandraFlow'
 
-export type PersonalQuestionPack = QuestionPack & PersonalPackMeta
+export type { PersonalQuestionPack }
 
 /**
  * Convert a Sandra draft into a personal QuestionPack.
@@ -69,3 +69,6 @@ export function isPersonalPack(pack: QuestionPack | null | undefined): pack is P
     typeof p.anrede === 'string'
   )
 }
+
+/** REQ-020 spec-canonical alias of {@link isPersonalPack}. */
+export const isPersonalQuestionPack = isPersonalPack

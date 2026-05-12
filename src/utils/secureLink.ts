@@ -7,7 +7,7 @@ import {
   validateContactHandshake,
 } from './payloadGuards'
 import { decodeQuestionPack, encodeQuestionPack } from './sharing'
-import type { PersonalQuestionPack } from '../lib/sandraFlow/packBuilder'
+import type { PersonalQuestionPack } from '../types/sandraFlow'
 import { isPersonalPack } from '../lib/sandraFlow/packBuilder'
 
 // ── Plain Base64 fallback (no crypto required) ────────────────────────────────
@@ -471,7 +471,7 @@ function decodeJsonAsPack(json: string): QuestionPack | null {
  * Helper: is the parsed pack a Sandra-personal pack? Re-exported so callers
  * don't need to import from two places.
  */
-export function isPersonalQuestionPack(pack: QuestionPack | null): pack is PersonalQuestionPack {
+export function isPersonalQuestionPack(pack: QuestionPack | null | undefined): pack is PersonalQuestionPack {
   return isPersonalPack(pack)
 }
 

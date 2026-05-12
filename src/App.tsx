@@ -18,7 +18,7 @@ import {
   generateSecureInviteUrl,
 } from './utils/secureLink'
 import type { QuestionPack } from './types'
-import type { PersonalQuestionPack } from './lib/sandraFlow/packBuilder'
+import type { PersonalQuestionPack } from './types/sandraFlow'
 import { HomeView } from './views/HomeView'
 import { QuizView } from './views/QuizView'
 import { ArchiveView } from './views/ArchiveView'
