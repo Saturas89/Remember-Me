@@ -160,15 +160,18 @@ jobs:
       - uses: actions/github-script@v7
         with:
           script: |
-            const marker = '<!-- claude-ci-heartbeat -->';
-            const finalMarker = '<!-- claude-ci-ping -->';
+            const runId = '${{ github.run_id }}';
+            const heartbeatMarker = `<!-- claude-ci-heartbeat run=${runId} -->`;
+            const finalMarker = `<!-- claude-ci-ping run=${runId} -->`;
             // Post a fresh heartbeat comment every ~3 min for up to ~13 min, so
             // the Claude sandbox session never idle-times-out between the early
             // jobs (unit/build, ~1 min) and the final notify (after e2e, which
             // can take up to ~15 min if a slow browser like mobile-safari runs).
             // Each iteration deletes the previous heartbeat marker so the next
             // post is a fresh issue_comment.created event (edits do not wake
-            // the Claude session).
+            // the Claude session). Markers include the GitHub run_id so a
+            // previous run's final-notify comment does not falsely trigger
+            // early-exit.
             const delaysSec = [60, 180, 180, 180, 180]; // cumulative: 1, 4, 7, 10, 13 min
             for (let i = 0; i < delaysSec.length; i++) {
               await new Promise((r) => setTimeout(r, delaysSec[i] * 1000));
@@ -177,13 +180,13 @@ jobs:
                 repo: context.repo.repo,
                 issue_number: context.issue.number,
               });
-              // Stop early if the final notify has already posted.
+              // Stop early if THIS run's final notify has already posted.
               if (comments.some((c) => c.body?.startsWith(finalMarker))) {
                 core.info(`Final notify already posted, stopping heartbeat loop at iteration ${i + 1}.`);
                 return;
               }
               for (const c of comments) {
-                if (c.body?.startsWith(marker)) {
+                if (c.body?.startsWith(heartbeatMarker)) {
                   await github.rest.issues.deleteComment({
                     owner: context.repo.owner,
                     repo: context.repo.repo,
@@ -191,7 +194,7 @@ jobs:
                   });
                 }
               }
-              const body = `${marker}\n⏳ CI heartbeat ${i + 1}/${delaysSec.length} — e2e still running…\n\n_Heartbeat keeps the Claude sandbox session warm; final result follows._`;
+              const body = `${heartbeatMarker}\n⏳ CI heartbeat ${i + 1}/${delaysSec.length} — e2e still running…\n\n_Heartbeat keeps the Claude sandbox session warm; final result follows._`;
               await github.rest.issues.createComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
@@ -211,25 +214,27 @@ jobs:
       - uses: actions/github-script@v7
         with:
           script: |
+            const runId = '${{ github.run_id }}';
             const unit = '${{ needs.unit.result }}';
             const build = '${{ needs.build.result }}';
             const e2e = '${{ needs.e2e.result }}';
             const allGreen = unit === 'success' && build === 'success' && e2e === 'success';
             const status = allGreen ? '✅' : '❌';
-            const finalMarker = '<!-- claude-ci-ping -->';
-            const heartbeatMarker = '<!-- claude-ci-heartbeat -->';
-            const allMarkers = [finalMarker, heartbeatMarker];
+            const finalMarker = `<!-- claude-ci-ping run=${runId} -->`;
+            // Cleanup-prefixes match ALL runs (any run_id) so each PR shows
+            // only the latest run's final comment.
+            const cleanupPrefixes = ['<!-- claude-ci-ping ', '<!-- claude-ci-heartbeat '];
             const body = `${finalMarker}\n${status} CI run finished — unit: \`${unit}\`, build: \`${build}\`, e2e: \`${e2e}\`\n\n_This comment exists so the Claude sandbox session receives a webhook on CI completion._`;
             const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number,
             });
-            // Delete any existing marker comments (final + heartbeats) so the next
-            // post is a fresh `issue_comment.created` event (edits do not wake the
-            // Claude session) and so the PR view shows only the final result.
+            // Delete any existing marker comments (final + heartbeats from any
+            // run) so the next post is a fresh `issue_comment.created` event
+            // (edits do not wake the Claude session).
             for (const c of comments) {
-              if (allMarkers.some((m) => c.body?.startsWith(m))) {
+              if (cleanupPrefixes.some((p) => c.body?.startsWith(p))) {
                 await github.rest.issues.deleteComment({
                   owner: context.repo.owner,
                   repo: context.repo.repo,

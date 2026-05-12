@@ -69,3 +69,29 @@ if (typeof window !== 'undefined' && typeof window.scrollTo !== 'function') {
 if (typeof Element !== 'undefined' && !Element.prototype.scrollIntoView) {
   Element.prototype.scrollIntoView = function () {}
 }
+
+// ── State-Persist-Race verhindern ─────────────────────────────────────────
+//
+// `saveState` in `src/utils/stateStorage.ts` schreibt sofort plaintext nach
+// localStorage und queued danach asynchron eine AES-GCM-verschlüsselte
+// Variante. Im Vitest-Lauf (jsdom + fake-indexeddb + Web Crypto) ist
+// Encryption aktiv und der Async-Write kann landen, NACHDEM der nächste
+// Test bereits `localStorage.clear()` + neuen Plaintext-Seed geschrieben
+// hat – dann überschreibt der stale Encrypted-Snapshot den frischen Seed
+// und der nächste Test sieht Zustand aus dem vorigen (z. B. erbt
+// `onlineSharing.enabled = true`, was Integration-Tests wie
+// `familyModeHandshake.test.tsx` flaky macht).
+//
+// Globaler `afterEach`-Drain: Wir importieren `stateStorage` dynamisch
+// (lazy, kein Eager-Load für Tests, die das Modul nicht brauchen) und
+// awaiten die `_pendingWrite`-Chain. So ist beim nächsten `beforeEach`
+// garantiert kein Async-Write mehr pending.
+import { afterEach } from 'vitest'
+afterEach(async () => {
+  try {
+    const { flushPendingWrites } = await import('../utils/stateStorage')
+    await flushPendingWrites()
+  } catch {
+    // Tests, die `stateStorage` nicht laden, sind hier no-op.
+  }
+})
