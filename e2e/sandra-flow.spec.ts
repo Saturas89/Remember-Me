@@ -437,3 +437,120 @@ test.describe('Sandra-Flow – Web-Share-API stub', () => {
     expect(combined).toMatch(/Mama/i)
   })
 })
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Test 7 — Full two-person integration: Sandra builds, Ingrid answers, submits
+//
+// This is the "first interaction between the two people" guarantee. It
+// covers the receiver-side beyond just landing — full answer-loop and the
+// post-submit state, with the senderName roundtrip through `decodeQuestionPack`.
+// ─────────────────────────────────────────────────────────────────────────────
+
+test.describe('Sandra-Flow – Two-person integration', () => {
+  test('Ingrid answers every question and submits → archive landing', async ({ browser }) => {
+    // ── Sandra builds the share URL via the real flow ──────────────────────
+    const senderContext = await browser.newContext()
+    await seedContext(senderContext, { lang: 'de', profile: 'sandra' })
+    await stubWebShare(senderContext)
+    const sender = await senderContext.newPage()
+
+    await sender.goto('/#/ask')
+    await sender.getByTestId('sandra-landing-cta').click()
+    await sender.getByTestId('sandra-anchor-chip-mama').click()
+    await sender.getByTestId('sandra-anchor-next').click()
+    await sender.locator('[data-testid^="sandra-trigger-"]').first().click()
+    await sender.getByTestId('sandra-composer-seed').fill('Schulzeit')
+    await sender.locator('[data-testid^="sandra-suggestion-"]').first().click()
+    await sender.locator('[data-testid^="sandra-suggestion-use-"]').first().click()
+    await sender.getByTestId('sandra-list-send').click()
+    await sender.getByTestId('sandra-share-cta').click()
+
+    await expect.poll(async () => (await getSharedPayloads(sender)).length).toBeGreaterThanOrEqual(1)
+    const shareUrl = (await getSharedPayloads(sender))[0].url ?? ''
+    expect(shareUrl).toMatch(/qp/)
+    await senderContext.close()
+
+    // ── Ingrid opens the URL in a fresh context ────────────────────────────
+    const ingridContext = await browser.newContext()
+    await seedContext(ingridContext, { lang: 'de', profile: 'none' })
+    const ingrid = await ingridContext.newPage()
+    await ingrid.goto(shareUrl)
+
+    // Simple-mode prompt → accept (FR-020.9 happy path).
+    const acceptSimple = ingrid.getByTestId('sandra-receive-simple-yes')
+    await expect(acceptSimple).toBeVisible({ timeout: 15_000 })
+    await acceptSimple.click()
+
+    // Regression for the decodeQuestionPack metadata-roundtrip bug:
+    // the welcome header MUST contain Sandra's name (not "undefined").
+    await expect(ingrid.getByText(/Sandra hat dir/i)).toBeVisible()
+    await expect(ingrid.locator('.sandra-receive__title')).not.toContainText('undefined')
+
+    // ── Ingrid types her name and starts ───────────────────────────────────
+    await ingrid.getByTestId('sandra-receive-name').fill('Ingrid')
+    await ingrid.getByTestId('sandra-receive-start').click()
+
+    // ── Answer every question (the sender flow above produced 1 question;
+    // we loop defensively so a future flow change with more questions is
+    // automatically covered). After the final continue-click the quiz phase
+    // transitions to "done" and the answer textarea is unmounted. ──────────
+    const continueBtn = ingrid.getByTestId('sandra-receive-continue')
+    const answerBox = ingrid.getByTestId('sandra-receive-answer')
+    const submitBtn = ingrid.getByTestId('sandra-receive-submit')
+    let safety = 10
+    while (safety-- > 0) {
+      if (await submitBtn.isVisible().catch(() => false)) break
+      await expect(answerBox).toBeVisible()
+      await answerBox.fill('Eine schöne Erinnerung an damals.')
+      await continueBtn.click()
+    }
+    expect(safety).toBeGreaterThan(0)
+    await expect(submitBtn).toBeVisible()
+
+    // ── Submit → URL cleaned + archive view rendered ───────────────────────
+    await ingrid.getByTestId('sandra-receive-submit').click()
+
+    // URL no longer carries the pack code (history.replaceState to '/').
+    await expect.poll(async () => ingrid.url()).not.toMatch(/qp/)
+
+    // Archive heading visible (post-submit landing).
+    await expect(ingrid.getByText('📖 Mein Vermächtnis')).toBeVisible({ timeout: 10_000 })
+
+    await ingridContext.close()
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Test 8 — FriendsView entry card (FR-020.10)
+//
+// Sandra's first touchpoint: she opens the Friends tab and taps the
+// "Eigene Fragen für jemanden formulieren" card. The card must navigate
+// directly into `#/ask`.
+// ─────────────────────────────────────────────────────────────────────────────
+
+test.describe('Sandra-Flow – Friends-tab entry card (FR-020.10)', () => {
+  test.beforeEach(async ({ context }) => {
+    await seedContext(context, { lang: 'de', profile: 'sandra' })
+  })
+
+  test('card is visible in /friends and the CTA navigates to #/ask', async ({ page }) => {
+    await page.goto('/friends')
+
+    // The section title is the spec wording verbatim (FR-020.10).
+    await expect(
+      page.getByRole('heading', { name: 'Eigene Fragen für jemanden formulieren' }),
+    ).toBeVisible()
+
+    const cta = page.getByTestId('sandra-entry-cta')
+    await expect(cta).toBeVisible()
+    await expect(cta).toHaveText(/Loslegen/i)
+    await cta.click()
+
+    // After clicking, we're on the Sandra-flow landing — assert the hero
+    // text (which is unique to the landing step) is visible.
+    await expect(
+      page.getByText('Was wolltest du deine Mutter schon immer fragen?'),
+    ).toBeVisible()
+    expect(page.url()).toContain('#/ask')
+  })
+})
