@@ -408,20 +408,20 @@ export function PrivateSyncSetupView({ onComplete }: Props) {
   if (step === 'intro') {
     return (
       <div className="private-sync-view">
-        <div className="private-sync-view__hero">
-          <img src="/features/privater-sync.jpg" alt="" className="private-sync-view__hero-img" />
-        </div>
-        <div className="private-sync-view__content">
+        <img src="/features/privater-sync.jpg" alt="" className="familien-banner" aria-hidden="true" />
+        <section className="friends-section">
           <h3 className="friends-section-title">{s.introTitle}</h3>
           <p className="friends-hint">{s.introDesc}</p>
-          <button
-            className="share-cta-btn"
-            onClick={() => setStep('provider-choice')}
-            type="button"
-          >
-            {s.setupButton}
-          </button>
-        </div>
+          <div className="friends-share">
+            <button
+              className="share-cta-btn"
+              onClick={() => setStep('provider-choice')}
+              type="button"
+            >
+              {s.setupButton}
+            </button>
+          </div>
+        </section>
       </div>
     )
   }
@@ -445,14 +445,14 @@ export function PrivateSyncSetupView({ onComplete }: Props) {
     }
     return (
       <div className="private-sync-view">
-        <div className="private-sync-view__topbar">
+        <div className="quiz-topbar">
           <button className="btn btn--ghost btn--sm" onClick={() => setStep('intro')} type="button">
             {s.back}
           </button>
+          <h2 className="archive-title">{s.providerChoiceTitle}</h2>
         </div>
-        <div className="private-sync-view__content">
-          <h2 className="private-sync-view__title">{s.providerChoiceTitle}</h2>
-          {error && <p className="private-sync-view__error">{error}</p>}
+        {error && <p className="private-sync-view__error">{error}</p>}
+        <section className="friends-section">
           <div className="private-sync-view__provider-list">
             {providers.map(p => (
               <button
@@ -474,15 +474,21 @@ export function PrivateSyncSetupView({ onComplete }: Props) {
               </button>
             ))}
           </div>
-          <button
-            className="btn btn--primary btn--full"
-            disabled={!provider || loading}
-            onClick={handleContinue}
-            type="button"
-          >
-            {loading ? s.signingIn : s.continueButton}
-          </button>
-        </div>
+          <div className="friends-share">
+            <button
+              className="share-cta-btn"
+              disabled={!provider || loading}
+              onClick={handleContinue}
+              type="button"
+            >
+              {loading ? (
+                <><span className="share-cta-btn__spinner" aria-hidden="true" />{s.signingIn}</>
+              ) : (
+                s.continueButton
+              )}
+            </button>
+          </div>
+        </section>
       </div>
     )
   }
@@ -495,15 +501,15 @@ export function PrivateSyncSetupView({ onComplete }: Props) {
     }
     return (
       <div className="private-sync-view">
-        <div className="private-sync-view__topbar">
+        <div className="quiz-topbar">
           <button className="btn btn--ghost btn--sm" onClick={() => setStep('provider-choice')} type="button">
             {s.back}
           </button>
+          <h2 className="archive-title">{s.accountModeTitle}</h2>
         </div>
-        <div className="private-sync-view__content">
-          <h2 className="private-sync-view__title">{s.accountModeTitle}</h2>
-          <p className="private-sync-view__desc">{s.accountModeDesc}</p>
-          {error && <p className="private-sync-view__error">{error}</p>}
+        {error && <p className="private-sync-view__error">{error}</p>}
+        <section className="friends-section">
+          <p className="friends-hint">{s.accountModeDesc}</p>
           <div className="private-sync-view__provider-list">
             <button
               type="button"
@@ -530,7 +536,7 @@ export function PrivateSyncSetupView({ onComplete }: Props) {
               </div>
             </button>
           </div>
-        </div>
+        </section>
       </div>
     )
   }
@@ -544,15 +550,14 @@ export function PrivateSyncSetupView({ onComplete }: Props) {
       : (isSignUp ? s.signUpButton : s.signInButton)
     return (
       <div className="private-sync-view">
-        <div className="private-sync-view__topbar">
+        <div className="quiz-topbar">
           <button className="btn btn--ghost btn--sm" onClick={() => setStep('account-mode')} type="button">
             {s.back}
           </button>
+          <h2 className="archive-title">{title}</h2>
         </div>
-        <div className="private-sync-view__content">
-          <h2 className="private-sync-view__title">{title}</h2>
-          {error && <p className="private-sync-view__error">{error}</p>}
-
+        {error && <p className="private-sync-view__error">{error}</p>}
+        <section className="friends-section">
           <div className="private-sync-view__form">
             <label className="profile-label">
               {s.emailLabel}
@@ -576,16 +581,22 @@ export function PrivateSyncSetupView({ onComplete }: Props) {
                 autoComplete={isSignUp ? 'new-password' : 'current-password'}
               />
             </label>
-            <button
-              className="btn btn--primary btn--full"
-              onClick={handler}
-              disabled={loading || !email || !password}
-              type="button"
-            >
-              {buttonLabel}
-            </button>
+            <div className="friends-share">
+              <button
+                className="share-cta-btn"
+                onClick={handler}
+                disabled={loading || !email || !password}
+                type="button"
+              >
+                {loading ? (
+                  <><span className="share-cta-btn__spinner" aria-hidden="true" />{buttonLabel}</>
+                ) : (
+                  buttonLabel
+                )}
+              </button>
+            </div>
           </div>
-        </div>
+        </section>
       </div>
     )
   }
@@ -593,23 +604,29 @@ export function PrivateSyncSetupView({ onComplete }: Props) {
   if (step === 'pending-email-confirmation') {
     return (
       <div className="private-sync-view">
-        <div className="private-sync-view__content">
-          <h2 className="private-sync-view__title">{s.pendingEmailTitle}</h2>
-          <p className="private-sync-view__desc">
+        <h2 className="private-sync-view__title">{s.pendingEmailTitle}</h2>
+        <section className="friends-section">
+          <p className="friends-hint">
             {s.pendingEmailDescPrefix}
             <strong>{email}</strong>
             {s.pendingEmailDescSuffix}
           </p>
           <p className="friends-hint friends-hint--warn">{s.pendingEmailHint}</p>
 
-          <button
-            className="share-cta-btn"
-            onClick={handleResendConfirmation}
-            disabled={resending || !email}
-            type="button"
-          >
-            {resending ? s.pendingEmailResending : s.pendingEmailResendButton}
-          </button>
+          <div className="friends-share">
+            <button
+              className="share-cta-btn"
+              onClick={handleResendConfirmation}
+              disabled={resending || !email}
+              type="button"
+            >
+              {resending ? (
+                <><span className="share-cta-btn__spinner" aria-hidden="true" />{s.pendingEmailResending}</>
+              ) : (
+                s.pendingEmailResendButton
+              )}
+            </button>
+          </div>
 
           {resendNotice && (
             <p
@@ -634,7 +651,7 @@ export function PrivateSyncSetupView({ onComplete }: Props) {
           >
             {s.pendingEmailBackToLogin}
           </button>
-        </div>
+        </section>
       </div>
     )
   }
@@ -642,13 +659,13 @@ export function PrivateSyncSetupView({ onComplete }: Props) {
   if (step === 'recovery-code') {
     return (
       <div className="private-sync-view">
-        <div className="private-sync-view__content">
-          <h2 className="private-sync-view__title">{s.recoveryCodeTitle}</h2>
-          <p className="private-sync-view__desc">{s.recoveryCodeDesc}</p>
+        <h2 className="private-sync-view__title">{s.recoveryCodeTitle}</h2>
+        <section className="friends-section">
+          <p className="friends-hint">{s.recoveryCodeDesc}</p>
           <div className="private-sync-view__code-box">
             <code className="private-sync-view__code">{formatRecoveryCode(recoveryCode)}</code>
           </div>
-          <p className="private-sync-view__warning">{s.recoveryCodeWarning}</p>
+          <p className="friends-hint friends-hint--warn">{s.recoveryCodeWarning}</p>
           <label className="private-sync-view__confirm-label">
             <input
               type="checkbox"
@@ -657,15 +674,21 @@ export function PrivateSyncSetupView({ onComplete }: Props) {
             />
             <span>{s.recoveryCodeConfirm}</span>
           </label>
-          <button
-            className="btn btn--primary btn--full"
-            disabled={!codeConfirmed || loading}
-            onClick={handleRecoveryCodeConfirm}
-            type="button"
-          >
-            {loading ? s.signingIn : s.continueButton}
-          </button>
-        </div>
+          <div className="friends-share">
+            <button
+              className="share-cta-btn"
+              disabled={!codeConfirmed || loading}
+              onClick={handleRecoveryCodeConfirm}
+              type="button"
+            >
+              {loading ? (
+                <><span className="share-cta-btn__spinner" aria-hidden="true" />{s.signingIn}</>
+              ) : (
+                s.continueButton
+              )}
+            </button>
+          </div>
+        </section>
       </div>
     )
   }
@@ -673,38 +696,46 @@ export function PrivateSyncSetupView({ onComplete }: Props) {
   if (step === 'enter-code') {
     return (
       <div className="private-sync-view">
-        <div className="private-sync-view__content">
-          <h2 className="private-sync-view__title">{s.enterCodeTitle}</h2>
-          <p className="private-sync-view__desc">{s.enterCodeDesc}</p>
+        <h2 className="private-sync-view__title">{s.enterCodeTitle}</h2>
+        <section className="friends-section">
+          <p className="friends-hint">{s.enterCodeDesc}</p>
           {codeError && <p className="private-sync-view__error">{codeError}</p>}
-          <label className="profile-label">
-            {s.enterCodeLabel}
-            <input
-              className="profile-input private-sync-view__code-input"
-              type="text"
-              value={enteredCode}
-              onChange={e => setEnteredCode(e.target.value)}
-              placeholder={s.enterCodePlaceholder}
-              autoComplete="off"
-              spellCheck={false}
-            />
-          </label>
-          <button
-            className="btn btn--primary btn--full"
-            disabled={!enteredCode || loading}
-            onClick={handleEnterCode}
-            type="button"
-          >
-            {loading ? s.signingIn : s.enterCodeButton}
-          </button>
-          <button
-            type="button"
-            className="btn btn--ghost btn--full"
-            onClick={() => setShowLostKeyDialog(true)}
-          >
-            {s.lostKeyLink}
-          </button>
-        </div>
+          <div className="private-sync-view__form">
+            <label className="profile-label">
+              {s.enterCodeLabel}
+              <input
+                className="profile-input private-sync-view__code-input"
+                type="text"
+                value={enteredCode}
+                onChange={e => setEnteredCode(e.target.value)}
+                placeholder={s.enterCodePlaceholder}
+                autoComplete="off"
+                spellCheck={false}
+              />
+            </label>
+            <div className="friends-share">
+              <button
+                className="share-cta-btn"
+                disabled={!enteredCode || loading}
+                onClick={handleEnterCode}
+                type="button"
+              >
+                {loading ? (
+                  <><span className="share-cta-btn__spinner" aria-hidden="true" />{s.signingIn}</>
+                ) : (
+                  s.enterCodeButton
+                )}
+              </button>
+            </div>
+            <button
+              type="button"
+              className="btn btn--ghost btn--full"
+              onClick={() => setShowLostKeyDialog(true)}
+            >
+              {s.lostKeyLink}
+            </button>
+          </div>
+        </section>
         {showLostKeyDialog && (
           <div className="modal-overlay" role="dialog" aria-modal="true">
             <div className="modal-box">
@@ -736,11 +767,11 @@ export function PrivateSyncSetupView({ onComplete }: Props) {
   // success
   return (
     <div className="private-sync-view">
-      <div className="private-sync-view__content private-sync-view__content--center">
+      <section className="friends-section">
         <span className="private-sync-view__success-icon" aria-hidden="true">✅</span>
         <h2 className="private-sync-view__title">{s.successTitle}</h2>
-        <p className="private-sync-view__desc">{s.successDesc}</p>
-      </div>
+        <p className="friends-hint">{s.successDesc}</p>
+      </section>
     </div>
   )
 }
