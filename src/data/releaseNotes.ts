@@ -6,6 +6,15 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '2.7.0',
+    date: '2026-05-12',
+    highlights: [
+      '💬 Stell deine eigenen Fragen – in deinen Worten, an Mama, Papa, Oma.',
+      '💞 Auch die Fragen, die zwischen euch liegen.',
+      '🌍 Komplett auf Deutsch und Englisch verfügbar.',
+    ],
+  },
+  {
     version: '2.6.0',
     date: '2026-05-11',
     highlights: [

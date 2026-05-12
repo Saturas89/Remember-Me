@@ -260,3 +260,7 @@ export interface AnswerExport {
     questionText?: string
   }>
 }
+
+// Sandra-Flow types (REQ-020) live in `./types/sandraFlow.ts` — see there for
+// PersonalPackMeta, PersonalQuestionPack, SandraDraft, ComposedQuestion,
+// TemplateDef, TriggerDef. Imported via `from './types/sandraFlow'`.

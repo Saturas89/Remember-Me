@@ -10,6 +10,40 @@ Versionierung folgt [Semantic Versioning](https://semver.org/lang/de/).
 > Der Check `npm run check:changelog` (Teil von `npm test`) bricht sonst ab.
 > Details: `CLAUDE.md` → „Changelog-Pflicht".
 
+## [2.7.0] – 2026-05-12
+
+### Hinzugefügt
+
+- **Sandra-First Flow: persönliche Fragen formulieren und an Verwandte
+  schicken** – die neue Einstiegs-Route `#/ask` führt durch sechs Schritte
+  (Landing → Beziehungs-Anker → Trigger-Wahl → Composer → Fragen-Sammlung →
+  Versand), damit der tech-affinere Käufer eigene Fragen in eigenen Worten
+  formulieren und per Web Share API als Link an Mama/Papa/Oma schicken kann.
+  Der Pack-Code reist im URL-Hash (`?qp=…`), wird niemals als Text gezeigt
+  und ist abwärtskompatibel zum bestehenden Question-Pack-Schema (optionale
+  Felder `personalPack`, `senderName`, `recipientLabel`, `anrede`).
+- **Trigger-Gruppe „Über uns zwei"** für Beziehungsfragen, visuell durch
+  `--accent-tinted`-Background und ❤-Marker im Sektion-Titel hervorgehoben.
+  10 Trigger insgesamt (6 Biografie + 4 Beziehung) mit 3–4 Template-Varianten
+  pro Trigger und seed-getriebener Substitution für `{anrede}` und `{seed}`.
+- **Inspirations-Schublade** mit kuratierten, anonymisierten Beispielen pro
+  Trigger – Klick übernimmt den Text als Stichwort in den Composer.
+- **Ingrid-Empfang**: bei Eingang eines `personalPack`-Packs zeigt die App
+  einen sanften Header („{senderName} hat dir {n} Fragen geschickt"),
+  schlägt einmalig den Vereinfachten Bedienmodus vor und führt durch die
+  Fragen One-Question-at-a-Time mit großem Mikrofon-Button und Punkt-
+  Progress (statt Liste oder Prozentanzeige).
+- **Trigger-Bank und UI in Deutsch und Englisch** – Sprache folgt der App-
+  Locale, keine Einstellung nötig.
+- Eintrag im Freunde-Tab: neue Karte „Eigene Fragen für jemanden formulieren"
+  führt direkt in den Flow.
+
+> Bekannte Lücke / Geplant: Empfänger ohne eigenes Smartphone – Sandra als
+> „Proxy" mit Audio-Aufnahme über ihr Gerät. Backlog in
+> [REQ-020](./requirements/REQ-020-sandra-flow.md) §Future Work.
+
+---
+
 ## [2.6.0] – 2026-05-11
 
 ### Hinzugefügt
@@ -909,6 +943,7 @@ Wenn im Hintergrund eine neue Version der App als Service Worker bereit steht, e
 | **2.4.0** | Vereinfachter Bedienmodus für ältere Nutzer (Mode-Auswahl im Onboarding & Profil, große Buttons, reduzierte UI) | ✔️ Fertig |
 | **2.5.0** | Impressum-Seite (§ 5 DDG, § 18 MStV) im Profil – Anbieter, Kontakt, Streitbeilegung, Haftung, Urheberrecht | ✔️ Fertig |
 | **2.6.0** | Sync-Setup: Wartebildschirm für E-Mail-Bestätigung + Resend-Button, automatischer Sprung nach Verifikation | ✔️ Fertig |
+| **2.7.0** | Sandra-First Flow: persönliche Fragen formulieren, Trigger-Bank DE+EN, Inspirations-Schublade, Ingrid-Empfang mit One-Question-View (REQ-020) | ✔️ Fertig |
 | — | **Geplante Features** | — |
 | **TBD** | Lebenszeitlinie – chronologische visuelle Ansicht | Geplant |
 | **TBD** | Import bestehender Erinnerungen (Social Media, Clouds) | Geplant |

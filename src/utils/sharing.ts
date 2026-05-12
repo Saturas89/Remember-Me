@@ -68,6 +68,8 @@ function validateCustomQuestion(raw: unknown): CustomQuestion | null {
   }
 }
 
+const MAX_PERSONAL_META_LEN = 200
+
 /** Decode a question pack code; returns null on any error or schema mismatch.
  *  Validates each question against bounded length + enum-type constraints so
  *  a crafted pack URL cannot stuff multi-MB strings or unknown types into
@@ -85,7 +87,23 @@ export function decodeQuestionPack(code: string): QuestionPack | null {
       if (!valid) return null
       questions.push(valid)
     }
-    return { questions, createdBy: r.createdBy as string | undefined }
+    const out: QuestionPack & Partial<Record<'personalPack' | 'senderName' | 'recipientLabel' | 'anrede', unknown>> = {
+      questions,
+      createdBy: r.createdBy as string | undefined,
+    }
+    // REQ-020: preserve Sandra-flow personal-pack metadata across the
+    // share-URL round trip, but only when every field passes the same bounded
+    // validation as the rest of the pack.
+    if (r.personalPack === true
+      && isBoundedString(r.senderName, MAX_PERSONAL_META_LEN)
+      && isBoundedString(r.recipientLabel, MAX_PERSONAL_META_LEN)
+      && isBoundedString(r.anrede, MAX_PERSONAL_META_LEN)) {
+      out.personalPack = true
+      out.senderName = r.senderName
+      out.recipientLabel = r.recipientLabel
+      out.anrede = r.anrede
+    }
+    return out as QuestionPack
   } catch {
     return null
   }

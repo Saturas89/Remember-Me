@@ -7,13 +7,18 @@ import {
   isAnswerHash,
   isMemoryShareHash,
   isContactHash,
+  isQuestionPackHash,
   parseSecureInviteFromHash,
   parseAnswerFromHash,
   parseMemoryShareFromHash,
   parseContactFromHash,
+  parseQuestionPackFromHash,
+  isPersonalQuestionPack,
   generatePlainInviteUrl,
   generateSecureInviteUrl,
 } from './utils/secureLink'
+import type { QuestionPack } from './types'
+import type { PersonalQuestionPack } from './types/sandraFlow'
 import { HomeView } from './views/HomeView'
 import { QuizView } from './views/QuizView'
 import { ArchiveView } from './views/ArchiveView'
@@ -31,6 +36,8 @@ import { PrivateSyncHubView } from './views/PrivateSyncHubView'
 import { OnlineSharingIntroView } from './views/OnlineSharingIntroView'
 import { OnlineSharingHubView } from './views/OnlineSharingHubView'
 import { ContactHandshakeView } from './views/ContactHandshakeView'
+import { SandraFlowView } from './views/SandraFlowView'
+import { PersonalPackReceiveView } from './views/PersonalPackReceiveView'
 import { useOnlineSync } from './hooks/useOnlineSync'
 import { usePrivateSync } from './hooks/usePrivateSync'
 import { defaultMediaAdapter } from './utils/privateSyncMediaAdapter'
@@ -72,13 +79,16 @@ type View =
   | { name: 'impressum'; from: 'profile' | 'home' }
   | { name: 'online-intro' }
   | { name: 'online-hub' }
+  | { name: 'sandra-flow' }
 
 type MainTab = 'home' | 'friends' | 'archive' | 'sync' | 'profile'
 
 // Detect URL type synchronously to show a loading state before async parse
-const needsAsyncParse = isSecureInviteHash() || isAnswerHash() || isMemoryShareHash()
+const needsAsyncParse =
+  isSecureInviteHash() || isAnswerHash() || isMemoryShareHash() || isQuestionPackHash()
 // #contact/ is parsed synchronously (no crypto, no compression)
 const initialContactHandshake = isContactHash() ? parseContactFromHash() : null
+const initialSandraHash = !needsAsyncParse && !initialContactHandshake && window.location.hash.startsWith('#/ask')
 
 // ── Pathname ↔ View mapping (for Vercel Analytics page tracking) ──────────
 function pathToView(pathname: string): View {
@@ -95,7 +105,7 @@ const INVITE_URL_STORAGE_KEY = 'remember-me-invite-url'
 
 // Views that are hidden in Simple Mode (also blocked from deep-links).
 const HIDDEN_IN_SIMPLE: ReadonlySet<View['name']> = new Set([
-  'friends', 'sync', 'online-intro', 'online-hub', 'custom-questions',
+  'friends', 'sync', 'online-intro', 'online-hub', 'custom-questions', 'sandra-flow',
 ])
 
 function loadCachedInviteUrl(): string {
@@ -110,10 +120,11 @@ function loadCachedInviteUrl(): string {
 }
 
 export default function App() {
-  // State for async URL parsing (#mi/ secure invite, #ma/ answer import, #ms/ memory share)
+  // State for async URL parsing (#mi/ secure invite, #ma/ answer import, #ms/ memory share, ?qp/ question pack)
   const [asyncInvite, setAsyncInvite] = useState<InviteData | null>(null)
   const [pendingAnswerImport, setPendingAnswerImport] = useState<AnswerExport | null>(null)
   const [sharedMemory, setSharedMemory] = useState<MemorySharePayload | null>(null)
+  const [incomingPack, setIncomingPack] = useState<QuestionPack | null>(null)
   const [urlParsing, setUrlParsing] = useState(needsAsyncParse)
 
   // Permanent invite URL – generated once at app open, same link for all friends.
@@ -186,7 +197,7 @@ export default function App() {
     setOnlineSharing({ deviceId, publicKey })
   })
 
-  // Resolve secure invite / answer-import / memory-share URL asynchronously on first mount
+  // Resolve secure invite / answer-import / memory-share / pack URL asynchronously on first mount
   useEffect(() => {
     if (!needsAsyncParse) return
     if (isSecureInviteHash()) {
@@ -200,6 +211,10 @@ export default function App() {
     } else if (isMemoryShareHash()) {
       parseMemoryShareFromHash()
         .then(payload => { if (payload) setSharedMemory(payload) })
+        .finally(() => setUrlParsing(false))
+    } else if (isQuestionPackHash()) {
+      parseQuestionPackFromHash()
+        .then(pack => { if (pack) setIncomingPack(pack) })
         .finally(() => setUrlParsing(false))
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
@@ -313,9 +328,11 @@ export default function App() {
     console.error('[App] friend ZIP import failed:', result.error ?? 'unknown error')
   }
 
-  const [view, setView] = useState<View>(() =>
-    needsAsyncParse ? { name: 'home' } : pathToView(window.location.pathname)
-  )
+  const [view, setView] = useState<View>(() => {
+    if (needsAsyncParse) return { name: 'home' }
+    if (initialSandraHash) return { name: 'sandra-flow' }
+    return pathToView(window.location.pathname)
+  })
   const [showReleaseNotes, setShowReleaseNotes] = useState(false)
   const { state: installState, visible: installVisible, triggerInstall, dismiss: dismissInstall } = useInstallPrompt()
   const { needRefresh, applyUpdate, dismiss: dismissUpdate } = useServiceWorker()
@@ -351,8 +368,17 @@ export default function App() {
   // Sync view with browser back/forward navigation
   useEffect(() => {
     const onPopstate = () => setView(pathToView(window.location.pathname))
+    const onHashChange = () => {
+      if (window.location.hash.startsWith('#/ask')) {
+        setView({ name: 'sandra-flow' })
+      }
+    }
     window.addEventListener('popstate', onPopstate)
-    return () => window.removeEventListener('popstate', onPopstate)
+    window.addEventListener('hashchange', onHashChange)
+    return () => {
+      window.removeEventListener('popstate', onPopstate)
+      window.removeEventListener('hashchange', onHashChange)
+    }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Redirect hidden routes to home whenever simple mode is active. This
@@ -388,6 +414,31 @@ export default function App() {
 
   if (sharedMemory) {
     return <SharedMemoryView payload={sharedMemory} />
+  }
+
+  if (incomingPack && isPersonalQuestionPack(incomingPack)) {
+    return (
+      <AppModeProvider appMode={appMode} setAppMode={saveAppMode}>
+        <PersonalPackReceiveView
+          pack={incomingPack as PersonalQuestionPack}
+          onSubmit={() => {
+            // Store the answers on the receiving device's "custom questions"
+            // archive for now — the receiver can revisit them later. Sending
+            // them back to the sender is out of scope for v2.7.0 (see REQ-020
+            // Future Work / Backlog).
+            importCustomQuestions(incomingPack.questions)
+            setIncomingPack(null)
+            history.replaceState({}, '', '/')
+            setView({ name: 'archive' })
+          }}
+          onDismiss={() => {
+            setIncomingPack(null)
+            history.replaceState({}, '', '/')
+            setView({ name: 'home' })
+          }}
+        />
+      </AppModeProvider>
+    )
   }
 
   if (pendingContact) {
@@ -458,8 +509,8 @@ export default function App() {
 
   const friendsBadge = friendAnswers.filter(a => a.value.trim() || (a.imageIds?.length ?? 0) > 0 || (a.videoIds?.length ?? 0) > 0 || !!a.audioId).length
 
-  // Bottom nav shown on all main views (not during focused quiz/friend-answer)
-  const showNav = view.name !== 'quiz'
+  // Bottom nav shown on all main views (not during focused quiz/friend-answer/sandra-flow)
+  const showNav = view.name !== 'quiz' && view.name !== 'sandra-flow'
 
   if (view.name === 'quiz') {
     let category: Category | undefined
@@ -540,6 +591,10 @@ export default function App() {
           onOpenOnlineSharing={() => goTo({ name: onlineSharing?.enabled ? 'online-hub' : 'online-intro' })}
           onlineSharingEnabled={Boolean(onlineSharing?.enabled)}
           onlineSharingConfigured={ONLINE_SHARING_CONFIGURED}
+          onOpenSandraFlow={() => {
+            history.replaceState({}, '', '#/ask')
+            setView({ name: 'sandra-flow' })
+          }}
         />
       )}
 
@@ -644,6 +699,18 @@ export default function App() {
 
       {view.name === 'impressum' && (
         <ImpressumView onBack={() => goTo({ name: view.from } as View)} />
+      )}
+
+      {view.name === 'sandra-flow' && (
+        <SandraFlowView
+          profileName={profile?.name ?? ''}
+          onBack={() => {
+            if (window.location.hash.startsWith('#/ask')) {
+              history.replaceState({}, '', '/friends')
+            }
+            goTo({ name: 'friends' })
+          }}
+        />
       )}
 
       {view.name === 'home' && (
