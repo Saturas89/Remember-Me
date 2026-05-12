@@ -146,6 +146,10 @@ jobs:
           PW_SKIP_BUILD: '1'
         run: npx playwright test --project=${{ matrix.project }}
 
+      - name: Summarize flaky tests
+        if: ${{ !cancelled() }}
+        run: node scripts/summarize-flaky-tests.mjs "${{ matrix.project }}"
+
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:
