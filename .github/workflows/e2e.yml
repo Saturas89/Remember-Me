@@ -78,7 +78,7 @@ jobs:
           retention-days: 1
 
   e2e:
-    name: ${{ matrix.project }}
+    name: ${{ matrix.entry.name }}
     runs-on: ubuntu-latest
     needs: build
     timeout-minutes: 45
@@ -87,12 +87,15 @@ jobs:
       matrix:
         # On PRs: chromium + firefox + the two mobile profiles. Desktop-webkit
         # is intentionally skipped because mobile-safari already exercises the
-        # same WebKit engine on Linux runners (where it is the slowest job),
-        # and real iOS users are covered by mobile-safari. Keep the desktop
-        # webkit project in playwright.config.ts for manual local runs when
-        # a Safari rendering quirk is suspected.
+        # same WebKit engine on Linux runners, and real iOS users are covered
+        # by mobile-safari. Firefox on Linux is consistently the wall-clock
+        # bottleneck (Gecko's per-context-spawn cost on multi-device specs),
+        # so it is split into two playwright shards that run in parallel and
+        # halve the firefox wall-clock at the cost of one extra runner.
+        # Keep the desktop webkit project in playwright.config.ts for manual
+        # local runs when a Safari rendering quirk is suspected.
         # On pushes to main: only chromium (cheap smoke on the merged commit).
-        project: ${{ github.event_name == 'pull_request' && fromJSON('["chromium","firefox","mobile-chrome","mobile-safari"]') || fromJSON('["chromium"]') }}
+        entry: ${{ github.event_name == 'pull_request' && fromJSON('[{"name":"chromium","project":"chromium","shard":"1/1"},{"name":"firefox-shard-1","project":"firefox","shard":"1/2"},{"name":"firefox-shard-2","project":"firefox","shard":"2/2"},{"name":"mobile-chrome","project":"mobile-chrome","shard":"1/1"},{"name":"mobile-safari","project":"mobile-safari","shard":"1/1"}]') || fromJSON('[{"name":"chromium","project":"chromium","shard":"1/1"}]') }}
     steps:
       - uses: actions/checkout@v4
 
@@ -121,10 +124,10 @@ jobs:
       - name: Resolve browser engine for project
         id: engine
         run: |
-          case "${{ matrix.project }}" in
+          case "${{ matrix.entry.project }}" in
             mobile-chrome) echo "name=chromium" >> "$GITHUB_OUTPUT" ;;
             mobile-safari) echo "name=webkit"   >> "$GITHUB_OUTPUT" ;;
-            *)             echo "name=${{ matrix.project }}" >> "$GITHUB_OUTPUT" ;;
+            *)             echo "name=${{ matrix.entry.project }}" >> "$GITHUB_OUTPUT" ;;
           esac
 
       - name: Resolve Playwright version
@@ -149,15 +152,15 @@ jobs:
       - name: Run E2E tests
         env:
           PW_SKIP_BUILD: '1'
-        run: npx playwright test --project=${{ matrix.project }}
+        run: npx playwright test --project=${{ matrix.entry.project }} --shard=${{ matrix.entry.shard }}
 
       - name: Summarize flaky tests
         if: ${{ !cancelled() }}
-        run: node scripts/summarize-flaky-tests.mjs "${{ matrix.project }}"
+        run: node scripts/summarize-flaky-tests.mjs "${{ matrix.entry.name }}"
 
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:
-          name: playwright-report-${{ matrix.project }}
+          name: playwright-report-${{ matrix.entry.name }}
           path: playwright-report/
           retention-days: 14
