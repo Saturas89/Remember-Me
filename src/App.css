@@ -1368,6 +1368,53 @@
 
 .friend-card__name   { font-weight: 700; font-size: 0.97rem; color: var(--text); }
 .friend-card__status { font-size: 0.78rem; color: var(--text-muted); }
+.friend-card__last-active {
+  font-size: 0.74rem;
+  color: var(--text-faint);
+  font-style: italic;
+}
+
+/* Two-flow Entscheidungs-Guidance auf der Friends-Seite (#164). Sitzt vor
+   den eigentlichen Sektionen und nimmt Sandra die "welcher Pfad für Tine?"-
+   Mental-Load ab. Reine Tokens, kein Custom-Color. */
+.friends-flow-guidance__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.friends-flow-guidance__item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.6rem 0.75rem;
+  border-left: 3px solid var(--accent);
+  background: var(--surface-raised);
+  border-radius: 8px;
+}
+
+.friends-flow-guidance__name {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.friends-flow-guidance__desc {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+/* Smooth waiting feedback inside ContactHandshakeView (#165) – stacked
+   reassurance, retry button, escalation. */
+.contact-handshake__waiting {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
 
 .friend-progress-bar {
   height: 4px;

@@ -124,6 +124,22 @@ export function FriendsView({
         <h2 className="archive-title">{t.friends.topbarTitle}</h2>
       </div>
 
+      {onlineSharingConfigured && onOpenOnlineSharing && (
+        <section className="friends-section friends-flow-guidance">
+          <h3 className="friends-section-title">{t.friends.flowGuidanceHeading}</h3>
+          <ul className="friends-flow-guidance__list">
+            <li className="friends-flow-guidance__item">
+              <strong className="friends-flow-guidance__name">{t.friends.flowGuidanceOfflineTitle}</strong>
+              <span className="friends-flow-guidance__desc">{t.friends.flowGuidanceOfflineDesc}</span>
+            </li>
+            <li className="friends-flow-guidance__item">
+              <strong className="friends-flow-guidance__name">{t.friends.flowGuidanceFamilyTitle}</strong>
+              <span className="friends-flow-guidance__desc">{t.friends.flowGuidanceFamilyDesc}</span>
+            </li>
+          </ul>
+        </section>
+      )}
+
       <section className="friends-section">
         <h3 className="friends-section-title">{t.friends.inviteLinkHeading}</h3>
         <div className="friends-tags">

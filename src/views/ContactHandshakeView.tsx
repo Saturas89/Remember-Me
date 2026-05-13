@@ -4,6 +4,13 @@ import { generateShareCard } from '../utils/shareCard'
 import { useTranslation } from '../locales'
 import type { ContactHandshake } from '../types'
 
+/** Waiting-state milestones for the contact-handshake (#165). After 3 s we
+ *  add a reassuring time hint; after 10 s a retry; after 30 s a clearer
+ *  failure message. */
+const HANDSHAKE_HINT_MS = 3_000
+const HANDSHAKE_RETRY_MS = 10_000
+const HANDSHAKE_TIMEOUT_MS = 30_000
+
 interface Props {
   handshake: ContactHandshake
   profileName: string
@@ -40,6 +47,20 @@ export function ContactHandshakeView({
   const [accepted, setAccepted] = useState(false)
   const [copied, setCopied] = useState(false)
   const shareCardRef = useRef<File | null>(null)
+
+  // Persona-led waiting feedback (#165) — track how long the
+  // "enabled && !myDeviceId" connecting state has lingered.
+  const [waitElapsed, setWaitElapsed] = useState(0)
+  const isWaiting = enabled && !myDeviceId
+  useEffect(() => {
+    if (!isWaiting) {
+      setWaitElapsed(0)
+      return
+    }
+    const start = Date.now()
+    const interval = setInterval(() => setWaitElapsed(Date.now() - start), 500)
+    return () => clearInterval(interval)
+  }, [isWaiting])
 
   const myLink = useMemo(() => {
     if (!myDeviceId || !myPublicKey) return ''
@@ -119,7 +140,25 @@ export function ContactHandshakeView({
         )}
 
         {enabled && !myDeviceId && (
-          <p className="friends-hint">{c.connecting}</p>
+          <div className="contact-handshake__waiting">
+            <p className="friends-hint">{c.connecting}</p>
+            {waitElapsed >= HANDSHAKE_HINT_MS && waitElapsed < HANDSHAKE_TIMEOUT_MS && (
+              <p className="friends-hint">{c.connectingHint}</p>
+            )}
+            {waitElapsed >= HANDSHAKE_RETRY_MS && waitElapsed < HANDSHAKE_TIMEOUT_MS && (
+              <button
+                type="button"
+                className="btn btn--ghost btn--sm"
+                onClick={onEnable}
+                data-testid="contact-handshake-retry"
+              >
+                {c.connectingRetry}
+              </button>
+            )}
+            {waitElapsed >= HANDSHAKE_TIMEOUT_MS && (
+              <p className="friends-hint friends-hint--warn">{c.connectingTimeout}</p>
+            )}
+          </div>
         )}
 
         {enabled && myDeviceId && (
