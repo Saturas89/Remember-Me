@@ -1,7 +1,7 @@
-// Curated "How have others asked?" examples per trigger (DE).
-// Anonymized – brave, plain-spoken example phrasings designed to give Sandra
-// permission to ask the real questions. Clicking one COPIES the text into the
-// composer textarea so she can edit it.
+// Curated "One way to ask" example phrasings per trigger (DE).
+// Brave, plain-spoken examples designed to give Sandra permission to ask the
+// real questions — these are app-authored, NOT user data (privacy-first).
+// Clicking one COPIES the text into the composer textarea so she can edit it.
 
 export const INSPIRATION_QUESTIONS_DE: Record<string, string[]> = {
   'time-rarely-spoken-of': [
