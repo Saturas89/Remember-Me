@@ -15,6 +15,16 @@ type SyncErrorCode = 'auth' | 'network' | 'quota' | 'decrypt' | 'unknown'
 // install and lands back on /sync without ever entering the wizard again.
 const GDRIVE_OAUTH_PENDING_KEY = 'rm-gdrive-oauth-pending'
 
+/** Diff-summary of the most recent successful sync — drives the Hub's
+ *  activity banner (#177) so Sandra can see that the sync actually moved
+ *  data without leaking content ("Lesefenster, kein CCTV"). */
+export interface SyncActivity {
+  at: string
+  addedOwnAnswers: number
+  addedFriendAnswers: number
+  addedFriends: number
+}
+
 export interface UsePrivateSyncReturn {
   isEnabled: boolean
   providerType: SyncProviderType | null
@@ -22,6 +32,11 @@ export interface UsePrivateSyncReturn {
   lastSyncAt: string | null
   errorMessage: string | null
   errorCode: SyncErrorCode | null
+  /** Summary of the most recent sync diff (null when nothing changed yet or
+   *  before the first successful sync of this session). */
+  lastSyncActivity: SyncActivity | null
+  /** Caller-controlled dismiss of the activity banner. */
+  dismissSyncActivity(): void
   syncNow(): Promise<void>
   reauthenticate(): Promise<void>
   setup(provider: SyncProviderType): Promise<void>
@@ -44,6 +59,10 @@ export function usePrivateSync(
     appState.privateSync?.errorMessage ?? null,
   )
   const [errorCode, setErrorCode] = useState<SyncErrorCode | null>(null)
+  // #177 – cache the most recent diff summary so the Hub can flash a
+  // transient "X neue Antworten" banner. Reset to null after dismiss /
+  // after auto-timeout.
+  const [lastSyncActivity, setLastSyncActivity] = useState<SyncActivity | null>(null)
 
   const providerRef = useRef<SyncProvider | null>(null)
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -96,6 +115,41 @@ export function usePrivateSync(
 
       retryCountRef.current = 0
       const now = new Date().toISOString()
+      // #177 – compute a privacy-safe diff summary for the Hub banner.
+      // Pull-result.merged contains the post-merge appState; comparing key
+      // sets against the pre-pull appState gives "added since last sync".
+      // Inhalts-Filter spiegelt die Logik aus useAnswers/getCategoryProgress,
+      // damit leere Antwort-Skelette nicht als "neu" gezählt werden.
+      if (result && isMountedRef.current) {
+        const beforeAnswers = new Set(Object.keys(appState.answers))
+        const beforeFriends = new Set((appState.friends ?? []).map(f => f.id))
+        const beforeFriendAnswers = new Set((appState.friendAnswers ?? []).map(a => a.id))
+        let addedOwnAnswers = 0
+        for (const [id, a] of Object.entries(result.merged.answers)) {
+          if (beforeAnswers.has(id)) continue
+          if (
+            a.value.trim() !== '' ||
+            (a.imageIds?.length ?? 0) > 0 ||
+            (a.videoIds?.length ?? 0) > 0 ||
+            !!a.audioId ||
+            !!a.audioTranscript
+          ) addedOwnAnswers++
+        }
+        const addedFriendAnswers = (result.merged.friendAnswers ?? [])
+          .filter(a => !beforeFriendAnswers.has(a.id))
+          .length
+        const addedFriends = (result.merged.friends ?? [])
+          .filter(f => !beforeFriends.has(f.id))
+          .length
+        if (addedOwnAnswers + addedFriendAnswers + addedFriends > 0) {
+          setLastSyncActivity({
+            at: now,
+            addedOwnAnswers,
+            addedFriendAnswers,
+            addedFriends,
+          })
+        }
+      }
       if (isMountedRef.current) {
         setStatus('success')
         setLastSyncAt(now)
@@ -268,8 +322,13 @@ export function usePrivateSync(
       setLastSyncAt(null)
       setErrorMessage(null)
       setErrorCode(null)
+      setLastSyncActivity(null)
     }
   }, [getProvider])
+
+  const dismissSyncActivity = useCallback(() => {
+    setLastSyncActivity(null)
+  }, [])
 
   return {
     isEnabled: providerType !== null,
@@ -278,6 +337,8 @@ export function usePrivateSync(
     lastSyncAt,
     errorMessage,
     errorCode,
+    lastSyncActivity,
+    dismissSyncActivity,
     syncNow,
     reauthenticate,
     setup,

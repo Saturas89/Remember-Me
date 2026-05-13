@@ -720,6 +720,15 @@ export interface Translations {
     enterCodePlaceholder: string
     enterCodeButton: string
     enterCodeError: string
+    /** Sync-Activity-Banner (#177). */
+    syncActivityTitle: string
+    syncActivityOwnOne: string
+    syncActivityOwnMany: string
+    syncActivityFriendOne: string
+    syncActivityFriendMany: string
+    syncActivityFriendsAddedOne: string
+    syncActivityFriendsAddedMany: string
+    syncActivityDismiss: string
     /** Volumen-Pill im Hub (#176). */
     memoriesSyncedLabel: string
     memoriesSyncedOne: string
