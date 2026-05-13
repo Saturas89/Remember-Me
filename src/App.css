@@ -1680,14 +1680,6 @@
   margin: 0;
 }
 
-.sandra-landing__how {
-  align-self: center;
-  color: var(--text-muted);
-  text-decoration: underline;
-  cursor: pointer;
-  margin: 0;
-}
-
 .sandra-steps {
   list-style: none;
   padding: 0;

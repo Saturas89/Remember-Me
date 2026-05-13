@@ -97,9 +97,10 @@ test.describe('Sandra-Flow – DE Happy Path', () => {
   test('Sandra composes one question and shares via Web-Share-API', async ({ page }) => {
     await page.goto('/#/ask')
 
-    // ── Screen 1: hero text matches DE spec exactly ─────────────────────────
+    // ── Screen 1: hero text matches DE spec (with anrede fallback "Mama"
+    // because the user hasn't picked one yet on first visit) ───────────────
     await expect(
-      page.getByText('Was wolltest du deine Mutter schon immer fragen?'),
+      page.getByText('Was wolltest du Mama schon immer fragen?'),
     ).toBeVisible()
     await expect(
       page.getByText('In 2 Minuten formulierst du deine eigenen Fragen.'),
@@ -180,9 +181,10 @@ test.describe('Sandra-Flow – EN Happy Path', () => {
   test('the hero text and labels switch to English', async ({ page }) => {
     await page.goto('/#/ask')
 
-    // ── Screen 1: English hero text ──────────────────────────────────────────
+    // ── Screen 1: English hero text (with anrede fallback "Mom" because
+    // the user hasn't picked one yet on first visit) ─────────────────────
     await expect(
-      page.getByText('What have you always wanted to ask your mother?'),
+      page.getByText('What have you always wanted to ask Mom?'),
     ).toBeVisible()
     await expect(
       page.getByText("In 2 minutes, you'll compose your own questions."),
@@ -555,7 +557,7 @@ test.describe('Sandra-Flow – Friends-tab entry card (FR-020.10)', () => {
     // After clicking, we're on the Sandra-flow landing — assert the hero
     // text (which is unique to the landing step) is visible.
     await expect(
-      page.getByText('Was wolltest du deine Mutter schon immer fragen?'),
+      page.getByText('Was wolltest du Mama schon immer fragen?'),
     ).toBeVisible()
     expect(page.url()).toContain('#/ask')
   })

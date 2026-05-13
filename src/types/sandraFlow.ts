@@ -25,8 +25,8 @@ export interface TemplateDef {
 }
 
 /**
- * One trigger = one "category" of personal questions (e.g. "Mensch, den du nie
- * kennengelernt hast"). Each trigger carries a handful of templates the user
+ * One trigger = one "category" of personal questions (e.g. "Mensch, den ich
+ * nie kennengelernt habe"). Each trigger carries a handful of templates the user
  * can pick from in the composer step.
  */
 export interface TriggerDef {

@@ -6,14 +6,13 @@ import type { SandraFlowStrings } from '../de/sandraFlow'
 export const SANDRA_FLOW_EN: SandraFlowStrings = {
   // ── Landing (Screen 1) ─────────────────────────────────────────────
   landing: {
-    title: 'What have you always wanted to ask your mother?',
+    title: 'What have you always wanted to ask {anrede}?',
     subline: "In 2 minutes, you'll compose your own questions.",
     primaryCta: 'Compose your first question',
-    howItWorks: 'How it works',
     steps: [
-      'Set the anchor',
-      'Compose',
-      'Send',
+      'Pick the person',
+      'Compose questions',
+      'Send to {anrede}',
     ],
   },
 
@@ -29,9 +28,18 @@ export const SANDRA_FLOW_EN: SandraFlowStrings = {
       geschwister: 'Sibling',
       other: 'Other',
     },
+    chipPlaceholders: {
+      mama: 'Mom',
+      papa: 'Dad',
+      oma: 'Grandma',
+      opa: 'Grandpa',
+      tante_onkel: 'e.g. Aunt Helen',
+      geschwister: 'e.g. Anna',
+      other: 'e.g. godmother',
+    },
     otherPlaceholder: 'e.g. sister, godmother',
     anredeLabel: 'How do you address them?',
-    anredeHelper: "Pre-filled from the chip but editable – e.g. 'Mom', 'Mum', 'Pops', first name.",
+    anredeHelper: "Taken from above, feel free to tweak – e.g. 'Mom', 'Mum', 'Pops', first name.",
     anredePlaceholder: 'Mom',
     birthYearLabel: 'Birth year (optional)',
     birthYearPlaceholder: 'e.g. 1957',
@@ -42,18 +50,19 @@ export const SANDRA_FLOW_EN: SandraFlowStrings = {
 
   // ── Trigger pick (Screen 3) ────────────────────────────────────────
   trigger: {
-    sectionAboutThem: 'About them',
+    sectionAboutThem: 'About {anrede}',
     sectionAboutUs: 'About us two',
     sectionAboutUsHeart: '❤',
     sectionAboutUsHint: 'These questions go deeper – take your time with them.',
-    typeMyOwn: "I'd rather type my own question",
+    typeMyOwn: 'Compose your own question',
   },
 
   // ── Composer (Screen 4) ────────────────────────────────────────────
   composer: {
-    triggerChipLabel: 'Trigger',
-    backToTriggers: 'Different trigger',
+    triggerChipLabel: 'Topic',
+    backToTriggers: 'Different topic',
     seedLabel: 'What comes to mind? A keyword is enough.',
+    seedHelper: 'Suggestions appear below based on your keyword.',
     seedPlaceholders: [
       'the hungry years',
       'Uncle Karl',
@@ -67,10 +76,11 @@ export const SANDRA_FLOW_EN: SandraFlowStrings = {
     suggestionEdit: 'Edit',
     suggestionDiscardAria: 'Remove suggestion',
     inspirationToggle: 'How have others asked?',
-    inspirationHint: 'Click an example to copy it as your seed.',
+    inspirationHint: 'Click an example to copy it as your keyword.',
     freeformLabel: 'Your own question',
     freeformPlaceholder: 'Your question in your own words…',
-    discard: 'Discard',
+    freeformHelper: 'Write the question exactly how you would ask {anrede}.',
+    discard: 'Cancel',
     addQuestion: 'Add question',
     addEmptyError: 'Please type a question or pick a suggestion.',
   },
@@ -81,7 +91,7 @@ export const SANDRA_FLOW_EN: SandraFlowStrings = {
     emptyHint: '5 is a good start – but 1 is enough.',
     addAnother: 'Add question',
     send: 'Send to {anrede}',
-    triggerChipAria: 'Trigger',
+    triggerChipAria: 'Topic',
     editAria: 'Edit',
     moveUpAria: 'Move up',
     moveDownAria: 'Move down',

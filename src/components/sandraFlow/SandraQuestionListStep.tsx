@@ -103,7 +103,7 @@ export function SandraQuestionListStep({
                     <span className="friends-tag sandra-question-row__chip">
                       {q.group === 'relationship'
                         ? t.trigger.sectionAboutUs
-                        : t.trigger.sectionAboutThem}
+                        : t.trigger.sectionAboutThem.replace('{anrede}', anchor.anrede)}
                     </span>
                   </div>
                   <div className="sandra-question-row__actions">

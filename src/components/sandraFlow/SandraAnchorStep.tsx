@@ -14,6 +14,12 @@ type ChipKey = keyof SandraFlowStrings['anchor']['chipLabels']
 
 const CHIPS: ChipKey[] = ['mama', 'papa', 'oma', 'opa', 'tante_onkel', 'geschwister', 'other']
 
+/** Chips whose label doubles as a natural anrede ("Mama", "Papa", "Oma",
+ *  "Opa"). Tante/Onkel, Geschwister and Andere need an actual name like
+ *  "Tante Heidi" or "Anna", so we keep the anrede field empty for them and
+ *  surface the example via the placeholder instead. */
+const AUTO_ANREDE_CHIPS: ChipKey[] = ['mama', 'papa', 'oma', 'opa']
+
 export function SandraAnchorStep({ t, anchor, onUpdate, onBack, onNext }: Props) {
   const [relation, setRelation] = useState(anchor.relation)
   const [anrede, setAnrede] = useState(anchor.anrede)
@@ -25,11 +31,12 @@ export function SandraAnchorStep({ t, anchor, onUpdate, onBack, onNext }: Props)
   )
   const [touched, setTouched] = useState(false)
 
-  // Auto-prefill the anrede whenever Sandra picks a default chip and hasn't
-  // typed anything yet. Free-form ("other") never triggers a prefill.
+  // Auto-prefill only for chips that ARE the anrede ("Mama" → "Mama"). For
+  // tante_onkel / geschwister / other the placeholder shows the example and
+  // we leave the field empty so Sandra types the actual name.
   useEffect(() => {
     if (anrede.trim()) return
-    if (!relation || relation === 'other') return
+    if (!relation || !AUTO_ANREDE_CHIPS.includes(relation as ChipKey)) return
     const chipLabel = t.anchor.chipLabels[relation as ChipKey]
     if (chipLabel) setAnrede(chipLabel)
   }, [relation, anrede, t])
@@ -41,6 +48,11 @@ export function SandraAnchorStep({ t, anchor, onUpdate, onBack, onNext }: Props)
       setRelation(key)
     }
   }
+
+  const anredePlaceholder =
+    relation && relation in t.anchor.chipPlaceholders
+      ? t.anchor.chipPlaceholders[relation as ChipKey]
+      : t.anchor.anredePlaceholder
 
   function handleNext() {
     setTouched(true)
@@ -102,7 +114,7 @@ export function SandraAnchorStep({ t, anchor, onUpdate, onBack, onNext }: Props)
         <input
           type="text"
           className="input-text"
-          placeholder={t.anchor.anredePlaceholder}
+          placeholder={anredePlaceholder}
           value={anrede}
           onChange={e => setAnrede(e.target.value)}
           aria-label={t.anchor.anredeLabel}

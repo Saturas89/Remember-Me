@@ -107,7 +107,7 @@ export function SandraComposerStep({
             onClick={onChangeTrigger}
             data-testid="sandra-composer-trigger-chip"
           >
-            {trigger?.title ?? t.composer.triggerChipLabel}
+            {(trigger?.title ?? t.composer.triggerChipLabel).replace('{anrede}', anchor.anrede)}
           </button>
           <button
             type="button"
@@ -139,7 +139,7 @@ export function SandraComposerStep({
                 data-testid="sandra-composer-freeform"
               />
               <p id="sandra-freeform-hint" className="friends-hint">
-                {t.composer.freeformPlaceholder}
+                {t.composer.freeformHelper.replace('{anrede}', anchor.anrede)}
               </p>
             </>
           ) : (
@@ -158,7 +158,7 @@ export function SandraComposerStep({
                 data-testid="sandra-composer-seed"
               />
               <p id="sandra-seed-hint" className="friends-hint">
-                {t.composer.seedLabel}
+                {t.composer.seedHelper}
               </p>
             </>
           )}
