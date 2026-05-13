@@ -1,10 +1,17 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useAudioRecorder } from '../hooks/useAudioRecorder'
 import { ImageAttachment } from './ImageAttachment'
 import { VideoAttachment } from './VideoAttachment'
 import { AudioPlayer } from './AudioPlayer'
 import { useTranslation } from '../locales'
 import { useAppMode } from '../hooks/useAppMode'
+
+/** Waiting-state milestones for the microphone permission, in ms. After 3 s
+ *  we add a reassuring hint; after 10 s we offer a manual retry; after 30 s
+ *  we escalate to a clear failure message. */
+const MIC_WAIT_HINT_MS = 3_000
+const MIC_WAIT_RETRY_MS = 10_000
+const MIC_WAIT_TIMEOUT_MS = 30_000
 
 const MAX_IMAGES = 5
 const MAX_VIDEOS = 3
@@ -44,11 +51,39 @@ export function MediaCapture({
   const videoTrigger = useRef<HTMLInputElement>(null)
   const rec = useAudioRecorder()
   const savingRef = useRef(false)
-  const [saveAudioFile, setSaveAudioFile] = useState(false)
+  // Default the audio-save toggle to true — the Ingrid persona reported losing
+  // confidence ("habe Angst, dass Heinrichs Stimme nicht ankommt") when the
+  // option was an opt-in (#170). In Simple Mode the checkbox is hidden and the
+  // audio is always saved.
+  const [saveAudioFile, setSaveAudioFile] = useState(true)
   const [textChoice, setTextChoice] = useState<'new' | 'keep'>('new')
+
+  // Track how long we've been waiting for the microphone permission so we can
+  // (a) show a reassuring sub-hint after 3 s, (b) offer a retry after 10 s,
+  // (c) escalate to a clear failure after 30 s (#172).
+  const [micWaitElapsed, setMicWaitElapsed] = useState(0)
+  useEffect(() => {
+    if (rec.state !== 'requesting') {
+      setMicWaitElapsed(0)
+      return
+    }
+    const start = Date.now()
+    const tick = () => setMicWaitElapsed(Date.now() - start)
+    const interval = setInterval(tick, 500)
+    return () => clearInterval(interval)
+  }, [rec.state])
 
   const hasTextConflict = !!(currentValue?.trim()) && !!rec.transcript.trim()
     && currentValue!.trim() !== rec.transcript.trim()
+
+  function handleCancelRecording() {
+    // Confirm before discarding so a stray tap doesn't lose a fresh, emotionally
+    // charged recording (#171). In Simple Mode the confirmation is mandatory;
+    // in Full Mode it's still a safety net.
+    if (window.confirm(m.cancelRecordingConfirm)) {
+      rec.cancel()
+    }
+  }
 
   async function handleAudioConfirm() {
     if (!rec.previewBlob || savingRef.current) return
@@ -105,8 +140,27 @@ export function MediaCapture({
 
       {rec.state === 'requesting' && (
         <div className="audio-panel audio-panel--requesting">
-          <span className="audio-panel__spinner" aria-hidden="true" />
-          <span>{m.waitingMicrophone}</span>
+          <div className="audio-panel__row">
+            <span className="audio-panel__spinner" aria-hidden="true" />
+            <span>{m.waitingMicrophone}</span>
+          </div>
+          {micWaitElapsed >= MIC_WAIT_HINT_MS && micWaitElapsed < MIC_WAIT_TIMEOUT_MS && (
+            <p className="audio-panel__hint">{m.waitingMicrophoneHint}</p>
+          )}
+          {micWaitElapsed >= MIC_WAIT_RETRY_MS && micWaitElapsed < MIC_WAIT_TIMEOUT_MS && (
+            <button
+              type="button"
+              className="btn btn--ghost btn--sm audio-panel__retry"
+              onClick={() => { rec.cancel(); rec.start() }}
+            >
+              {m.waitingMicrophoneRetry}
+            </button>
+          )}
+          {micWaitElapsed >= MIC_WAIT_TIMEOUT_MS && (
+            <p className="audio-rec-error audio-panel__timeout">
+              {m.waitingMicrophoneTimeout}
+            </p>
+          )}
         </div>
       )}
 
@@ -124,8 +178,13 @@ export function MediaCapture({
               <button type="button" className="btn btn--primary btn--sm" onClick={rec.stop}>
                 {m.stopRecording}
               </button>
-              <button type="button" className="btn btn--ghost btn--sm" onClick={rec.cancel} aria-label={m.cancelRecordingAria}>
-                ✕
+              <button
+                type="button"
+                className="btn btn--ghost btn--sm media-capture__cancel"
+                onClick={handleCancelRecording}
+                aria-label={m.cancelRecordingAria}
+              >
+                {m.cancelRecording}
               </button>
             </div>
           </div>
@@ -171,14 +230,19 @@ export function MediaCapture({
               </div>
             </div>
           )}
-          <label className="audio-rec-save-toggle">
-            <input
-              type="checkbox"
-              checked={saveAudioFile}
-              onChange={e => setSaveAudioFile(e.target.checked)}
-            />
-            <span>{m.saveAudioFileLabel}</span>
-          </label>
+          {/* In Simple Mode the audio is always saved alongside the
+              transcript; we don't burden the Ingrid persona with an
+              opt-in/opt-out decision (#170). */}
+          {!isSimple && (
+            <label className="audio-rec-save-toggle">
+              <input
+                type="checkbox"
+                checked={saveAudioFile}
+                onChange={e => setSaveAudioFile(e.target.checked)}
+              />
+              <span>{m.saveAudioFileLabel}</span>
+            </label>
+          )}
           <div className="audio-rec-actions">
             <button type="button" className="btn btn--primary btn--sm" onClick={handleAudioConfirm}>
               {m.confirmAccept}
@@ -186,7 +250,7 @@ export function MediaCapture({
             <button type="button" className="btn btn--ghost btn--sm" onClick={rec.reset}>
               {m.retryRecord}
             </button>
-            <button type="button" className="btn btn--ghost btn--sm" onClick={rec.cancel}>
+            <button type="button" className="btn btn--ghost btn--sm" onClick={handleCancelRecording}>
               {m.discardRecord}
             </button>
           </div>

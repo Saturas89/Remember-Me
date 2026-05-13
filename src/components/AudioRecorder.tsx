@@ -2,6 +2,7 @@ import { useRef, useState } from 'react'
 import { useAudioRecorder } from '../hooks/useAudioRecorder'
 import { AudioPlayer } from './AudioPlayer'
 import { useTranslation } from '../locales'
+import { useAppMode } from '../hooks/useAppMode'
 
 interface Props {
   /** If set, shows the saved audio player + replace / delete actions */
@@ -24,10 +25,14 @@ function fmtDur(secs: number): string {
 
 export function AudioRecorder({ existingAudioId, existingValue, onSave, onRemove }: Props) {
   const { t } = useTranslation()
+  const { isSimple } = useAppMode()
   const m = t.media
   const rec          = useAudioRecorder()
   const savingRef    = useRef(false)
-  const [saveAudioFile, setSaveAudioFile] = useState(false)
+  // Default to "save audio alongside transcript" – the senior persona reported
+  // anxiety that an opt-in checkbox would silently lose the original recording
+  // (#170). Hidden entirely in Simple Mode so no decision is required.
+  const [saveAudioFile, setSaveAudioFile] = useState(true)
   const [textChoice, setTextChoice] = useState<'new' | 'keep'>('new')
 
   const hasTextConflict = !!(existingValue?.trim()) && !!rec.transcript.trim()
@@ -116,14 +121,16 @@ export function AudioRecorder({ existingAudioId, existingValue, onSave, onRemove
             </div>
           </div>
         )}
-        <label className="audio-rec-save-toggle">
-          <input
-            type="checkbox"
-            checked={saveAudioFile}
-            onChange={e => setSaveAudioFile(e.target.checked)}
-          />
-          <span>{m.saveAudioFileLabel}</span>
-        </label>
+        {!isSimple && (
+          <label className="audio-rec-save-toggle">
+            <input
+              type="checkbox"
+              checked={saveAudioFile}
+              onChange={e => setSaveAudioFile(e.target.checked)}
+            />
+            <span>{m.saveAudioFileLabel}</span>
+          </label>
+        )}
         <div className="audio-rec-actions">
           <button type="button" className="btn btn--primary btn--sm" onClick={handleConfirm}>
             {m.confirmAccept}

@@ -142,6 +142,9 @@ describe('MediaCapture – active recording states', () => {
   it('shows the timer and stop/cancel controls while recording', () => {
     const stop = vi.fn()
     const cancel = vi.fn()
+    // The cancel button now confirms before discarding (#171). Allow the
+    // confirm dialog so the cancel handler reaches rec.cancel().
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true)
     recorder.current = makeRecorder({ state: 'recording', duration: 72, stop, cancel })
     render(<MediaCapture {...baseProps()} />)
     expect(screen.getByText('01:12')).toBeTruthy()
@@ -149,6 +152,18 @@ describe('MediaCapture – active recording states', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Abbrechen' }))
     expect(stop).toHaveBeenCalledOnce()
     expect(cancel).toHaveBeenCalledOnce()
+    confirmSpy.mockRestore()
+  })
+
+  it('aborts the cancel-while-recording flow when the user dismisses the confirm dialog (#171)', () => {
+    const cancel = vi.fn()
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false)
+    recorder.current = makeRecorder({ state: 'recording', duration: 5, cancel })
+    render(<MediaCapture {...baseProps()} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Abbrechen' }))
+    expect(confirmSpy).toHaveBeenCalledOnce()
+    expect(cancel).not.toHaveBeenCalled()
+    confirmSpy.mockRestore()
   })
 
   it('surfaces a live transcript below the timer when SpeechRecognition emits', () => {
@@ -187,26 +202,28 @@ describe('MediaCapture – preview & confirm', () => {
     expect(screen.getByRole('button', { name: /Verwerfen/ })).toBeTruthy()
   })
 
-  it('Übernehmen calls onSaveAudio with the transcript and no blob by default', async () => {
+  it('Übernehmen passes the original audio blob by default (audio-save toggle defaults on, #170)', async () => {
     previewProps()
     const onSaveAudio = vi.fn(async () => {})
     render(<MediaCapture {...baseProps({ onSaveAudio })} />)
     fireEvent.click(screen.getByRole('button', { name: /Übernehmen/ }))
     // Allow the click's async handler to resolve
     await Promise.resolve()
-    expect(onSaveAudio).toHaveBeenCalledWith('transkribiert', null, true)
+    const call = onSaveAudio.mock.calls[0] as unknown as [string, Blob | null, boolean]
+    expect(call[0]).toBe('transkribiert')
+    expect(call[1]).toBeInstanceOf(Blob)
+    expect(call[2]).toBe(true)
   })
 
-  it('Übernehmen passes the blob when the "als Audio-Datei speichern" toggle is on', async () => {
+  it('Übernehmen drops the blob when the user un-ticks "Originalton zusätzlich speichern"', async () => {
     previewProps()
     const onSaveAudio = vi.fn(async () => {})
     render(<MediaCapture {...baseProps({ onSaveAudio })} />)
-    fireEvent.click(screen.getByRole('checkbox', { name: /Aufnahme als Audio-Datei speichern/ }))
+    // Default is on (#170). One click toggles it off → only the transcript is kept.
+    fireEvent.click(screen.getByRole('checkbox', { name: /Originalton zusätzlich/ }))
     fireEvent.click(screen.getByRole('button', { name: /Übernehmen/ }))
     await Promise.resolve()
-    const call = onSaveAudio.mock.calls[0] as unknown as [string, Blob | null, boolean]
-    expect(call[1]).toBeInstanceOf(Blob)
-    expect(call[2]).toBe(true)
+    expect(onSaveAudio).toHaveBeenCalledWith('transkribiert', null, true)
   })
 
   it('shows the text-conflict chooser when transcript and currentValue differ', () => {
@@ -223,7 +240,12 @@ describe('MediaCapture – preview & confirm', () => {
     fireEvent.click(screen.getByRole('button', { name: /Bisherigen Text behalten/ }))
     fireEvent.click(screen.getByRole('button', { name: /Übernehmen/ }))
     await Promise.resolve()
-    expect(onSaveAudio).toHaveBeenCalledWith('neu', null, false)
+    // Default audio-save is on (#170), so the blob is preserved; replaceText
+    // is false because the user opted to keep the previous textual answer.
+    const call = onSaveAudio.mock.calls[0] as unknown as [string, Blob | null, boolean]
+    expect(call[0]).toBe('neu')
+    expect(call[1]).toBeInstanceOf(Blob)
+    expect(call[2]).toBe(false)
   })
 
   it('falls back to a no-transcription hint when SpeechRecognition is unsupported', () => {

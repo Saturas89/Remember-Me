@@ -18,7 +18,10 @@ interface Props {
 
 type Phase = 'auto-suggest' | 'welcome' | 'quiz'
 
-const MIC_TARGET_SIZE = 80
+/** Big-button minimum size for the senior persona (REQ-019). Used by the
+ *  primary "Antwort speichern" CTA in the quiz phase – the e2e Ingrid path
+ *  asserts ≥80 × 80 px for this target. */
+const PRIMARY_CTA_MIN_SIZE = 80
 
 /**
  * Receiver-side view for Sandra-flow personal packs.
@@ -204,20 +207,22 @@ export function PersonalPackReceiveView({ pack, onSubmit, onDismiss }: Props) {
         />
 
         <div className="sandra-receive__actions">
-          {/* Big mic placeholder – record button reuses media-toolbar pattern.
-              We don't auto-import the full MediaCapture here to keep the
-              receive flow lean; users with the existing mic feature still see
-              the textarea fallback. */}
+          {/* Primary "Antwort speichern" CTA. Previously rendered a 🎙 icon
+              and was labelled "Sprachaufnahme starten" via aria-label – but
+              clicking it never recorded audio, it just called saveAndNext.
+              The Sandra persona flagged this as a trust-breaking
+              accessibility fake (#169). The button now states its real
+              action clearly; the senior tap-target ≥ 80×80 px is preserved. */}
           <button
             type="button"
-            className="share-cta-btn sandra-receive__mic"
-            style={{ minWidth: MIC_TARGET_SIZE, minHeight: MIC_TARGET_SIZE }}
-            aria-label={t.receiver.micAria}
-            title={t.receiver.micAria}
+            className="share-cta-btn sandra-receive__save"
+            style={{ minWidth: PRIMARY_CTA_MIN_SIZE, minHeight: PRIMARY_CTA_MIN_SIZE }}
+            aria-label={t.receiver.saveAndNextAria}
+            title={t.receiver.saveAndNextLabel}
             onClick={saveAndNext}
             data-testid="sandra-receive-next"
           >
-            <span aria-hidden="true">🎙</span>
+            {t.receiver.saveAndNextLabel}
           </button>
         </div>
 

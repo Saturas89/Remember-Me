@@ -565,9 +565,17 @@ export interface Translations {
     /** MediaCapture toolbar / hint copy. */
     introHint: string
     waitingMicrophone: string
+    /** Sub-text shown after ~3 s of waiting for the microphone permission. */
+    waitingMicrophoneHint: string
+    /** Retry button label shown after ~10 s. */
+    waitingMicrophoneRetry: string
+    /** Escalation message shown after ~30 s. */
+    waitingMicrophoneTimeout: string
     stopRecording: string
     cancelRecording: string
     cancelRecordingAria: string
+    /** Confirmation dialog text before discarding an in-progress recording. */
+    cancelRecordingConfirm: string
     transcriptionLabel: string
     noTranscriptionHint: string
     noTranscriptionHintInBrowser: string
