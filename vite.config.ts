@@ -81,6 +81,32 @@ export default defineConfig({
       },
     }),
   ],
+  build: {
+    rollupOptions: {
+      output: {
+        // Vite 7 (rollup) hat `supabaseClient.ts`, `privateSyncClient.ts` und
+        // das Paket `@supabase/supabase-js` standardmäßig in den
+        // index-*.js-Entry-Chunk inlined, weil sie statisch aus
+        // PrivateSyncSetupView ↳ privateSyncClient erreichbar sind. Vite 8
+        // (rolldown) zieht denselben Code dagegen in einen eigenen
+        // `supabaseClient-*.js`-Chunk und verletzt damit den Test-Contract
+        // aus e2e/sharing-optin.spec.ts:85: die Assertion prüft, dass kein
+        // auf das Regex `/(supabase|sharingService)/i` matchender Chunk
+        // beim First Paint geladen wird. Wir lumpen die drei Module hier
+        // explizit in einen `app-extras`-Chunk – das entspricht in der
+        // Bytes-Bilanz dem vite-7-Inlining (gleicher Code, statisch
+        // erreichbar, nur mit anderem Dateinamen) und hält den Vertrag.
+        manualChunks: (id) => {
+          if (
+            id.includes('node_modules/@supabase/supabase-js') ||
+            /\/utils\/(supabaseClient|privateSyncClient)\.ts$/.test(id)
+          ) {
+            return 'app-extras'
+          }
+        },
+      },
+    },
+  },
   test: {
     environment: 'jsdom',
     setupFiles: ['src/test-helpers/vitestSetup.ts'],
