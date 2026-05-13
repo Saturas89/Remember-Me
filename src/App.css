@@ -2092,10 +2092,12 @@
   margin-bottom: 1rem;
 }
 
-.sandra-receive__mic {
-  max-width: 6rem;
+.sandra-receive__save {
+  max-width: 18rem;
   border-radius: 999px;
-  font-size: 1.8rem;
+  font-size: 1.05rem;
+  padding: 1rem 1.6rem;
+  line-height: 1.2;
 }
 
 .sandra-receive__nav {
@@ -3643,11 +3645,35 @@
 }
 
 .audio-panel--requesting {
-  flex-direction: row;
-  align-items: center;
-  gap: 0.6rem;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.5rem;
   color: var(--text-muted);
   font-size: 0.88rem;
+}
+
+.audio-panel__hint {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.audio-panel__retry {
+  align-self: flex-start;
+  min-height: 44px;
+}
+
+.audio-panel__timeout {
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* Cancel button during active recording – the persona reported the bare "✕"
+   was too easy to mis-tap (#171). The visible "✕ Abbrechen" label plus the
+   confirm dialog in MediaCapture make the destructive action explicit. */
+.media-capture__cancel {
+  color: var(--warn, var(--text-muted));
 }
 
 .audio-panel__spinner {
