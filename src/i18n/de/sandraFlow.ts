@@ -122,8 +122,10 @@ export const SANDRA_FLOW_DE = {
     shareMessage: 'Ich habe ein paar Fragen für dich aufgeschrieben ✨\n\n{url}',
     shareTitle: '{anrede}, ich habe Fragen für dich',
     /** What the recipient sees when they open the link – shown to the sender
-     *  before they hit send, so they don't share blind. */
-    recipientPreviewHeading: 'Das sieht {anrede}, wenn sie den Link öffnet:',
+     *  before they hit send, so they don't share blind. The `{pronoun}` is
+     *  substituted in the component (sie/er based on relation), so Papa/Opa
+     *  reads naturally as „wenn er den Link öffnet". */
+    recipientPreviewHeading: 'Das sieht {anrede}, wenn {pronoun} den Link öffnet:',
     recipientPreviewLines: [
       'Eine kurze Begrüßung mit deinem Namen.',
       'Deine Fragen, eine nach der anderen.',
