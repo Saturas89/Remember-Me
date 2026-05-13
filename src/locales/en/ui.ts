@@ -408,6 +408,12 @@ export const UI_EN = {
     friendAnswersHeading: 'Memories from {name}',
     friendsSectionTitle: '👥 What Friends Say About Me',
     questionNotAvailable: 'Question no longer available',
+    bookReadinessTitle: 'Book readiness',
+    bookReadinessReady: "Your archive is book-ready – {n} memories, {words} words.",
+    bookReadinessAlmost: 'Almost there: {n} memories, {words} words. A book is possible from 30 memories or 5,000 words.',
+    bookReadinessFar: 'Keep collecting: {n} memories, {words} words. A book is possible from 30 memories or 5,000 words.',
+    bookReadinessPctAria: '{pct} % towards the book-ready minimum',
+    bookReadinessUpcoming: 'Print-on-demand and gift cards are coming in a later release.',
   },
 
   customQ: {

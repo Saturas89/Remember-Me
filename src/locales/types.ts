@@ -439,6 +439,13 @@ export interface Translations {
     friendAnswersHeading: string
     friendsSectionTitle: string
     questionNotAvailable: string
+    /** Buchfähigkeits-Anzeige (#166). */
+    bookReadinessTitle: string
+    bookReadinessReady: string
+    bookReadinessAlmost: string
+    bookReadinessFar: string
+    bookReadinessPctAria: string
+    bookReadinessUpcoming: string
   }
 
   customQ: {
