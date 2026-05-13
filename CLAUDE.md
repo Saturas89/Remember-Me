@@ -77,23 +77,35 @@ Alle neuen Views, Modals, Sektionen und UI-Komponenten **müssen sich am Friends
 
 Ausnahme: Der Nutzer fordert für eine konkrete View bewusst ein abweichendes Design.
 
-## CI-Wakeup nach PR-Erstellung
+## CI-Wakeup nach PR-Erstellung: aktives Polling via Monitor
 
-`.github/workflows/e2e.yml` enthält einen `notify`-Job, der nach Abschluss aller Matrix-Jobs **einen** PR-Kommentar als `github-actions[bot]` postet (Marker `<!-- claude-ci-ping -->`, Edit-in-Place bei Re-Runs). Dieser Kommentar weckt die Claude-Sandbox-Session zuverlässig auf – Wake-Latenz typisch ≤ 15 s nach Comment-Posting, gesamt ~6 min nach Push.
+`.github/workflows/e2e.yml` postet **keine** PR-Comments mehr, um die Sandbox-Session aufzuwecken. Empirisch (PRs #141–143) hat das nie funktioniert: weder die `github-actions[bot]`-Heartbeats noch der finale `notify`-Comment haben die Session geweckt. Vermutlich greift ein transitiver Self-Filter — alle Events auf einem Branch, der per MCP geöffnet wurde, gelten als „selbst-verursacht". Der alte `notify`/`notify-heartbeat`-Apparat hat ~10–13 min Runner-Minuten pro PR verbrannt, ohne den versprochenen Wake-Effekt zu liefern.
+
+Stattdessen: **Claude pollt aktiv mit dem Monitor-Tool**, sobald ein PR angelegt wurde.
 
 **Vorgehen nach `mcp__github__create_pull_request`:**
 
-1. Subscription wird vom System automatisch gesetzt – kein expliziter `subscribe_pr_activity`-Call nötig.
-2. Turn beenden und auf das `<github-webhook-activity>`-Event warten. **Kein aktives Polling.**
-3. Wenn der Wakeup-Comment ankommt: Status aus dem Comment-Body parsen (`unit`/`build`/`e2e` success/failure) und entsprechend reagieren.
+1. Im selben Turn die Polling-Schleife per `Monitor`-Tool starten:
 
-**Self-Filter beachten:** Events, die diese Session selbst über MCP-Tool-Calls auslöst (eigene Kommentare, eigene Reviews), wecken die Session **nicht** zurück. Externe Bot-Comments (`github-actions[bot]`, `vercel[bot]`) und Aktionen anderer GitHub-User wecken zuverlässig. Der `notify`-Job nutzt genau diese Eigenschaft.
+   ```
+   Monitor command: i=0; while [ $i -lt 25 ]; do i=$((i+1)); echo "poll $i $(date -u +%H:%M:%SZ)"; sleep 60; done; echo "polling-window-exhausted"
+   persistent: true
+   ```
 
-**Fallback (nur falls `notify`-Job fehlt, bricht oder die Matrix bei einem `needs:`-Job hängt):** Monitor-Heartbeat im 3,5-min-Takt mit `mcp__github__pull_request_read` (method `get_check_runs`):
+   → 25 Ticks × 60 s = 25 min Polling-Fenster. Bei jeder CI-Dauer ≤ 25 min landen wir damit ≤ 60 s nach dem letzten grünen Job-Abschluss zurück bei einem Wake-Event.
 
-```
-Monitor command: i=1; while :; do echo "tick $i $(date -u +%H:%M:%SZ)"; i=$((i+1)); [ "$i" -gt 15 ] && { echo "giving-up"; exit 0; }; sleep 210; done
-persistent: true
-```
+2. **Auf jeden Tick** den CI-Status checken:
+   - `mcp__github__pull_request_read` mit `method: get_check_runs`
+   - Prüfen, ob alle Jobs aus `needs: [unit, build, e2e]` `status: completed` sind
+   - Optional: Restdauer aus `started_at` der noch laufenden Jobs schätzen
 
-Bei grüner CI Monitor per `kill <pid>` stoppen.
+3. Sobald **alle E2E-Jobs `completed`** sind:
+   - Ergebnisse für den Nutzer zusammenfassen (Conclusions pro Browser + Wall-Clock)
+   - Monitor per `kill <pid>` stoppen (sonst läuft die Schleife unnötig weiter)
+   - Den Nutzer fragen, ob gemerged werden soll (per CLAUDE.md-Regel „Pull Requests, nie direkte Merges")
+
+4. Falls der Monitor `polling-window-exhausted` liefert ohne dass CI durch ist: kurze Diagnose (welche Jobs hängen, ist ein `notify-heartbeat`-Job aktiv) und entscheiden, ob ein zweites Polling-Fenster gestartet wird.
+
+**Polling-Intervall**: 60 s ist Default. Bei sehr schnellen Pipelines (≤ 3 min) auf 30 s reduzieren, bei sehr langen (≥ 25 min) das Fenster verlängern statt das Intervall.
+
+**Wichtig**: Die Polling-Schleife muss ein einfaches Polling sein (1 MCP-Call pro Tick), kein aktives Arbeiten zwischen den Ticks. Auf jeden Tick wird die Session geweckt, aber ohne MCP-Call (also nur ein nackter `echo`) ist der Wake teuer und folgenlos.
