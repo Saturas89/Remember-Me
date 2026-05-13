@@ -16,7 +16,7 @@ interface Props {
   onDismiss: () => void
 }
 
-type Phase = 'auto-suggest' | 'welcome' | 'quiz' | 'done'
+type Phase = 'auto-suggest' | 'welcome' | 'quiz'
 
 const MIC_TARGET_SIZE = 80
 
@@ -64,15 +64,29 @@ export function PersonalPackReceiveView({ pack, onSubmit, onDismiss }: Props) {
     setPhase('quiz')
   }
 
+  function submit(finalAnswers: Record<string, string>) {
+    const collected = pack.questions
+      .map(q => ({
+        questionId: q.id,
+        questionText: q.text,
+        value: finalAnswers[q.id]?.trim() ?? '',
+      }))
+      .filter(a => a.value.length > 0)
+    onSubmit(name.trim() || pack.recipientLabel || 'Anonym', collected)
+  }
+
   function saveAndNext() {
     const current = pack.questions[index]
-    if (current) {
-      setAnswers(prev => ({ ...prev, [current.id]: draft.trim() }))
-    }
+    // Compute the next answer map synchronously so the submit path on the last
+    // question doesn't read stale state from React's batched setAnswers.
+    const nextAnswers = current
+      ? { ...answers, [current.id]: draft.trim() }
+      : answers
+    if (current) setAnswers(nextAnswers)
     if (index + 1 < pack.questions.length) {
       setIndex(i => i + 1)
     } else {
-      setPhase('done')
+      submit(nextAnswers)
     }
   }
 
@@ -80,19 +94,8 @@ export function PersonalPackReceiveView({ pack, onSubmit, onDismiss }: Props) {
     if (index + 1 < pack.questions.length) {
       setIndex(i => i + 1)
     } else {
-      setPhase('done')
+      submit(answers)
     }
-  }
-
-  function handleSubmit() {
-    const collected = pack.questions
-      .map(q => ({
-        questionId: q.id,
-        questionText: q.text,
-        value: answers[q.id]?.trim() ?? '',
-      }))
-      .filter(a => a.value.length > 0)
-    onSubmit(name.trim() || pack.recipientLabel || 'Anonym', collected)
   }
 
   // ── Auto-suggest Vereinfachter Bedienmodus ────────────────────────
@@ -171,27 +174,6 @@ export function PersonalPackReceiveView({ pack, onSubmit, onDismiss }: Props) {
               onClick={onDismiss}
             >
               {t.back}
-            </button>
-          </div>
-        </section>
-      </div>
-    )
-  }
-
-  // ── Done ──────────────────────────────────────────────────────────
-  if (phase === 'done') {
-    return (
-      <div className="sandra-flow-view sandra-receive">
-        <section className="friends-section sandra-receive__done">
-          <h2 className="friends-section-title">{t.receiver.done}</h2>
-          <div className="friends-share">
-            <button
-              type="button"
-              className="share-cta-btn"
-              onClick={handleSubmit}
-              data-testid="sandra-receive-submit"
-            >
-              {t.receiver.done}
             </button>
           </div>
         </section>

@@ -128,7 +128,7 @@ describe('PersonalPackReceiveView', () => {
   })
 
   describe('Submit (API contract for parent component)', () => {
-    function advanceToDoneWithAnswers(answers: string[], appMode: AppMode = 'simple') {
+    function answerAll(answers: string[], appMode: AppMode = 'simple') {
       const ctx = renderWith(makePack(), appMode)
       fireEvent.change(screen.getByTestId('sandra-receive-name'), { target: { value: 'Ingrid' } })
       fireEvent.click(screen.getByTestId('sandra-receive-start'))
@@ -140,8 +140,7 @@ describe('PersonalPackReceiveView', () => {
     }
 
     it('passes the recipient name + trimmed/filtered answers to onSubmit', () => {
-      const { onSubmit } = advanceToDoneWithAnswers(['  Schöne Erinnerungen  ', 'Sehr viel.'])
-      fireEvent.click(screen.getByTestId('sandra-receive-submit'))
+      const { onSubmit } = answerAll(['  Schöne Erinnerungen  ', 'Sehr viel.'])
       expect(onSubmit).toHaveBeenCalledTimes(1)
       const [name, collected] = onSubmit.mock.calls[0]
       expect(name).toBe('Ingrid')
@@ -155,11 +154,10 @@ describe('PersonalPackReceiveView', () => {
       const { onSubmit } = renderWith(makePack(), 'simple')
       fireEvent.change(screen.getByTestId('sandra-receive-name'), { target: { value: 'Ingrid' } })
       fireEvent.click(screen.getByTestId('sandra-receive-start'))
-      // Skip Q1, then answer Q2.
+      // Skip Q1, then answer Q2 — the final continue-click submits directly.
       fireEvent.click(screen.getByTestId('sandra-receive-skip'))
       fireEvent.change(screen.getByTestId('sandra-receive-answer'), { target: { value: 'Sehr viel.' } })
       fireEvent.click(screen.getByTestId('sandra-receive-continue'))
-      fireEvent.click(screen.getByTestId('sandra-receive-submit'))
 
       const [, collected] = onSubmit.mock.calls[0]
       expect(collected).toHaveLength(1)
