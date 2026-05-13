@@ -19,6 +19,8 @@ export const SANDRA_FLOW_EN: SandraFlowStrings = {
       'No cloud',
       "Stays on {anrede}'s device",
     ],
+    crossHintToOwnTitle: 'Capture your own memories?',
+    crossHintToOwnBody: 'If you\'d rather write your own stories instead of sending questions to someone else, head to the "My Memories" card on the Journey tab.',
   },
 
   // ── Anchor step (Screen 2) ─────────────────────────────────────────

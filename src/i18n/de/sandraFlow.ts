@@ -20,6 +20,9 @@ export const SANDRA_FLOW_DE = {
       'Keine Cloud',
       'Bleibt auf {anrede}s Gerät',
     ],
+    /** Cross-Hint Richtung CustomQuestionsView (ADR-002, #178). */
+    crossHintToOwnTitle: 'Eigene Erinnerungen festhalten?',
+    crossHintToOwnBody: 'Wenn du nicht jemandem Fragen schicken willst, sondern deine eigenen Geschichten aufschreiben möchtest, geht das auf dem Lebensweg-Tab unter „Eigene Erinnerung".',
   },
 
   // ── Anchor step (Screen 2) ─────────────────────────────────────────

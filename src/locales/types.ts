@@ -451,6 +451,10 @@ export interface Translations {
   customQ: {
     title: string
     intro: string
+    /** Cross-Hint zur Sandra-Flow-Route (ADR-002, #178). */
+    crossHintToSandraTitle: string
+    crossHintToSandraBody: string
+    crossHintToSandraCta: string
     addHeading: string
     titlePlaceholder: string
     addButton: string

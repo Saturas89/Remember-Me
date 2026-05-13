@@ -53,6 +53,18 @@ export function SandraLanding({ t, anrede, onBack, onStart }: Props) {
             </li>
           ))}
         </ol>
+
+        {/* Cross-Hint Richtung CustomQuestionsView (ADR-002, #178). Kein
+            Navigations-Button — wir verweisen verbal auf den anderen Pfad,
+            damit Nutzer:innen, die hier falsch gelandet sind, den richtigen
+            Einstieg finden. */}
+        <p
+          className="friends-hint sandra-landing__cross-hint"
+          data-testid="sandra-landing-cross-hint"
+        >
+          <strong>{t.landing.crossHintToOwnTitle}</strong>{' '}
+          {t.landing.crossHintToOwnBody}
+        </p>
       </section>
     </div>
   )

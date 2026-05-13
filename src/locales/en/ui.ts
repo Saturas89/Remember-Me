@@ -419,6 +419,9 @@ export const UI_EN = {
   customQ: {
     title: '✏️ My Memories',
     intro: 'Capture your own memories here – give them a title and write down what you want to preserve.',
+    crossHintToSandraTitle: 'Composing questions for someone else?',
+    crossHintToSandraBody: 'If you want to send questions to someone for them to answer – with suggestions and a soft receiver layout – use the Sandra flow.',
+    crossHintToSandraCta: 'Go to Sandra flow →',
     addHeading: 'Add memory',
     titlePlaceholder: 'Memory title...',
     addButton: '+ Add',

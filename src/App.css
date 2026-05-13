@@ -3186,6 +3186,23 @@
   padding: env(safe-area-inset-top, 0px) 1rem calc(4.5rem + env(safe-area-inset-bottom, 0px));
 }
 
+/* Cross-Hint zwischen CustomQuestionsView und SandraFlow (ADR-002, #178).
+   Subtle Border-Left, identische Tokens wie .friends-flow-guidance. */
+.custom-q-cross-hint {
+  border-left: 3px solid var(--accent);
+  background: var(--surface-raised);
+}
+
+.sandra-landing__cross-hint {
+  margin-top: 0.75rem;
+  max-width: 28rem;
+  border-left: 3px solid var(--accent);
+  background: var(--surface-raised);
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  text-align: left;
+}
+
 .custom-q-list {
   display: flex;
   flex-direction: column;

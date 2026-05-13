@@ -425,6 +425,10 @@ export const UI_DE = {
   customQ: {
     title: '✏️ Eigene Erinnerungen',
     intro: 'Halte hier deine eigenen Erinnerungen fest – gib ihnen einen Titel und schreibe auf, was du bewahren möchtest.',
+    /** Cross-Hint zur Sandra-Flow-Route (#178, ADR-002). */
+    crossHintToSandraTitle: 'Fragen für jemand anderen vorbereiten?',
+    crossHintToSandraBody: 'Wenn du jemandem Fragen schicken willst, die sie beantworten soll – mit Vorschlägen und sanftem Empfänger-Modus – nimm den Sandra-Flow.',
+    crossHintToSandraCta: 'Zum Sandra-Flow →',
     addHeading: 'Erinnerung hinzufügen',
     titlePlaceholder: 'Titel der Erinnerung...',
     addButton: '+ Hinzufügen',
