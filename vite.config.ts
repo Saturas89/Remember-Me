@@ -81,6 +81,22 @@ export default defineConfig({
       },
     }),
   ],
+  build: {
+    // Vite 8 (rolldown) emittiert standardmäßig `<link rel="modulepreload">`
+    // für jeden Chunk, der transitiv vom Entry erreichbar ist – inklusive
+    // `supabaseClient`, `privateSyncClient` und `recoveryCode`. Das bricht den
+    // Opt-in-Vertrag aus REQ-009 (e2e/sharing-optin.spec.ts:85): ein User, der
+    // „Online teilen" nie aktiviert hat, soll den supabase-Chunk gar nicht
+    // erst herunterladen. Vite 7 (rollup) war hier konservativer und hat die
+    // Chunks zwar erzeugt, aber nicht preloaded. Wir filtern die Preload-Liste
+    // hier explizit, statt den Chunk-Split zu erzwingen.
+    modulePreload: {
+      resolveDependencies: (_url, deps) =>
+        deps.filter(
+          (dep) => !/(supabaseClient|sharingService|privateSyncClient|recoveryCode)/.test(dep),
+        ),
+    },
+  },
   test: {
     environment: 'jsdom',
     setupFiles: ['src/test-helpers/vitestSetup.ts'],
