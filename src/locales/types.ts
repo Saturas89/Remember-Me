@@ -256,6 +256,16 @@ export interface Translations {
     familienmodusTagEncrypted: string
     familienmodusCtaSetup: string
     familienmodusCtaOpen: string
+    flowGuidanceHeading: string
+    flowGuidanceOfflineTitle: string
+    flowGuidanceOfflineDesc: string
+    flowGuidanceFamilyTitle: string
+    flowGuidanceFamilyDesc: string
+    lastActiveToday: string
+    lastActiveYesterday: string
+    lastActiveDays: string
+    lastActiveWeeks: string
+    lastActiveMonths: string
   }
 
   onlineSharingIntro: {
@@ -316,6 +326,10 @@ export interface Translations {
     notEnabledHint: string
     enableButton: string
     connecting: string
+    /** Mehrstufiges Warte-Feedback im Handshake (#165). */
+    connectingHint: string
+    connectingRetry: string
+    connectingTimeout: string
     /** "{name} wurde in deiner Kontaktliste gespeichert …" – uses {name}. */
     savedHint: string
     savedHintDefaultName: string

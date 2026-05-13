@@ -242,6 +242,19 @@ export const UI_DE = {
     familienmodusTagEncrypted: 'Verschlüsselt',
     familienmodusCtaSetup: 'Einrichten',
     familienmodusCtaOpen: 'Geteilte Erinnerungen öffnen',
+    /** Persona-led entscheidungs-Guidance (#164): erklärt, wann Offline-
+     *  Einladung und wann Familienmodus die richtige Wahl ist. */
+    flowGuidanceHeading: 'Zwei Wege, jemanden einzubinden',
+    flowGuidanceOfflineTitle: 'Einmalige Einladung',
+    flowGuidanceOfflineDesc: 'Ideal für jemanden, der einmal mitmacht. Person beantwortet die Fragen, schickt dir das Ergebnis zurück. Kein Account, keine laufende Verbindung.',
+    flowGuidanceFamilyTitle: 'Familienmodus',
+    flowGuidanceFamilyDesc: 'Ideal für aktive Mitautor:innen. Live-Verbindung – du siehst neue Beiträge sofort, könnt euch gegenseitig Erinnerungen schicken.',
+    /** FriendCard relatives Datum (#167). */
+    lastActiveToday: 'heute aktiv',
+    lastActiveYesterday: 'gestern aktiv',
+    lastActiveDays: 'zuletzt aktiv vor {n} Tagen',
+    lastActiveWeeks: 'zuletzt aktiv vor {n} Wochen',
+    lastActiveMonths: 'zuletzt aktiv vor {n} Monaten',
   },
 
   onlineSharingIntro: {
@@ -296,6 +309,10 @@ export const UI_DE = {
     notEnabledHint: 'Dafür musst du Online-Teilen in Storyhold einmalig aktivieren. Deine bestehenden Antworten bleiben weiterhin nur auf deinem Gerät.',
     enableButton: 'Online-Teilen einrichten',
     connecting: 'Verbinde mit Server …',
+    /** Mehrstufiges Warte-Feedback im Handshake (#165). */
+    connectingHint: 'Das dauert meist unter 10 Sekunden.',
+    connectingRetry: '↺ Erneut versuchen',
+    connectingTimeout: 'Die Verbindung dauert länger als gewöhnlich. Bitte prüfe deine Internet-Verbindung und versuche es erneut.',
     savedHint: '{name} wurde in deiner Kontaktliste gespeichert (verschlüsselter Public-Key + Geräte-ID). Damit ihr euch gegenseitig Erinnerungen schicken könnt, schicke jetzt auch deinen Link zurück:',
     savedHintDefaultName: 'Der Kontakt',
     shareBackButton: 'Meinen Link zurück senden',
