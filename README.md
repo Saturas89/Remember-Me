@@ -2,6 +2,8 @@
 
 *Digitale Erinnerung + persönliche Biografie + kontrolliertes Vermächtnis*
 
+[![License: AGPL v3+](https://img.shields.io/badge/License-AGPL%20v3%2B-blue.svg)](./LICENSE)
+
 **Storyhold** ist eine Progressive Web App (PWA), mit der Menschen ihre Lebensgeschichte, Erinnerungen, Werte und persönliche Informationen spielerisch für die Nachwelt festhalten.
 
 ## Wie es funktioniert
@@ -54,3 +56,18 @@ npm run test
 ## Dokumentation
 
 Vollständige Specs und Architektur unter [`/docs`](./docs/INDEX.md).
+
+## Lizenz
+
+Storyhold steht unter der [**GNU Affero General Public License v3.0 oder
+später (AGPL-3.0-or-later)**](./LICENSE). Der komplette App-Code in diesem
+Repository ist Open Source — du kannst ihn inspizieren, selbst hosten und
+weiterentwickeln, solange Modifikationen (auch von Netzwerk-Diensten) unter
+derselben Lizenz veröffentlicht werden.
+
+Die serverseitigen Premium-Komponenten (`saturas89/remember-me-pro`,
+Supabase Edge Functions) sind **proprietär** und nicht Teil dieses Repos.
+Die Architektur-Begründung steht in
+[ADR-001](./docs/architecture/ADR-001-open-source-vs-proprietary.md).
+
+Beiträge sind willkommen – siehe [`CONTRIBUTING.md`](./docs/guides/CONTRIBUTING.md).
