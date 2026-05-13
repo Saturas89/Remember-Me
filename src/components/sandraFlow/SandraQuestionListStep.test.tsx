@@ -79,7 +79,7 @@ describe('SandraQuestionListStep – rendering', () => {
     expect(container.querySelectorAll('.sandra-question-row').length).toBe(2)
   })
 
-  it('renders a trigger chip per row (one of "Über uns zwei" / "Über sie/ihn")', () => {
+  it('renders a trigger chip per row (one of "Über uns zwei" / "Über {anrede}")', () => {
     const qs = [
       makeQ('q1', 'biography'),
       makeQ('q2', 'relationship'),
@@ -88,8 +88,11 @@ describe('SandraQuestionListStep – rendering', () => {
     const chips = container.querySelectorAll('.sandra-question-row__chip')
     expect(chips.length).toBe(2)
     const chipTexts = Array.from(chips).map(c => c.textContent)
+    // Biography chip uses the section title with {anrede} substituted in
+    // (anchor.anrede comes from the test props' ANCHOR const = "Mama").
+    const expectedBiography = SANDRA_FLOW_DE.trigger.sectionAboutThem.replace('{anrede}', ANCHOR.anrede)
     expect(chipTexts).toEqual(
-      expect.arrayContaining([SANDRA_FLOW_DE.trigger.sectionAboutThem, SANDRA_FLOW_DE.trigger.sectionAboutUs]),
+      expect.arrayContaining([expectedBiography, SANDRA_FLOW_DE.trigger.sectionAboutUs]),
     )
   })
 

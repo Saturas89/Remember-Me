@@ -7,14 +7,13 @@
 export const SANDRA_FLOW_DE = {
   // ── Landing (Screen 1) ─────────────────────────────────────────────
   landing: {
-    title: 'Was wolltest du deine Mutter schon immer fragen?',
+    title: 'Was wolltest du {anrede} schon immer fragen?',
     subline: 'In 2 Minuten formulierst du deine eigenen Fragen.',
     primaryCta: 'Erste Frage formulieren',
-    howItWorks: 'Wie es funktioniert',
     steps: [
-      'Anker setzen',
+      'An wen denken',
       'Fragen formulieren',
-      'An Mama schicken',
+      'An {anrede} schicken',
     ],
   },
 
@@ -30,9 +29,21 @@ export const SANDRA_FLOW_DE = {
       geschwister: 'Geschwister',
       other: 'Andere',
     },
+    /** Placeholder for the anrede input, per chip. The four direct chips
+     *  pre-fill the value via the auto-fill effect; for everyone else the
+     *  field stays empty and we show a concrete example instead. */
+    chipPlaceholders: {
+      mama: 'Mama',
+      papa: 'Papa',
+      oma: 'Oma',
+      opa: 'Opa',
+      tante_onkel: 'z. B. Tante Heidi',
+      geschwister: 'z. B. Anna',
+      other: 'z. B. Patentante',
+    },
     otherPlaceholder: 'z. B. Schwester, Patentante',
     anredeLabel: 'Wie sprichst du sie/ihn an?',
-    anredeHelper: 'Default vom Chip, aber bearbeitbar – z. B. „Mama", „Omi", „Vati", Vorname.',
+    anredeHelper: 'Übernommen von oben, kannst du anpassen – z. B. „Mama", „Omi", „Vati", Vorname.',
     anredePlaceholder: 'Mama',
     birthYearLabel: 'Geburtsjahr (optional)',
     birthYearPlaceholder: 'z. B. 1957',
@@ -43,18 +54,19 @@ export const SANDRA_FLOW_DE = {
 
   // ── Trigger pick (Screen 3) ────────────────────────────────────────
   trigger: {
-    sectionAboutThem: 'Über sie/ihn',
+    sectionAboutThem: 'Über {anrede}',
     sectionAboutUs: 'Über uns zwei',
     sectionAboutUsHeart: '❤',
     sectionAboutUsHint: 'Diese Fragen gehen näher – formulier sie in deinem eigenen Tempo.',
-    typeMyOwn: 'Ich tippe lieber selbst eine Frage',
+    typeMyOwn: 'Eigene Frage formulieren',
   },
 
   // ── Composer (Screen 4) ────────────────────────────────────────────
   composer: {
-    triggerChipLabel: 'Trigger',
-    backToTriggers: 'Anderer Trigger',
+    triggerChipLabel: 'Thema',
+    backToTriggers: 'Anderes Thema',
     seedLabel: 'Was schießt dir dazu durch den Kopf? Ein Stichwort reicht.',
+    seedHelper: 'Aus deinem Stichwort entstehen unten Frage-Vorschläge.',
     seedPlaceholders: [
       'die Hungerjahre',
       'Onkel Karl',
@@ -64,14 +76,15 @@ export const SANDRA_FLOW_DE = {
     ],
     suggestionsHeading: 'Vorschläge',
     suggestionsHint: 'Wähle einen Vorschlag oder pass ihn an.',
-    suggestionUse: 'So nehmen',
+    suggestionUse: 'Übernehmen',
     suggestionEdit: 'Anpassen',
     suggestionDiscardAria: 'Vorschlag entfernen',
     inspirationToggle: 'Wie haben andere gefragt?',
-    inspirationHint: 'Klick auf eine Frage, um sie als Stichwort in deinen Composer zu übernehmen.',
+    inspirationHint: 'Klick auf eine Frage, um sie als Stichwort zu übernehmen.',
     freeformLabel: 'Eigene Frage',
     freeformPlaceholder: 'Deine Frage in deinen Worten…',
-    discard: 'Verwerfen',
+    freeformHelper: 'Tipp die Frage so, wie du sie {anrede} stellen würdest.',
+    discard: 'Abbrechen',
     addQuestion: 'Frage übernehmen',
     addEmptyError: 'Bitte tipp eine Frage ein oder wähl einen Vorschlag.',
   },
@@ -82,7 +95,7 @@ export const SANDRA_FLOW_DE = {
     emptyHint: '5 Fragen sind ein schöner Auftakt – aber auch 1 reicht.',
     addAnother: 'Frage hinzufügen',
     send: 'An {anrede} schicken',
-    triggerChipAria: 'Trigger',
+    triggerChipAria: 'Thema',
     editAria: 'Bearbeiten',
     moveUpAria: 'Nach oben',
     moveDownAria: 'Nach unten',
@@ -97,7 +110,7 @@ export const SANDRA_FLOW_DE = {
     sending: 'Wird geöffnet…',
     copied: '✓ Link kopiert!',
     error: '⚠ Nochmal versuchen',
-    privacyHint: 'Auch {anrede}s Antworten bleiben auf ihrem Gerät.',
+    privacyHint: 'Auch {anrede}s Antworten bleiben auf {anrede}s Gerät.',
     relationshipHint:
       'Ein paar Fragen sind sehr persönlich. Vielleicht magst du {anrede} kurz anrufen, bevor du den Link schickst.',
     backToList: 'Zurück zur Liste',

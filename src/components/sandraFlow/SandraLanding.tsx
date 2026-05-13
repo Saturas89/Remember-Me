@@ -2,11 +2,14 @@ import type { SandraFlowStrings } from '../../i18n/de/sandraFlow'
 
 interface Props {
   t: SandraFlowStrings
+  /** Fallback "Mama" until the user picks their own anrede in screen 2. */
+  anrede: string
   onBack: () => void
   onStart: () => void
 }
 
-export function SandraLanding({ t, onBack, onStart }: Props) {
+export function SandraLanding({ t, anrede, onBack, onStart }: Props) {
+  const fill = (s: string) => s.replace('{anrede}', anrede)
   return (
     <div className="sandra-flow-view">
       <div className="quiz-topbar">
@@ -16,7 +19,7 @@ export function SandraLanding({ t, onBack, onStart }: Props) {
       </div>
 
       <section className="friends-section sandra-landing">
-        <h1 className="sandra-landing__title">{t.landing.title}</h1>
+        <h1 className="sandra-landing__title">{fill(t.landing.title)}</h1>
         <p className="sandra-landing__subline">{t.landing.subline}</p>
 
         <div className="friends-share">
@@ -34,18 +37,10 @@ export function SandraLanding({ t, onBack, onStart }: Props) {
           {t.landing.steps.map((label, i) => (
             <li key={i} className="sandra-steps__item">
               <span className="sandra-steps__num">{i + 1}</span>
-              <span className="sandra-steps__label">{label}</span>
+              <span className="sandra-steps__label">{fill(label)}</span>
             </li>
           ))}
         </ol>
-
-        <a
-          href="#sandra-how-it-works"
-          className="friends-hint sandra-landing__how"
-          onClick={e => e.preventDefault()}
-        >
-          {t.landing.howItWorks}
-        </a>
       </section>
     </div>
   )

@@ -14,7 +14,7 @@ export const PERSONAL_QUESTION_TRIGGERS_DE: TriggerDef[] = [
   {
     id: 'time-rarely-spoken-of',
     group: 'biography',
-    title: 'Zeit, von der sie selten spricht',
+    title: 'Zeit, von der {anrede} selten spricht',
     templates: [
       {
         id: 'time-rarely-spoken-of-1',
@@ -37,7 +37,7 @@ export const PERSONAL_QUESTION_TRIGGERS_DE: TriggerDef[] = [
   {
     id: 'person-never-met',
     group: 'biography',
-    title: 'Mensch, den du nie kennengelernt hast',
+    title: 'Mensch, den ich nie kennengelernt habe',
     templates: [
       {
         id: 'person-never-met-1',
@@ -56,7 +56,7 @@ export const PERSONAL_QUESTION_TRIGGERS_DE: TriggerDef[] = [
   {
     id: 'before-i-was-born',
     group: 'biography',
-    title: 'Bevor es dich gab',
+    title: 'Bevor es mich gab',
     templates: [
       {
         id: 'before-i-was-born-1',

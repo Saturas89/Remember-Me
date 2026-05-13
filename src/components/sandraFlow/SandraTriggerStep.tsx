@@ -5,15 +5,17 @@ import { getPersonalQuestionTriggers } from '../../data/loadPersonalQuestions'
 interface Props {
   t: SandraFlowStrings
   locale: Locale
+  anrede: string
   onBack: () => void
   onPick: (triggerId: string) => void
   onPickFreeform: () => void
 }
 
-export function SandraTriggerStep({ t, locale, onBack, onPick, onPickFreeform }: Props) {
+export function SandraTriggerStep({ t, locale, anrede, onBack, onPick, onPickFreeform }: Props) {
   const triggers = getPersonalQuestionTriggers(locale)
   const biography = triggers.filter(tr => tr.group === 'biography')
   const relationship = triggers.filter(tr => tr.group === 'relationship')
+  const renderTitle = (title: string) => title.replace('{anrede}', anrede)
 
   return (
     <div className="sandra-flow-view">
@@ -24,7 +26,9 @@ export function SandraTriggerStep({ t, locale, onBack, onPick, onPickFreeform }:
       </div>
 
       <section className="friends-section">
-        <h2 className="friends-section-title">{t.trigger.sectionAboutThem}</h2>
+        <h2 className="friends-section-title">
+          {t.trigger.sectionAboutThem.replace('{anrede}', anrede)}
+        </h2>
         <div className="friends-list">
           {biography.map(tr => (
             <button
@@ -34,7 +38,7 @@ export function SandraTriggerStep({ t, locale, onBack, onPick, onPickFreeform }:
               onClick={() => onPick(tr.id)}
               data-testid={`sandra-trigger-${tr.id}`}
             >
-              <span className="sandra-trigger-card__title">{tr.title}</span>
+              <span className="sandra-trigger-card__title">{renderTitle(tr.title)}</span>
             </button>
           ))}
         </div>
@@ -55,7 +59,7 @@ export function SandraTriggerStep({ t, locale, onBack, onPick, onPickFreeform }:
               onClick={() => onPick(tr.id)}
               data-testid={`sandra-trigger-${tr.id}`}
             >
-              <span className="sandra-trigger-card__title">{tr.title}</span>
+              <span className="sandra-trigger-card__title">{renderTitle(tr.title)}</span>
             </button>
           ))}
         </div>

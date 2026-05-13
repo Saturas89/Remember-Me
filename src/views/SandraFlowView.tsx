@@ -174,6 +174,7 @@ export function SandraFlowView({ profileName, onBack }: Props) {
     return (
       <SandraLanding
         t={t}
+        anrede={draft.anchor.anrede || 'Mama'}
         onBack={onBack}
         onStart={() => setStep('anchor')}
       />
@@ -197,6 +198,7 @@ export function SandraFlowView({ profileName, onBack }: Props) {
       <SandraTriggerStep
         t={t}
         locale={locale}
+        anrede={draft.anchor.anrede || 'Mama'}
         onBack={() => (draft.questions.length > 0 ? setStep('list') : setStep('anchor'))}
         onPick={triggerId => {
           setCurrentTrigger(triggerId)
