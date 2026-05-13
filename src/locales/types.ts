@@ -436,6 +436,12 @@ export interface Translations {
     enterLabel: string
     shareHeading: string
     shareHint: string
+    /** #179: privacy default = share questions only; answers via explicit opt-in. */
+    shareIncludeAnswersLabel: string
+    shareIncludeAnswersWarning: string
+    shareIncludeAnswersWarningLabelOne: string
+    shareIncludeAnswersWarningLabelMany: string
+    shareIncludeAnswersConfirm: string
     opening: string
     linkCopied: string
     shareRetry: string

@@ -177,15 +177,34 @@ describe('CustomQuestionsView – Erinnerungen teilen', () => {
   // ── Payload an generateMemoryShareUrl ───────────────────────────────────────
 
   describe('Payload an generateMemoryShareUrl', () => {
-    it('übergibt Frage-Titel und Antwort-Inhalt', async () => {
+    it('teilt standardmäßig nur Fragen (kein content), auch wenn Antworten vorhanden sind (#179)', async () => {
       stubClipboard()
       const getAnswer = vi.fn((id: string) => (id === 'q-1' ? 'Mein Lieblingsort' : ''))
       const { container } = render(<CustomQuestionsView {...makeProps({ getAnswer })} />)
       await act(async () => { fireEvent.click(getShareBtn(container)!) })
       expect(vi.mocked(generateMemoryShareUrlSync)).toHaveBeenCalledWith({
+        memories: [{ title: 'Lieblingsort', content: undefined }],
+        sharedBy: 'Anna',
+      })
+    })
+
+    it('inkludiert Antworten nur, wenn die Opt-In-Checkbox aktiv ist (#179)', async () => {
+      stubClipboard()
+      const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true)
+      const getAnswer = vi.fn((id: string) => (id === 'q-1' ? 'Mein Lieblingsort' : ''))
+      const { container } = render(<CustomQuestionsView {...makeProps({ getAnswer })} />)
+      // Tick the include-answers checkbox + confirm the dialog → blob includes content.
+      const checkbox = container.querySelector(
+        '[data-testid="custom-q-include-answers"] input[type="checkbox"]',
+      ) as HTMLInputElement
+      await act(async () => { fireEvent.click(checkbox) })
+      await act(async () => { fireEvent.click(getShareBtn(container)!) })
+      expect(confirmSpy).toHaveBeenCalledOnce()
+      expect(vi.mocked(generateMemoryShareUrlSync)).toHaveBeenCalledWith({
         memories: [{ title: 'Lieblingsort', content: 'Mein Lieblingsort' }],
         sharedBy: 'Anna',
       })
+      confirmSpy.mockRestore()
     })
 
     it('lässt content weg wenn keine Antwort vorhanden ist', async () => {
@@ -208,7 +227,7 @@ describe('CustomQuestionsView – Erinnerungen teilen', () => {
       )
     })
 
-    it('schließt alle Fragen als memories ein', async () => {
+    it('schließt alle Fragen als memories ein (content nur via Opt-In)', async () => {
       stubClipboard()
       const q2: CustomQuestion = { id: 'q-2', text: 'Lieblingsessen', type: 'text', createdAt: '' }
       const getAnswer = vi.fn((id: string) => (id === 'q-1' ? 'Berge' : 'Pizza'))
@@ -216,10 +235,11 @@ describe('CustomQuestionsView – Erinnerungen teilen', () => {
         <CustomQuestionsView {...makeProps({ customQuestions: [Q1, q2], getAnswer })} />,
       )
       await act(async () => { fireEvent.click(getShareBtn(container)!) })
+      // Default (no opt-in): titles only, no content.
       expect(vi.mocked(generateMemoryShareUrlSync)).toHaveBeenCalledWith({
         memories: [
-          { title: 'Lieblingsort', content: 'Berge' },
-          { title: 'Lieblingsessen', content: 'Pizza' },
+          { title: 'Lieblingsort', content: undefined },
+          { title: 'Lieblingsessen', content: undefined },
         ],
         sharedBy: 'Anna',
       })
