@@ -495,24 +495,20 @@ test.describe('Sandra-Flow – Two-person integration', () => {
 
     // ── Answer every question (the sender flow above produced 1 question;
     // we loop defensively so a future flow change with more questions is
-    // automatically covered). After the final continue-click the quiz phase
-    // transitions to "done" and the answer textarea is unmounted. ──────────
+    // automatically covered). The final continue-click submits directly and
+    // unmounts the receiver view — there is no intermediate "done" screen,
+    // so we use the answer textarea disappearing as the exit signal. ──────
     const continueBtn = ingrid.getByTestId('sandra-receive-continue')
     const answerBox = ingrid.getByTestId('sandra-receive-answer')
-    const submitBtn = ingrid.getByTestId('sandra-receive-submit')
     let safety = 10
     while (safety-- > 0) {
-      if (await submitBtn.isVisible().catch(() => false)) break
-      await expect(answerBox).toBeVisible()
+      if (!(await answerBox.isVisible().catch(() => false))) break
       await answerBox.fill('Eine schöne Erinnerung an damals.')
       await continueBtn.click()
     }
     expect(safety).toBeGreaterThan(0)
-    await expect(submitBtn).toBeVisible()
 
-    // ── Submit → personal-pack view unmounts, URL cleaned ──────────────────
-    await ingrid.getByTestId('sandra-receive-submit').click()
-
+    // ── Receiver view unmounts on submit, URL cleaned ──────────────────────
     // URL no longer carries the pack code (history.replaceState to '/').
     await expect.poll(async () => ingrid.url()).not.toMatch(/qp/)
 
