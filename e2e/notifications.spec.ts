@@ -80,10 +80,11 @@ test.describe('REQ-016 – Welcome-Back-Banner (FR-16.8)', () => {
     
     // Should show welcome back title
     await expect(page.getByText(de.reminder.welcomeBack.title)).toBeVisible()
-    
-    // Should show days away message
-    const daysMessage = de.reminder.welcomeBack.bodyDays.replace('{days}', '4')
-    await expect(page.getByText(daysMessage)).toBeVisible()
+
+    // Should show memory-count body (1 stored answer → singular phrasing).
+    // The Ingrid persona reported "Du warst X Tage nicht da" as accusatory
+    // (#157); the new copy surfaces the saved memories instead (#159).
+    await expect(page.getByText(de.reminder.welcomeBack.bodyMemoriesOne)).toBeVisible()
   })
 
   test('banner can be dismissed via aria-labelled button', async ({ page }) => {

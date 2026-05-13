@@ -213,7 +213,9 @@ export interface Translations {
     dismiss: string
     welcomeBack: {
       title: string
-      bodyDays: string
+      bodyMemoriesOne: string
+      bodyMemoriesMany: string
+      bodyNoMemories: string
       continueCta: string
       dismiss: string
     }

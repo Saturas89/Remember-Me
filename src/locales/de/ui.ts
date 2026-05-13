@@ -202,7 +202,9 @@ export const UI_DE = {
     dismiss: 'Benachrichtigung schließen',
     welcomeBack: {
       title: 'Willkommen zurück!',
-      bodyDays: 'Du warst {days} Tage nicht da. Zeit, deine Geschichte weiterzuschreiben.',
+      bodyMemoriesOne: 'Eine Erinnerung wartet auf dich.',
+      bodyMemoriesMany: 'Deine {count} Erinnerungen warten auf dich.',
+      bodyNoMemories: 'Schön, dass du wieder da bist.',
       continueCta: 'Weitermachen',
       dismiss: 'Schließen',
     },

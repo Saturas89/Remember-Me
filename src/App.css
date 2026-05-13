@@ -3169,8 +3169,9 @@
   border: none;
   color: var(--text-muted);
   cursor: pointer;
-  width: 1.75rem;
-  height: 1.75rem;
+  /* Tap-target ≥ 44×44 px for 65+ fingers (Apple HIG, WCAG 2.5.5). */
+  min-width: 44px;
+  min-height: 44px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -3179,6 +3180,12 @@
   line-height: 1;
   border-radius: 999px;
   transition: color 0.15s, background-color 0.15s;
+}
+
+/* WelcomeBackBanner dismiss — same 44×44 tap-target as ReminderBanner. */
+.welcome-back-banner__dismiss {
+  min-width: 44px;
+  min-height: 44px;
 }
 
 .update-banner__close:hover {

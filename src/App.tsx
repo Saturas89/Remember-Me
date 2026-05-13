@@ -345,8 +345,14 @@ export default function App() {
   })
 
   // Welcome back banner state
+  const WELCOME_BACK_SESSION_KEY = 'rm-welcome-back-shown-this-session'
   const [showWelcomeBack, setShowWelcomeBack] = useState(false)
-  const [welcomeBackDays, setWelcomeBackDays] = useState(0)
+  // Track per-tab whether the welcome-back banner was already shown so the
+  // reminder/permission banner doesn't pop up immediately after dismissal
+  // (Ingrid persona, #156).
+  const [welcomeBackShownThisSession, setWelcomeBackShownThisSession] = useState(() => {
+    try { return sessionStorage.getItem(WELCOME_BACK_SESSION_KEY) === '1' } catch { return false }
+  })
 
   // Check for welcome back scenario on load
   useEffect(() => {
@@ -358,8 +364,9 @@ export default function App() {
     const daysDiff = Math.floor((todayDate.getTime() - lastAnswer.getTime()) / (24 * 60 * 60 * 1000))
 
     if (daysDiff >= 3) {
-      setWelcomeBackDays(daysDiff)
       setShowWelcomeBack(true)
+      setWelcomeBackShownThisSession(true)
+      try { sessionStorage.setItem(WELCOME_BACK_SESSION_KEY, '1') } catch { /* private mode */ }
       // Also check for streak reset
       checkStreakReset()
     }
@@ -739,7 +746,7 @@ export default function App() {
 
       {installVisible && <InstallBanner state={installState} onInstall={triggerInstall} onDismiss={dismissInstall} />}
       {needRefresh && <UpdateBanner onUpdate={applyUpdate} onDismiss={dismissUpdate} onViewNotes={() => setShowReleaseNotes(true)} />}
-      {!installVisible && !needRefresh && !showWelcomeBack && showReminderPrompt && (
+      {!installVisible && !needRefresh && !showWelcomeBack && !welcomeBackShownThisSession && showReminderPrompt && (
         <ReminderBanner
           visible={showReminderPrompt}
           onEnable={enableReminder}
@@ -749,7 +756,13 @@ export default function App() {
       {showWelcomeBack && (
         <WelcomeBackBanner
           visible={showWelcomeBack}
-          daysAway={welcomeBackDays}
+          memoriesCount={Object.values(answers).filter(a =>
+            a.value.trim() !== '' ||
+            (a.imageIds?.length ?? 0) > 0 ||
+            (a.videoIds?.length ?? 0) > 0 ||
+            !!a.audioId ||
+            !!a.audioTranscript,
+          ).length}
           onContinue={handleWelcomeBackContinue}
           onDismiss={() => setShowWelcomeBack(false)}
         />
