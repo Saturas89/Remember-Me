@@ -259,6 +259,11 @@ export function SandraFlowView({ profileName, onBack }: Props) {
       t={t}
       anchor={draft.anchor}
       questions={draft.questions}
+      // #163 – default the simple-mode-handoff to true (Sandra-Persona asked
+      // for "Default = ein", so the most senior-friendly path requires no
+      // extra decision from her in the share moment).
+      preferSimpleMode={draft.preferSimpleMode ?? true}
+      onTogglePreferSimpleMode={next => setDraftState({ ...draft, preferSimpleMode: next })}
       onBack={() => setStep('list')}
       onShareSync={() => {
         const pack = buildPersonalPack(draft, profileName)

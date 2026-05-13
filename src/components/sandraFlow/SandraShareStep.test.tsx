@@ -48,6 +48,8 @@ function makeProps(
     t: SANDRA_FLOW_DE,
     anchor: ANCHOR,
     questions: [makeQ('q1')],
+    preferSimpleMode: true,
+    onTogglePreferSimpleMode: vi.fn(),
     onShareSync: vi.fn(() => ({ url: FAKE_URL, encoded: FAKE_ENCODED })),
     onShareUpgrade: vi.fn(async () => FAKE_URL),
     onBack: vi.fn(),

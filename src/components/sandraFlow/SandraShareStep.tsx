@@ -11,6 +11,10 @@ interface Props {
   t: SandraFlowStrings
   anchor: SandraAnchor
   questions: ComposedQuestion[]
+  /** Current value of the simple-mode-handoff opt-in (#163). */
+  preferSimpleMode: boolean
+  /** Persist a change so buildPersonalPack picks it up. */
+  onTogglePreferSimpleMode: (next: boolean) => void
   /**
    * Synchronous URL builder. Called inside the click gesture so
    * `navigator.share()` can be invoked without any prior `await`.
@@ -29,6 +33,8 @@ export function SandraShareStep({
   t,
   anchor,
   questions,
+  preferSimpleMode,
+  onTogglePreferSimpleMode,
   onShareSync,
   onShareUpgrade,
   onBack,
@@ -136,6 +142,28 @@ export function SandraShareStep({
             ))}
           </ul>
         </div>
+
+        {/* #163 — explicit opt-in to land Mama in Vereinfachter Bedienmodus
+            (REQ-019) without an extra choice screen. Default-on; Sandra can
+            opt out for tech-savvier recipients. */}
+        <label
+          className="sandra-share__simple-toggle"
+          data-testid="sandra-share-prefer-simple"
+        >
+          <input
+            type="checkbox"
+            checked={preferSimpleMode}
+            onChange={e => onTogglePreferSimpleMode(e.target.checked)}
+          />
+          <span>
+            <strong>
+              {t.share.preferSimpleModeLabel.replace('{anrede}', anchor.anrede)}
+            </strong>
+            <span className="sandra-share__simple-toggle-hint">
+              {t.share.preferSimpleModeHint.split('{anrede}').join(anchor.anrede)}
+            </span>
+          </span>
+        </label>
 
         <div className="friends-share">
           <button

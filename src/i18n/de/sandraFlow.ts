@@ -129,6 +129,11 @@ export const SANDRA_FLOW_DE = {
       'Deine Fragen, eine nach der anderen.',
       'Antworten per Tippen oder Spracheingabe – keine App-Installation nötig.',
     ],
+    /** #163 — Sandra-side opt-in: aktiviert für {anrede} vorab den
+     *  Vereinfachten Bedienmodus, damit Mama die Modus-Wahl nicht selbst
+     *  treffen muss. */
+    preferSimpleModeLabel: 'Großschrift-Modus für {anrede} voreinstellen',
+    preferSimpleModeHint: 'Empfohlen wenn {anrede} mit Apps eher vorsichtig ist – nur die wichtigsten Knöpfe, große Schrift. {anrede} kann das später jederzeit umstellen.',
   },
 
   // ── Receiver side (Screen 7, modifications to Friends-Receive) ─────
