@@ -56,7 +56,14 @@ export function CustomQuestionsView({
   const [importMsg, setImportMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const [isSharing, setIsSharing] = useState(false)
   const [shareStatus, setShareStatus] = useState<'idle' | 'copied' | 'error'>('idle')
+  // #179: privacy default is "share questions only"; the user has to actively
+  // opt in to including their own answers, with a final confirm before sending.
+  const [includeAnswersInShare, setIncludeAnswersInShare] = useState(false)
   const shareCardRef = useRef<File | null>(null)
+
+  // Count questions with substantive answers – used to decide whether to show
+  // the opt-in warning at all and what the confirm dialog should say.
+  const answeredCount = customQuestions.filter(q => getAnswer(q.id).trim().length > 0).length
 
   useEffect(() => {
     if (shareStatus === 'idle') return
@@ -98,11 +105,28 @@ export function CustomQuestionsView({
   function handleShare() {
     if (customQuestions.length === 0 || isSharing) return
 
+    // #179: Sandra-persona reported the silent leak of own answers as a
+    // privacy/trust risk. Even when the user opted in, ask one last time
+    // before the URL is generated and the share-sheet pops up.
+    if (includeAnswersInShare && answeredCount > 0) {
+      const label = answeredCount === 1
+        ? t.customQ.shareIncludeAnswersWarningLabelOne
+        : t.customQ.shareIncludeAnswersWarningLabelMany
+      const msg = t.customQ.shareIncludeAnswersConfirm
+        .replace('{n}', String(answeredCount))
+        .replace('{label}', label)
+      if (!window.confirm(msg)) return
+    }
+
     let url: string
     try {
       const memories = customQuestions.map(q => ({
         title: q.text,
-        content: getAnswer(q.id).trim() || undefined,
+        // Default = questions only. Answers are only attached when the user
+        // explicitly ticked the opt-in checkbox AND confirmed the prompt.
+        content: includeAnswersInShare
+          ? getAnswer(q.id).trim() || undefined
+          : undefined,
       }))
       url = generateMemoryShareUrlSync({ memories, sharedBy: profileName || undefined })
     } catch {
@@ -324,6 +348,27 @@ export function CustomQuestionsView({
         <section className="friends-section">
           <h3 className="friends-section-title">{t.customQ.shareHeading}</h3>
           <p className="friends-hint">{t.customQ.shareHint}</p>
+          {/* #179: Default is "share questions only". The checkbox below is
+              the explicit opt-in for including the user's own answers; the
+              warning appears as soon as ticking would actually leak content. */}
+          <label className="custom-q-share-toggle" data-testid="custom-q-include-answers">
+            <input
+              type="checkbox"
+              checked={includeAnswersInShare}
+              onChange={e => setIncludeAnswersInShare(e.target.checked)}
+            />
+            <span>{t.customQ.shareIncludeAnswersLabel}</span>
+          </label>
+          {includeAnswersInShare && answeredCount > 0 && (
+            <p className="friends-hint friends-hint--warn">
+              {t.customQ.shareIncludeAnswersWarning
+                .replace('{n}', String(answeredCount))
+                .replace('{label}',
+                  answeredCount === 1
+                    ? t.customQ.shareIncludeAnswersWarningLabelOne
+                    : t.customQ.shareIncludeAnswersWarningLabelMany)}
+            </p>
+          )}
           <div className="friends-share">
             <button
               className={`share-cta-btn${shareStatus === 'copied' ? ' share-cta-btn--success' : shareStatus === 'error' ? ' share-cta-btn--error' : ''}`}

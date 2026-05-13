@@ -63,8 +63,8 @@ export const UI_DE = {
     progress: '{pct}% deiner Geschichte erzählt',
     faqAriaLabel: 'Hilfe & FAQ',
     customCatTitle: 'Eigene Erinnerung',
-    customCatDesc: 'Deine Erinnerungen – teile sie und lass Liebste deine Geschichte ergänzen',
-    customCatDescEmpty: 'Was hat dich geprägt? Halte es fest – und lade Liebste ein, deine Geschichte zu bereichern',
+    customCatDesc: 'Eigene Fragen formulieren oder Erinnerungen festhalten – und beides mit Liebsten teilen',
+    customCatDescEmpty: 'Formuliere eigene Fragen oder halte Erinnerungen fest – und teile beides mit Liebsten, damit sie ihre Gedanken ergänzen können',
     customCatImgAlt: 'Eigene Erinnerungen – benutzerdefinierte Kategorie',
   },
 
@@ -430,6 +430,12 @@ export const UI_DE = {
     enterLabel: '+ Eintragen',
     shareHeading: 'Erinnerungen teilen',
     shareHint: 'Teile die Erinnerung, sodass andere ihre Gedanken und Erinnerungen daran hinzufügen können.',
+    /** #179: privacy-default ist "nur Fragen", Antworten sind explizites Opt-In. */
+    shareIncludeAnswersLabel: 'Auch meine Antworten mit teilen',
+    shareIncludeAnswersWarning: 'Achtung: Du hast in {n} {label} eine Antwort eingetragen. Diese werden mitgeschickt, wenn du das ankreuzt.',
+    shareIncludeAnswersWarningLabelOne: 'Erinnerung',
+    shareIncludeAnswersWarningLabelMany: 'Erinnerungen',
+    shareIncludeAnswersConfirm: 'Deine Antworten zu {n} {label} werden mit-geteilt. Wirklich fortfahren?',
     opening: 'Wird geöffnet…',
     linkCopied: '✓ Link kopiert!',
     shareRetry: '⚠ Nochmal versuchen',
