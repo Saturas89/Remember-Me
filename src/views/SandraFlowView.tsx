@@ -169,12 +169,18 @@ export function SandraFlowView({ profileName, onBack }: Props) {
     onBack()
   }
 
+  // Locale-aware fallback so an EN user on a fresh tab reads "Mom" on the
+  // landing/trigger screens — not the German "Mama". Once the user has
+  // picked an anrede in screen 2 we use that instead.
+  const fallbackAnrede = locale === 'en' ? 'Mom' : 'Mama'
+  const anredeForUi = draft.anchor.anrede || fallbackAnrede
+
   // ── Render the right step ────────────────────────────────────────
   if (step === 'landing') {
     return (
       <SandraLanding
         t={t}
-        anrede={draft.anchor.anrede || 'Mama'}
+        anrede={anredeForUi}
         onBack={onBack}
         onStart={() => setStep('anchor')}
       />
@@ -198,7 +204,7 @@ export function SandraFlowView({ profileName, onBack }: Props) {
       <SandraTriggerStep
         t={t}
         locale={locale}
-        anrede={draft.anchor.anrede || 'Mama'}
+        anrede={anredeForUi}
         onBack={() => (draft.questions.length > 0 ? setStep('list') : setStep('anchor'))}
         onPick={triggerId => {
           setCurrentTrigger(triggerId)
