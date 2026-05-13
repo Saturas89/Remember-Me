@@ -412,6 +412,14 @@ export const UI_DE = {
     friendAnswersHeading: 'Erinnerungen von {name}',
     friendsSectionTitle: '👥 Was Freunde über mich sagen',
     questionNotAvailable: 'Frage nicht mehr verfügbar',
+    /** Buchfähigkeits-Anzeige (#166) — Sandra-family-manager braucht im
+     *  November ein Lesefenster, ob Mamas Archiv weihnachtstauglich ist. */
+    bookReadinessTitle: 'Buchfähigkeit',
+    bookReadinessReady: 'Dein Archiv ist buchfähig – {n} Erinnerungen, {words} Wörter.',
+    bookReadinessAlmost: 'Fast soweit: {n} Erinnerungen, {words} Wörter. Buch möglich ab 30 Erinnerungen oder 5.000 Wörtern.',
+    bookReadinessFar: 'Sammle weiter: {n} Erinnerungen, {words} Wörter. Buch möglich ab 30 Erinnerungen oder 5.000 Wörtern.',
+    bookReadinessPctAria: '{pct} % bis zum buchfähigen Mindeststand',
+    bookReadinessUpcoming: 'Print-on-Demand und Geschenk-Karten kommen in einer späteren Version.',
   },
 
   customQ: {

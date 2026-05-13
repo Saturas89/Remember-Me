@@ -186,6 +186,62 @@ export function ArchiveView({
     customWithAnswers.length > 0 ||
     friendsWithAnswers.length > 0
 
+  // ── Buchfähigkeits-Indikator (#166) ──────────────────────
+  //
+  // Sandra-family-manager wants a read-window in the Archive that signals
+  // whether Mama's stand is far enough for the planned hardcover Christmas
+  // gift. We count substantive own + custom + friend answers and sum the
+  // word counts across value text and the audioTranscript fallback. Two
+  // thresholds — either reaches "ready":
+  //   - ≥ 30 substantive memories, or
+  //   - ≥ 5 000 words.
+  const BOOK_READY_ANSWERS = 30
+  const BOOK_READY_WORDS = 5000
+  const { totalMemories, totalWords } = useMemo(() => {
+    let mem = 0
+    let words = 0
+    const count = (text: string | undefined, transcript: string | undefined) => {
+      const v = (text ?? '').trim()
+      const tx = (transcript ?? '').trim()
+      if (v) words += v.split(/\s+/).filter(Boolean).length
+      if (tx) words += tx.split(/\s+/).filter(Boolean).length
+    }
+    for (const a of Object.values(answers)) {
+      if (a.value.trim() ||
+          (a.imageIds?.length ?? 0) > 0 ||
+          (a.videoIds?.length ?? 0) > 0 ||
+          !!a.audioId ||
+          !!a.audioTranscript) {
+        mem += 1
+        count(a.value, a.audioTranscript)
+      }
+    }
+    for (const fa of friendAnswers) {
+      if (fa.value.trim() || (fa.imageIds?.length ?? 0) > 0 || (fa.videoIds?.length ?? 0) > 0 || !!fa.audioId) {
+        mem += 1
+        count(fa.value, undefined)
+      }
+    }
+    return { totalMemories: mem, totalWords: words }
+  }, [answers, friendAnswers])
+
+  const readinessRatio = Math.max(
+    totalMemories / BOOK_READY_ANSWERS,
+    totalWords / BOOK_READY_WORDS,
+  )
+  const readinessPct = Math.min(100, Math.round(readinessRatio * 100))
+  const readinessStatus: 'far' | 'almost' | 'ready' =
+    readinessRatio >= 1     ? 'ready'
+    : readinessRatio >= 0.5 ? 'almost'
+    :                         'far'
+  const readinessCopyKey =
+    readinessStatus === 'ready'  ? 'bookReadinessReady'
+    : readinessStatus === 'almost' ? 'bookReadinessAlmost'
+    :                                'bookReadinessFar'
+  const readinessSentence = t.archiveView[readinessCopyKey]
+    .replace('{n}', String(totalMemories))
+    .replace('{words}', totalWords.toLocaleString(locale === 'en' ? 'en-GB' : 'de-DE'))
+
   // ── Shared edit form ─────────────────────────────────────
 
   function renderEditForm(questionId: string, categoryId: string) {
@@ -247,6 +303,34 @@ export function ArchiveView({
 
       {!hasAnything && (
         <p className="archive-empty">{t.archiveView.empty}</p>
+      )}
+
+      {hasAnything && (
+        <section
+          className={`archive-section archive-readiness archive-readiness--${readinessStatus} no-print`}
+          data-testid="archive-readiness"
+        >
+          <h3 className="archive-section-title">
+            {t.archiveView.bookReadinessTitle}
+          </h3>
+          <p className="friends-hint">{readinessSentence}</p>
+          <div
+            className="archive-readiness__bar"
+            role="progressbar"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={readinessPct}
+            aria-label={t.archiveView.bookReadinessPctAria.replace('{pct}', String(readinessPct))}
+          >
+            <div
+              className="archive-readiness__fill"
+              style={{ width: `${readinessPct}%` }}
+            />
+          </div>
+          <p className="friends-hint archive-readiness__upcoming">
+            {t.archiveView.bookReadinessUpcoming}
+          </p>
+        </section>
       )}
 
       {/* ── Own answers grouped by category ── */}
