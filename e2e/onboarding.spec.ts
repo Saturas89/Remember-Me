@@ -116,7 +116,7 @@ test.describe('Storyhold – Simple Mode (mode-choice flow)', () => {
     await page.goto('/')
 
     // Mode-choice screen should be visible
-    await expect(page.getByText(/Wie möchten Sie die App nutzen\?/)).toBeVisible()
+    await expect(page.getByText(/Wie möchtest du die App nutzen\?/)).toBeVisible()
     await expect(page.getByTestId('onboarding-mode-simple')).toBeVisible()
     await expect(page.getByTestId('onboarding-mode-full')).toBeVisible()
 
