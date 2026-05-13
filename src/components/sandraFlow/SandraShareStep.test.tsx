@@ -118,8 +118,11 @@ describe('SandraShareStep – no QR / no visible pack-code', () => {
 describe('SandraShareStep – privacy hint (always rendered)', () => {
   it('renders the DE privacy hint with the anrede substituted', () => {
     const { container } = render(<SandraShareStep {...makeProps()} />)
-    const expected = SANDRA_FLOW_DE.share.privacyHint.replace('{anrede}', 'Mama')
+    // privacyHint contains {anrede} twice ("Auch Mamas Antworten bleiben auf
+    // Mamas Gerät") so both occurrences must be replaced – not just the first.
+    const expected = SANDRA_FLOW_DE.share.privacyHint.split('{anrede}').join('Mama')
     expect(container.textContent ?? '').toContain(expected)
+    expect(container.textContent ?? '').not.toContain('{anrede}')
   })
 
   it('renders the privacy hint EVEN when only one question exists', () => {
@@ -127,6 +130,39 @@ describe('SandraShareStep – privacy hint (always rendered)', () => {
     // Pull just the static portion of the privacy hint to avoid templating noise.
     const stem = SANDRA_FLOW_DE.share.privacyHint.split('{anrede}')[0]
     expect(container.textContent ?? '').toContain(stem)
+  })
+})
+
+describe('SandraShareStep – recipient preview heading (DE pronoun)', () => {
+  it('uses "sie" for Mama', () => {
+    const { container } = render(
+      <SandraShareStep {...makeProps({ anchor: { relation: 'mama', anrede: 'Mama' } })} />,
+    )
+    const heading = container.querySelector('.sandra-share__preview-heading')!
+    expect(heading.textContent ?? '').toContain('wenn sie den Link öffnet')
+  })
+
+  it('uses "er" for Papa', () => {
+    const { container } = render(
+      <SandraShareStep {...makeProps({ anchor: { relation: 'papa', anrede: 'Papa' } })} />,
+    )
+    const heading = container.querySelector('.sandra-share__preview-heading')!
+    expect(heading.textContent ?? '').toContain('wenn er den Link öffnet')
+  })
+
+  it('uses "er" for Opa', () => {
+    const { container } = render(
+      <SandraShareStep {...makeProps({ anchor: { relation: 'opa', anrede: 'Opa' } })} />,
+    )
+    const heading = container.querySelector('.sandra-share__preview-heading')!
+    expect(heading.textContent ?? '').toContain('wenn er den Link öffnet')
+  })
+
+  it('never leaves a literal {pronoun} placeholder in the DOM', () => {
+    const { container } = render(
+      <SandraShareStep {...makeProps({ anchor: { relation: 'tante_onkel', anrede: 'Tante Heidi' } })} />,
+    )
+    expect(container.textContent ?? '').not.toContain('{pronoun}')
   })
 })
 

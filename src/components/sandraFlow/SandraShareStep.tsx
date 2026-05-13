@@ -2,6 +2,13 @@ import { useState, useEffect, useRef } from 'react'
 import type { SandraFlowStrings } from '../../i18n/de/sandraFlow'
 import type { ComposedQuestion, SandraAnchor } from '../../types/sandraFlow'
 
+// Pronoun used in the DE recipientPreviewHeading. EN already phrases the
+// sentence with "they" so the {pronoun} placeholder is absent there and the
+// replace below is a no-op.
+function pronounForRelation(relation: string): string {
+  return relation === 'papa' || relation === 'opa' ? 'er' : 'sie'
+}
+
 interface SyncShareData {
   url: string
   encoded: string
@@ -134,7 +141,9 @@ export function SandraShareStep({
 
         <div className="sandra-share__preview" data-testid="sandra-share-preview">
           <p className="sandra-share__preview-heading">
-            {t.share.recipientPreviewHeading.replace('{anrede}', anchor.anrede)}
+            {t.share.recipientPreviewHeading
+              .replace('{anrede}', anchor.anrede)
+              .replace('{pronoun}', pronounForRelation(anchor.relation))}
           </p>
           <ul className="sandra-share__preview-list">
             {t.share.recipientPreviewLines.map((line, i) => (
@@ -179,7 +188,7 @@ export function SandraShareStep({
         </div>
 
         <p className="friends-hint">
-          {t.share.privacyHint.replace('{anrede}', anchor.anrede)}
+          {t.share.privacyHint.split('{anrede}').join(anchor.anrede)}
         </p>
       </section>
     </div>

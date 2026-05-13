@@ -2118,6 +2118,12 @@
   text-align: center;
 }
 
+/* Breathing room between the preview box, opt-in toggle, CTA and privacy
+   hint – they were sitting flush against each other. */
+.sandra-share > * + * {
+  margin-top: 1rem;
+}
+
 /* Section title border-bottom collides visually with a centered title; drop
    it in the share context and lean on whitespace instead. */
 .sandra-share .friends-section-title {
