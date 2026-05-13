@@ -85,9 +85,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # On PRs: test all five browser projects.
+        # On PRs: chromium + firefox + the two mobile profiles. Desktop-webkit
+        # is intentionally skipped because mobile-safari already exercises the
+        # same WebKit engine on Linux runners (where it is the slowest job),
+        # and real iOS users are covered by mobile-safari. Keep the desktop
+        # webkit project in playwright.config.ts for manual local runs when
+        # a Safari rendering quirk is suspected.
         # On pushes to main: only chromium (cheap smoke on the merged commit).
-        project: ${{ github.event_name == 'pull_request' && fromJSON('["chromium","firefox","webkit","mobile-chrome","mobile-safari"]') || fromJSON('["chromium"]') }}
+        project: ${{ github.event_name == 'pull_request' && fromJSON('["chromium","firefox","mobile-chrome","mobile-safari"]') || fromJSON('["chromium"]') }}
     steps:
       - uses: actions/checkout@v4
 
