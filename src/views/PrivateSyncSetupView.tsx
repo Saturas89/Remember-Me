@@ -427,8 +427,12 @@ export function PrivateSyncSetupView({ onComplete }: Props) {
   }
 
   if (step === 'provider-choice') {
+    // OneDrive support is fully implemented (handleMicrosoftSignIn below);
+    // only the provider-choice card was missing — the Sandra persona caught
+    // this stille Inkonsistenz in #175.
     const providers = [
       { id: 'google-drive' as SyncProviderType, title: s.googleDriveTitle, desc: s.googleDriveDesc, privacy: s.googleDrivePrivacy, icon: '☁️', colorClass: 'provider-card__icon--google' },
+      { id: 'onedrive'     as SyncProviderType, title: s.oneDriveTitle,   desc: s.oneDriveDesc,   privacy: s.oneDrivePrivacy,   icon: '🪟', colorClass: 'provider-card__icon--onedrive' },
       { id: 'supabase'     as SyncProviderType, title: s.supabaseTitle,   desc: s.supabaseDesc,   privacy: s.supabasePrivacy,   icon: '🔒', colorClass: 'provider-card__icon--server' },
     ]
     const handleContinue = () => {
@@ -611,11 +615,25 @@ export function PrivateSyncSetupView({ onComplete }: Props) {
             <strong>{email}</strong>
             {s.pendingEmailDescSuffix}
           </p>
-          <p className="friends-hint friends-hint--warn">{s.pendingEmailHint}</p>
+          <p className="friends-hint">{s.pendingEmailHint}</p>
+
+          <div className="friends-share">
+            {/* Primary path is to open the mail app on the same device (#174):
+                avoids the iPad-Laptop-Switch that drove every Senior-Persona
+                to call their daughter for help. mailto:'' opens the OS mail
+                app on iOS / Android / macOS reliably. */}
+            <a
+              className="share-cta-btn"
+              href="mailto:"
+              data-testid="pending-email-open-mail"
+            >
+              {s.pendingEmailOpenMailButton}
+            </a>
+          </div>
 
           <div className="friends-share">
             <button
-              className="share-cta-btn"
+              className="btn btn--ghost btn--full"
               onClick={handleResendConfirmation}
               disabled={resending || !email}
               type="button"
@@ -661,11 +679,17 @@ export function PrivateSyncSetupView({ onComplete }: Props) {
       <div className="private-sync-view">
         <h2 className="private-sync-view__title">{s.recoveryCodeTitle}</h2>
         <section className="friends-section">
+          {/* Persona-led copy reorder (#173): reassurance first, then the
+              practical "what's it for" sentence, then the cautionary note
+              (with explicit pointer to the REQ-018 lost-key safety net), and
+              finally concrete storage suggestions. */}
+          <p className="friends-hint">{s.recoveryCodeReassurance}</p>
           <p className="friends-hint">{s.recoveryCodeDesc}</p>
           <div className="private-sync-view__code-box">
             <code className="private-sync-view__code">{formatRecoveryCode(recoveryCode)}</code>
           </div>
-          <p className="friends-hint friends-hint--warn">{s.recoveryCodeWarning}</p>
+          <p className="friends-hint">{s.recoveryCodeWarning}</p>
+          <p className="friends-hint">{s.recoveryCodeAdvice}</p>
           <label className="private-sync-view__confirm-label">
             <input
               type="checkbox"

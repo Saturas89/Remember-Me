@@ -1179,6 +1179,28 @@
   line-height: 1.5;
 }
 
+/* Collapsible "show raw error" details under a friendly sync error
+   message (#168). Kept small + muted so it doesn't compete visually with
+   the persona-safe headline copy. */
+.sync-error-details {
+  margin-top: 0.4rem;
+}
+
+.sync-error-details > summary {
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  list-style: revert;
+}
+
+.sync-error-details__raw {
+  margin-top: 0.4rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  word-break: break-word;
+}
+
 .friends-hint--warn {
   color: var(--warn);
   background: var(--warn-bg);

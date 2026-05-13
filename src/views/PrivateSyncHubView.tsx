@@ -7,6 +7,10 @@ import type { UsePrivateSyncReturn } from '../hooks/usePrivateSync'
 interface Props {
   syncState: PrivateSyncState
   sync: UsePrivateSyncReturn
+  /** Substantive answers count – Sandra-family-manager wants a read-window
+   *  ("Lesefenster, kein CCTV") that surfaces volume without leaking
+   *  content (#176). */
+  memoriesCount: number
   onDeactivated: () => void
 }
 
@@ -20,9 +24,14 @@ function formatDateTime(iso: string, locale: string): string {
   })
 }
 
-export function PrivateSyncHubView({ syncState, sync, onDeactivated }: Props) {
+export function PrivateSyncHubView({ syncState, sync, memoriesCount, onDeactivated }: Props) {
   const { t, locale } = useTranslation()
   const s = t.privateSync
+
+  const memoriesLabel =
+    memoriesCount === 0 ? s.memoriesSyncedNone
+    : memoriesCount === 1 ? s.memoriesSyncedOne
+    : s.memoriesSyncedMany.replace('{count}', String(memoriesCount))
 
   const [showDeactivateDialog, setShowDeactivateDialog] = useState(false)
 
@@ -60,6 +69,9 @@ export function PrivateSyncHubView({ syncState, sync, onDeactivated }: Props) {
         </div>
         <p className="friends-hint">
           <strong>{s.lastSync}:</strong> {lastSyncText}
+        </p>
+        <p className="friends-hint" data-testid="private-sync-memories-count">
+          <strong>{s.memoriesSyncedLabel}:</strong> {memoriesLabel}
         </p>
         {sync.errorMessage && (
           <p className="friends-hint friends-hint--warn">{sync.errorMessage}</p>

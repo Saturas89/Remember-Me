@@ -24,6 +24,22 @@ function resolveQuestionText(questionId: string): string {
   return questionId
 }
 
+/** Map a raw sync error.message string to a friendly, persona-safe text from
+ *  the locale block. Tackles #168 — the Sandra-family-manager persona
+ *  reported that the unfiltered `{h.syncErrorPrefix}{sync.error}` rendered
+ *  stack-trace-ish messages directly to Mama. */
+function friendlySyncError(
+  raw: string,
+  h: Translations['onlineSharingHub'],
+): string {
+  const r = raw.toLowerCase()
+  if (/network|offline|failed to fetch|connection|ecconn/i.test(r)) return h.syncErrorOffline
+  if (/auth|unauthor|401|403|jwt|token/i.test(r))                  return h.syncErrorAuth
+  if (/quota|storage|413|too large|payload/i.test(r))              return h.syncErrorQuota
+  if (/conflict|409|version|stale/i.test(r))                       return h.syncErrorConflict
+  return h.syncErrorGeneric
+}
+
 interface Props {
   profileName: string
   friends: Friend[]
@@ -127,8 +143,17 @@ export function OnlineSharingHubView({
       {sync.error && (
         <section className="friends-section">
           <p className="friends-hint friends-hint--warn">
-            {h.syncErrorPrefix}{sync.error}
+            {friendlySyncError(sync.error, h)}
           </p>
+          {/* The raw error.message is kept as a collapsed <details> so
+              technically inclined users (or bug reporters) can still grab it
+              without scaring the Senior persona on first sight. */}
+          <details className="sync-error-details">
+            <summary className="friends-hint">{h.syncErrorDetailsToggle}</summary>
+            <p className="friends-hint sync-error-details__raw">
+              {h.syncErrorPrefix}{sync.error}
+            </p>
+          </details>
         </section>
       )}
 

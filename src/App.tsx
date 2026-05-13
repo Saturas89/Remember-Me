@@ -684,7 +684,18 @@ export default function App() {
 
       {view.name === 'sync' && (
         privateSyncState
-          ? <PrivateSyncHubView syncState={privateSyncState} sync={privateSync} onDeactivated={() => savePrivateSync(undefined)} />
+          ? <PrivateSyncHubView
+              syncState={privateSyncState}
+              sync={privateSync}
+              memoriesCount={Object.values(answers).filter(a =>
+                a.value.trim() !== '' ||
+                (a.imageIds?.length ?? 0) > 0 ||
+                (a.videoIds?.length ?? 0) > 0 ||
+                !!a.audioId ||
+                !!a.audioTranscript,
+              ).length}
+              onDeactivated={() => savePrivateSync(undefined)}
+            />
           : <PrivateSyncSetupView
               onComplete={(providerType, userId) => {
                 savePrivateSync({

@@ -329,6 +329,13 @@ export interface Translations {
     title: string
     /** "Sync-Fehler: " prefix; concatenated with the raw error message. */
     syncErrorPrefix: string
+    /** Privacy-USP-konformer Fallback statt rohem error.message in der UI (#168). */
+    syncErrorGeneric: string
+    syncErrorOffline: string
+    syncErrorAuth: string
+    syncErrorQuota: string
+    syncErrorConflict: string
+    syncErrorDetailsToggle: string
     connecting: string
 
     tabs: {
@@ -662,14 +669,23 @@ export interface Translations {
     pendingEmailDescPrefix: string
     pendingEmailDescSuffix: string
     pendingEmailHint: string
+    /** Optional deep-link button that opens the mail app on the same device.
+     *  Senior-Persona reported the laptop-switch of pending-email confirmation
+     *  as a guaranteed support call (#174). */
+    pendingEmailOpenMailButton: string
     pendingEmailResendButton: string
     pendingEmailResending: string
     pendingEmailBackToLogin: string
     resendSuccess: string
     resendError: string
     recoveryCodeTitle: string
+    /** Reassuring lead sentence shown before the cautionary text (#173).
+     *  Persona reported the previous warning-first order as Bedrohungs-Erleben. */
+    recoveryCodeReassurance: string
     recoveryCodeDesc: string
     recoveryCodeWarning: string
+    /** Concrete suggestions where to store the recovery code (#173). */
+    recoveryCodeAdvice: string
     recoveryCodeConfirm: string
     enterCodeTitle: string
     enterCodeDesc: string
@@ -677,6 +693,11 @@ export interface Translations {
     enterCodePlaceholder: string
     enterCodeButton: string
     enterCodeError: string
+    /** Volumen-Pill im Hub (#176). */
+    memoriesSyncedLabel: string
+    memoriesSyncedOne: string
+    memoriesSyncedMany: string
+    memoriesSyncedNone: string
     lostKeyLink: string
     lostKeyTitle: string
     lostKeyBody: string
