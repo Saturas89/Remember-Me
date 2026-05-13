@@ -35,16 +35,19 @@ Beim Backfill (mehrere Features in einem PR) eine sinnvolle Sammelversion vergeb
 
 ## Doc-Sync-Pflicht
 
-Mit jedem Versions-Bump (also immer dann, wenn die Changelog-Pflicht greift) müssen zusätzlich **zwei Dokumentationsdateien** aktualisiert werden, damit die Roadmap-Übersicht nicht der Realität hinterherläuft:
+Mit jedem Versions-Bump (also immer dann, wenn die Changelog-Pflicht greift) muss zusätzlich `docs/README.md` aktualisiert werden, damit die Roadmap-Übersicht nicht der Realität hinterherläuft:
 
-1. `docs/INDEX.md` – Kopfzeile `**Version:** x.y.z | **Stand:** YYYY-MM-DD` auf die neue Version und das Release-Datum heben. Wenn das Feature ein neues REQ einführt oder den Status eines bestehenden REQ ändert, die REQ-Tabelle entsprechend pflegen.
-2. `docs/PROJECT.md` – Header (`**Version:** x.y.z`, `**Letzte Aktualisierung:** YYYY-MM-DD`) aktualisieren. Wenn das Feature in die Liste „Abgeschlossen ✔️" oder „Geplant 📋" gehört, dort den passenden Eintrag verschieben/ergänzen (inkl. Version, REQ-Verweis, kurzer Klartext-Beschreibung).
+- **Kopfzeile**: `**Version:** x.y.z` und `**Letzte Aktualisierung:** YYYY-MM-DD` auf die neue Version und das Release-Datum heben.
+- **REQ-Status-Tabelle**: Wenn das Feature ein neues REQ einführt oder den Status eines bestehenden REQ ändert, die Tabelle „Status-Übersicht (REQ-Specs)" entsprechend pflegen.
+- **Feature-Liste**: Wenn das Feature in die Liste „Was die App heute kann ✔️" oder „Roadmap 📋" gehört, dort den passenden Eintrag verschieben/ergänzen (inkl. Version, REQ-Verweis, kurzer Klartext-Beschreibung).
 
 Der Script `node scripts/check-docs-sync.mjs` (Teil von `npm test`, separat via `npm run check:docs`) bricht ab, wenn:
-- die Version in der Kopfzeile einer der beiden Dateien von `package.json#version` abweicht, oder
+- die Version in der Kopfzeile von `package.json#version` abweicht, oder
 - das Header-Datum älter ist als das Datum des jüngsten Changelog-Eintrags.
 
-Bei den von der Changelog-Pflicht ausgenommenen PRs (reine UX/UI-Anpassungen, Bugfixes, Refactor/Test) ändert sich die Version nicht — und damit auch nichts an den beiden Headern. Der Check ist dann trivial grün.
+Bei den von der Changelog-Pflicht ausgenommenen PRs (reine UX/UI-Anpassungen, Bugfixes, Refactor/Test) ändert sich die Version nicht — und damit auch nichts an `docs/README.md`. Der Check ist dann trivial grün.
+
+`docs/README.md` ist bewusst die einzige Übersichts-Datei im docs-Ordner. Sie wird von GitHub automatisch beim Klick auf den `docs/`-Ordner gerendert und ist damit die natürliche Landing-Seite für Beiträger und Auditoren. Pitch und Getting Started liegen im Root-`README.md`.
 
 ## Tests
 

@@ -1,4 +1,4 @@
-# Projektübersicht – Storyhold
+# Storyhold – Projekt-Übersicht
 
 **Status:** 🔵 IN PROGRESS
 **Version:** 2.7.0
@@ -9,6 +9,11 @@
 > verifiziert. Bei jedem Versions-Bump müssen **Version** und
 > **Letzte Aktualisierung** oben mit aktualisiert werden, sonst schlägt
 > der Check fehl. Details: [CLAUDE.md → „Doc-Sync-Pflicht"](../CLAUDE.md).
+>
+> Auf der Suche nach dem **Pitch / Getting Started**? Siehe das Root-
+> [`README.md`](../README.md). Diese Datei richtet sich an Entwickler,
+> Beiträger und Auditoren und beschreibt den aktuellen Stand der App,
+> die Roadmap, die Architektur und das Glossar.
 
 ---
 
@@ -22,6 +27,40 @@ Die App ist vollständig responsiv und funktioniert nahtlos auf:
 - 📱 Mobilgeräten – installierbar als PWA auf iOS & Android
 - 💻 Desktop/Tablet – für längere Antworten
 - 📴 Offline – mit Service Worker & Workbox-Caching
+
+---
+
+## Status-Übersicht (REQ-Specs)
+
+Legende: ✔️ Completed · 🟢 Draft (Code existiert, Spec nur historisch) · 🟡 Planned
+
+| ID | Titel | Status |
+|----|-------|--------|
+| [REQ-001](requirements/REQ-001-pwa-foundation-clean.md) | PWA Foundation & Responsive Design | ✔️ |
+| [REQ-002](requirements/REQ-002-question-engine.md) | Frage-Engine & Fragenkatalog | ✔️ |
+| [REQ-003](requirements/REQ-003-story-storage.md) | Lebensarchiv & Datenspeicherung | ✔️ |
+| [REQ-004](requirements/REQ-004-export-sharing.md) | Export & Teilen | ✔️ |
+| [REQ-005](requirements/REQ-005-ci-cd-pipeline.md) | CI/CD Pipeline | ✔️ |
+| [REQ-006](requirements/REQ-006-life-timeline.md) | Lebenszeitlinie | 🟡 |
+| [REQ-007](requirements/REQ-007-social-media-import.md) | Social Media Import | 🟡 |
+| [REQ-008](requirements/REQ-008-biography-generator.md) | Biografie-Generator (Premium) | 🟡 |
+| [REQ-009](requirements/REQ-009-audio-recording.md) | Audio-Aufnahme & Transkription | ✔️ |
+| [REQ-010](requirements/REQ-010-faq.md) | Hilfe & FAQ | ✔️ |
+| [REQ-011](requirements/REQ-011-archive-export.md) | Erinnerungs-Archiv ZIP-Export | ✔️ |
+| [REQ-012](requirements/REQ-012-video-attachments.md) | Video-Anhänge | ✔️ |
+| [REQ-013](requirements/REQ-013-archive-import.md) | Erinnerungs-Archiv-Import | ✔️ |
+| [REQ-014](requirements/REQ-014-release-notes.md) | Release Notes / „Was ist neu?" | ✔️ |
+| [REQ-015](requirements/REQ-015-familienmodus.md) | Familienmodus | ✔️ |
+| [REQ-016](requirements/REQ-016-pwa-notifications.md) | Engagement-Benachrichtigungen | 🟡 |
+| [REQ-017](requirements/REQ-017-privater-sync.md) | Privater Sync (Google Drive · OneDrive · Storyhold Server) | ✔️ |
+| [REQ-018](requirements/REQ-018-sync-key-loss-reset.md) | Sync-Login: Schlüssel verloren? (Reset) | ✔️ |
+| [REQ-019](requirements/REQ-019-einfach-modus.md) | Vereinfachter Bedienmodus | ✔️ |
+
+### Architektur-Entscheidungen (ADRs)
+
+| ID | Titel | Status |
+|----|-------|--------|
+| [ADR-001](architecture/ADR-001-open-source-vs-proprietary.md) | Open-Source-Kern, proprietäre Premium-Features serverseitig | ✅ |
 
 ---
 
@@ -47,11 +86,9 @@ Teilen / Exportieren (PDF, Markdown, JSON, ZIP-Archiv, KI-Export, Freunde einlad
 
 ---
 
-## Projektziele
+## Was die App heute kann ✔️
 
-### Abgeschlossen ✔️
-
-#### Foundation (v1.x)
+### Foundation (v1.x)
 - [x] Progressive Web App (PWA) Grundstruktur, Vercel Deployment (REQ-001)
 - [x] Vite + React 19 + TypeScript Setup
 - [x] Frage-Engine mit 6 Kategorien, 50+ Fragen (text, choice, scale, year) (REQ-002)
@@ -86,7 +123,7 @@ Teilen / Exportieren (PDF, Markdown, JSON, ZIP-Archiv, KI-Export, Freunde einlad
 - [x] **Erinnerungs-Archiv ZIP-Export** – Komplettarchiv inkl. Fotos, Audio & Video (REQ-011) – v1.9.x
 - [x] **Erinnerungs-Archiv-Import** – Wiederherstellung aus ZIP oder JSON-Backup (REQ-013) – v1.9.x
 
-#### Sync, Privacy & Brand (v2.x)
+### Sync, Privacy & Brand (v2.x)
 - [x] **Familienmodus** – Familien-Räume mit E2E-Verschlüsselung (REQ-015) – v1.9.x
 - [x] **Rebrand auf Storyhold** – Logo, Splash, Manifest, Markdown-Branding in Exports – v2.0.0
 - [x] **Privater Sync** – geräteübergreifende Synchronisation über drei Provider (Google Drive, Microsoft OneDrive, Storyhold-Server), AES-256-GCM mit Recovery-Code-abgeleitetem Key (REQ-017) – v2.0.x
@@ -96,7 +133,7 @@ Teilen / Exportieren (PDF, Markdown, JSON, ZIP-Archiv, KI-Export, Freunde einlad
 - [x] **Sync-Setup: Wartebildschirm für E-Mail-Bestätigung** – Wizard zeigt jetzt Hinweistext + Resend-Button statt stummem Skip – v2.6.0
 - [x] **Mehrsprachigkeit DE / EN** – alle UI-Strings, Onboarding, FAQ, Release Notes, Kategorien und Fragen lokalisiert (`src/locales/de/`, `src/locales/en/`, `detectLocale.ts`)
 
-### Geplant 📋
+## Roadmap 📋
 
 - [ ] **Engagement-Benachrichtigungen** – OS-Reminder mit Backoff-Cadence (3/10/24 Tage), iOS-Welcome-Back-Banner, Streak-Tracking & Meilenstein-Glückwünsche (REQ-016)
 - [ ] **Lebenszeitlinie** – chronologische Ansicht aller Erlebnisse und Fotos auf einer visuellen Timeline, filterbar nach Jahr und Kategorie; optional ungefähres Alter pro Eintrag, wird automatisch aus Geburtsjahr vorgeschlagen (REQ-006)
@@ -204,18 +241,25 @@ i18n-Schicht: `src/locales/index.ts` + `src/locales/detectLocale.ts`
 
 ---
 
+## Wo gibt es Details?
+
+- [CHANGELOG.md](CHANGELOG.md) – Versionshistorie
+- [requirements/README.md](requirements/README.md) – MoSCoW-Priorisierung der REQs
+- [architecture/ADR-001-open-source-vs-proprietary.md](architecture/ADR-001-open-source-vs-proprietary.md) – Open-Source-Kern, proprietäre Premium-Features serverseitig
+- [DEPLOYMENT.md](DEPLOYMENT.md) – Vercel Setup
+- [DATA_STORAGE.md](DATA_STORAGE.md) – Lokale & Cloud-Datenspeicherung
+- [SUPABASE_SETUP.md](SUPABASE_SETUP.md) – Supabase-Projekt & RLS
+- [SECRETS_SECURITY.md](SECRETS_SECURITY.md) – Geheimnisverwaltung
+- [modules/README.md](modules/README.md) – Architektur & Modulübersicht
+- [design/AI_READABLE_EXPORT.md](design/AI_READABLE_EXPORT.md) – KI-Export-Konzept
+- [guides/CONTRIBUTING.md](guides/CONTRIBUTING.md) – Beitragsrichtlinien
+- [testing-conventions.md](testing-conventions.md) – Test-Konventionen
+- [req-016-pr74-postmortem.md](req-016-pr74-postmortem.md) – PR-74 Postmortem
+
+---
+
 ## Key Stakeholder
 
 - **Projekt Owner:** Saturas89
 - **Lead Developer:** Claude Code
 - **Zielgruppe:** Menschen aller Altersgruppen, besonders 40+ / Familien
-
----
-
-## Dokumentation
-
-- [CHANGELOG](./CHANGELOG.md) – Versionshistorie
-- [Anforderungen](./requirements/README.md) – REQ-001 bis REQ-019
-- [ADR-001](./architecture/ADR-001-open-source-vs-proprietary.md) – Open-Source-Kern, proprietäre Premium-Features serverseitig
-- [KI-Export Konzept](./design/AI_READABLE_EXPORT.md) – Vorschläge für KI-lesbare Formate
-- [Test-Konventionen](./testing-conventions.md)
