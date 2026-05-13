@@ -23,6 +23,10 @@ export const FAQ_DE = [
         q: 'Verwendet die Spracherkennung externe Server?',
         a: 'Die Spracherkennung nutzt die Diktierfunktion deines Browsers. In Chrome und Edge kann das bedeuten, dass Audio kurzzeitig an Google oder Microsoft übermittelt wird – wie beim normalen Diktieren. Die gespeicherte Aufnahme selbst bleibt aber immer lokal auf deinem Gerät. Du kannst die Transkription einfach ignorieren und nur deine Originalstimme verwenden.',
       },
+      {
+        q: 'Warum steht Storyhold unter der AGPL-Lizenz?',
+        a: 'Wir wollen ein Versprechen einlösen, nicht nur Marketing: Storyhold bleibt offen. Du kannst den Quellcode auf GitHub einsehen und dich selbst davon überzeugen, dass deine Lebensgeschichte privat bleibt – und du kannst Storyhold sogar selbst hosten, wenn du das möchtest. Die AGPL-3.0-Lizenz stellt zusätzlich sicher, dass auch zukünftige Versionen offen bleiben, auch wenn jemand anders Storyhold weiterbetreibt. Mehr Details zur Trennung zwischen offenem Kern und serverseitigen Premium-Komponenten findest du in der Projekt-Dokumentation.',
+      },
     ],
   },
   {
