@@ -349,6 +349,6 @@ Datenschutzbedingungen. Die App zeigt beim Export einen Hinweis:
 
 ## Referenzen
 
-- [Aktuelles Datenmodell](../PROJECT.md#datenmodell-aktuell)
+- [Aktuelles Datenmodell](../README.md#datenmodell-aktuell)
 - [REQ-004 Export & Teilen](./REQ-004-export-sharing.md)
 - [CHANGELOG](../CHANGELOG.md)

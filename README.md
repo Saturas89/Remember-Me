@@ -55,7 +55,7 @@ npm run test
 
 ## Dokumentation
 
-Vollständige Specs und Architektur unter [`/docs`](./docs/INDEX.md).
+Vollständige Specs und Architektur unter [`/docs`](./docs/README.md).
 
 ## Lizenz
 

@@ -33,6 +33,22 @@ Der Script `node scripts/check-changelog.mjs` (läuft als Teil von `npm test`, s
 
 Beim Backfill (mehrere Features in einem PR) eine sinnvolle Sammelversion vergeben statt einen Eintrag pro Commit.
 
+## Doc-Sync-Pflicht
+
+Mit jedem Versions-Bump (also immer dann, wenn die Changelog-Pflicht greift) muss zusätzlich `docs/README.md` aktualisiert werden, damit die Roadmap-Übersicht nicht der Realität hinterherläuft:
+
+- **Kopfzeile**: `**Version:** x.y.z` und `**Letzte Aktualisierung:** YYYY-MM-DD` auf die neue Version und das Release-Datum heben.
+- **REQ-Status-Tabelle**: Wenn das Feature ein neues REQ einführt oder den Status eines bestehenden REQ ändert, die Tabelle „Status-Übersicht (REQ-Specs)" entsprechend pflegen.
+- **Feature-Liste**: Wenn das Feature in die Liste „Was die App heute kann ✔️" oder „Roadmap 📋" gehört, dort den passenden Eintrag verschieben/ergänzen (inkl. Version, REQ-Verweis, kurzer Klartext-Beschreibung).
+
+Der Script `node scripts/check-docs-sync.mjs` (Teil von `npm test`, separat via `npm run check:docs`) bricht ab, wenn:
+- die Version in der Kopfzeile von `package.json#version` abweicht, oder
+- das Header-Datum älter ist als das Datum des jüngsten Changelog-Eintrags.
+
+Bei den von der Changelog-Pflicht ausgenommenen PRs (reine UX/UI-Anpassungen, Bugfixes, Refactor/Test) ändert sich die Version nicht — und damit auch nichts an `docs/README.md`. Der Check ist dann trivial grün.
+
+`docs/README.md` ist bewusst die einzige Übersichts-Datei im docs-Ordner. Sie wird von GitHub automatisch beim Klick auf den `docs/`-Ordner gerendert und ist damit die natürliche Landing-Seite für Beiträger und Auditoren. Pitch und Getting Started liegen im Root-`README.md`.
+
 ## Tests
 
 - **Unit / Komponenten:** Vitest + Testing Library in `src/**/*.test.{ts,tsx}`. Lauf: `npm test`.
