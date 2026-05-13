@@ -1,5 +1,6 @@
-// Curated "How have others asked?" examples per trigger (EN).
-// Semantically equivalent to the DE bank, idiomatic English.
+// Curated "One way to ask" example phrasings per trigger (EN).
+// App-authored, NOT user data (privacy-first). Semantically equivalent to the
+// DE bank, idiomatic English.
 
 export const INSPIRATION_QUESTIONS_EN: Record<string, string[]> = {
   'time-rarely-spoken-of': [
