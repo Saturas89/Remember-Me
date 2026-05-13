@@ -10,7 +10,7 @@ describe('WelcomeBackBanner', () => {
 
   const defaultProps = {
     visible: true,
-    daysAway: 5,
+    memoriesCount: 5,
     onContinue: vi.fn(),
     onDismiss: vi.fn(),
   }
@@ -51,11 +51,23 @@ describe('WelcomeBackBanner', () => {
     expect(screen.getByText(de.reminder.welcomeBack.title)).not.toBeNull()
   })
 
-  it('displays days away message with correct interpolation', () => {
-    render(<WelcomeBackBanner {...defaultProps} daysAway={7} />)
+  it('displays memory-count body with correct interpolation', () => {
+    render(<WelcomeBackBanner {...defaultProps} memoriesCount={7} />)
 
-    const expected = de.reminder.welcomeBack.bodyDays.replace('{days}', '7')
+    const expected = de.reminder.welcomeBack.bodyMemoriesMany.replace('{count}', '7')
     expect(screen.getByText(expected)).not.toBeNull()
+  })
+
+  it('uses singular phrasing when memoriesCount is 1', () => {
+    render(<WelcomeBackBanner {...defaultProps} memoriesCount={1} />)
+
+    expect(screen.getByText(de.reminder.welcomeBack.bodyMemoriesOne)).not.toBeNull()
+  })
+
+  it('uses no-memories fallback when memoriesCount is 0', () => {
+    render(<WelcomeBackBanner {...defaultProps} memoriesCount={0} />)
+
+    expect(screen.getByText(de.reminder.welcomeBack.bodyNoMemories)).not.toBeNull()
   })
 
   it('renders continue button with correct testid', () => {
@@ -78,7 +90,6 @@ describe('WelcomeBackBanner', () => {
   it('renders dismiss button reachable via aria-label', () => {
     render(<WelcomeBackBanner {...defaultProps} />)
 
-    // Dismiss button shows ✕ text but is identified via aria-label
     const dismissButton = screen.getByRole('button', {
       name: de.reminder.welcomeBack.dismiss,
     })
@@ -97,17 +108,10 @@ describe('WelcomeBackBanner', () => {
     expect(onDismiss).toHaveBeenCalledTimes(1)
   })
 
-  it('handles minimum days away (3)', () => {
-    render(<WelcomeBackBanner {...defaultProps} daysAway={3} />)
+  it('handles large memory counts', () => {
+    render(<WelcomeBackBanner {...defaultProps} memoriesCount={42} />)
 
-    const expected = de.reminder.welcomeBack.bodyDays.replace('{days}', '3')
-    expect(screen.getByText(expected)).not.toBeNull()
-  })
-
-  it('handles large numbers of days away', () => {
-    render(<WelcomeBackBanner {...defaultProps} daysAway={30} />)
-
-    const expected = de.reminder.welcomeBack.bodyDays.replace('{days}', '30')
+    const expected = de.reminder.welcomeBack.bodyMemoriesMany.replace('{count}', '42')
     expect(screen.getByText(expected)).not.toBeNull()
   })
 
