@@ -1633,13 +1633,29 @@
 
 /* ── Sandra-first flow (REQ-020) ─────────────────────────────────────
    Inherits Friends-tab tokens: friends-section / friend-card / share-cta-btn.
-   Only adds what the existing Friends classes don't cover. */
+   Only adds what the existing Friends classes don't cover.
+
+   Outer container mirrors `.home-view` / `.friends-view`: 720px max-width,
+   horizontal page padding, safe-area top/bottom so the back-button never
+   collides with the notch. */
 
 .sandra-flow-view {
+  min-height: 100dvh;
+  max-width: 720px;
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  padding-bottom: 3rem;
+  padding:
+    env(safe-area-inset-top, 0px) 1rem
+    calc(3rem + env(safe-area-inset-bottom, 0px));
+}
+
+/* Text inputs in Sandra live inside flex-column sections, where `.input-text`'s
+   default `flex: 1` doesn't make them grow. Force full width so single-input
+   rows (Anrede, Geburtsjahr, freeform) match the rest of the column. */
+.sandra-flow-view .input-text {
+  width: 100%;
 }
 
 .sandra-landing {
@@ -1665,20 +1681,22 @@
 }
 
 .sandra-landing__how {
-  text-align: center;
+  align-self: center;
   color: var(--text-muted);
   text-decoration: underline;
   cursor: pointer;
+  margin: 0;
 }
 
 .sandra-steps {
   list-style: none;
   padding: 0;
-  margin: 1rem 0 0;
+  margin: 0;
   display: flex;
   flex-direction: row;
   gap: 0.75rem;
   flex-wrap: wrap;
+  justify-content: center;
 }
 
 .sandra-steps__item {
@@ -1724,11 +1742,20 @@
   border-color: var(--accent);
 }
 
-/* Section variant: accent-tinted background for the "Über uns zwei" group */
+/* Section variant: soft accent stripe for the "Über uns zwei" group.
+   Earlier this had a tinted card background which fought visually with the
+   nested .friend-card surface – we now use a subtle border + accent-colored
+   title so the section reads as "more intimate" without nesting cards. */
 .sandra-section--accent {
-  background: var(--accent-tinted);
-  border-radius: 12px;
-  padding: 1rem;
+  position: relative;
+  padding-left: 0.75rem;
+  border-left: 3px solid color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
+.sandra-section--accent .friends-section-title {
+  color: var(--accent);
+  border-bottom-color:
+    color-mix(in srgb, var(--accent) 25%, var(--border));
 }
 
 .sandra-trigger-card {
@@ -1739,11 +1766,16 @@
   width: 100%;
   font-family: inherit;
   min-height: 3rem;
-  transition: border-color 0.15s, background 0.15s;
+  padding: 0.85rem 1rem;
+  transition: border-color 0.15s, background 0.15s, transform 0.1s;
 }
 
 .sandra-trigger-card:hover {
   border-color: var(--accent);
+}
+
+.sandra-trigger-card:active {
+  transform: scale(0.99);
 }
 
 .sandra-trigger-card--accent {
@@ -1755,6 +1787,7 @@
   font-weight: 700;
   color: var(--text);
   font-size: 1rem;
+  line-height: 1.35;
 }
 
 /* Composer */
@@ -1764,11 +1797,17 @@
   gap: 1rem;
 }
 
+/* Zone A reads as a header bar: active trigger chip on the left, a small
+   "back to triggers" link on the right, with a subtle separator below to
+   detach it from the textarea that follows. */
 .sandra-composer__zone-a {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 0.6rem;
   flex-wrap: wrap;
+  padding-bottom: 0.6rem;
+  border-bottom: 1px solid var(--border);
 }
 
 .sandra-trigger-chip {
@@ -1864,17 +1903,22 @@
   padding: 0.6rem 0.75rem;
 }
 
+/* Footer: primary CTA centered up to 22rem (matches .share-cta-btn), with
+   the secondary "Verwerfen" link below. Stacks naturally without flex-wrap
+   chaos and ensures the primary action is always horizontally centered. */
 .sandra-composer__footer {
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
   align-items: center;
-  gap: 0.75rem;
-  flex-wrap: wrap;
+  gap: 0.6rem;
   margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
 }
 
 .sandra-composer__add {
-  max-width: 14rem;
+  width: 100%;
+  max-width: 22rem;
 }
 
 /* Question-list step */
@@ -1914,20 +1958,39 @@
   gap: 0.6rem;
 }
 
+/* Sticky bottom action bar. Fades into the page background so questions
+   scrolling underneath aren't visually clipped, and respects iOS home-bar
+   safe area so the "Senden" button never sits under the indicator. */
 .sandra-list-footer {
   position: sticky;
   bottom: 0;
-  background: var(--bg);
-  padding: 0.75rem 0;
+  background:
+    linear-gradient(to top, var(--bg) 70%, color-mix(in srgb, var(--bg) 0%, transparent));
+  padding: 1rem 0 calc(0.75rem + env(safe-area-inset-bottom, 0px));
   display: flex;
   flex-direction: column;
   gap: 0.6rem;
-  align-items: stretch;
+  align-items: center;
 }
 
 /* Share step */
 .sandra-share {
   text-align: center;
+}
+
+/* Section title border-bottom collides visually with a centered title; drop
+   it in the share context and lean on whitespace instead. */
+.sandra-share .friends-section-title {
+  border-bottom: none;
+  padding-bottom: 0;
+  font-size: 1.2rem;
+  margin-bottom: 0.75rem;
+}
+
+.sandra-share .friends-hint {
+  max-width: 28rem;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .sandra-entry {
