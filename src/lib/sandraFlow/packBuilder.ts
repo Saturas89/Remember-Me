@@ -47,6 +47,13 @@ export function buildPersonalPack(
     senderName: senderName.trim() || (draft.anchor.anrede ? `Jemand für ${draft.anchor.anrede}` : 'Jemand'),
     recipientLabel: draft.anchor.relation,
     anrede: draft.anchor.anrede,
+    // #163 – Sandra-Flow packs default to "Vereinfachten Bedienmodus für die
+    // Empfängerin voreinstellen" (REQ-019) unless Sandra explicitly toggles
+    // the SandraShareStep checkbox off. This matches the persona's expressed
+    // intent ("Default = ein, damit Sandra im Stress-Moment keine
+    // zusätzliche Entscheidung treffen muss"). Older drafts from a previous
+    // session that don't yet carry the field also default to true.
+    preferSimpleMode: draft.preferSimpleMode ?? true,
     // `now` is unused in the QuestionPack itself – kept here just to make
     // the build-time obvious for callers who care about provenance.
     ...(now ? {} : {}),

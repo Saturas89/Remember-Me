@@ -76,6 +76,10 @@ export interface SandraDraft {
   currentTriggerId?: string
   /** Seed text typed for the current trigger (if any). */
   currentSeed?: string
+  /** Whether the receiver should land in Vereinfachter Bedienmodus (REQ-019)
+   *  without being asked. Defaults to true in SandraShareStep because the
+   *  whole Sandra-Flow exists to take Senior-Persona-anxiety off Mama (#163). */
+  preferSimpleMode?: boolean
 }
 
 /**
@@ -90,6 +94,10 @@ export interface PersonalPackMeta {
   senderName: string
   recipientLabel: string
   anrede: string
+  /** Optional URL-handoff hint (#163): when true, the receiver side activates
+   *  Vereinfachter Bedienmodus (REQ-019) without showing the auto-suggest
+   *  prompt. Older packs without this field fall through to the prompt. */
+  preferSimpleMode?: boolean
 }
 
 /**

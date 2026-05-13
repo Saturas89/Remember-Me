@@ -38,9 +38,23 @@ export function PersonalPackReceiveView({ pack, onSubmit, onDismiss }: Props) {
   const t = useSandraFlowStrings()
   const { appMode, setAppMode } = useAppMode()
 
-  const [phase, setPhase] = useState<Phase>(() =>
-    appMode === 'simple' ? 'welcome' : 'auto-suggest',
-  )
+  // #163: when the sender (Sandra) ticked the simple-mode-handoff checkbox in
+  // SandraShareStep, the pack carries `preferSimpleMode: true`. We honor that
+  // by skipping the auto-suggest screen and activating Simple Mode silently —
+  // so the senior persona never has to make the choice. Effect runs once; if
+  // the user later opts out via Profile, that decision stands.
+  const [phase, setPhase] = useState<Phase>(() => {
+    if (appMode === 'simple') return 'welcome'
+    if (pack.preferSimpleMode === true) return 'welcome'
+    return 'auto-suggest'
+  })
+  useEffect(() => {
+    if (pack.preferSimpleMode === true && appMode !== 'simple') {
+      setAppMode('simple')
+    }
+    // run once on mount so a later toggle from Profile doesn't fight us
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
   const [name, setName] = useState('')
   const [index, setIndex] = useState(0)
   const [answers, setAnswers] = useState<Record<string, string>>({})

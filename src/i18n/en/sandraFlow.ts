@@ -123,6 +123,8 @@ export const SANDRA_FLOW_EN: SandraFlowStrings = {
       'Your questions, one at a time.',
       'Answers via typing or voice – no app installation needed.',
     ],
+    preferSimpleModeLabel: 'Pre-set large-text mode for {anrede}',
+    preferSimpleModeHint: 'Recommended if {anrede} is hesitant with apps – only the essential buttons, large text. {anrede} can switch this later any time.',
   },
 
   // ── Receiver side ──────────────────────────────────────────────────
