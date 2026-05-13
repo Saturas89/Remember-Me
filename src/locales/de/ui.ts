@@ -679,6 +679,15 @@ export const UI_DE = {
     back: '← Zurück',
     continueButton: 'Weiter',
     statusHeading: 'Status',
+    /** Aktivitäts-Banner nach erfolgreichem Sync (#177). */
+    syncActivityTitle: '✨ Synchronisierung erfolgreich',
+    syncActivityOwnOne: '1 neue Erinnerung von dir',
+    syncActivityOwnMany: '{count} neue Erinnerungen von dir',
+    syncActivityFriendOne: '1 neue Erinnerung von einer freundlichen Person',
+    syncActivityFriendMany: '{count} neue Erinnerungen von freundlichen Personen',
+    syncActivityFriendsAddedOne: '1 neue verknüpfte Person',
+    syncActivityFriendsAddedMany: '{count} neue verknüpfte Personen',
+    syncActivityDismiss: 'Schließen',
     /** Volumen-Pill im Hub (#176) — Lesefenster ohne Inhalte. */
     memoriesSyncedLabel: 'Synchronisierte Erinnerungen',
     memoriesSyncedOne: '1 Erinnerung',

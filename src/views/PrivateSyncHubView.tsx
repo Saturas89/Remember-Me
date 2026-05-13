@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from '../locales'
 import { SyncStatusBadge } from '../components/SyncStatusBadge'
 import type { PrivateSyncState } from '../types'
@@ -13,6 +13,10 @@ interface Props {
   memoriesCount: number
   onDeactivated: () => void
 }
+
+/** Auto-dismiss the sync-activity banner after this many ms so Sandra
+ *  doesn't have to think about it on every Hub visit. */
+const SYNC_ACTIVITY_AUTO_DISMISS_MS = 12_000
 
 function formatDateTime(iso: string, locale: string): string {
   return new Date(iso).toLocaleString(locale === 'de' ? 'de-DE' : 'en-US', {
@@ -32,6 +36,28 @@ export function PrivateSyncHubView({ syncState, sync, memoriesCount, onDeactivat
     memoriesCount === 0 ? s.memoriesSyncedNone
     : memoriesCount === 1 ? s.memoriesSyncedOne
     : s.memoriesSyncedMany.replace('{count}', String(memoriesCount))
+
+  // #177 — auto-dismiss the activity banner so Sandra doesn't need to
+  // tap it away on every Hub visit. The hook's lastSyncActivity already
+  // resets when sync is deactivated; here we additionally hide on age.
+  useEffect(() => {
+    if (!sync.lastSyncActivity) return
+    const timer = setTimeout(sync.dismissSyncActivity, SYNC_ACTIVITY_AUTO_DISMISS_MS)
+    return () => clearTimeout(timer)
+  }, [sync.lastSyncActivity, sync.dismissSyncActivity])
+
+  function syncActivitySentence(): string {
+    const a = sync.lastSyncActivity
+    if (!a) return ''
+    const parts: string[] = []
+    if (a.addedOwnAnswers === 1) parts.push(s.syncActivityOwnOne)
+    else if (a.addedOwnAnswers > 1) parts.push(s.syncActivityOwnMany.replace('{count}', String(a.addedOwnAnswers)))
+    if (a.addedFriendAnswers === 1) parts.push(s.syncActivityFriendOne)
+    else if (a.addedFriendAnswers > 1) parts.push(s.syncActivityFriendMany.replace('{count}', String(a.addedFriendAnswers)))
+    if (a.addedFriends === 1) parts.push(s.syncActivityFriendsAddedOne)
+    else if (a.addedFriends > 1) parts.push(s.syncActivityFriendsAddedMany.replace('{count}', String(a.addedFriends)))
+    return parts.join(' · ')
+  }
 
   const [showDeactivateDialog, setShowDeactivateDialog] = useState(false)
 
@@ -60,6 +86,30 @@ export function PrivateSyncHubView({ syncState, sync, memoriesCount, onDeactivat
   return (
     <div className="private-sync-view">
       <h1 className="private-sync-view__title">{s.hubTitle}</h1>
+
+      {sync.lastSyncActivity && (
+        <section
+          className="friends-section private-sync-view__activity"
+          data-testid="private-sync-activity"
+          role="status"
+          aria-live="polite"
+        >
+          <div className="private-sync-view__activity-row">
+            <div className="private-sync-view__activity-body">
+              <p className="private-sync-view__activity-title">{s.syncActivityTitle}</p>
+              <p className="friends-hint">{syncActivitySentence()}</p>
+            </div>
+            <button
+              type="button"
+              className="btn btn--ghost btn--sm"
+              onClick={sync.dismissSyncActivity}
+              aria-label={s.syncActivityDismiss}
+            >
+              ✕
+            </button>
+          </div>
+        </section>
+      )}
 
       <section className="friends-section">
         <h3 className="friends-section-title">{s.statusHeading}</h3>
