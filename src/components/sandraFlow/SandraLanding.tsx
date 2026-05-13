@@ -20,7 +20,7 @@ export function SandraLanding({ t, anrede, onBack, onStart }: Props) {
 
       <section className="friends-section sandra-landing">
         <h1 className="sandra-landing__title">{fill(t.landing.title)}</h1>
-        <p className="sandra-landing__subline">{t.landing.subline}</p>
+        <p className="sandra-landing__subline">{fill(t.landing.subline)}</p>
 
         <div className="friends-share">
           <button
@@ -32,6 +32,18 @@ export function SandraLanding({ t, anrede, onBack, onStart }: Props) {
             {t.landing.primaryCta}
           </button>
         </div>
+
+        <ul
+          className="sandra-landing__privacy"
+          aria-label="Datenschutz"
+          data-testid="sandra-landing-privacy"
+        >
+          {t.landing.privacyBadges.map((label, i) => (
+            <li key={i} className="friends-tag sandra-landing__privacy-tag">
+              {fill(label)}
+            </li>
+          ))}
+        </ul>
 
         <ol className="sandra-steps">
           {t.landing.steps.map((label, i) => (

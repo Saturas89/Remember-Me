@@ -7,12 +7,17 @@ export const SANDRA_FLOW_EN: SandraFlowStrings = {
   // ── Landing (Screen 1) ─────────────────────────────────────────────
   landing: {
     title: 'What have you always wanted to ask {anrede}?',
-    subline: "In 2 minutes, you'll compose your own questions.",
+    subline: "You ask – {anrede} answers in their own time. A gift that lasts.",
     primaryCta: 'Compose your first question',
     steps: [
       'Pick the person',
       'Compose questions',
-      'Send to {anrede}',
+      'Share the link with {anrede} as a gift',
+    ],
+    privacyBadges: [
+      'No account',
+      'No cloud',
+      "Stays on {anrede}'s device",
     ],
   },
 
@@ -112,6 +117,12 @@ export const SANDRA_FLOW_EN: SandraFlowStrings = {
     backToList: 'Back to the list',
     shareMessage: "I wrote down a few questions for you ✨\n\n{url}",
     shareTitle: '{anrede}, I have questions for you',
+    recipientPreviewHeading: '{anrede} will see this when they open the link:',
+    recipientPreviewLines: [
+      'A short greeting with your name.',
+      'Your questions, one at a time.',
+      'Answers via typing or voice – no app installation needed.',
+    ],
   },
 
   // ── Receiver side ──────────────────────────────────────────────────

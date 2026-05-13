@@ -8,12 +8,17 @@ export const SANDRA_FLOW_DE = {
   // ── Landing (Screen 1) ─────────────────────────────────────────────
   landing: {
     title: 'Was wolltest du {anrede} schon immer fragen?',
-    subline: 'In 2 Minuten formulierst du deine eigenen Fragen.',
+    subline: 'Du fragst – {anrede} antwortet, wann es passt. Ein Geschenk, das bleibt.',
     primaryCta: 'Erste Frage formulieren',
     steps: [
       'An wen denken',
       'Fragen formulieren',
-      'An {anrede} schicken',
+      'Per Link an {anrede} verschenken',
+    ],
+    privacyBadges: [
+      'Keine Anmeldung',
+      'Keine Cloud',
+      'Bleibt auf {anrede}s Gerät',
     ],
   },
 
@@ -116,6 +121,14 @@ export const SANDRA_FLOW_DE = {
     backToList: 'Zurück zur Liste',
     shareMessage: 'Ich habe ein paar Fragen für dich aufgeschrieben ✨\n\n{url}',
     shareTitle: '{anrede}, ich habe Fragen für dich',
+    /** What the recipient sees when they open the link – shown to the sender
+     *  before they hit send, so they don't share blind. */
+    recipientPreviewHeading: 'Das sieht {anrede}, wenn sie den Link öffnet:',
+    recipientPreviewLines: [
+      'Eine kurze Begrüßung mit deinem Namen.',
+      'Deine Fragen, eine nach der anderen.',
+      'Antworten per Tippen oder Spracheingabe – keine App-Installation nötig.',
+    ],
   },
 
   // ── Receiver side (Screen 7, modifications to Friends-Receive) ─────

@@ -126,6 +126,17 @@ export function SandraShareStep({
           </p>
         )}
 
+        <div className="sandra-share__preview" data-testid="sandra-share-preview">
+          <p className="sandra-share__preview-heading">
+            {t.share.recipientPreviewHeading.replace('{anrede}', anchor.anrede)}
+          </p>
+          <ul className="sandra-share__preview-list">
+            {t.share.recipientPreviewLines.map((line, i) => (
+              <li key={i} className="sandra-share__preview-line">{line}</li>
+            ))}
+          </ul>
+        </div>
+
         <div className="friends-share">
           <button
             type="button"

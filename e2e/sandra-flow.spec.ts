@@ -103,7 +103,9 @@ test.describe('Sandra-Flow – DE Happy Path', () => {
       page.getByText('Was wolltest du Mama schon immer fragen?'),
     ).toBeVisible()
     await expect(
-      page.getByText('In 2 Minuten formulierst du deine eigenen Fragen.'),
+      // Persona-led rewrite (#160): subline now communicates the gift
+      // outcome rather than the "2-Minuten-Fragebogen"-Baukasten framing.
+      page.getByText('Du fragst – Mama antwortet, wann es passt. Ein Geschenk, das bleibt.'),
     ).toBeVisible()
 
     // Tap the landing CTA → anchor step
@@ -187,7 +189,8 @@ test.describe('Sandra-Flow – EN Happy Path', () => {
       page.getByText('What have you always wanted to ask Mom?'),
     ).toBeVisible()
     await expect(
-      page.getByText("In 2 minutes, you'll compose your own questions."),
+      // Persona-led rewrite (#160) – gift framing, EN counterpart.
+      page.getByText('You ask – Mom answers in their own time. A gift that lasts.'),
     ).toBeVisible()
 
     // ── Screen 2 ─────────────────────────────────────────────────────────────
