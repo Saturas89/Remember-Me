@@ -34,11 +34,11 @@
 
 ---
 
-## 7a. API-Vertrag (verbindlich für Impl + Tests)
+## 7a. API-Vertrag (verbindlich)
 
 > Pflicht, sobald die Spec neue Hooks, Komponenten oder Utility-Module
-> einführt. Ohne expliziten Vertrag entsteht in der parallel-generation-
-> Pipeline Black-Box-Drift zwischen Impl- und Test-Agent.
+> einführt. Ein expliziter Vertrag legt Naming, Signaturen und Prop-Shapes
+> fest, bevor implementiert wird.
 
 ### Hook `useFoo`
 

@@ -55,19 +55,6 @@ Bei den von der Changelog-Pflicht ausgenommenen PRs (reine UX/UI-Anpassungen, Bu
 - **End-to-End:** Playwright in `e2e/`. Lauf: `npm run test:e2e`. Läuft in CI gegen fünf Browser-Projekte.
 - Vor jeder PR-Erstellung sicherstellen, dass `npm test` lokal grün ist.
 
-## Dual-Agent Specs: parallele Ausführung Pflicht
-
-Pläne, die die Header `# ── IMPLEMENTATION AGENT BRIEF ──` **und** `# ── TEST AGENT BRIEF ──` enthalten (Single-Source-of-Truth-Specs für zwei Agents), MÜSSEN über zwei `Agent`-Tool-Aufrufe in **einer einzigen Message** parallel gestartet werden:
-
-- Agent A: `subagent_type: general-purpose`, Prompt = Spec + Verweis auf Implementation-Brief-Sektionen
-- Agent B: `subagent_type: general-purpose`, Prompt = Spec + Verweis auf Test-Brief-Sektionen
-
-**Verboten:** direkte Eigenausführung im Hauptkontext, sequentielle Ausführung beider Briefs nacheinander, oder einen der beiden Briefs auslassen.
-
-**Pre-Approval-Vertrag:** Bevor der Nutzer den Plan genehmigt, gibt Claude explizit bekannt: „Ich starte nach Approval zwei Agents parallel: Agent A (Implementation, §X–Y), Agent B (Test, §Z–W). Beide in einer Message." Damit ist der Vertrag bestätigt, und der Nutzer kann widersprechen, falls Claude es im Eifer vergessen sollte.
-
-Ausnahme: Der Nutzer fordert explizit Eigenausführung oder serielle Reihenfolge.
-
 ## Design-System: Friends-Tab als Referenz
 
 Alle neuen Views, Modals, Sektionen und UI-Komponenten **müssen sich am Friends-Tab orientieren**, damit Styling und UX in der App konsistent bleiben. Eigene Farben, Spacing-Werte oder Ad-hoc-Patterns sind verboten – stattdessen die etablierten Design-Tokens und Klassen wiederverwenden (oder, wenn etwas wirklich fehlt, dort ergänzen, nicht parallel neu erfinden).

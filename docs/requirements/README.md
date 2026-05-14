@@ -88,7 +88,7 @@ Dieses Prinzip gilt für alle REQs, die Daten speichern oder exportieren:
 
 Specs, die neue Hooks, Komponenten oder Utility-Module einführen, **sollen** einen Abschnitt **"API-Vertrag"** (typisch Section 7a) enthalten mit exakten TypeScript-Signaturen für jedes neue Export-Symbol — Funktionen, Hook-Returns, Komponenten-Props, exportierte Konstanten.
 
-Zweck: In der parallel-generation-Pipeline (`.github/workflows/parallel-generation.yml`) schreiben Implementierungs- und Test-Agent **isoliert voneinander** Code gegen dieselbe Spec. Ohne expliziten API-Vertrag entsteht Black-Box-Drift bei Naming (`updateStreak` vs `recordAnswer`), Prop-Shapes (Required vs Optional) und Hilfsmethoden — sichtbar erst beim CI-Run.
+Zweck: Vor der Implementierung Naming (`updateStreak` vs `recordAnswer`), Prop-Shapes (Required vs Optional) und Hilfsmethoden festzunageln, damit Implementierung und Tests gegen dieselben Symbole arbeiten.
 
 Specs, die nur bestehende Symbole erweitern oder reine UI-/Konfig-Änderungen machen, brauchen keinen Vertrag.
 
