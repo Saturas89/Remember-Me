@@ -17,6 +17,8 @@ export const de: Translations = {
   impressum: {
     topbarTitle: 'Impressum',
     intro: 'Angaben gemäß § 5 DDG (Digitale-Dienste-Gesetz) und § 18 Abs. 2 MStV (Medienstaatsvertrag).',
+    badgeOpenSource: '🔓 Open Source · AGPL-3.0',
+    badgeMadeInGermany: '🇩🇪 Made in Germany',
     providerHeading: 'Anbieter',
     contactHeading: 'Kontakt',
     contactEmailLabel: 'E-Mail',

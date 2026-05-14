@@ -1,7 +1,7 @@
 # Storyhold – Projekt-Übersicht
 
 **Status:** 🔵 IN PROGRESS
-**Version:** 2.8.0
+**Version:** 2.9.0
 **Letzte Aktualisierung:** 2026-05-14
 
 > Version und Datum werden per `npm test` (`scripts/check-docs-sync.mjs`)
@@ -136,6 +136,7 @@ Teilen / Exportieren (PDF, Markdown, JSON, ZIP-Archiv, KI-Export, Freunde einlad
 - [x] **Mehrsprachigkeit DE / EN** – alle UI-Strings, Onboarding, FAQ, Release Notes, Kategorien und Fragen lokalisiert (`src/locales/de/`, `src/locales/en/`, `detectLocale.ts`)
 - [x] **Sandra-First Flow** – tech-affinerer Käufer formuliert eigene Fragen und schickt sie als Pack-Link an Mama/Papa/Oma (REQ-020) – v2.7.0
 - [x] **Leichtgewichtiges In-App-Feedback** – 5-Smiley-Modal mit optionalem Kommentar im Profil, anonyme Insert-Tabelle (REQ-021) – v2.8.0
+- [x] **Trust-Badges in Impressum + README** – „🔓 Open Source · AGPL-3.0" und „🇩🇪 Made in Germany" als Pills im Friends-Tab-Stil, zusätzlich shields.io-Badges im Root-README – v2.9.0
 
 ## Roadmap 📋
 

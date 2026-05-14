@@ -4455,6 +4455,16 @@ details[open] .faq-item__chevron {
   color: var(--text);
 }
 
+.impressum-badges {
+  margin: 0.4rem 0 1.5rem;
+  gap: 0.6rem;
+}
+
+.impressum-badges .friends-tag {
+  font-size: 0.8rem;
+  padding: 0.3rem 0.75rem;
+}
+
 /* ── Import view ─────────────────────────────────────── */
 .import-view {
   min-height: 100dvh;

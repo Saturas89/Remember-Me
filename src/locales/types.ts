@@ -525,6 +525,8 @@ export interface Translations {
   impressum: {
     topbarTitle: string
     intro: string
+    badgeOpenSource: string
+    badgeMadeInGermany: string
     providerHeading: string
     contactHeading: string
     contactEmailLabel: string

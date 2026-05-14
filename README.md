@@ -3,6 +3,7 @@
 *Digitale Erinnerung + persönliche Biografie + kontrolliertes Vermächtnis*
 
 [![License: AGPL v3+](https://img.shields.io/badge/License-AGPL%20v3%2B-blue.svg)](./LICENSE)
+[![Made in Germany](https://img.shields.io/badge/Made%20in-Germany-000000?labelColor=DD0000&color=FFCE00)](./docs/DATA_STORAGE.md)
 
 **Storyhold** ist eine Progressive Web App (PWA), mit der Menschen ihre Lebensgeschichte, Erinnerungen, Werte und persönliche Informationen spielerisch für die Nachwelt festhalten.
 

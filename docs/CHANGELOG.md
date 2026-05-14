@@ -10,6 +10,22 @@ Versionierung folgt [Semantic Versioning](https://semver.org/lang/de/).
 > Der Check `npm run check:changelog` (Teil von `npm test`) bricht sonst ab.
 > Details: `CLAUDE.md` → „Changelog-Pflicht".
 
+## [2.9.0] – 2026-05-14
+
+### Hinzugefügt
+
+- **Trust-Badges für Transparenz und Herkunft** – auf der Impressum-Seite zeigen
+  zwei dezente Pills im Friends-Tab-Stil („🔓 Open Source · AGPL-3.0" und
+  „🇩🇪 Made in Germany"), dass der Storyhold-App-Code öffentlich einsehbar ist
+  und der Anbieter in Deutschland ansässig ist. Beide Pills nutzen
+  `.friends-tag--accent` und respektieren alle vier Themes (sepia/nacht/hell/
+  ozean). Lokalisiert in DE und EN.
+- **README-Badges**: zusätzlich zur bestehenden AGPL-Badge taucht die
+  Made-in-Germany-Badge (shields.io, Schwarz-Rot-Gold) jetzt prominent oben in
+  `README.md` auf — sichtbar für GitHub-Besucher, Beiträger und Auditoren.
+
+---
+
 ## [2.8.0] – 2026-05-14
 
 ### Hinzugefügt
@@ -967,6 +983,7 @@ Wenn im Hintergrund eine neue Version der App als Service Worker bereit steht, e
 | **2.6.0** | Sync-Setup: Wartebildschirm für E-Mail-Bestätigung + Resend-Button, automatischer Sprung nach Verifikation | ✔️ Fertig |
 | **2.7.0** | Sandra-First Flow: persönliche Fragen formulieren, Trigger-Bank DE+EN, Inspirations-Schublade, Ingrid-Empfang mit One-Question-View (REQ-020) | ✔️ Fertig |
 | **2.8.0** | Leichtgewichtiges In-App-Feedback: 5-Smiley-Modal + optionaler Kommentar im Profil, anonyme Supabase-Tabelle (REQ-021) | ✔️ Fertig |
+| **2.9.0** | Trust-Badges „Open Source · AGPL-3.0" und „Made in Germany" in der Impressum-Seite + README-Shields | ✔️ Fertig |
 | — | **Geplante Features** | — |
 | **TBD** | Lebenszeitlinie – chronologische visuelle Ansicht | Geplant |
 | **TBD** | Import bestehender Erinnerungen (Social Media, Clouds) | Geplant |

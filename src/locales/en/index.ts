@@ -17,6 +17,8 @@ export const en: Translations = {
   impressum: {
     topbarTitle: 'Legal notice',
     intro: 'Provider information pursuant to § 5 DDG (German Digital Services Act) and § 18 (2) MStV (Interstate Media Treaty).',
+    badgeOpenSource: '🔓 Open Source · AGPL-3.0',
+    badgeMadeInGermany: '🇩🇪 Made in Germany',
     providerHeading: 'Provider',
     contactHeading: 'Contact',
     contactEmailLabel: 'Email',
