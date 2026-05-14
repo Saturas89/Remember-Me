@@ -1141,12 +1141,6 @@
   margin-bottom: 1rem;
 }
 
-/* Primärer „Eigene Fragen formulieren"-Block innerhalb der Einladungs-
-   Sektion (Sandra-Persona priorisiert). */
-.friends-invite-primary {
-  margin-bottom: 0.75rem;
-}
-
 /* Sekundärer, aufklappbarer „Themenpack senden"-Block. Selbe Tokens wie
    .friends-details, nur dezenter platziert unter dem primären Sandra-CTA. */
 .friends-invite-secondary {
@@ -2335,13 +2329,6 @@
   color: var(--text-muted);
   line-height: 1.4;
   font-weight: 400;
-}
-
-.sandra-entry {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 1rem;
 }
 
 /* Receive (Ingrid) view */
