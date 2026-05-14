@@ -1360,7 +1360,7 @@
 }
 
 [data-app-mode='simple'] .feedback-smiley {
-  min-width: 72px;
+  min-width: 0;
   min-height: 72px;
   font-size: 2rem;
 }
