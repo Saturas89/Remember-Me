@@ -1,8 +1,8 @@
 # Storyhold – Projekt-Übersicht
 
 **Status:** 🔵 IN PROGRESS
-**Version:** 2.7.0
-**Letzte Aktualisierung:** 2026-05-13
+**Version:** 2.8.0
+**Letzte Aktualisierung:** 2026-05-14
 
 > Version und Datum werden per `npm test` (`scripts/check-docs-sync.mjs`)
 > gegen `package.json` und das jüngste `docs/CHANGELOG.md`-Datum
@@ -55,6 +55,8 @@ Legende: ✔️ Completed · 🟢 Draft (Code existiert, Spec nur historisch) ·
 | [REQ-017](requirements/REQ-017-privater-sync.md) | Privater Sync (Google Drive · OneDrive · Storyhold Server) | ✔️ |
 | [REQ-018](requirements/REQ-018-sync-key-loss-reset.md) | Sync-Login: Schlüssel verloren? (Reset) | ✔️ |
 | [REQ-019](requirements/REQ-019-einfach-modus.md) | Vereinfachter Bedienmodus | ✔️ |
+| [REQ-020](requirements/REQ-020-sandra-flow.md) | Sandra-First Flow | ✔️ |
+| [REQ-021](requirements/REQ-021-feedback.md) | Leichtgewichtiges In-App-Feedback | ✔️ |
 
 ### Architektur-Entscheidungen (ADRs)
 
@@ -132,6 +134,8 @@ Teilen / Exportieren (PDF, Markdown, JSON, ZIP-Archiv, KI-Export, Freunde einlad
 - [x] **Impressum-Seite** – rechtskonform nach DDG § 5 und MStV § 18, im Profil unter „Hilfe & FAQ" – v2.5.0
 - [x] **Sync-Setup: Wartebildschirm für E-Mail-Bestätigung** – Wizard zeigt jetzt Hinweistext + Resend-Button statt stummem Skip – v2.6.0
 - [x] **Mehrsprachigkeit DE / EN** – alle UI-Strings, Onboarding, FAQ, Release Notes, Kategorien und Fragen lokalisiert (`src/locales/de/`, `src/locales/en/`, `detectLocale.ts`)
+- [x] **Sandra-First Flow** – tech-affinerer Käufer formuliert eigene Fragen und schickt sie als Pack-Link an Mama/Papa/Oma (REQ-020) – v2.7.0
+- [x] **Leichtgewichtiges In-App-Feedback** – 5-Smiley-Modal mit optionalem Kommentar im Profil, anonyme Insert-Tabelle (REQ-021) – v2.8.0
 
 ## Roadmap 📋
 
