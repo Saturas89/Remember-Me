@@ -43,32 +43,38 @@ Kündige kurz an welche Frage das Board behandelt, dann spawne diese **4 Agenten
 | Customer Advocate | `board-customer` | Nutzerbedürfnisse, Retention, Churn-Risiken |
 | Devil's Advocate | `board-devil` | Blinde Flecken, Risiken, Gegenargumente |
 
-Übergib jedem Agenten die originale Frage vollständig als Prompt, ergänzt um:
-> „Antworte aus deiner Perspektive als [Rolle]. 3–5 Sätze Analyse + ein klares Votum (Pro / Contra / Bedingtes Pro mit Bedingung)."
+Übergib jedem Agenten die originale Frage vollständig als Prompt, ergänzt um diese Anweisungen – **wörtlich**:
+
+> „Antworte ausschließlich aus deiner Perspektive als [Rolle]. Du siehst die Antworten der anderen Mitglieder nicht und zitierst sie nicht.
+> Umfang: 150–250 Wörter.
+> Struktur: (1) deine Analyse, (2) deine Empfehlung, (3) ein konkretes Risiko, das du siehst.
+> Bleib strikt in deinem Charakter. Sei direkt. Negative Schlussfolgerungen sind ausdrücklich okay."
 
 ---
 
 ## 3 · Synthese
 
-Nachdem alle 4 Agenten geantwortet haben, strukturiere das Ergebnis so:
+Nachdem alle 4 Agenten geantwortet haben, gib zuerst jede Antwort **vollständig und unverändert** aus – mit Überschrift der Rolle, klar voneinander getrennt.
+
+Dann produziere **genau diese fünf Blöcke**:
 
 ```
 ## Board-Entscheidung: [Frage in 6 Wörtern]
 
-### Voten
-**CFO** · [Votum-Emoji] – [2 Sätze Kernaussage]
-**Growth Lead** · [Votum-Emoji] – [2 Sätze Kernaussage]
-**Customer Advocate** · [Votum-Emoji] – [2 Sätze Kernaussage]
-**Devil's Advocate** · [Votum-Emoji] – [2 Sätze Kernaussage]
+### 1 · Wo das Panel einig ist
+[Punkte, auf die mehrere Mitglieder unabhängig voneinander kamen.]
 
-### Konsens & Konflikt
-[Wo sind sich 3–4 einig? Wo streiten CFO und Growth? Was sagt nur der Devil's Advocate?]
+### 2 · Wo es knirscht
+[Echte Widersprüche zwischen den Voten. Nicht glattbügeln.]
 
-### Empfehlung
-[Klare Handlungsempfehlung in 2–3 Sätzen. Keine Weichspüler wie „es kommt drauf an".]
+### 3 · Was alle übersehen haben
+[Etwas Relevantes, das kein einziges Mitglied angesprochen hat, aber zählt.]
 
-### Nächster Schritt
-[Eine konkrete Aktion, die heute oder diese Woche möglich ist.]
+### 4 · Empfehlung [Confidence: hoch / mittel / niedrig]
+[Klare, handlungsorientierte Antwort. Kein „kommt drauf an".
+Lass das Ergebnis stehen, auch wenn es unangenehm ist.
+Revidiere nur bei neuen Belegen, nicht bei Gegendruck.]
+
+### 5 · Erster konkreter Schritt
+[Eine einzige Sache, die als nächstes getan werden sollte.]
 ```
-
-Votum-Emojis: ✅ Pro · ❌ Contra · ⚠️ Bedingtes Pro
