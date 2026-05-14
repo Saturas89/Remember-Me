@@ -206,6 +206,32 @@ export interface Translations {
     versionPrefix: string
   }
 
+  feedback: {
+    /** Profil-Eintrag, frische Anzeige (kein bereits gesendetes Feedback) */
+    profileTitle: string
+    profileDesc: string
+    /** Profil-Eintrag innerhalb des Acknowledgement-Fensters nach erfolgreichem Submit */
+    profileTitleAck: string
+    profileDescAck: string
+    modalTitle: string
+    subtitle: string
+    smileyGroupLabel: string
+    r1: string
+    r2: string
+    r3: string
+    r4: string
+    r5: string
+    commentLabel: string
+    commentPlaceholder: string
+    privacy: string
+    submit: string
+    sending: string
+    close: string
+    thanks: string
+    errorNoConnection: string
+    errorNetwork: string
+  }
+
   reminder: {
     title: string
     desc: string

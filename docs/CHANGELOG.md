@@ -10,6 +10,28 @@ Versionierung folgt [Semantic Versioning](https://semver.org/lang/de/).
 > Der Check `npm run check:changelog` (Teil von `npm test`) bricht sonst ab.
 > Details: `CLAUDE.md` → „Changelog-Pflicht".
 
+## [2.8.0] – 2026-05-14
+
+### Hinzugefügt
+
+- **Leichtgewichtiges In-App-Feedback (REQ-021)** – ein neuer Eintrag im Profil
+  („Wie gefällt dir die App? 💬") öffnet ein Modal mit fünf Smileys (😞 😐 🙂
+  😊 🤩). Ein Tap auf ein Gesicht genügt für ein vollständiges Feedback; ein
+  optionales Textfeld erscheint erst danach. Nach dem Senden zeigt der Eintrag
+  60 Tage lang „Danke für dein Feedback 💛".
+- **Anonyme Datenhaltung von Anfang an**: Die neue Supabase-Tabelle
+  `feedback_submissions` speichert nur `rating`, `comment` und `created_at` —
+  keine Geräte-ID, keine App-Version, keine Locale, kein App-Mode. Anon-Insert
+  über RLS-Policy mit Längen- und Wertebereichs-Check; Lese-Zugriff
+  ausschließlich über den Service-Role-Key.
+- **Senioren-Modus berücksichtigt**: Im Vereinfachten Bedienmodus wachsen die
+  Smiley-Buttons auf 72 × 72 px (statt 56 × 56 px im Full-Mode). Wording ist
+  bewusst alltagssprachlich gehalten („Dein Name wird nirgends gespeichert"
+  statt „anonym"), nach Persona-Review mit Ingrid-Novice / -Routine und
+  Sandra-Family-Manager / -Gift-Buyer.
+
+---
+
 ## [2.7.0] – 2026-05-12
 
 ### Hinzugefügt
@@ -944,6 +966,7 @@ Wenn im Hintergrund eine neue Version der App als Service Worker bereit steht, e
 | **2.5.0** | Impressum-Seite (§ 5 DDG, § 18 MStV) im Profil – Anbieter, Kontakt, Streitbeilegung, Haftung, Urheberrecht | ✔️ Fertig |
 | **2.6.0** | Sync-Setup: Wartebildschirm für E-Mail-Bestätigung + Resend-Button, automatischer Sprung nach Verifikation | ✔️ Fertig |
 | **2.7.0** | Sandra-First Flow: persönliche Fragen formulieren, Trigger-Bank DE+EN, Inspirations-Schublade, Ingrid-Empfang mit One-Question-View (REQ-020) | ✔️ Fertig |
+| **2.8.0** | Leichtgewichtiges In-App-Feedback: 5-Smiley-Modal + optionaler Kommentar im Profil, anonyme Supabase-Tabelle (REQ-021) | ✔️ Fertig |
 | — | **Geplante Features** | — |
 | **TBD** | Lebenszeitlinie – chronologische visuelle Ansicht | Geplant |
 | **TBD** | Import bestehender Erinnerungen (Social Media, Clouds) | Geplant |

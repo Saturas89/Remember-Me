@@ -3,8 +3,10 @@ import { getCategoriesForLocale } from '../data/categories'
 import { THEMES, useTheme } from '../hooks/useTheme'
 import { useAppMode } from '../hooks/useAppMode'
 import { ArchiveExportCard } from '../components/ArchiveExportCard'
+import { FeedbackModal } from '../components/FeedbackModal'
 import { getLastBackupDate, backupAgeLabel, backupAgeStatus } from '../utils/backupStatus'
 import { importFile } from '../utils/archiveImport'
+import { feedbackRecentlySubmitted } from '../utils/feedbackSubmit'
 import { RELEASE_NOTES } from '../data/releaseNotes'
 import { useTranslation } from '../locales'
 import type { Locale } from '../locales'
@@ -84,6 +86,8 @@ export function ProfileView({
   )
   const [importStatus, setImportStatus] = useState<{ ok: boolean; message: string } | null>(null)
   const [importProgress, setImportProgress] = useState<{ step: string; pct: number } | null>(null)
+  const [showFeedback, setShowFeedback] = useState(false)
+  const [feedbackAck, setFeedbackAck] = useState<boolean>(() => feedbackRecentlySubmitted())
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const categories = getCategoriesForLocale(locale)
@@ -400,6 +404,23 @@ export function ProfileView({
           </span>
           <span className="profile-import-card__arrow">›</span>
         </button>
+        <button
+          type="button"
+          className="profile-import-card"
+          onClick={() => setShowFeedback(true)}
+          data-testid="profile-feedback-entry"
+        >
+          <span className="profile-import-card__icon">💬</span>
+          <span className="profile-import-card__body">
+            <span className="profile-import-card__title">
+              {feedbackAck ? t.feedback.profileTitleAck : t.feedback.profileTitle}
+            </span>
+            <span className="profile-import-card__desc">
+              {feedbackAck ? t.feedback.profileDescAck : t.feedback.profileDesc}
+            </span>
+          </span>
+          <span className="profile-import-card__arrow">›</span>
+        </button>
         {!isSimple && (
           <button type="button" className="profile-import-card" onClick={onShowReleaseNotes}>
             <span className="profile-import-card__icon">🆕</span>
@@ -442,6 +463,15 @@ export function ProfileView({
             </div>
           </details>
         </section>
+      )}
+
+      {showFeedback && (
+        <FeedbackModal
+          onClose={() => {
+            setShowFeedback(false)
+            setFeedbackAck(feedbackRecentlySubmitted())
+          }}
+        />
       )}
 
     </div>

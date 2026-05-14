@@ -6,6 +6,15 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '2.8.0',
+    date: '2026-05-14',
+    highlights: [
+      '💬 Neuer Eintrag im Profil: „Wie gefällt dir die App?" – Smiley antippen, fertig.',
+      '✍️ Wenn du magst, kannst du danach einen kurzen Kommentar dazulegen.',
+      '🔒 Dein Name wird nirgends gespeichert – wir wissen nur, dass jemand getippt hat.',
+    ],
+  },
+  {
     version: '2.7.0',
     date: '2026-05-12',
     highlights: [
