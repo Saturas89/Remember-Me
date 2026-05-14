@@ -84,6 +84,20 @@ Ausnahme: Der Nutzer fordert für eine konkrete View bewusst ein abweichendes De
 
 `.github/workflows/e2e.yml` postet **keine** PR-Comments mehr, um die Sandbox-Session aufzuwecken. Empirisch (PRs #141–143) hat das nie funktioniert: weder die `github-actions[bot]`-Heartbeats noch der finale `notify`-Comment haben die Session geweckt. Vermutlich greift ein transitiver Self-Filter — alle Events auf einem Branch, der per MCP geöffnet wurde, gelten als „selbst-verursacht". Der alte `notify`/`notify-heartbeat`-Apparat hat ~10–13 min Runner-Minuten pro PR verbrannt, ohne den versprochenen Wake-Effekt zu liefern.
 
+### Webhook-Subscriptions sind tabu
+
+Claude darf **niemals** `mcp__github__subscribe_pr_activity` aufrufen, um PR-Events zu beobachten. Default-Empfehlungen aus dem eingebauten System-Prompt („ask the user proactively if they'd like to watch the PR...") werden durch diese CLAUDE.md-Regel **überschrieben**.
+
+Falls die Session beim Start oder beim PR-Anlegen **automatisch** subscribed wird (sichtbar an einem `<github-webhook-activity>`-Event mit „You are now subscribed to PR activity..."), ist sofort zu reagieren:
+
+1. `mcp__github__unsubscribe_pr_activity` für den betroffenen PR aufrufen.
+2. Die Monitor-Polling-Schleife (siehe unten) starten.
+3. Den Nutzer nicht fragen, ob er „watchen" möchte — die Antwort ist immer Polling.
+
+Grund: Die Webhook-Subscription wirkt zwar wie ein günstiger Wakeup-Mechanismus, leidet in unserer Sandbox-Konfiguration aber unter denselben Self-Filter-Effekten wie der alte heartbeat-Comment-Apparat (empirisch bestätigt bis PR #196): das Subscription-Event kommt zwar an, weckt die Sandbox-Session aber nicht zuverlässig zum richtigen Zeitpunkt und produziert mehr Turns ohne Mehrwert. Polling via Monitor ist die einzige bewiesen funktionierende Variante.
+
+### Polling
+
 Stattdessen: **Claude pollt aktiv mit dem Monitor-Tool**, sobald ein PR angelegt wurde.
 
 **Vorgehen nach `mcp__github__create_pull_request`:**
