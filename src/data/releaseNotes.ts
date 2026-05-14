@@ -6,6 +6,15 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '2.9.0',
+    date: '2026-05-14',
+    highlights: [
+      '🔓 Im Impressum siehst du jetzt: Storyhold ist Open Source (AGPL-3.0).',
+      '🇩🇪 Und: Made in Germany – die App wird in Deutschland entwickelt.',
+      '🤝 Zwei kleine Pills, ein klares Vertrauenssignal.',
+    ],
+  },
+  {
     version: '2.8.0',
     date: '2026-05-14',
     highlights: [

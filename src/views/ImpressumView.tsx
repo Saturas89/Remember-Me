@@ -25,6 +25,11 @@ export function ImpressumView({ onBack }: Props) {
 
       <p className="friends-intro">{i.intro}</p>
 
+      <div className="friends-tags impressum-badges" aria-label="Storyhold trust badges">
+        <span className="friends-tag friends-tag--accent">{i.badgeOpenSource}</span>
+        <span className="friends-tag friends-tag--accent">{i.badgeMadeInGermany}</span>
+      </div>
+
       <section className="friends-section">
         <h3 className="friends-section-title">{i.providerHeading}</h3>
         <address className="impressum-address">
