@@ -9,7 +9,7 @@
 
 ## 1. Kontext
 
-Storyhold ist als Open-Source-PWA aufgesetzt (Repo `saturas89/remember-me`). Einige geplante Features sollen jedoch **nicht** im offenen Quellcode liegen, weil sie
+Storyhold ist als Open-Source-PWA aufgesetzt (Repo `saturas89/storyhold`). Einige geplante Features sollen jedoch **nicht** im offenen Quellcode liegen, weil sie
 
 - echtes Domain-Know-how enthalten (Prompt-Engineering für die Biografie-Generierung),
 - laufende Kosten verursachen, die abgerechnet werden müssen (Claude-API-Aufrufe, Cloud-Sync-Speicher),
@@ -69,7 +69,7 @@ Option A bleibt als Ergänzung verfügbar, falls künftig reine Client-Premium-F
 
 ```
 ┌──────────────────────────────────────────────────────┐
-│  OSS-Repo (saturas89/remember-me)                    │
+│  OSS-Repo (saturas89/storyhold)                      │
 │  • Komplette UI, Frage-Engine, Local-Storage         │
 │  • Dünne Pro-Clients (z. B. useBiographyGenerator)   │
 │  • Feature-Gate via VITE_PRO_ENDPOINT                │

@@ -325,7 +325,7 @@ export const UI_DE = {
     title: 'Kontakt verknüpfen',
     shareCardSubtitle: 'Teile Erinnerungen sicher & privat – ohne Account.',
     shareCardTitleWithName: '{name} lädt ein',
-    shareInviteText: '{name} möchte Remember-Me-Erinnerungen mit dir teilen. Öffne diesen Link, um dich zu verknüpfen:',
+    shareInviteText: '{name} möchte Storyhold-Erinnerungen mit dir teilen. Öffne diesen Link, um dich zu verknüpfen:',
     shareBackText: '{name} möchte sich mit dir verknüpfen. Öffne diesen Link:',
     shareSheetTitle: 'Storyhold – Online-Kontakt',
     introTextSuffix: ' möchte sich mit dir für Online-Erinnerungen verknüpfen.',
@@ -527,8 +527,8 @@ export const UI_DE = {
       description: 'Antworten zu Datenschutz, Import, Export und der Funktionsweise von Storyhold.',
     },
     impressum: {
-      title: 'Impressum – Remember Me',
-      description: 'Anbieterkennzeichnung gemäß § 5 DDG und § 18 MStV für Remember Me.',
+      title: 'Impressum – Storyhold',
+      description: 'Anbieterkennzeichnung gemäß § 5 DDG und § 18 MStV für Storyhold.',
     },
   },
 

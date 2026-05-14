@@ -4,7 +4,7 @@
 **Datum:** 2026-05-13
 **Autor:** Storyhold-Team (Persona-Programm Iteration 1)
 **Betroffene Bereiche:** `src/views/CustomQuestionsView.tsx`, `src/components/sandraFlow/*`, `src/views/SandraFlowView.tsx`, `src/views/PersonalPackReceiveView.tsx`
-**Referenz-Issue:** [#178](https://github.com/saturas89/remember-me/issues/178) — „CustomQuestions vs. SandraComposerStep: zwei parallele Wege ohne Guidance, welcher kanonisch ist"
+**Referenz-Issue:** [#178](https://github.com/saturas89/storyhold/issues/178) — „CustomQuestions vs. SandraComposerStep: zwei parallele Wege ohne Guidance, welcher kanonisch ist"
 
 ---
 

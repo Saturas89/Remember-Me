@@ -519,8 +519,8 @@ export const UI_EN = {
       description: 'Answers about privacy, import, export and how Storyhold works.',
     },
     impressum: {
-      title: 'Legal notice – Remember Me',
-      description: 'Provider information under German § 5 DDG and § 18 MStV for Remember Me.',
+      title: 'Legal notice – Storyhold',
+      description: 'Provider information under German § 5 DDG and § 18 MStV for Storyhold.',
     },
   },
 

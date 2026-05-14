@@ -341,7 +341,7 @@ export interface Translations {
     /** "{name} lädt ein" / "{name} invites you" – share-card title used by
      *  ContactHandshakeView and OnlineSharingHubView. Uses {name}. */
     shareCardTitleWithName: string
-    /** "{name} möchte Remember-Me-Erinnerungen mit dir teilen…" – uses {name}. */
+    /** "{name} möchte Storyhold-Erinnerungen mit dir teilen…" – uses {name}. */
     shareInviteText: string
     /** "{name} möchte sich mit dir verknüpfen. Öffne diesen Link:" – uses {name}. */
     shareBackText: string

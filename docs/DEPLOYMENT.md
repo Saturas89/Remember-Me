@@ -7,7 +7,7 @@
 ## Setup
 
 ```
-Repository: saturas89/remember-me
+Repository: saturas89/storyhold
 Auto-Deploy: main-Branch → Vercel
 Build: npm ci → npm run build → Deploy
 ```
