@@ -167,3 +167,45 @@ jobs:
           name: interaction-report-${{ matrix.entry.name }}
           path: playwright-report/
           retention-days: 14
+
+  create-issue:
+    name: Open GitHub Issue on failure / flakiness
+    needs: interaction
+    # Run after every non-cancelled run so flaky-but-passing tests are also tracked.
+    if: always() && needs.interaction.result != 'cancelled'
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Cache node_modules
+        id: nm-cache
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: nm-${{ runner.os }}-node22-${{ hashFiles('package-lock.json') }}
+
+      - name: Install dependencies
+        if: steps.nm-cache.outputs.cache-hit != 'true'
+        run: npm ci
+
+      # Each per-project artifact lands in its own subdirectory:
+      #   interaction-reports/interaction-report-<name>/interaction-report.json
+      - name: Download all Playwright reports
+        uses: actions/download-artifact@v4
+        with:
+          pattern: interaction-report-*
+          path: interaction-reports/
+
+      - name: Create GitHub Issue if needed
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          INTERACTION_RESULT: ${{ needs.interaction.result }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: node scripts/create-interaction-issue.mjs
