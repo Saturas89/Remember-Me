@@ -59,7 +59,7 @@ export async function openFamilyHub(page: Page) {
   // check would return false even though the consent screen is about to
   // appear. waitFor polls the DOM until the heading is present (or the hub
   // heading appears instead, in which case we can skip the consent step).
-  const consentHeading = page.getByRole('heading', { name: 'Familienmodus', exact: true })
+  const consentHeading = page.getByRole('heading', { name: 'Laufend verbunden bleiben', exact: true })
   const consentVisible = await consentHeading
     .waitFor({ state: 'visible', timeout: 20_000 })
     .then(() => true)
