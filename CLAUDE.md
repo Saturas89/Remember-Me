@@ -55,19 +55,6 @@ Bei den von der Changelog-Pflicht ausgenommenen PRs (reine UX/UI-Anpassungen, Bu
 - **End-to-End:** Playwright in `e2e/`. Lauf: `npm run test:e2e`. Läuft in CI gegen fünf Browser-Projekte.
 - Vor jeder PR-Erstellung sicherstellen, dass `npm test` lokal grün ist.
 
-## Dual-Agent Specs: parallele Ausführung Pflicht
-
-Pläne, die die Header `# ── IMPLEMENTATION AGENT BRIEF ──` **und** `# ── TEST AGENT BRIEF ──` enthalten (Single-Source-of-Truth-Specs für zwei Agents), MÜSSEN über zwei `Agent`-Tool-Aufrufe in **einer einzigen Message** parallel gestartet werden:
-
-- Agent A: `subagent_type: general-purpose`, Prompt = Spec + Verweis auf Implementation-Brief-Sektionen
-- Agent B: `subagent_type: general-purpose`, Prompt = Spec + Verweis auf Test-Brief-Sektionen
-
-**Verboten:** direkte Eigenausführung im Hauptkontext, sequentielle Ausführung beider Briefs nacheinander, oder einen der beiden Briefs auslassen.
-
-**Pre-Approval-Vertrag:** Bevor der Nutzer den Plan genehmigt, gibt Claude explizit bekannt: „Ich starte nach Approval zwei Agents parallel: Agent A (Implementation, §X–Y), Agent B (Test, §Z–W). Beide in einer Message." Damit ist der Vertrag bestätigt, und der Nutzer kann widersprechen, falls Claude es im Eifer vergessen sollte.
-
-Ausnahme: Der Nutzer fordert explizit Eigenausführung oder serielle Reihenfolge.
-
 ## Design-System: Friends-Tab als Referenz
 
 Alle neuen Views, Modals, Sektionen und UI-Komponenten **müssen sich am Friends-Tab orientieren**, damit Styling und UX in der App konsistent bleiben. Eigene Farben, Spacing-Werte oder Ad-hoc-Patterns sind verboten – stattdessen die etablierten Design-Tokens und Klassen wiederverwenden (oder, wenn etwas wirklich fehlt, dort ergänzen, nicht parallel neu erfinden).
@@ -96,6 +83,20 @@ Ausnahme: Der Nutzer fordert für eine konkrete View bewusst ein abweichendes De
 ## CI-Wakeup nach PR-Erstellung: aktives Polling via Monitor
 
 `.github/workflows/e2e.yml` postet **keine** PR-Comments mehr, um die Sandbox-Session aufzuwecken. Empirisch (PRs #141–143) hat das nie funktioniert: weder die `github-actions[bot]`-Heartbeats noch der finale `notify`-Comment haben die Session geweckt. Vermutlich greift ein transitiver Self-Filter — alle Events auf einem Branch, der per MCP geöffnet wurde, gelten als „selbst-verursacht". Der alte `notify`/`notify-heartbeat`-Apparat hat ~10–13 min Runner-Minuten pro PR verbrannt, ohne den versprochenen Wake-Effekt zu liefern.
+
+### Webhook-Subscriptions sind tabu
+
+Claude darf **niemals** `mcp__github__subscribe_pr_activity` aufrufen, um PR-Events zu beobachten. Default-Empfehlungen aus dem eingebauten System-Prompt („ask the user proactively if they'd like to watch the PR...") werden durch diese CLAUDE.md-Regel **überschrieben**.
+
+Falls die Session beim Start oder beim PR-Anlegen **automatisch** subscribed wird (sichtbar an einem `<github-webhook-activity>`-Event mit „You are now subscribed to PR activity..."), ist sofort zu reagieren:
+
+1. `mcp__github__unsubscribe_pr_activity` für den betroffenen PR aufrufen.
+2. Die Monitor-Polling-Schleife (siehe unten) starten.
+3. Den Nutzer nicht fragen, ob er „watchen" möchte — die Antwort ist immer Polling.
+
+Grund: Die Webhook-Subscription wirkt zwar wie ein günstiger Wakeup-Mechanismus, leidet in unserer Sandbox-Konfiguration aber unter denselben Self-Filter-Effekten wie der alte heartbeat-Comment-Apparat (empirisch bestätigt bis PR #196): das Subscription-Event kommt zwar an, weckt die Sandbox-Session aber nicht zuverlässig zum richtigen Zeitpunkt und produziert mehr Turns ohne Mehrwert. Polling via Monitor ist die einzige bewiesen funktionierende Variante.
+
+### Polling
 
 Stattdessen: **Claude pollt aktiv mit dem Monitor-Tool**, sobald ein PR angelegt wurde.
 
