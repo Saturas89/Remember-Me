@@ -9,11 +9,18 @@ Grund: Der Workflow `.github/workflows/e2e.yml` läuft die Playwright-Matrix (Ch
 **Vorgehen:**
 1. Branch pushen (via `git push -u origin <branch>`).
 2. PR via `mcp__github__create_pull_request` öffnen (gegen `main`).
-3. Den Nutzer über den PR-Link informieren und fragen, ob nach grünem CI automatisch gemerged werden soll.
-4. Nur bei ausdrücklicher Bestätigung `mcp__github__merge_pull_request` aufrufen (bevorzugt `squash`).
-5. Niemals `--no-verify` oder CI-Umgehungen benutzen.
+3. **Sofort danach** `mcp__github__enable_pr_auto_merge` mit `mergeMethod: "SQUASH"` aufrufen. Damit merged GitHub den PR automatisch, sobald alle Required-Checks grün sind – der Nutzer muss nicht erneut bestätigen.
+4. Den Nutzer über den PR-Link informieren und kurz erwähnen, dass Auto-Merge aktiv ist.
+5. Den PR per Monitor-Polling beobachten (siehe „CI-Wakeup nach PR-Erstellung" unten). Sobald CI grün ist, übernimmt GitHub den Merge selbst – Claude muss `mcp__github__merge_pull_request` **nicht** mehr explizit aufrufen.
+6. Wird ein Check rot, Auto-Merge bleibt blockiert. Claude untersucht den Fehler, fixt ihn (oder fragt nach), pusht — Auto-Merge feuert dann automatisch, sobald der nächste Lauf grün ist.
+7. Niemals `--no-verify` oder CI-Umgehungen benutzen.
 
-Ausnahme: Der Nutzer fordert explizit einen direkten Merge ohne PR.
+Ausnahmen (in diesen Fällen Auto-Merge **nicht** aktivieren):
+- Der Nutzer fordert explizit einen direkten Merge ohne PR.
+- Der PR ist als Draft angelegt oder soll bewusst zur Review liegen bleiben (z. B. `mcp__github__create_pull_request` mit `draft: true`).
+- Der PR berührt sicherheitskritische Konfiguration (Secrets, Branch-Protection, CI-Workflow-Auth-Token) – dann zuerst Nutzer fragen.
+
+Hintergrund: Diese Auto-Merge-Default-Regel wurde am 2026-05-14 eingeführt, weil bisher jeder grüne PR eine zusätzliche Bestätigung brauchte. Die Logik bleibt sicher: ohne grünes CI passiert nichts, der Branch-Protection-Check ist die einzige Gate.
 
 ## Changelog-Pflicht
 
