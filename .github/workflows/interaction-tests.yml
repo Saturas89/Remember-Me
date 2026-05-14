@@ -168,9 +168,113 @@ jobs:
           path: playwright-report/
           retention-days: 14
 
+  # ── Real-DB job: local Supabase container ────────────────────────────────────
+  # Starts a genuine Supabase stack via Docker (PostgREST + GoTrue + Storage)
+  # so that RLS policies, FK cascades, and the full auth flow are exercised
+  # against a real database — not the in-memory mock used by the mock-based
+  # interaction suite above.
+  #
+  # Runs: Vitest RLS tests (src/integration/supabaseRLS.test.ts)
+  #       Playwright E2E tests (e2e/supabase/two-device-real.spec.ts)
+  #
+  # Only chromium; purpose is schema/RLS validation, not cross-browser coverage.
+  interaction-real-db:
+    name: Real-DB Integration (Supabase)
+    runs-on: ubuntu-latest
+    needs: [unit]
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Cache node_modules
+        id: nm-cache
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: nm-${{ runner.os }}-node22-${{ hashFiles('package-lock.json') }}
+
+      - name: Install dependencies
+        if: steps.nm-cache.outputs.cache-hit != 'true'
+        run: npm ci
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Start local Supabase
+        run: supabase start
+
+      - name: Extract Supabase credentials
+        id: sb
+        run: |
+          sb_env=$(supabase status --output env)
+          extract() { echo "$sb_env" | grep "^$1=" | sed 's/^[^=]*="\(.*\)"/\1/'; }
+          echo "url=$(extract API_URL)"          >> "$GITHUB_OUTPUT"
+          echo "anon=$(extract ANON_KEY)"        >> "$GITHUB_OUTPUT"
+          echo "service=$(extract SERVICE_ROLE_KEY)" >> "$GITHUB_OUTPUT"
+
+      - name: Run Vitest RLS tests
+        env:
+          SUPABASE_URL: ${{ steps.sb.outputs.url }}
+          SUPABASE_ANON_KEY: ${{ steps.sb.outputs.anon }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ steps.sb.outputs.service }}
+        run: npx vitest run src/integration/supabaseRLS.test.ts
+
+      - name: Resolve Playwright version
+        id: pw
+        run: echo "version=$(node -p "require('@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Playwright browsers
+        id: pw-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.pw.outputs.version }}-chromium
+
+      - name: Install Playwright browser (cached)
+        if: steps.pw-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
+
+      - name: Install Playwright browser (fresh)
+        if: steps.pw-cache.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps chromium
+
+      - name: Build app with real Supabase URL
+        env:
+          VITE_SUPABASE_URL: ${{ steps.sb.outputs.url }}
+          VITE_SUPABASE_ANON_KEY: ${{ steps.sb.outputs.anon }}
+          VITE_E2E: 'true'
+        run: npm run build:app
+
+      - name: Run real-DB E2E tests
+        env:
+          PW_SKIP_BUILD: '1'
+          SUPABASE_URL: ${{ steps.sb.outputs.url }}
+          SUPABASE_ANON_KEY: ${{ steps.sb.outputs.anon }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ steps.sb.outputs.service }}
+        run: npx playwright test --config=playwright.supabase.config.ts
+
+      - name: Stop Supabase
+        if: always()
+        run: supabase stop
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: interaction-report-supabase-real-db
+          path: playwright-report/
+          retention-days: 14
+
   create-issue:
     name: Open GitHub Issue on failure / flakiness
-    needs: interaction
+    needs: [interaction, interaction-real-db]
     # Run after every non-cancelled run so flaky-but-passing tests are also tracked.
     if: always() && needs.interaction.result != 'cancelled'
     runs-on: ubuntu-latest
@@ -197,6 +301,7 @@ jobs:
 
       # Each per-project artifact lands in its own subdirectory:
       #   interaction-reports/interaction-report-<name>/interaction-report.json
+      # This pattern also picks up interaction-report-supabase-real-db.
       - name: Download all Playwright reports
         uses: actions/download-artifact@v4
         with:
