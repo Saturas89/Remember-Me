@@ -168,21 +168,32 @@ jobs:
           path: playwright-report/
           retention-days: 14
 
-  # ── Real-DB job: local Supabase container ────────────────────────────────────
+  # ── Real-DB job: local Supabase container, alle 6 Browser/Geräte ────────────
   # Starts a genuine Supabase stack via Docker (PostgREST + GoTrue + Storage)
-  # so that RLS policies, FK cascades, and the full auth flow are exercised
-  # against a real database — not the in-memory mock used by the mock-based
-  # interaction suite above.
+  # so that RLS policies, FK cascades, private-sync flows, and the complete
+  # auth/crypto stack are exercised against a real database across all six
+  # browser/device profiles.
   #
-  # Runs: Vitest RLS tests (src/integration/supabaseRLS.test.ts)
-  #       Playwright E2E tests (e2e/supabase/two-device-real.spec.ts)
+  # Runs sequentially on a single runner (workers: 1 in playwright.supabase.config.ts)
+  # to avoid test-data interference across the shared local Supabase instance.
+  # Nightly runtime budget is ≈ 90 min.
   #
-  # Only chromium; purpose is schema/RLS validation, not cross-browser coverage.
+  # Test suites covered:
+  #   • src/integration/supabaseRLS.test.ts  – 8 Vitest RLS unit tests
+  #   • e2e/supabase/two-device-real.spec.ts – full Alice→Bob share flow
+  #   • e2e/supabase/android-ux-real.spec.ts – mobile UX (skip on desktop)
+  #   • e2e/supabase/private-sync-real.spec.ts – Storyhold Server sync wizard
+  #
+  # OneDrive and Google Drive providers are intentionally NOT tested here:
+  # they require OAuth2 authorization code flows against cloud services
+  # (Microsoft / Google) for which no local Docker equivalent exists.
+  # Those providers are covered by mock-based tests in e2e/private-sync/ and
+  # by encryption unit tests in src/utils/*.encryption.test.ts.
   interaction-real-db:
-    name: Real-DB Integration (Supabase)
+    name: Real-DB – alle 6 Browser (Supabase)
     runs-on: ubuntu-latest
     needs: [unit]
-    timeout-minutes: 25
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
         with:
@@ -216,9 +227,9 @@ jobs:
         run: |
           sb_env=$(supabase status --output env)
           extract() { echo "$sb_env" | grep "^$1=" | sed 's/^[^=]*="\(.*\)"/\1/'; }
-          echo "url=$(extract API_URL)"          >> "$GITHUB_OUTPUT"
-          echo "anon=$(extract ANON_KEY)"        >> "$GITHUB_OUTPUT"
-          echo "service=$(extract SERVICE_ROLE_KEY)" >> "$GITHUB_OUTPUT"
+          echo "url=$(extract API_URL)"               >> "$GITHUB_OUTPUT"
+          echo "anon=$(extract ANON_KEY)"             >> "$GITHUB_OUTPUT"
+          echo "service=$(extract SERVICE_ROLE_KEY)"  >> "$GITHUB_OUTPUT"
 
       - name: Run Vitest RLS tests
         env:
@@ -236,15 +247,15 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ steps.pw.outputs.version }}-chromium
+          key: playwright-${{ runner.os }}-${{ steps.pw.outputs.version }}-all-engines
 
-      - name: Install Playwright browser (cached)
+      - name: Install Playwright browsers (cached)
         if: steps.pw-cache.outputs.cache-hit == 'true'
-        run: npx playwright install-deps chromium
+        run: npx playwright install-deps chromium firefox webkit
 
-      - name: Install Playwright browser (fresh)
+      - name: Install Playwright browsers (fresh)
         if: steps.pw-cache.outputs.cache-hit != 'true'
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install --with-deps chromium firefox webkit
 
       - name: Build app with real Supabase URL
         env:
@@ -253,7 +264,7 @@ jobs:
           VITE_E2E: 'true'
         run: npm run build:app
 
-      - name: Run real-DB E2E tests
+      - name: Run real-DB E2E tests (alle 6 Projekte, sequenziell)
         env:
           PW_SKIP_BUILD: '1'
           SUPABASE_URL: ${{ steps.sb.outputs.url }}
@@ -264,6 +275,10 @@ jobs:
       - name: Stop Supabase
         if: always()
         run: supabase stop
+
+      - name: Summarize flaky tests
+        if: ${{ !cancelled() }}
+        run: node scripts/summarize-flaky-tests.mjs "supabase-real-db"
 
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
