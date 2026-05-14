@@ -267,7 +267,6 @@ export const UI_EN = {
     familienmodusTagPermanent: 'Permanent',
     familienmodusTagMutual: 'Two-way',
     familienmodusTagEncrypted: 'Only you two',
-    familienmodusTagInternet: 'Needs internet',
     familienmodusCtaSetup: 'Set up',
     familienmodusCtaOpen: 'Open shared memories',
     lastActiveToday: 'active today',

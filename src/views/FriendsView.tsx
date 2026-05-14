@@ -138,19 +138,17 @@ export function FriendsView({
         )}
 
         {onOpenSandraFlow && (
-          <div className="friends-invite-primary sandra-entry">
+          <>
             <p className="friends-hint">{sandraT.entryCard.desc}</p>
-            <div className="friends-share">
-              <button
-                type="button"
-                className="share-cta-btn"
-                onClick={onOpenSandraFlow}
-                data-testid="sandra-entry-cta"
-              >
-                {sandraT.entryCard.cta}
-              </button>
-            </div>
-          </div>
+            <button
+              type="button"
+              className="share-cta-btn"
+              onClick={onOpenSandraFlow}
+              data-testid="sandra-entry-cta"
+            >
+              {sandraT.entryCard.cta}
+            </button>
+          </>
         )}
 
         <details className="friends-invite-secondary">
@@ -191,7 +189,6 @@ export function FriendsView({
             <span className="friends-tag friends-tag--accent">{t.friends.familienmodusTagPermanent}</span>
             <span className="friends-tag friends-tag--accent">{t.friends.familienmodusTagMutual}</span>
             <span className="friends-tag friends-tag--accent">{t.friends.familienmodusTagEncrypted}</span>
-            <span className="friends-tag">{t.friends.familienmodusTagInternet}</span>
           </div>
           <p className="friends-hint">{t.friends.familienmodusHint}</p>
           <button

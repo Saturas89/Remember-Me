@@ -283,7 +283,6 @@ export interface Translations {
     familienmodusTagPermanent: string
     familienmodusTagMutual: string
     familienmodusTagEncrypted: string
-    familienmodusTagInternet: string
     familienmodusCtaSetup: string
     familienmodusCtaOpen: string
     lastActiveToday: string

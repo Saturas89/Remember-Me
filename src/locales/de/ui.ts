@@ -270,7 +270,6 @@ export const UI_DE = {
     familienmodusTagPermanent: 'Dauerhaft',
     familienmodusTagMutual: 'Gegenseitig',
     familienmodusTagEncrypted: 'Nur ihr beide',
-    familienmodusTagInternet: 'Braucht Internet',
     familienmodusCtaSetup: 'Einrichten',
     familienmodusCtaOpen: 'Geteilte Erinnerungen öffnen',
     /** FriendCard relatives Datum (#167). */
