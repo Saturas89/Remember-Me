@@ -63,8 +63,10 @@ test.describe('Online sharing – opt-in contract', () => {
   test('invite link generation works offline (existing ?mi= flow unaffected)', async ({ page }) => {
     await completeOnboarding(page, 'Anna')
     await openFriendsTab(page)
-    await expect(page.locator('.share-cta-btn').first()).toBeVisible()
-    await expect(page.locator('.share-cta-btn').first()).toContainText(/Link teilen/)
+    // Themenpack share button lives inside a collapsible <details> below the
+    // Sandra-Flow primary CTA. Expand it before asserting on its label.
+    await page.getByText('Lieber vorbereitete Fragen?').click()
+    await expect(page.getByRole('button', { name: /Themen-Link teilen/ })).toBeVisible()
   })
 
   test('online-sharing CTA is rendered – but does not trigger any network', async ({ page }) => {

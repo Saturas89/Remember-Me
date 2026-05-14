@@ -535,8 +535,8 @@ test.describe('Sandra-Flow – Two-person integration', () => {
 // Test 8 — FriendsView entry card (FR-020.10)
 //
 // Sandra's first touchpoint: she opens the Friends tab and taps the
-// "Eigene Fragen für jemanden formulieren" card. The card must navigate
-// directly into `#/ask`.
+// primary "Fragen formulieren" CTA inside the merged invitation section.
+// The CTA must navigate directly into `#/ask`.
 // ─────────────────────────────────────────────────────────────────────────────
 
 test.describe('Sandra-Flow – Friends-tab entry card (FR-020.10)', () => {
@@ -547,9 +547,9 @@ test.describe('Sandra-Flow – Friends-tab entry card (FR-020.10)', () => {
   test('card is visible in /friends and the CTA navigates to #/ask', async ({ page }) => {
     await page.goto('/friends')
 
-    // The section title is the spec wording verbatim (FR-020.10).
+    // The merged invitation section title (Sandra-Flow + Themenpack).
     await expect(
-      page.getByRole('heading', { name: 'Eigene Fragen für jemanden formulieren' }),
+      page.getByRole('heading', { name: 'Erinnerungs-Einladung verschicken' }),
     ).toBeVisible()
 
     const cta = page.getByTestId('sandra-entry-cta')

@@ -32,10 +32,13 @@ test.describe('Storyhold – Freunde-Einladung', () => {
     await completeOnboarding(page, 'Anna')
     await openFriendsTab(page)
 
-    // The Friends view contains two `.share-cta-btn` instances when the build
-    // has Supabase configured (the second is the Familienmodus opt-in CTA),
-    // so we scope the lookup to the invite section by accessible text.
-    const shareBtn = page.getByRole('button', { name: /Link teilen/ })
+    // Primary CTA in the merged invitation section is the Sandra-Flow entry.
+    await expect(page.getByTestId('sandra-entry-cta')).toBeVisible()
+
+    // The Themenpack fallback is hidden behind a collapsible <details>;
+    // expand it before asserting on the secondary share button and copy.
+    await page.getByText('Lieber vorbereitete Fragen?').click()
+    const shareBtn = page.getByRole('button', { name: /Themen-Link teilen/ })
     await expect(shareBtn).toBeVisible()
     await expect(shareBtn).toBeEnabled()
 

@@ -241,13 +241,19 @@ export const UI_DE = {
   friends: {
     pageTitle: 'Freunde einladen',
     topbarTitle: 'Erinnerung einsammeln',
-    inviteLinkHeading: 'Einmalige Einladung',
+    /** Persona-getriebene Vereinfachung: drei Sektionen → zwei. Sandra-Flow
+     *  ist primärer CTA, Themenpack wird sekundär aufklappbar; Familienmodus
+     *  wird zu „Laufend verbunden bleiben" mit „Braucht Internet"-Tag. */
+    intro: 'Lade jemanden ein, dir Erinnerungen zu erzählen – oder bleibt laufend in Verbindung.',
+    inviteLinkHeading: 'Erinnerungs-Einladung verschicken',
     inviteHintNoName: 'Tipp: Gib deinen Namen auf der Startseite ein, damit die Einladung personalisiert ist.',
-    inviteHint: 'Du teilst den Link – dein Gegenüber klickt darauf, tippt seine Erinnerungen ein und schickt sie dir zurück. Ganz ohne App oder Account. Du kannst den Link beliebig oft und an beliebig viele Personen schicken.',
+    inviteHint: 'Schicke jemandem Fragen – sie antwortet auf ihrem Gerät und schickt dir die Erinnerungen zurück. Ohne App und ohne Account.',
+    inviteSecondarySummary: 'Lieber vorbereitete Fragen? Fertiges Themenpack senden',
+    inviteSecondaryHint: 'Du teilst den Link – dein Gegenüber klickt darauf, tippt seine Erinnerungen ein und schickt sie dir zurück. Ganz ohne App oder Account. Du kannst den Link beliebig oft und an beliebig viele Personen schicken.',
     opening: 'Wird geöffnet…',
     messageCopied: '✓ Nachricht kopiert!',
     copyRetry: '⚠ Nochmal versuchen',
-    shareCta: '📤 Link teilen',
+    shareCta: '📤 Themen-Link teilen',
     friendsFromHeading: 'Erinnerungen von ({n})',
     attachmentsHeading: 'Erinnerungen mit Anhängen empfangen',
     attachmentsHint: 'Hat ein Freund Fotos, Aufnahmen oder Videos mitgeschickt? Öffne die Datei hier und sie landen in deinem Archiv.',
@@ -259,20 +265,14 @@ export const UI_DE = {
     inviteShareCardTitleWithName: '{name} lädt ein',
     inviteShareCardTitleFallback: 'Einladung zu Storyhold',
     inviteShareCardSubtitle: 'Erzähl mir deine Erinnerung – ohne App, ohne Account.',
-    familienmodusHeading: 'Familienmodus',
+    familienmodusHeading: 'Laufend verbunden bleiben',
     familienmodusHint: 'Ihr tauscht je einmal einen Verbindungslink aus – danach könnt ihr euch gegenseitig ausgewählte Erinnerungen zuschicken, die nur ihr beide lesen könnt. Anders als beim Einladungslink bleibt die Verbindung bestehen.',
     familienmodusTagPermanent: 'Dauerhaft',
     familienmodusTagMutual: 'Gegenseitig',
-    familienmodusTagEncrypted: 'Verschlüsselt',
+    familienmodusTagEncrypted: 'Nur ihr beide',
+    familienmodusTagInternet: 'Braucht Internet',
     familienmodusCtaSetup: 'Einrichten',
     familienmodusCtaOpen: 'Geteilte Erinnerungen öffnen',
-    /** Persona-led entscheidungs-Guidance (#164): erklärt, wann Offline-
-     *  Einladung und wann Familienmodus die richtige Wahl ist. */
-    flowGuidanceHeading: 'Zwei Wege, jemanden einzubinden',
-    flowGuidanceOfflineTitle: 'Einmalige Einladung',
-    flowGuidanceOfflineDesc: 'Ideal für jemanden, der einmal mitmacht. Person beantwortet die Fragen, schickt dir das Ergebnis zurück. Kein Account, keine laufende Verbindung.',
-    flowGuidanceFamilyTitle: 'Familienmodus',
-    flowGuidanceFamilyDesc: 'Ideal für aktive Mitautor:innen. Live-Verbindung – du siehst neue Beiträge sofort, könnt euch gegenseitig Erinnerungen schicken.',
     /** FriendCard relatives Datum (#167). */
     lastActiveToday: 'heute aktiv',
     lastActiveYesterday: 'gestern aktiv',
@@ -283,8 +283,9 @@ export const UI_DE = {
 
   onlineSharingIntro: {
     back: 'Zurück',
-    title: 'Familienmodus',
-    heroAlt: 'Familienmodus',
+    title: 'Laufend verbunden bleiben',
+    heroAlt: 'Laufend verbunden bleiben',
+    plainTextAssurance: 'Was du teilst, können nur du und die andere Person lesen. Nicht einmal wir.',
     whatHeading: 'Was ist das?',
     whatBody1: 'Du kannst einzelne Erinnerungen direkt mit ausgewählten Personen teilen – Familie, enge Freunde, Kolleg:innen. Sie sehen die Erinnerung in ihrem eigenen Storyhold und können ihre Gedanken ergänzen. Deine Erinnerung bleibt dabei unverändert.',
     whatBody2Strong: 'Komplett optional.',
@@ -316,7 +317,7 @@ export const UI_DE = {
     deactivateHeading: 'Was passiert beim Deaktivieren?',
     deactivateBody: 'Alle geteilten Erinnerungen werden vom Server gelöscht und die Verbindung zu deinen Kontakten getrennt. Deine eigenen Antworten und Fotos auf diesem Gerät bleiben vollständig erhalten.',
     notConfiguredWarning: 'Diese Installation unterstützt das direkte Teilen noch nicht. Frag die Person, die Storyhold für dich betreibt, ob das Feature verfügbar ist.',
-    consentLabel: 'Ich habe verstanden, dass meine geteilten Erinnerungen verschlüsselt gespeichert werden.',
+    consentLabel: 'Ich habe verstanden, dass nur die andere Person und ich das Geteilte lesen können.',
     activateButton: 'Aktivieren',
   },
 
