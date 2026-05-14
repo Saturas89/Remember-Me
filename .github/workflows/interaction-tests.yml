@@ -14,8 +14,8 @@ on:
         required: false
         default: ''
   schedule:
-    # 03:00 UTC every night
-    - cron: '0 3 * * *'
+    # 01:00 UTC every night
+    - cron: '0 1 * * *'
 
 concurrency:
   group: interaction-${{ github.ref }}
@@ -231,12 +231,12 @@ jobs:
           echo "anon=$(extract ANON_KEY)"             >> "$GITHUB_OUTPUT"
           echo "service=$(extract SERVICE_ROLE_KEY)"  >> "$GITHUB_OUTPUT"
 
-      - name: Run Vitest RLS tests
+      - name: Run Vitest integration tests
         env:
           SUPABASE_URL: ${{ steps.sb.outputs.url }}
           SUPABASE_ANON_KEY: ${{ steps.sb.outputs.anon }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ steps.sb.outputs.service }}
-        run: npx vitest run src/integration/supabaseRLS.test.ts
+        run: npx vitest run src/integration/
 
       - name: Resolve Playwright version
         id: pw

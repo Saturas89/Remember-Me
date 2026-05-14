@@ -62,6 +62,28 @@ Bei den von der Changelog-Pflicht ausgenommenen PRs (reine UX/UI-Anpassungen, Bu
 - **End-to-End:** Playwright in `e2e/`. Lauf: `npm run test:e2e`. Läuft in CI gegen fünf Browser-Projekte.
 - Vor jeder PR-Erstellung sicherstellen, dass `npm test` lokal grün ist.
 
+## Nachttest-Synchronisation: Tests mit Features aktuell halten
+
+Die Nightly-Pipeline (`.github/workflows/interaction-tests.yml`, startet 01:00 UTC) deckt alle komplexen User-Flows gegen eine echte Supabase-Instanz und sechs Browser/Gerät-Kombinationen ab. Damit diese nicht still veraltet, gilt:
+
+**Pflicht:** Jeder PR, der einen bestehenden User-Flow **ändert** oder einen neuen Flow **einführt**, muss im selben Commit die betroffenen Nacht-Testdateien in `e2e/supabase/` aktualisieren.
+
+Konkret:
+- Ändert sich ein UI-Selector, ein Workflow-Step oder ein API-Endpunkt → betroffene Spec-Datei patchen.
+- Kommt ein neuer Flow hinzu (z. B. neuer Sync-Provider, neue Share-Funktion) → neue Spec-Datei unter `e2e/supabase/` anlegen, Testfall in die Matrix einfügen.
+- Wird ein Flow entfernt → zugehörigen Test ebenfalls entfernen, keinen toten Code lassen.
+
+**Ausgenommen:** Reine Styling-/Layout-PRs ohne Verhaltensänderung müssen keine Nacht-Tests anpassen.
+
+**Dateiübersicht (Stand 2026-05-14):**
+| Datei | Inhalt |
+|---|---|
+| `e2e/supabase/two-device-real.spec.ts` | Share-Flow, RLS-Isolation, Annotation-Roundtrip, Cascade-Cleanup |
+| `e2e/supabase/android-ux-real.spec.ts` | Viewport, Tap-Targets, Feed-Scroll, Samsung-Viewport |
+| `e2e/supabase/private-sync-real.spec.ts` | Setup-Wizard, Sync-Write, RLS-Isolation, Deaktivierung, Zweites Gerät |
+| `e2e/supabase/storage-real.spec.ts` | Supabase Storage: Upload, Download, Delete, RLS-Isolation |
+| `e2e/supabase/multi-recipient-real.spec.ts` | Drei-Geräte-Share, mehrere Empfänger, sequentielle Shares |
+
 ## Design-System: Friends-Tab als Referenz
 
 Alle neuen Views, Modals, Sektionen und UI-Komponenten **müssen sich am Friends-Tab orientieren**, damit Styling und UX in der App konsistent bleiben. Eigene Farben, Spacing-Werte oder Ad-hoc-Patterns sind verboten – stattdessen die etablierten Design-Tokens und Klassen wiederverwenden (oder, wenn etwas wirklich fehlt, dort ergänzen, nicht parallel neu erfinden).
