@@ -1132,6 +1132,42 @@
 
 .friends-section        { margin-bottom: 2rem; }
 
+/* Ein-Satz-Begrüßung oben auf dem Friends-Tab (Persona-Audit Ingrid):
+   reduziert kognitive Last vor den Sektionen, ohne neuen Kasten zu öffnen. */
+.friends-intro {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin-bottom: 1rem;
+}
+
+/* Primärer „Eigene Fragen formulieren"-Block innerhalb der Einladungs-
+   Sektion (Sandra-Persona priorisiert). */
+.friends-invite-primary {
+  margin-bottom: 0.75rem;
+}
+
+/* Sekundärer, aufklappbarer „Themenpack senden"-Block. Selbe Tokens wie
+   .friends-details, nur dezenter platziert unter dem primären Sandra-CTA. */
+.friends-invite-secondary {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+}
+
+.friends-invite-secondary__summary {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  user-select: none;
+  margin-bottom: 0.75rem;
+}
+
+.friends-invite-secondary[open] .friends-invite-secondary__summary {
+  margin-bottom: 0.75rem;
+  color: var(--text);
+}
+
 .friends-section-title {
   font-size: 1rem;
   font-weight: 700;
@@ -5219,6 +5255,19 @@ details[open] .faq-item__chevron {
 }
 
 /* ── Online Sharing – Intro / Hub ──────────────────────── */
+/* Klartext-Zusicherung oben im Consent-Screen (Persona-Audit Ingrid):
+   Ein ruhiger Satz vor allen Datenschutz-Sektionen. */
+.online-intro-assurance {
+  background: var(--surface-raised);
+  border-left: 3px solid var(--accent);
+  border-radius: 8px;
+  padding: 0.6rem 0.75rem;
+  margin-bottom: 1rem;
+  color: var(--text);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
 .friends-details {
   margin-bottom: 0.75rem;
 }

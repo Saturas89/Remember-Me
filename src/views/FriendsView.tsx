@@ -124,21 +124,7 @@ export function FriendsView({
         <h2 className="archive-title">{t.friends.topbarTitle}</h2>
       </div>
 
-      {onlineSharingConfigured && onOpenOnlineSharing && (
-        <section className="friends-section friends-flow-guidance">
-          <h3 className="friends-section-title">{t.friends.flowGuidanceHeading}</h3>
-          <ul className="friends-flow-guidance__list">
-            <li className="friends-flow-guidance__item">
-              <strong className="friends-flow-guidance__name">{t.friends.flowGuidanceOfflineTitle}</strong>
-              <span className="friends-flow-guidance__desc">{t.friends.flowGuidanceOfflineDesc}</span>
-            </li>
-            <li className="friends-flow-guidance__item">
-              <strong className="friends-flow-guidance__name">{t.friends.flowGuidanceFamilyTitle}</strong>
-              <span className="friends-flow-guidance__desc">{t.friends.flowGuidanceFamilyDesc}</span>
-            </li>
-          </ul>
-        </section>
-      )}
+      <p className="friends-intro">{t.friends.intro}</p>
 
       <section className="friends-section">
         <h3 className="friends-section-title">{t.friends.inviteLinkHeading}</h3>
@@ -150,43 +136,47 @@ export function FriendsView({
         {!profileName && (
           <p className="friends-hint friends-hint--warn">{t.friends.inviteHintNoName}</p>
         )}
-        <p className="friends-hint">{t.friends.inviteHint}</p>
 
-        <div className="friends-share">
-          <button
-            className={`share-cta-btn${shareStatus === 'copied' ? ' share-cta-btn--success' : shareStatus === 'error' ? ' share-cta-btn--error' : ''}`}
-            onClick={handleShare}
-            disabled={isSharing}
-          >
-            {isSharing ? (
-              <><span className="share-cta-btn__spinner" aria-hidden="true" />{t.friends.opening}</>
-            ) : shareStatus === 'copied' ? (
-              t.friends.messageCopied
-            ) : shareStatus === 'error' ? (
-              t.friends.copyRetry
-            ) : (
-              t.friends.shareCta
-            )}
-          </button>
-        </div>
-      </section>
+        {onOpenSandraFlow && (
+          <div className="friends-invite-primary sandra-entry">
+            <p className="friends-hint">{sandraT.entryCard.desc}</p>
+            <div className="friends-share">
+              <button
+                type="button"
+                className="share-cta-btn"
+                onClick={onOpenSandraFlow}
+                data-testid="sandra-entry-cta"
+              >
+                {sandraT.entryCard.cta}
+              </button>
+            </div>
+          </div>
+        )}
 
-      {onOpenSandraFlow && (
-        <section className="friends-section sandra-entry">
-          <h3 className="friends-section-title">{sandraT.entryCard.title}</h3>
-          <p className="friends-hint">{sandraT.entryCard.desc}</p>
+        <details className="friends-invite-secondary">
+          <summary className="friends-invite-secondary__summary">
+            {t.friends.inviteSecondarySummary}
+          </summary>
+          <p className="friends-hint">{t.friends.inviteSecondaryHint}</p>
           <div className="friends-share">
             <button
-              type="button"
-              className="share-cta-btn"
-              onClick={onOpenSandraFlow}
-              data-testid="sandra-entry-cta"
+              className={`btn btn--ghost btn--sm${shareStatus === 'copied' ? ' is-success' : shareStatus === 'error' ? ' is-error' : ''}`}
+              onClick={handleShare}
+              disabled={isSharing}
             >
-              {sandraT.entryCard.cta}
+              {isSharing ? (
+                <><span className="share-cta-btn__spinner" aria-hidden="true" />{t.friends.opening}</>
+              ) : shareStatus === 'copied' ? (
+                t.friends.messageCopied
+              ) : shareStatus === 'error' ? (
+                t.friends.copyRetry
+              ) : (
+                t.friends.shareCta
+              )}
             </button>
           </div>
-        </section>
-      )}
+        </details>
+      </section>
 
       {onlineSharingConfigured && onOpenOnlineSharing && (
         <section className="friends-section">
@@ -201,6 +191,7 @@ export function FriendsView({
             <span className="friends-tag friends-tag--accent">{t.friends.familienmodusTagPermanent}</span>
             <span className="friends-tag friends-tag--accent">{t.friends.familienmodusTagMutual}</span>
             <span className="friends-tag friends-tag--accent">{t.friends.familienmodusTagEncrypted}</span>
+            <span className="friends-tag">{t.friends.familienmodusTagInternet}</span>
           </div>
           <p className="friends-hint">{t.friends.familienmodusHint}</p>
           <button

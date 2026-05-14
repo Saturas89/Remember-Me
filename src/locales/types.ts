@@ -254,9 +254,12 @@ export interface Translations {
   friends: {
     pageTitle: string
     topbarTitle: string
+    intro: string
     inviteLinkHeading: string
     inviteHintNoName: string
     inviteHint: string
+    inviteSecondarySummary: string
+    inviteSecondaryHint: string
     opening: string
     messageCopied: string
     copyRetry: string
@@ -280,13 +283,9 @@ export interface Translations {
     familienmodusTagPermanent: string
     familienmodusTagMutual: string
     familienmodusTagEncrypted: string
+    familienmodusTagInternet: string
     familienmodusCtaSetup: string
     familienmodusCtaOpen: string
-    flowGuidanceHeading: string
-    flowGuidanceOfflineTitle: string
-    flowGuidanceOfflineDesc: string
-    flowGuidanceFamilyTitle: string
-    flowGuidanceFamilyDesc: string
     lastActiveToday: string
     lastActiveYesterday: string
     lastActiveDays: string
@@ -298,6 +297,7 @@ export interface Translations {
     back: string
     title: string
     heroAlt: string
+    plainTextAssurance: string
     whatHeading: string
     whatBody1: string
     whatBody2Strong: string

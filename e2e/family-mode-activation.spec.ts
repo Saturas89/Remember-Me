@@ -35,9 +35,9 @@ test.describe('Familienmodus – Aktivierung & Consent (FR-15.1 – FR-15.3)', (
     await openFriendsTab(page)
     await page.getByTestId('open-online-sharing').click()
 
-    await expect(page.getByRole('heading', { name: 'Familienmodus', exact: true })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Laufend verbunden bleiben', exact: true })).toBeVisible()
     await expect(page.getByRole('heading', { name: /Datenschutz auf einen Blick/ })).toBeVisible()
-    await expect(page.getByText(/verschlüsselt gespeichert werden/)).toBeVisible()
+    await expect(page.getByText(/nur die andere Person und ich das Geteilte lesen können/)).toBeVisible()
 
     const activate = page.getByRole('button', { name: 'Aktivieren', exact: true })
     await expect(activate).toBeDisabled()
@@ -63,7 +63,7 @@ test.describe('Familienmodus – Aktivierung & Consent (FR-15.1 – FR-15.3)', (
     await completeOnboarding(page, 'Anna')
     await openFriendsTab(page)
     await page.getByTestId('open-online-sharing').click()
-    await expect(page.getByRole('heading', { name: 'Familienmodus', exact: true })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Laufend verbunden bleiben', exact: true })).toBeVisible()
 
     await page.getByRole('button', { name: 'Zurück', exact: true }).click()
     await expect(page.getByRole('heading', { name: /Erinnerung einsammeln/ })).toBeVisible()

@@ -33,6 +33,8 @@ export function OnlineSharingIntroView({ configured, onActivate, onBack }: Props
         />
       </div>
 
+      <p className="online-intro-assurance">{i.plainTextAssurance}</p>
+
       <section className="friends-section">
         <h3 className="friends-section-title">{i.whatHeading}</h3>
         <p className="friends-hint">{i.whatBody1}</p>

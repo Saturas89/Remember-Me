@@ -103,7 +103,7 @@ describe('Familienmodus – Aktivierung (FR-15.1 – FR-15.3)', () => {
     await gotoFriendsTab()
     fireEvent.click(await screen.findByTestId('open-online-sharing'))
 
-    expect(await screen.findByRole('heading', { name: 'Familienmodus' })).toBeTruthy()
+    expect(await screen.findByRole('heading', { name: 'Laufend verbunden bleiben' })).toBeTruthy()
 
     const activate = screen.getByRole('button', { name: 'Aktivieren' }) as HTMLButtonElement
     expect(activate.disabled).toBe(true)
@@ -135,7 +135,7 @@ describe('Familienmodus – Aktivierung (FR-15.1 – FR-15.3)', () => {
 
     await gotoFriendsTab()
     fireEvent.click(await screen.findByTestId('open-online-sharing'))
-    expect(await screen.findByRole('heading', { name: 'Familienmodus' })).toBeTruthy()
+    expect(await screen.findByRole('heading', { name: 'Laufend verbunden bleiben' })).toBeTruthy()
 
     fireEvent.click(screen.getByRole('button', { name: 'Zurück' }))
 
