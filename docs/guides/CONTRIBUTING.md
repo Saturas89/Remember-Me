@@ -12,7 +12,7 @@ derselben Lizenz veröffentlicht.
 Die Architektur folgt einem Open-Core-Modell, dokumentiert in
 [ADR-001](../architecture/ADR-001-open-source-vs-proprietary.md):
 
-- **Dieses Repo (`saturas89/remember-me`)** – komplette PWA: UI,
+- **Dieses Repo (`saturas89/storyhold`)** – komplette PWA: UI,
   Frage-Engine, Local-Storage, dünne Pro-Clients. AGPL-3.0-or-later.
 - **`saturas89/remember-me-pro`** (privat) – proprietäre
   Premium-Backend-Komponenten (Supabase Edge Functions, Prompt-Templates,
