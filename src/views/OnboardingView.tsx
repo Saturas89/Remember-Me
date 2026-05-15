@@ -1,8 +1,8 @@
-import { useState, useRef } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { HeroLogo } from '../components/Logo'
 import { importFile } from '../utils/archiveImport'
 import { useTranslation } from '../locales'
-import { trackOnboardingCompleted } from '../lib/analytics'
+import { trackOnboardingStarted, trackOnboardingCompleted } from '../lib/analytics'
 import type { Profile, AppMode } from '../types'
 
 interface Props {
@@ -22,6 +22,8 @@ export function OnboardingView({ needsModeChoice, modeOnly = false, onChooseMode
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [importProgress, setImportProgress] = useState<{ step: string; pct: number } | null>(null)
   const [importStatus, setImportStatus] = useState<{ ok: boolean; message: string } | null>(null)
+
+  useEffect(() => { trackOnboardingStarted() }, [])
 
   const features = [
     { icon: '🔒', title: t.onboarding.featuresPrivateTitle, desc: t.onboarding.featuresPrivateDesc },

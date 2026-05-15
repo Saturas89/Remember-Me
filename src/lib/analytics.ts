@@ -47,6 +47,10 @@ export function trackQuizMediaAdded(categoryId: string, mediaType: 'image' | 'vi
 
 // ── Onboarding ───────────────────────────────────────────────────────────────
 
+export function trackOnboardingStarted(): void {
+  posthog.capture('onboarding_started')
+}
+
 export function trackOnboardingCompleted(importedBackup: boolean): void {
   posthog.capture('onboarding_completed', { imported_backup: importedBackup })
 }

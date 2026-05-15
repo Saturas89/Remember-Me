@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { QuestionCard } from '../components/QuestionCard'
 import { ProgressBar } from '../components/ProgressBar'
 import { useTranslation } from '../locales'
@@ -36,8 +36,22 @@ export function QuizView({
   const videoIds  = getAnswerVideoIds(question.id)
   const audioId   = getAnswerAudioId(question.id)
 
+  // Refs keep beforeunload handler up-to-date without re-registering on every render.
+  const indexRef = useRef(index)
+  indexRef.current = index
+  const exitTrackedRef = useRef(false)
+
   useEffect(() => {
     trackQuizStarted(category.id, category.questions.length)
+
+    function handleBeforeUnload() {
+      if (!exitTrackedRef.current) {
+        exitTrackedRef.current = true
+        trackQuizAbandoned(category.id, indexRef.current, category.questions.length)
+      }
+    }
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   function handleSave(value: string) {
@@ -79,7 +93,10 @@ export function QuizView({
   }
 
   function handleBack() {
-    trackQuizAbandoned(category.id, index, category.questions.length)
+    if (!exitTrackedRef.current) {
+      exitTrackedRef.current = true
+      trackQuizAbandoned(category.id, index, category.questions.length)
+    }
     onBack()
   }
 
@@ -87,6 +104,7 @@ export function QuizView({
     if (index + 1 < category.questions.length) {
       setIndex(i => i + 1)
     } else {
+      exitTrackedRef.current = true
       trackQuizCompleted(category.id, category.questions.length)
       onBack()
     }

@@ -3,6 +3,7 @@ import { FriendCard } from '../components/FriendCard'
 import { useTranslation } from '../locales'
 import { useSandraFlowStrings } from '../i18n/sandraFlow'
 import { generateShareCard } from '../utils/shareCard'
+import { trackShareInitiated } from '../lib/analytics'
 import type { Friend, FriendAnswer } from '../types'
 
 interface Props {
@@ -72,6 +73,7 @@ export function FriendsView({
   // directly inside the click gesture (no awaits before the call).
   function handleShare() {
     if (isSharing) return
+    trackShareInitiated('online-link')
 
     const url   = inviteUrl
     const text  = buildText(url)
