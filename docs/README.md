@@ -1,8 +1,8 @@
 # Storyhold – Projekt-Übersicht
 
 **Status:** 🔵 IN PROGRESS
-**Version:** 2.9.0
-**Letzte Aktualisierung:** 2026-05-14
+**Version:** 2.10.0
+**Letzte Aktualisierung:** 2026-05-15
 
 > Version und Datum werden per `npm test` (`scripts/check-docs-sync.mjs`)
 > gegen `package.json` und das jüngste `docs/CHANGELOG.md`-Datum
@@ -137,6 +137,7 @@ Teilen / Exportieren (PDF, Markdown, JSON, ZIP-Archiv, KI-Export, Freunde einlad
 - [x] **Sandra-First Flow** – tech-affinerer Käufer formuliert eigene Fragen und schickt sie als Pack-Link an Mama/Papa/Oma (REQ-020) – v2.7.0
 - [x] **Leichtgewichtiges In-App-Feedback** – 5-Smiley-Modal mit optionalem Kommentar im Profil, anonyme Insert-Tabelle (REQ-021) – v2.8.0
 - [x] **Trust-Badges in Impressum + README** – „🔓 Open Source · AGPL-3.0" und „🇩🇪 Made in Germany" als Pills im Friends-Tab-Stil, zusätzlich shields.io-Badges im Root-README – v2.9.0
+- [x] **PostHog Analytics (EU Cloud, cookie-less)** – Quiz-Flows, Onboarding, Tab-Wechsel und Feature-Öffner werden anonym getrackt; kein Cookie, kein Autocapture, kein Fingerprinting; deaktiviert wenn `VITE_POSTHOG_KEY` fehlt – v2.10.0
 
 ## Roadmap 📋
 
@@ -175,7 +176,7 @@ Teilen / Exportieren (PDF, Markdown, JSON, ZIP-Archiv, KI-Export, Freunde einlad
 | Crypto | Web Crypto API (ECDH P-256, HKDF-SHA256, AES-256-GCM) |
 | Online-Backend (optional) | Supabase (Auth, Postgres mit RLS, Storage) |
 | OAuth | `@react-oauth/google` (Google Drive), `@azure/msal-browser` (OneDrive) |
-| Analytics | `@vercel/analytics` + `@vercel/speed-insights` |
+| Analytics | `@vercel/analytics` + `@vercel/speed-insights` + PostHog EU (cookie-less, `VITE_POSTHOG_KEY`) |
 | Deployment | Vercel (static SPA) |
 | Icons | sharp (SVG → PNG, `npm run generate-icons`) |
 | Tests | Vitest (Unit), Playwright (E2E, 5-Browser-Matrix in CI) |

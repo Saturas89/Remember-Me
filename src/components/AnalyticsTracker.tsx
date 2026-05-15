@@ -1,5 +1,10 @@
 import { useEffect, useState } from 'react'
 import { Analytics } from '@vercel/analytics/react'
+import { initPostHog, trackSessionStarted } from '../lib/analytics'
+
+// Initialise PostHog once, before first render. Reads VITE_POSTHOG_KEY; if
+// the key is absent this is a no-op so local dev stays clean.
+initPostHog()
 
 // ── Route pattern ──────────────────────────────────────
 // Groups dynamic segments so Vercel Analytics reports one entry per feature
@@ -62,6 +67,13 @@ function useCurrentPath(): string {
 // ── Public tracker component ───────────────────────────
 export function AnalyticsTracker() {
   const path = useCurrentPath()
+
+  useEffect(() => {
+    const lastVisit = localStorage.getItem('rm-last-visit')
+    trackSessionStarted(!!lastVisit)
+    localStorage.setItem('rm-last-visit', new Date().toISOString())
+  }, [])
+
   // Providing both `route` and `path` switches Vercel Analytics into manual
   // mode and fires a pageview every time either value changes – exactly what
   // we want for bottom-nav tab switches and the /feature/[id] sub-navigation.

@@ -6,6 +6,14 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '2.10.0',
+    date: '2026-05-15',
+    highlights: [
+      '📊 Wir tracken jetzt, wie Features genutzt werden – anonym, ohne Cookies, auf EU-Servern.',
+      '🔒 Kein Fingerprinting, kein Autocapture – nur was wirklich zählt.',
+    ],
+  },
+  {
     version: '2.9.0',
     date: '2026-05-14',
     highlights: [

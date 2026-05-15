@@ -10,6 +10,22 @@ Versionierung folgt [Semantic Versioning](https://semver.org/lang/de/).
 > Der Check `npm run check:changelog` (Teil von `npm test`) bricht sonst ab.
 > Details: `CLAUDE.md` → „Changelog-Pflicht".
 
+## [2.10.0] – 2026-05-15
+
+### Hinzugefügt
+
+- **PostHog Analytics (EU Cloud, cookie-less)** – die App trackt jetzt
+  ausgewählte Feature-Nutzung über PostHog EU (Frankfurt). Keine Cookies,
+  kein Fingerprinting, kein Autocapture – nur explizit gesetzte Events:
+  Quiz-Flows (`quiz_started`, `quiz_completed`, `quiz_abandoned`,
+  `quiz_media_added`), Onboarding (`onboarding_completed`),
+  Tab-Wechsel (`tab_changed`), Feature-Öffner (`feature_opened`) und
+  Session-Start (`session_started`). Analytics ist vollständig deaktiviert,
+  wenn `VITE_POSTHOG_KEY` nicht gesetzt ist (Local Dev bleibt clean).
+  CSP um `https://eu.i.posthog.com` erweitert.
+
+---
+
 ## [2.9.0] – 2026-05-14
 
 ### Hinzugefügt
