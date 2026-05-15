@@ -137,9 +137,9 @@ test.describe('Mobile-UX – Touch, Viewport, Tap-Targets', () => {
     // Annotation auf mobilem Viewport eingeben und absenden
     const input = bob.getByLabel('Ergänzung hinzufügen')
     await expect(input).toBeVisible()
-    await input.tap()
+    await input.click()
     await input.fill('Mobile Ergänzung von Bob.')
-    await bob.getByRole('button', { name: 'Ergänzung senden' }).tap()
+    await bob.getByRole('button', { name: 'Ergänzung senden' }).click()
     await expect(bob.getByRole('button', { name: /Gesendet/ })).toBeVisible({ timeout: 10_000 })
 
     expect(state.annotations).toHaveLength(1)
@@ -177,8 +177,8 @@ test.describe('Mobile-UX – Touch, Viewport, Tap-Targets', () => {
       await seedAnswer(alice, m.id, m.cat, m.text)
     }
 
-    for (const [i, m] of memories.entries()) {
-      if (i > 0) await reopenFamilyHub(alice)
+    for (const m of memories) {
+      await reopenFamilyHub(alice)
       await alice.getByRole('tab', { name: 'Teilen', exact: true }).click()
       await alice.getByText(m.text).click()
       await alice.locator('.share-recipient-chip', { hasText: 'Bob' }).click()
@@ -223,7 +223,7 @@ test.describe('Mobile-UX – Touch, Viewport, Tap-Targets', () => {
     expect(box!.y + box!.height).toBeLessThanOrEqual(viewport.height + 2)
 
     await nameInput.fill('Sandra')
-    await alice.getByRole('button', { name: /Loslegen/ }).tap()
+    await alice.getByRole('button', { name: /Loslegen/ }).click()
     await expect(alice.getByText(/Hallo,\s*Sandra/)).toBeVisible()
 
     // Familienmodus-Einstieg auf mobilem Viewport

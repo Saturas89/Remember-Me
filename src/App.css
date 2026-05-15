@@ -5336,6 +5336,7 @@ details[open] .faq-item__chevron {
   background: transparent;
   border: none;
   padding: 0.55rem 0.9rem;
+  min-height: 44px;
   font-size: 0.9rem;
   font-weight: 600;
   color: var(--text-muted);

@@ -378,8 +378,7 @@ test.describe('Chaos – Fehlertoleranz und Race-Conditions', () => {
     await bob.getByRole('button', { name: 'Ergänzung senden' }).click()
     await expect(bob.getByRole('button', { name: /Gesendet/ })).toBeVisible({ timeout: 10_000 })
 
-    // Zweite Ergänzung (nach kurzer Pause, um sicherzustellen dass das UI zurückgesetzt hat)
-    await bob.goto('/friends')
+    // Zweite Ergänzung – Hub neu öffnen (setzt Komponentenstatus zurück)
     await reopenFamilyHub(bob)
     await bob.getByRole('tab', { name: /^Feed\b/ }).click()
     await expect(bob.getByText('Erinnerung mit mehreren Ergänzungen.')).toBeVisible({ timeout: 15_000 })
@@ -452,11 +451,22 @@ test.describe('Chaos – Fehlertoleranz und Race-Conditions', () => {
     // Handshake mit Uhrzeitversatz
     await bobPage.goto(contactPath('Alice', aliceId.deviceId, aliceId.publicKey))
     await expect(bobPage.getByRole('heading', { name: 'Kontakt verknüpfen' })).toBeVisible()
+    // onAcceptContact runs in a useEffect after paint – poll until state is saved
+    await bobPage.waitForFunction(
+      () => ((window as any).__rmState?.get()?.friends ?? []).filter((f: any) => f.online).length >= 1,
+      undefined,
+      { timeout: 10_000 },
+    )
     const bobFriends = await readOnlineFriends(bobPage)
     expect(bobFriends).toHaveLength(1)
 
     await alice.goto(contactPath('Bob (Zukunft)', bobId.deviceId, bobId.publicKey))
     await expect(alice.getByRole('heading', { name: 'Kontakt verknüpfen' })).toBeVisible()
+    await alice.waitForFunction(
+      () => ((window as any).__rmState?.get()?.friends ?? []).filter((f: any) => f.online).length >= 1,
+      undefined,
+      { timeout: 10_000 },
+    )
     const aliceFriends = await readOnlineFriends(alice)
     expect(aliceFriends).toHaveLength(1)
 
