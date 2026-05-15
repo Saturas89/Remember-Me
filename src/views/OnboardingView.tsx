@@ -23,7 +23,9 @@ export function OnboardingView({ needsModeChoice, modeOnly = false, onChooseMode
   const [importProgress, setImportProgress] = useState<{ step: string; pct: number } | null>(null)
   const [importStatus, setImportStatus] = useState<{ ok: boolean; message: string } | null>(null)
 
-  useEffect(() => { trackOnboardingStarted() }, [])
+  // Only track for genuine new users, not the modeOnly upgrade path (profile
+  // exists but appMode was added after their first install).
+  useEffect(() => { if (!modeOnly) trackOnboardingStarted() }, [])
 
   const features = [
     { icon: '🔒', title: t.onboarding.featuresPrivateTitle, desc: t.onboarding.featuresPrivateDesc },
