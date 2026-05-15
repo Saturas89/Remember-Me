@@ -1,6 +1,6 @@
 {
   "name": "storyhold",
-  "version": "2.9.0",
+  "version": "2.10.0",
   "license": "AGPL-3.0-or-later",
   "type": "module",
   "engines": {
@@ -27,6 +27,7 @@
     "@vercel/analytics": "^2.0.1",
     "@vercel/speed-insights": "^2.0.0",
     "jszip": "^3.10.1",
+    "posthog-js": "^1.373.4",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
   },

@@ -1,10 +1,13 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { QuestionCard } from '../components/QuestionCard'
 import { ProgressBar } from '../components/ProgressBar'
 import { useTranslation } from '../locales'
 import { useImageStore } from '../hooks/useImageStore'
 import { addAudio, removeAudio } from '../hooks/useAudioStore'
 import { addVideo, removeVideo } from '../hooks/useVideoStore'
+import {
+  trackQuizStarted, trackQuizCompleted, trackQuizAbandoned, trackQuizMediaAdded,
+} from '../lib/analytics'
 import type { Category } from '../types'
 
 interface Props {
@@ -33,6 +36,10 @@ export function QuizView({
   const videoIds  = getAnswerVideoIds(question.id)
   const audioId   = getAnswerAudioId(question.id)
 
+  useEffect(() => {
+    trackQuizStarted(category.id, category.questions.length)
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
   function handleSave(value: string) {
     onSave(question.id, category.id, value)
   }
@@ -40,6 +47,7 @@ export function QuizView({
   async function handleAddImage(file: File) {
     const id = await addImage(file)
     onSetImages(question.id, category.id, [...imageIds, id])
+    trackQuizMediaAdded(category.id, 'image')
   }
 
   async function handleRemoveImage(id: string) {
@@ -50,6 +58,7 @@ export function QuizView({
   async function handleAddVideo(file: File) {
     const id = await addVideo(file)
     onSetVideos(question.id, category.id, [...videoIds, id])
+    trackQuizMediaAdded(category.id, 'video')
   }
 
   async function handleRemoveVideo(id: string) {
@@ -61,6 +70,7 @@ export function QuizView({
     if (audioId) await removeAudio(audioId)
     const id = blob ? await addAudio(blob) : undefined
     onSetAudio(question.id, category.id, id, new Date().toISOString(), transcript || undefined)
+    if (blob) trackQuizMediaAdded(category.id, 'audio')
   }
 
   async function handleRemoveAudio() {
@@ -68,10 +78,16 @@ export function QuizView({
     onSetAudio(question.id, category.id, undefined, undefined)
   }
 
+  function handleBack() {
+    trackQuizAbandoned(category.id, index, category.questions.length)
+    onBack()
+  }
+
   function handleNext() {
     if (index + 1 < category.questions.length) {
       setIndex(i => i + 1)
     } else {
+      trackQuizCompleted(category.id, category.questions.length)
       onBack()
     }
   }
@@ -80,7 +96,7 @@ export function QuizView({
     <div className="quiz-view">
       <img src={`/categories/${category.id}-banner.svg`} className="quiz-banner" alt="" />
       <div className="quiz-topbar">
-        <button className="btn btn--ghost btn--sm" onClick={onBack}>
+        <button className="btn btn--ghost btn--sm" onClick={handleBack}>
           {t.quiz.backButton}
         </button>
         <span className="quiz-category-title">

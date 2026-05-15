@@ -63,6 +63,7 @@ import { useStreak } from './hooks/useStreak'
 import { AppModeProvider } from './hooks/useAppMode'
 import { exportAsMarkdown, exportAsEnrichedJSON, downloadFile } from './utils/export'
 import { importFile } from './utils/archiveImport'
+import { trackTabChanged, trackFeatureOpened } from './lib/analytics'
 import type { Category, InviteData, AnswerExport, MemorySharePayload, ContactHandshake } from './types'
 import './App.css'
 
@@ -507,6 +508,14 @@ export default function App() {
     if (v.name === 'quiz') path = `/quiz/${v.categoryId}`
     if (v.name === 'custom-questions') path = '/custom-questions'
     if (path !== undefined) history.pushState({}, '', path)
+
+    const mainTabs = new Set(['home', 'friends', 'archive', 'profile', 'sync'])
+    if (mainTabs.has(v.name)) {
+      trackTabChanged(v.name)
+    } else {
+      trackFeatureOpened(v.name)
+    }
+
     setView(v)
   }
 
