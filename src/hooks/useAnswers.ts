@@ -16,7 +16,9 @@ async function loadStateAsync(): Promise<AppState> {
       onlineSharing: stored.onlineSharing,
       streak: stored.streak,
       privateSync: stored.privateSync,
-      appMode: stored.appMode,
+      // Users who installed before appMode was introduced have undefined here.
+      // Default to 'full' so they skip the mode-choice screen on every session.
+      appMode: stored.appMode ?? (stored.profile ? 'full' : undefined),
     }
   }
   return { profile: null, answers: {}, friends: [], friendAnswers: [], customQuestions: [] }
