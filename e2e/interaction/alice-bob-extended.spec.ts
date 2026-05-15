@@ -110,8 +110,8 @@ test.describe('Erweiterte Mehrgeräte-Szenarien', () => {
       await seedAnswer(alice, m.id, m.cat, m.text)
     }
 
-    for (const [i, m] of memories.entries()) {
-      if (i > 0) await reopenFamilyHub(alice)
+    for (const m of memories) {
+      await reopenFamilyHub(alice)
       await alice.getByRole('tab', { name: 'Teilen', exact: true }).click()
       await alice.getByText(m.text).click()
       await alice.locator('.share-recipient-chip', { hasText: 'Bob' }).click()
