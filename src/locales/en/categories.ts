@@ -16,7 +16,7 @@ export const CATEGORIES_EN: Category[] = [
       { id: 'childhood-05', categoryId: 'childhood', type: 'text', text: 'What nickname did you have as a child and where did it come from?' },
       { id: 'childhood-01', categoryId: 'childhood', type: 'text', text: 'Where did you grow up? Describe your hometown.', helpText: 'City or village? What do you still love about it today?' },
       { id: 'childhood-03', categoryId: 'childhood', type: 'text', text: 'What did your childhood bedroom look like?', helpText: 'Posters, toys, colours – what stands out?' },
-      { id: 'childhood-08', categoryId: 'childhood', type: 'choice', text: 'As a child, were you more of a...', options: ['Outdoor kid', 'Bookworm', 'Athlete', 'Creative type'] },
+      { id: 'childhood-08', categoryId: 'childhood', type: 'choice', text: 'As a child, were you more of a...', options: ['Outdoor kid', 'Bookworm', 'Athlete', 'Creative type', 'A bit of everything'] },
     ],
   },
   {
@@ -52,7 +52,7 @@ export const CATEGORIES_EN: Category[] = [
       { id: 'career-08', categoryId: 'career', type: 'text', text: 'What was your hardest professional decision – and how did you make it?' },
       { id: 'career-10', categoryId: 'career', type: 'text', text: 'Which project or task fulfilled you the most in your professional life?' },
       { id: 'career-09', categoryId: 'career', type: 'text', text: 'Who was your most important professional role model or mentor?', helpText: 'What did you take away from that person?' },
-      { id: 'career-07', categoryId: 'career', type: 'scale', text: 'How important is career success compared to personal happiness?', scaleMin: 'Career unimportant', scaleMax: 'Career very important' },
+      { id: 'career-07', categoryId: 'career', type: 'scale', text: 'How important is career success compared to personal happiness?', scaleMin: 'Life happiness first', scaleMax: 'Career success first' },
     ],
   },
   {
@@ -69,7 +69,7 @@ export const CATEGORIES_EN: Category[] = [
       { id: 'values-10', categoryId: 'values', type: 'text', text: 'Is there something you would never give up, no matter what?' },
       { id: 'values-07', categoryId: 'values', type: 'text', text: 'What principle do you try to live by every day?', helpText: 'A motto, a sentence, a conviction' },
       { id: 'values-08', categoryId: 'values', type: 'text', text: 'What is your relationship to religion, spirituality, or what lies beyond life?' },
-      { id: 'values-01', categoryId: 'values', type: 'text', text: 'What are your three most important values in life?', helpText: 'e.g. honesty, family, freedom, justice...' },
+      { id: 'values-01', categoryId: 'values', type: 'text', text: 'Was there a value you stood up for, even though it cost you something?', helpText: 'A moment when staying true to your conviction came at a price.' },
       { id: 'values-06', categoryId: 'values', type: 'choice', text: 'What matters most to you in life?', options: ['Family & friends', 'Health', 'Freedom & self-determination', 'Purpose & fulfilment'] },
     ],
   },
@@ -106,7 +106,7 @@ export const CATEGORIES_EN: Category[] = [
       { id: 'legacy-10', categoryId: 'legacy', type: 'text', text: 'What is the one sentence with which you would sum up your life?', helpText: 'Your personal epitaph in one sentence' },
       { id: 'legacy-08', categoryId: 'legacy', type: 'text', text: 'Which mistakes or failures ultimately moved you forward?', helpText: 'What did you learn from your greatest setbacks?' },
       { id: 'legacy-04', categoryId: 'legacy', type: 'text', text: 'What dream do you still have that you want to fulfil?' },
-      { id: 'legacy-07', categoryId: 'legacy', type: 'text', text: 'What do you still want to experience or achieve in your life?' },
+      { id: 'legacy-07', categoryId: 'legacy', type: 'text', text: 'Which story about you should never be lost?' },
     ],
   },
 ]
