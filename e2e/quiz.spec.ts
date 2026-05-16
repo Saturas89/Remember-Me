@@ -32,7 +32,7 @@ test.describe('Storyhold – Answering a category', () => {
 
     const textarea = page.locator('textarea.input-textarea').first()
     await expect(textarea).toBeVisible()
-    await textarea.fill('Ich wuchs in einem kleinen Dorf auf.')
+    await textarea.fill('Der Sonntagsbraten meiner Großmutter.')
 
     // Return to the home screen
     await page.getByRole('button', { name: /Kategorien/ }).click()
@@ -48,13 +48,13 @@ test.describe('Storyhold – Answering a category', () => {
 
     await page.getByRole('heading', { name: 'Werte & Überzeugungen' }).click()
     const textarea = page.locator('textarea.input-textarea').first()
-    await textarea.fill('Ehrlichkeit ist mir wichtig.')
+    await textarea.fill('Für meine Familie und meine Gesundheit.')
 
     await page.getByRole('button', { name: /Kategorien/ }).click()
     await page.reload()
 
     await page.getByRole('heading', { name: 'Werte & Überzeugungen' }).click()
-    await expect(page.locator('textarea.input-textarea').first()).toHaveValue('Ehrlichkeit ist mir wichtig.')
+    await expect(page.locator('textarea.input-textarea').first()).toHaveValue('Für meine Familie und meine Gesundheit.')
   })
 
   test('advances to the next question when tapping Weiter', async ({ page }) => {

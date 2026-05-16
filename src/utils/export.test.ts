@@ -121,15 +121,15 @@ describe('exportAsMarkdown', () => {
   })
 
   it('includes answered question text and answer value', () => {
-    const q = CATEGORIES[0].questions[0] // childhood-01
+    const q = CATEGORIES[0].questions[0] // childhood-07 (Lieblingsessen)
     const data = {
       ...EMPTY,
       profile: makeProfile('Max'),
-      answers: { [q.id]: makeAnswer(q.id, q.categoryId, 'Ich wuchs in München auf') },
+      answers: { [q.id]: makeAnswer(q.id, q.categoryId, 'Der Sonntagsbraten meiner Oma') },
     }
     const md = exportAsMarkdown(data)
     expect(md).toContain(q.text)
-    expect(md).toContain('Ich wuchs in München auf')
+    expect(md).toContain('Der Sonntagsbraten meiner Oma')
   })
 
   it('omits categories where no question has been answered', () => {
