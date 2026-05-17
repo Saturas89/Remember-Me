@@ -27,6 +27,7 @@ export function SandraQuestionListStep({
 }: Props) {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editText, setEditText] = useState('')
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null)
 
   function startEdit(q: ComposedQuestion) {
     setEditingId(q.id)
@@ -40,12 +41,10 @@ export function SandraQuestionListStep({
     setEditingId(null)
   }
 
-  function handleDelete(q: ComposedQuestion) {
-    // confirm() is acceptable for irreversible UX inside an SPA — keeps the
-    // surface tiny without pulling in a confirm-modal pattern.
-    if (window.confirm(t.list.confirmDelete)) {
-      onDelete(q.id)
-    }
+  function confirmDelete() {
+    if (!pendingDeleteId) return
+    onDelete(pendingDeleteId)
+    setPendingDeleteId(null)
   }
 
   return (
@@ -140,7 +139,7 @@ export function SandraQuestionListStep({
                     <button
                       type="button"
                       className="btn btn--ghost btn--sm"
-                      onClick={() => handleDelete(q)}
+                      onClick={() => setPendingDeleteId(q.id)}
                       aria-label={t.list.deleteAria}
                       title={t.list.deleteAria}
                       data-testid={`sandra-list-delete-${q.id}`}
@@ -174,6 +173,37 @@ export function SandraQuestionListStep({
           {t.list.send.replace('{anrede}', anchor.anrede)}
         </button>
       </div>
+
+      {pendingDeleteId && (
+        <div
+          className="modal-overlay"
+          role="dialog"
+          aria-modal="true"
+          data-testid="sandra-delete-confirm-modal"
+        >
+          <div className="modal-box">
+            <p className="modal-box__title">{t.list.confirmDelete}</p>
+            <div className="modal-box__actions">
+              <button
+                type="button"
+                className="btn btn--danger btn--full"
+                onClick={confirmDelete}
+                data-testid="sandra-delete-confirm-ok"
+              >
+                {t.list.confirmDeleteConfirm}
+              </button>
+              <button
+                type="button"
+                className="btn btn--secondary btn--full"
+                onClick={() => setPendingDeleteId(null)}
+                data-testid="sandra-delete-confirm-cancel"
+              >
+                {t.list.confirmDeleteCancel}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

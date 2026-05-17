@@ -13,7 +13,10 @@ import type { ComposedQuestion, SandraAnchor } from '../../types/sandraFlow'
 //            onMove, onSend }
 //   Send button:    data-testid="sandra-list-send"   (disabled when empty)
 //   Add another:    data-testid="sandra-list-add-another"
-//   Delete per row: data-testid="sandra-list-delete-{id}"  (uses window.confirm)
+//   Delete per row: data-testid="sandra-list-delete-{id}"  (opens in-app modal)
+//   Confirm modal:  data-testid="sandra-delete-confirm-modal"
+//   Confirm ok:     data-testid="sandra-delete-confirm-ok"
+//   Confirm cancel: data-testid="sandra-delete-confirm-cancel"
 //
 // SPEC contract (§4 Screen 5 + §0):
 //   - Question cards with text + trigger chip
@@ -166,26 +169,26 @@ describe('SandraQuestionListStep – delete + reorder', () => {
   it('invokes onDelete with the question id when the delete button is confirmed', () => {
     const onDelete = vi.fn()
     const qs = [makeQ('q1'), makeQ('q2')]
-    // Component uses window.confirm before delegating to onDelete.
-    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true)
     const { container } = render(<SandraQuestionListStep {...makeProps({ questions: qs, onDelete })} />)
     const deleteBtn = container.querySelector<HTMLButtonElement>(
       '[data-testid="sandra-list-delete-q1"]',
     )
     expect(deleteBtn).not.toBeNull()
     fireEvent.click(deleteBtn!)
+    expect(container.querySelector('[data-testid="sandra-delete-confirm-modal"]')).not.toBeNull()
+    fireEvent.click(container.querySelector('[data-testid="sandra-delete-confirm-ok"]')!)
     expect(onDelete).toHaveBeenCalledWith('q1')
-    confirmSpy.mockRestore()
   })
 
   it('does NOT invoke onDelete when the user cancels the confirm dialog', () => {
     const onDelete = vi.fn()
     const qs = [makeQ('q1')]
-    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false)
     const { container } = render(<SandraQuestionListStep {...makeProps({ questions: qs, onDelete })} />)
     fireEvent.click(container.querySelector('[data-testid="sandra-list-delete-q1"]')!)
+    expect(container.querySelector('[data-testid="sandra-delete-confirm-modal"]')).not.toBeNull()
+    fireEvent.click(container.querySelector('[data-testid="sandra-delete-confirm-cancel"]')!)
     expect(onDelete).not.toHaveBeenCalled()
-    confirmSpy.mockRestore()
+    expect(container.querySelector('[data-testid="sandra-delete-confirm-modal"]')).toBeNull()
   })
 
   it('clicking the "Add another" button invokes onAddAnother', () => {

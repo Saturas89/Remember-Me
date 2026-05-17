@@ -104,6 +104,8 @@ export const SANDRA_FLOW_EN: SandraFlowStrings = {
     moveDownAria: 'Move down',
     deleteAria: 'Delete',
     confirmDelete: 'Remove this question?',
+    confirmDeleteCancel: 'Cancel',
+    confirmDeleteConfirm: 'Remove',
   },
 
   // ── Share / send (Screen 6) ────────────────────────────────────────
