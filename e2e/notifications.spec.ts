@@ -81,9 +81,7 @@ test.describe('REQ-016 – Welcome-Back-Banner (FR-16.8)', () => {
     // Should show welcome back title
     await expect(page.getByText(de.reminder.welcomeBack.title)).toBeVisible()
 
-    // Should show memory-count body (1 stored answer → singular phrasing).
-    // The Ingrid persona reported "Du warst X Tage nicht da" as accusatory
-    // (#157); the new copy surfaces the saved memories instead (#159).
+    // Should show warm story-waiting body regardless of answer count.
     await expect(page.getByText(de.reminder.welcomeBack.bodyMemoriesOne)).toBeVisible()
   })
 

@@ -27,34 +27,29 @@ export function WelcomeBackBanner(props: WelcomeBackBannerProps): JSX.Element | 
       role="alert"
       aria-live="polite"
     >
-      <div className="update-banner-content">
-        <div className="update-banner-info">
-          <h3 className="update-banner-title" data-testid="welcome-back-title">
-            {t.reminder.welcomeBack.title}
-          </h3>
-          <p className="update-banner-subtitle" data-testid="welcome-back-body">
-            {body}
-          </p>
-        </div>
-        <div className="update-banner-actions">
-          <button
-            type="button"
-            className="btn btn-primary"
-            onClick={onContinue}
-            data-testid="welcome-back-continue"
-          >
-            {t.reminder.welcomeBack.continueCta}
-          </button>
-          <button
-            type="button"
-            className="btn btn-secondary welcome-back-banner__dismiss"
-            onClick={onDismiss}
-            aria-label={t.reminder.welcomeBack.dismiss}
-          >
-            ✕
-          </button>
-        </div>
+      <span className="update-banner__icon" aria-hidden="true">📖</span>
+      <div className="update-banner__text">
+        <strong data-testid="welcome-back-title">{t.reminder.welcomeBack.title}</strong>
+        <span data-testid="welcome-back-body">{body}</span>
       </div>
+      <div className="update-banner__actions">
+        <button
+          type="button"
+          className="btn btn--primary btn--sm update-banner__btn"
+          onClick={onContinue}
+          data-testid="welcome-back-continue"
+        >
+          {t.reminder.welcomeBack.continueCta}
+        </button>
+      </div>
+      <button
+        type="button"
+        className="update-banner__close"
+        onClick={onDismiss}
+        aria-label={t.reminder.welcomeBack.dismiss}
+      >
+        ✕
+      </button>
     </div>
   )
 }

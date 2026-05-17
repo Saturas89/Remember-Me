@@ -226,10 +226,10 @@ export const UI_EN = {
     dismiss: 'Dismiss notification',
     welcomeBack: {
       title: 'Welcome back!',
-      bodyMemoriesOne: 'One memory is waiting for you.',
-      bodyMemoriesMany: 'Your {count} memories are waiting for you.',
+      bodyMemoriesOne: 'Your story is waiting to be continued.',
+      bodyMemoriesMany: 'Your story is waiting to be continued.',
       bodyNoMemories: 'Glad you\'re back.',
-      continueCta: 'Continue',
+      continueCta: 'Continue my story',
       dismiss: 'Dismiss',
     },
     milestone: {
