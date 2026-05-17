@@ -109,6 +109,8 @@ export const SANDRA_FLOW_DE = {
     moveDownAria: 'Nach unten',
     deleteAria: 'Löschen',
     confirmDelete: 'Diese Frage entfernen?',
+    confirmDeleteCancel: 'Abbrechen',
+    confirmDeleteConfirm: 'Entfernen',
   },
 
   // ── Share / send (Screen 6) ────────────────────────────────────────
