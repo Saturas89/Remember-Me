@@ -390,9 +390,8 @@ test.describe('Chaos – Fehlertoleranz und Race-Conditions', () => {
     // Mock: beide Annotationen sind eigenständige Einträge, kein Overwrite
     expect(state.annotations).toHaveLength(2)
     expect(state.annotations.every(a => a.author_id === bobId.deviceId)).toBe(true)
-    const bodies = state.annotations.map(a => JSON.stringify(a))
-    expect(bodies.some(b => b.includes('Erste'))).toBe(true)
-    // Zweite Annotation muss einen anderen Ciphertext haben als die erste
+    // Annotationen sind AES-GCM-verschlüsselt – Plaintext nie direkt im Mock sichtbar.
+    // Verschiedene Ciphertexte bestätigen, dass kein Eintrag den anderen überschrieben hat.
     expect(state.annotations[0].ciphertext).not.toBe(state.annotations[1].ciphertext)
 
     // Alice sieht beide Ergänzungen

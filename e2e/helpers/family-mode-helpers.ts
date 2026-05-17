@@ -37,7 +37,8 @@ export async function completeOnboarding(page: Page, name: string) {
   await page.goto('/')
   await page.getByLabel('Wie heißt du?').fill(name)
   await page.getByRole('button', { name: /Loslegen/ }).click()
-  await expect(page.getByText(new RegExp(`Hallo,\\s*${name}`))).toBeVisible()
+  const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  await expect(page.getByText(new RegExp(`Hallo,\\s*${escapedName}`))).toBeVisible()
 }
 
 export async function openFriendsTab(page: Page) {
