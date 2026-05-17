@@ -8,7 +8,7 @@ const PROVIDER_NAME = 'Alexander Arians'
 const PROVIDER_STREET = 'Nachtigallenweg 3'
 const PROVIDER_CITY = '50829 Köln'
 const PROVIDER_COUNTRY = 'Deutschland'
-const CONTACT_EMAIL = 'Alex.Ari@gmx.de'
+const CONTACT_EMAIL = 'storyhold@gmail.com'
 
 export function ImpressumView({ onBack }: Props) {
   const { t } = useTranslation()
