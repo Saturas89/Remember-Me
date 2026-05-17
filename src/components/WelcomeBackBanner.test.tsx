@@ -51,14 +51,13 @@ describe('WelcomeBackBanner', () => {
     expect(screen.getByText(de.reminder.welcomeBack.title)).not.toBeNull()
   })
 
-  it('displays memory-count body with correct interpolation', () => {
+  it('shows story-waiting body when memoriesCount > 1', () => {
     render(<WelcomeBackBanner {...defaultProps} memoriesCount={7} />)
 
-    const expected = de.reminder.welcomeBack.bodyMemoriesMany.replace('{count}', '7')
-    expect(screen.getByText(expected)).not.toBeNull()
+    expect(screen.getByText(de.reminder.welcomeBack.bodyMemoriesMany)).not.toBeNull()
   })
 
-  it('uses singular phrasing when memoriesCount is 1', () => {
+  it('shows story-waiting body when memoriesCount is 1', () => {
     render(<WelcomeBackBanner {...defaultProps} memoriesCount={1} />)
 
     expect(screen.getByText(de.reminder.welcomeBack.bodyMemoriesOne)).not.toBeNull()
@@ -108,11 +107,10 @@ describe('WelcomeBackBanner', () => {
     expect(onDismiss).toHaveBeenCalledTimes(1)
   })
 
-  it('handles large memory counts', () => {
+  it('shows story-waiting body for large memoryCounts', () => {
     render(<WelcomeBackBanner {...defaultProps} memoriesCount={42} />)
 
-    const expected = de.reminder.welcomeBack.bodyMemoriesMany.replace('{count}', '42')
-    expect(screen.getByText(expected)).not.toBeNull()
+    expect(screen.getByText(de.reminder.welcomeBack.bodyMemoriesMany)).not.toBeNull()
   })
 
   it('continue button is focusable for accessibility', () => {
