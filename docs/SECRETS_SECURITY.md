@@ -62,3 +62,23 @@ Details zur Datenarchitektur: [`docs/DATA_STORAGE.md`](./DATA_STORAGE.md).
   diese nicht selbst löschen.
 
 Setup-Anleitung für Betreiber: [`docs/SUPABASE_SETUP.md`](./SUPABASE_SETUP.md).
+
+---
+
+## Bekannte Risiken & akzeptierte Lücken
+
+### Rate Limiting
+
+**Status: bewusstes, akzeptiertes Risiko (Stand 2026-05-17)**
+
+Storyhold ist eine reine Frontend-App (Vite/React-SPA, kein eigener Application-Server). Es gibt derzeit keine eigenen Server-seitigen API-Routen, keine Netlify Functions und keine Supabase Edge Functions. Daher existiert kein application-seitiges Rate-Limiting.
+
+Was trotzdem schützt:
+- Supabase-API-Tier: Supabase wendet auf Projektebene eigene Rate Limits auf alle eingehenden API-Aufrufe an.
+- Client-seitiges Debounce: `usePrivateSync.ts` drosselt Sync-Schreiboperationen auf einen Aufruf pro 30 Sekunden.
+
+Was fehlt und wann es relevant wird:
+- Kommt eine eigene Edge Function oder ein serverloser Endpunkt hinzu, **muss rate limiting von Beginn an** eingebaut werden (z. B. Supabase's eingebaute Throttling-Optionen oder ein Header-basierter Middleware-Layer).
+- Bekannte Attack-Surface: Ein Angreifer, der die Supabase-Limits kennt, könnte gezielt Anfragen im Bereich der Limits platzieren. Das Risiko ist im aktuellen Deployment-Modell gering, da keine destruktiven oder teuren serverseitigen Operationen existieren.
+
+**Maßnahme vor dem Einführen serverseitiger Endpunkte:** Rate-Limiting-Anforderungen im jeweiligen REQ-Dokument spezifizieren und in der Edge-Function-Implementierung umsetzen.

@@ -21,6 +21,8 @@ export class SupabaseSyncProvider implements SyncProvider {
     else {
       getSyncSupabaseClient().auth.getUser().then(({ data }) => {
         this._userId = data.user?.id ?? null
+      }).catch((err: unknown) => {
+        console.warn('[SupabaseSyncProvider] Background auth check failed', err)
       })
     }
   }
