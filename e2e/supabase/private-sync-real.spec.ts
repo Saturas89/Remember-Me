@@ -14,13 +14,16 @@
 // Cleanup: afterEach deletes created auth users; CASCADE removes private_sync_state rows.
 
 import { test, expect } from '@playwright/test'
+import { createClient } from '@supabase/supabase-js'
 import { cleanupUsers, spawnRealDevice, supabaseAdmin } from './helpers'
 import {
   completeOnboarding,
 } from '../helpers/family-mode-helpers'
 
-const TEST_EMAIL_BASE = 'e2e-sync-real'
-const TEST_PASSWORD   = 'Supabase-E2E-2026!'
+const TEST_EMAIL_BASE   = 'e2e-sync-real'
+const TEST_PASSWORD     = 'Supabase-E2E-2026!'
+const SUPABASE_URL      = process.env.SUPABASE_URL      || 'http://127.0.0.1:54321'
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || ''
 
 // Generate a unique email per test run to avoid conflicts between retries.
 function testEmail(suffix: string): string {
@@ -59,8 +62,46 @@ async function runSetupWizard(
   await page.getByLabel('Passwort').fill(password)
   await page.getByRole('button', { name: 'Konto erstellen', exact: true }).click()
 
-  // Recovery Code
-  await expect(page.getByRole('heading', { name: 'Dein Sicherheitsschlüssel' })).toBeVisible({ timeout: 20_000 })
+  // Production Supabase requires email confirmation. Detect which step appears
+  // and, if the pending-email screen shows up, bypass it via the admin API.
+  const recoveryHeading = page.getByRole('heading', { name: 'Dein Sicherheitsschlüssel' })
+  const pendingHeading  = page.getByRole('heading', { name: 'Bestätige deine E-Mail' })
+
+  const needsEmailConfirm = await Promise.race([
+    recoveryHeading.waitFor({ state: 'visible', timeout: 20_000 }).then(() => false),
+    pendingHeading.waitFor({ state: 'visible', timeout: 20_000 }).then(() => true),
+  ])
+
+  if (needsEmailConfirm) {
+    // 1. Admin-confirm the email server-side.
+    const adminClient = supabaseAdmin()
+    const { data: { users } } = await adminClient.auth.admin.listUsers({ perPage: 1000 })
+    const user = users.find(u => u.email === email)
+    if (!user) throw new Error(`User not found in auth.users for email ${email}`)
+    await adminClient.auth.admin.updateUser(user.id, { email_confirm: true })
+
+    // 2. Sign in from Node.js to obtain a real session.
+    const nodeClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: false } })
+    const { data: signInData, error: signInError } = await nodeClient.auth.signInWithPassword({ email, password })
+    if (signInError || !signInData.session) throw new Error(`Node sign-in after confirm failed: ${signInError?.message}`)
+    const session = signInData.session
+
+    // 3. Inject the session into the browser context. The GoTrueClient for the
+    //    sync supabase instance listens on BroadcastChannel('rm-sync-session')
+    //    and fires onAuthStateChange(SIGNED_IN) when it receives the message,
+    //    which advances the UI from pending-email to recovery-code.
+    const expiresAt = Math.round(Date.now() / 1000) + (session.expires_in ?? 3600)
+    await page.evaluate(
+      ({ storageKey, sess, exp }) => {
+        localStorage.setItem(storageKey, JSON.stringify({ currentSession: sess, expiresAt: exp }))
+        new BroadcastChannel(storageKey).postMessage({ event: 'SIGNED_IN', session: sess })
+      },
+      { storageKey: 'rm-sync-session', sess: session, exp: expiresAt },
+    )
+
+    await expect(recoveryHeading).toBeVisible({ timeout: 20_000 })
+  }
+
   const code = page.locator('.private-sync-view__code')
   await expect(code).toBeVisible()
   const codeText = await code.textContent() ?? ''
