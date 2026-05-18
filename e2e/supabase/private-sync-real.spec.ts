@@ -86,18 +86,18 @@ async function runSetupWizard(
     if (signInError || !signInData.session) throw new Error(`Node sign-in after confirm failed: ${signInError?.message}`)
     const session = signInData.session
 
-    // 3. Inject the session into the browser context. The GoTrueClient for the
-    //    sync supabase instance listens on BroadcastChannel('rm-sync-session')
-    //    and fires onAuthStateChange(SIGNED_IN) when it receives the message,
-    //    which advances the UI from pending-email to recovery-code.
-    const expiresAt = Math.round(Date.now() / 1000) + (session.expires_in ?? 3600)
-    await page.evaluate(
-      ({ storageKey, sess, exp }) => {
-        localStorage.setItem(storageKey, JSON.stringify({ currentSession: sess, expiresAt: exp }))
-        new BroadcastChannel(storageKey).postMessage({ event: 'SIGNED_IN', session: sess })
-      },
-      { storageKey: 'rm-sync-session', sess: session, exp: expiresAt },
-    )
+    // 3. Inject the session into the browser context via the exposed sync client.
+    //    BroadcastChannel only triggers _notifyAllSubscribers (React callbacks)
+    //    but does NOT call _saveSession, leaving GoTrueClient.currentSession null
+    //    so subsequent authenticated DB calls would fail RLS.
+    //    auth.setSession() updates both the internal session AND triggers the
+    //    onAuthStateChange callback, advancing the UI to the recovery-code screen.
+    await page.evaluate(async (sess) => {
+      type SyncClient = { auth: { setSession: (s: { access_token: string; refresh_token: string }) => Promise<unknown> } }
+      const client = (window as unknown as { __rmSyncClient?: SyncClient }).__rmSyncClient
+      if (!client) throw new Error('__rmSyncClient not on window — E2E exposure in privateSyncClient.ts missing?')
+      await client.auth.setSession({ access_token: sess.access_token, refresh_token: sess.refresh_token })
+    }, session)
 
     await expect(recoveryHeading).toBeVisible({ timeout: 20_000 })
   }
