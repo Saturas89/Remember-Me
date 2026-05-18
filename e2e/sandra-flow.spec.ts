@@ -35,7 +35,13 @@ const STATE_FULL_SANDRA = JSON.stringify({
 /** Existing Storyhold user (Ingrid) — used for issue-#225 "already owns" tests. */
 const STATE_FULL_INGRID = JSON.stringify({
   profile: { name: 'Ingrid', createdAt: '2025-01-01T00:00:00.000Z' },
-  answers: { 'q-childhood': 'Ich bin auf dem Land aufgewachsen.' },
+  answers: {
+    'q-childhood': {
+      id: 'q-childhood', questionId: 'q-childhood', categoryId: 'childhood',
+      value: 'Ich bin auf dem Land aufgewachsen.',
+      createdAt: '2025-01-01T00:00:00.000Z', updatedAt: '2025-01-01T00:00:00.000Z',
+    },
+  },
   friends: [], friendAnswers: [], customQuestions: [], appMode: 'full',
 })
 
