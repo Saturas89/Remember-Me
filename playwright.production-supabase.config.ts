@@ -33,7 +33,7 @@ export default defineConfig({
       ]
     : 'list',
   use: {
-    baseURL: 'https://storyhold.app',
+    baseURL: 'https://www.storyhold.app',
     storageState: './playwright-production-state.json',
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',

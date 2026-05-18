@@ -1,7 +1,7 @@
 import fs from 'fs'
 import path from 'path'
 
-const BASE_URL = 'https://storyhold.app'
+const BASE_URL = 'https://www.storyhold.app'
 
 const githubRunId    = process.env.GITHUB_RUN_ID    ?? undefined
 const testRunId      = githubRunId ? `gh-${githubRunId}` : undefined

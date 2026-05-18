@@ -31,7 +31,7 @@ test.describe('Production smoke', () => {
   test('HTTPS enforced – page URL starts with https', async ({ page }) => {
     await page.goto('/')
     await page.waitForLoadState('domcontentloaded')
-    expect(page.url()).toMatch(/^https:\/\/storyhold\.app/)
+    expect(page.url()).toMatch(/^https:\/\/(www\.)?storyhold\.app/)
   })
 
   test('debug route shows e2e traffic type', async ({ page }) => {
