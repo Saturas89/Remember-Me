@@ -11,11 +11,14 @@ import { test, expect, type BrowserContext, type Page } from '@playwright/test'
 //   1. DE happy path: Sandra composes one relationship question and shares
 //      → Web-Share-API stub is invoked with the share URL
 //   2. EN happy path: same flow with English locale
-//   3. Receiver: opens a `?qp-plain=…` URL in a fresh context, sees the
-//      simple-mode prompt + one-question-at-a-time view + big mic button
+//   3. Receiver (new user): opens a `?qp-plain=…` URL in a fresh context,
+//      sees the simple-mode prompt + one-question-at-a-time view + big mic button
+//   3b. Receiver (existing user, #225): already has a Storyhold profile →
+//      skips name-entry, sees tailored "Hey {name}!" welcome instead
 //   4. Mixed-group pack → relationship hint visibility
 //   5. Draft persistence in sessionStorage (reload-keeps, new-tab-drops)
 //   6. Web-Share-API stub captures URL + title cleanly (mobile-safari safe)
+//   7. Two-person integration: Sandra builds, new-user Ingrid answers, submits
 // ─────────────────────────────────────────────────────────────────────────────
 
 const STATE_FULL_NO_PROFILE = JSON.stringify({
@@ -29,19 +32,26 @@ const STATE_FULL_SANDRA = JSON.stringify({
   customQuestions: [], appMode: 'full',
 })
 
+/** Existing Storyhold user (Ingrid) — used for issue-#225 "already owns" tests. */
+const STATE_FULL_INGRID = JSON.stringify({
+  profile: { name: 'Ingrid', createdAt: '2025-01-01T00:00:00.000Z' },
+  answers: { 'q-childhood': 'Ich bin auf dem Land aufgewachsen.' },
+  friends: [], friendAnswers: [], customQuestions: [], appMode: 'full',
+})
+
 /** Suppress install banner + set lang + seed a profile so the app is past
  *  onboarding immediately. */
 async function seedContext(
   context: BrowserContext,
-  opts: { lang: 'de' | 'en'; profile?: 'sandra' | 'none' } = { lang: 'de', profile: 'sandra' },
+  opts: { lang: 'de' | 'en'; profile?: 'sandra' | 'ingrid' | 'none' } = { lang: 'de', profile: 'sandra' },
 ) {
-  await context.addInitScript(([lang, stateJson]) => {
+  const stateMap = { sandra: STATE_FULL_SANDRA, ingrid: STATE_FULL_INGRID, none: STATE_FULL_NO_PROFILE }
+  const stateJson = stateMap[opts.profile ?? 'sandra']
+  await context.addInitScript(([lang, state]) => {
     localStorage.setItem('rm-install-dismissed', '1')
     localStorage.setItem('rm-lang', lang as string)
-    if (!localStorage.getItem('remember-me-state')) {
-      localStorage.setItem('remember-me-state', stateJson as string)
-    }
-  }, [opts.lang, opts.profile === 'none' ? STATE_FULL_NO_PROFILE : STATE_FULL_SANDRA])
+    localStorage.setItem('remember-me-state', state as string)
+  }, [opts.lang, stateJson])
 }
 
 /**
@@ -338,22 +348,15 @@ test.describe('Sandra-Flow – Receiver Path (Ingrid)', () => {
 
     // Open the URL as an existing Storyhold user (Ingrid already has a profile).
     const ingridCtx = await browser.newContext()
-    await seedContext(ingridCtx, { lang: 'de', profile: 'none' })
-    await ingridCtx.addInitScript(() => {
-      localStorage.setItem('remember-me-state', JSON.stringify({
-        profile: { name: 'Ingrid', createdAt: '2025-01-01T00:00:00.000Z' },
-        answers: { 'q-childhood': 'Ich bin auf dem Land aufgewachsen.' },
-        friends: [], friendAnswers: [], customQuestions: [], appMode: 'full',
-      }))
-    })
+    await seedContext(ingridCtx, { lang: 'de', profile: 'ingrid' })
     const ingrid = await ingridCtx.newPage()
     await ingrid.goto(shareUrl)
 
-    // Existing user: name-entry input must NOT be visible.
+    // Existing user: tailored welcome is shown (wait generously for async URL parsing).
+    await expect(ingrid.getByTestId('sandra-receive-existing-title')).toBeVisible({ timeout: 15_000 })
+    // Name-entry must NOT be present — the existing-welcome phase skips it.
     await expect(ingrid.getByTestId('sandra-receive-name')).not.toBeVisible()
-
-    // Tailored welcome title mentioning both Ingrid and Sandra.
-    await expect(ingrid.getByTestId('sandra-receive-existing-title')).toBeVisible()
+    // Title mentions both names.
     await expect(ingrid.getByTestId('sandra-receive-existing-title')).toContainText('Ingrid')
     await expect(ingrid.getByTestId('sandra-receive-existing-title')).toContainText('Sandra')
 
