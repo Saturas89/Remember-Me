@@ -26,8 +26,8 @@ test.describe('Familienmodus – Aktivierung & Consent (FR-15.1 – FR-15.3)', (
     await openFriendsTab(page)
     const cta = page.getByTestId('open-online-sharing')
     await expect(cta).toBeVisible()
-    await expect(cta).toHaveText(/Einrichten/)
-    await expect(page.getByText(/tauscht je einmal einen Verbindungslink aus/)).toBeVisible()
+    await expect(cta).toHaveText(/Geteilte Erinnerungen öffnen/)
+    await expect(page.getByText(/Sobald du jemanden einlädst/)).toBeVisible()
   })
 
   test('Consent-Screen erklärt Datenschutz und erzwingt die Pflicht-Checkbox', async ({ page }) => {
@@ -66,7 +66,7 @@ test.describe('Familienmodus – Aktivierung & Consent (FR-15.1 – FR-15.3)', (
     await expect(page.getByRole('heading', { name: 'Laufend verbunden bleiben', exact: true })).toBeVisible()
 
     await page.getByRole('button', { name: 'Zurück', exact: true }).click()
-    await expect(page.getByRole('heading', { name: /Erinnerung einsammeln/ })).toBeVisible()
+    await expect(page.getByRole('heading', { name: /Einladen & verbinden/ })).toBeVisible()
 
     const stored = await page.evaluate(() => {
       type Bridge = { get: () => Record<string, unknown> | null }

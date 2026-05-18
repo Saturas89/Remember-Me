@@ -15,9 +15,9 @@ export const SANDRA_FLOW_EN: SandraFlowStrings = {
       'Share the link with {anrede} as a gift',
     ],
     privacyBadges: [
-      'No account',
-      'No cloud',
-      "Stays on {anrede}'s device",
+      'Private',
+      'Encrypted',
+      'Just for you two',
     ],
     crossHintToOwnTitle: 'Capture your own memories?',
     crossHintToOwnBody: 'If you\'d rather write your own stories instead of sending questions to someone else, head to the "My Memories" card on the Journey tab.',
@@ -110,22 +110,23 @@ export const SANDRA_FLOW_EN: SandraFlowStrings = {
 
   // ── Share / send (Screen 6) ────────────────────────────────────────
   share: {
-    title: 'Send {anrede} your {count} questions',
+    title: '{anrede} answers – and you stay connected for good',
     primaryCta: 'Send to {anrede}',
     sending: 'Opening…',
     copied: '✓ Link copied!',
     error: '⚠ Try again',
-    privacyHint: "{anrede}'s answers stay on their device too.",
+    privacyHint: 'Private & encrypted – only {anrede} and you can read everything.',
+    connectingHint: 'Setting up your secure connection – just takes a moment.',
     relationshipHint:
       'Some of these are very personal. You might want to call {anrede} before sending.',
     backToList: 'Back to the list',
-    shareMessage: "I wrote down a few questions for you ✨\n\n{url}",
+    shareMessage: "I wrote down a few questions I've been wanting to ask you for a long time 💌 Answer whenever you feel like it:\n\n{url}",
     shareTitle: '{anrede}, I have questions for you',
     recipientPreviewHeading: '{anrede} will see this when they open the link:',
     recipientPreviewLines: [
-      'A short greeting with your name.',
-      'Your questions, one at a time.',
-      'Answers via typing or voice – no app installation needed.',
+      "You'll stay connected for good – you see {anrede}'s new memories as they add them.",
+      'Your questions come one at a time, at their own pace.',
+      'It all starts with a short greeting with your name.',
     ],
     preferSimpleModeLabel: 'Pre-set large-text mode for {anrede}',
     preferSimpleModeHint: 'Recommended if {anrede} is hesitant with apps – only the essential buttons, large text. {anrede} can switch this later any time.',
@@ -148,16 +149,17 @@ export const SANDRA_FLOW_EN: SandraFlowStrings = {
     done: 'Done',
     answerPlaceholder: 'Your answer…',
     progressDotAria: 'Question {n} of {total}',
-    welcomeNameLabel: 'What\'s your name?',
+    welcomeNameLabel: 'What should {senderName} call you?',
+    welcomePrivacyHint: 'Only {senderName} sees your answers.',
     welcomeNamePlaceholder: 'Your name',
     welcomeStart: 'Begin',
   },
 
   // ── Friends-tab entry ──────────────────────────────────────────────
   entryCard: {
-    title: 'Compose your own questions for someone',
-    desc: 'Ask your own questions – in your own words, to Mom, Dad, Grandma. They answer when they\'re ready.',
-    cta: 'Get started',
+    title: 'Invite someone',
+    desc: "Ask personal questions in your own words – to Mom, Dad, Grandma. You'll stay connected going forward.",
+    cta: 'Create invitation',
   },
 
   // ── Global ─────────────────────────────────────────────────────────

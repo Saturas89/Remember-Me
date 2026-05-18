@@ -1,32 +1,26 @@
-import { useState, useEffect, useRef } from 'react'
+import { useRef } from 'react'
 import { FriendCard } from '../components/FriendCard'
 import { useTranslation } from '../locales'
 import { useSandraFlowStrings } from '../i18n/sandraFlow'
-import { generateShareCard } from '../utils/shareCard'
-import { trackShareInitiated } from '../lib/analytics'
 import type { Friend, FriendAnswer } from '../types'
 
 interface Props {
-  profileName: string
-  inviteUrl: string
   friends: Friend[]
   friendAnswers: FriendAnswer[]
   onRemoveFriend: (id: string) => void
   onImportZip: (file: File) => void
   onBack: () => void
-  /** Open the online-sharing entry point (intro if not yet opted in, hub if opted in). */
+  /** Open the online-sharing hub (or intro if not yet opted in). */
   onOpenOnlineSharing?: () => void
-  /** True when the user has already opted in to online sharing. Drives the CTA label. */
+  /** True when the user has already opted in to online sharing. */
   onlineSharingEnabled?: boolean
-  /** True when the build has a Supabase URL/anon key configured. Hides the CTA if false. */
+  /** True when the build has Supabase configured. */
   onlineSharingConfigured?: boolean
-  /** Navigate to the Sandra-first flow (`#/ask`). */
+  /** Navigate to the Sandra-first invite flow (`#/ask`). */
   onOpenSandraFlow?: () => void
 }
 
 export function FriendsView({
-  profileName,
-  inviteUrl,
   friends,
   friendAnswers,
   onRemoveFriend,
@@ -39,82 +33,9 @@ export function FriendsView({
 }: Props) {
   const { t } = useTranslation()
   const sandraT = useSandraFlowStrings()
-  const [isSharing, setIsSharing] = useState(false)
-  const [shareStatus, setShareStatus] = useState<'idle' | 'copied' | 'error'>('idle')
   const zipInputRef = useRef<HTMLInputElement>(null)
-  const shareCardRef = useRef<File | null>(null)
 
-  useEffect(() => {
-    const name = profileName.trim()
-    const title = name
-      ? t.friends.inviteShareCardTitleWithName.replace('{name}', name)
-      : t.friends.inviteShareCardTitleFallback
-    fetch('/pwa-192x192.png')
-      .then(r => r.blob())
-      .then(b => generateShareCard(b, {
-        title,
-        subtitle: t.friends.inviteShareCardSubtitle,
-      }))
-      .then(f => { shareCardRef.current = f })
-      .catch(() => {})
-  }, [profileName, t.friends.inviteShareCardTitleWithName, t.friends.inviteShareCardTitleFallback, t.friends.inviteShareCardSubtitle])
-
-  useEffect(() => {
-    if (shareStatus === 'idle') return
-    const timer = setTimeout(() => setShareStatus('idle'), 2500)
-    return () => clearTimeout(timer)
-  }, [shareStatus])
-
-  function buildText(url: string) {
-    return t.friends.shareMessage.replace('{url}', url)
-  }
-
-  // Synchronous share handler: Safari requires navigator.share() to be called
-  // directly inside the click gesture (no awaits before the call).
-  function handleShare() {
-    if (isSharing) return
-    trackShareInitiated('online-link')
-
-    const url   = inviteUrl
-    const text  = buildText(url)
-    const name  = profileName.trim()
-    const title = name ? `${name}s Lebensarchiv` : 'Mein Lebensarchiv'
-    setIsSharing(true)
-
-    const card = shareCardRef.current
-    if (card && typeof navigator.share === 'function') {
-      if (navigator.canShare?.({ files: [card] })) {
-        navigator
-          .share({ files: [card], title, text })
-          .then(() => setIsSharing(false))
-          .catch(err => {
-            setIsSharing(false)
-            if ((err as Error).name !== 'AbortError') fallbackShare(text)
-          })
-        return
-      }
-    }
-
-    if (typeof navigator.share === 'function') {
-      navigator
-        .share({ title, text })
-        .then(() => setIsSharing(false))
-        .catch(err => {
-          setIsSharing(false)
-          if ((err as Error).name !== 'AbortError') fallbackShare(text)
-        })
-    } else {
-      fallbackShare(text)
-      setIsSharing(false)
-    }
-  }
-
-  function fallbackShare(text: string) {
-    navigator.clipboard
-      ?.writeText(text)
-      .then(() => setShareStatus('copied'))
-      .catch(() => setShareStatus('error'))
-  }
+  const onlineFriends = friends.filter(f => f.online)
 
   return (
     <div className="friends-view">
@@ -128,88 +49,58 @@ export function FriendsView({
 
       <p className="friends-intro">{t.friends.intro}</p>
 
+      {/* Primary: Sandra-flow invite entry */}
       <section className="friends-section">
-        <h3 className="friends-section-title">{t.friends.inviteLinkHeading}</h3>
-        <div className="friends-tags">
-          <span className="friends-tag">{t.friends.tagOneTime}</span>
-          <span className="friends-tag">{t.friends.tagNoAccount}</span>
-          <span className="friends-tag">{t.friends.tagOffline}</span>
-        </div>
-        {!profileName && (
-          <p className="friends-hint friends-hint--warn">{t.friends.inviteHintNoName}</p>
-        )}
-
+        <h3 className="friends-section-title">{sandraT.entryCard.title}</h3>
+        <p className="friends-hint">{sandraT.entryCard.desc}</p>
         {onOpenSandraFlow && (
-          <>
-            <p className="friends-hint">{sandraT.entryCard.desc}</p>
-            <button
-              type="button"
-              className="share-cta-btn"
-              onClick={onOpenSandraFlow}
-              data-testid="sandra-entry-cta"
-            >
-              {sandraT.entryCard.cta}
-            </button>
-          </>
+          <button
+            type="button"
+            className="share-cta-btn"
+            onClick={onOpenSandraFlow}
+            data-testid="sandra-entry-cta"
+          >
+            {sandraT.entryCard.cta}
+          </button>
         )}
-
-        <details className="friends-invite-secondary">
-          <summary className="friends-invite-secondary__summary">
-            {t.friends.inviteSecondarySummary}
-          </summary>
-          <p className="friends-hint">{t.friends.inviteSecondaryHint}</p>
-          <div className="friends-share">
-            <button
-              className={`btn btn--ghost btn--sm${shareStatus === 'copied' ? ' is-success' : shareStatus === 'error' ? ' is-error' : ''}`}
-              onClick={handleShare}
-              disabled={isSharing}
-            >
-              {isSharing ? (
-                <><span className="share-cta-btn__spinner" aria-hidden="true" />{t.friends.opening}</>
-              ) : shareStatus === 'copied' ? (
-                t.friends.messageCopied
-              ) : shareStatus === 'error' ? (
-                t.friends.copyRetry
-              ) : (
-                t.friends.shareCta
-              )}
-            </button>
-          </div>
-        </details>
       </section>
 
+      {/* Connected memories hub — shown once Supabase is configured */}
       {onlineSharingConfigured && onOpenOnlineSharing && (
         <section className="friends-section">
-          <img
-            src="/features/familienmodus.jpg"
-            alt=""
-            className="familien-banner"
-            aria-hidden="true"
-          />
-          <h3 className="friends-section-title">{t.friends.familienmodusHeading}</h3>
-          <div className="friends-tags">
-            <span className="friends-tag friends-tag--accent">{t.friends.familienmodusTagPermanent}</span>
-            <span className="friends-tag friends-tag--accent">{t.friends.familienmodusTagMutual}</span>
-            <span className="friends-tag friends-tag--accent">{t.friends.familienmodusTagEncrypted}</span>
-          </div>
-          <p className="friends-hint">{t.friends.familienmodusHint}</p>
+          <h3 className="friends-section-title">{t.friends.connectedHeading}</h3>
+          {onlineSharingEnabled && onlineFriends.length > 0 ? (
+            <div className="friends-list">
+              {onlineFriends.map(f => (
+                <FriendCard
+                  key={f.id}
+                  friend={f}
+                  answers={friendAnswers.filter(a => a.friendId === f.id)}
+                  onRemove={() => onRemoveFriend(f.id)}
+                />
+              ))}
+            </div>
+          ) : (
+            <p className="friends-hint">{t.friends.connectedEmptyHint}</p>
+          )}
           <button
             className="share-cta-btn"
             onClick={onOpenOnlineSharing}
             data-testid="open-online-sharing"
           >
-            {onlineSharingEnabled ? t.friends.familienmodusCtaOpen : t.friends.familienmodusCtaSetup}
+            {t.friends.connectedCta}
           </button>
         </section>
       )}
 
-      {friends.length > 0 && (
+      {/* Legacy one-time friend answers (existing data) */}
+      {friends.filter(f => !f.online).length > 0 && (
         <section className="friends-section">
           <h3 className="friends-section-title">
-            {t.friends.friendsFromHeading.replace('{n}', String(friends.length))}
+            {t.friends.friendsFromHeading.replace('{n}', String(friends.filter(f => !f.online).length))}
           </h3>
           <div className="friends-list">
-            {friends.map(f => (
+            {friends.filter(f => !f.online).map(f => (
               <FriendCard
                 key={f.id}
                 friend={f}

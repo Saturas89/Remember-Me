@@ -34,7 +34,7 @@ async function completeOnboarding(page: Page, name: string) {
 async function openFriendsTab(page: Page) {
   const nav = page.getByRole('navigation', { name: 'Hauptnavigation' })
   await nav.getByRole('button', { name: 'Freunde', exact: true }).click()
-  await expect(page.getByRole('heading', { name: /Erinnerung einsammeln/ })).toBeVisible()
+  await expect(page.getByRole('heading', { name: /Einladen & verbinden/ })).toBeVisible()
 }
 
 function attachNetworkSpy(page: Page): Request[] {
@@ -60,13 +60,13 @@ test.describe('Online sharing – opt-in contract', () => {
     await expect.poll(() => offending.length).toBe(0)
   })
 
-  test('invite link generation works offline (existing ?mi= flow unaffected)', async ({ page }) => {
+  test('Sandra-Flow invite link generation works offline (no Supabase required)', async ({ page }) => {
     await completeOnboarding(page, 'Anna')
     await openFriendsTab(page)
-    // Themenpack share button lives inside a collapsible <details> below the
-    // Sandra-Flow primary CTA. Expand it before asserting on its label.
-    await page.getByText('Lieber vorbereitete Fragen?').click()
-    await expect(page.getByRole('button', { name: /Themen-Link teilen/ })).toBeVisible()
+    // Sandra-Flow entry CTA leads to the #/ask flow which is fully offline –
+    // the invite link is built client-side from the question pack only.
+    await expect(page.getByTestId('sandra-entry-cta')).toBeVisible()
+    await expect(page.getByTestId('sandra-entry-cta')).toBeEnabled()
   })
 
   test('online-sharing CTA is rendered – but does not trigger any network', async ({ page }) => {
@@ -79,7 +79,7 @@ test.describe('Online sharing – opt-in contract', () => {
     await completeOnboarding(page, 'Anna')
     await openFriendsTab(page)
     await expect(page.getByTestId('open-online-sharing')).toBeVisible()
-    await expect(page.getByTestId('open-online-sharing')).toHaveText(/Einrichten/)
+    await expect(page.getByTestId('open-online-sharing')).toHaveText(/Geteilte Erinnerungen öffnen/)
     await page.waitForTimeout(500)
     await expect.poll(() => offending.length).toBe(0)
   })

@@ -547,14 +547,14 @@ test.describe('Sandra-Flow – Friends-tab entry card (FR-020.10)', () => {
   test('card is visible in /friends and the CTA navigates to #/ask', async ({ page }) => {
     await page.goto('/friends')
 
-    // The merged invitation section title (Sandra-Flow + Themenpack).
+    // Sandra-Flow invitation section heading (sandraT.entryCard.title).
     await expect(
-      page.getByRole('heading', { name: 'Erinnerungs-Einladung verschicken' }),
+      page.getByRole('heading', { name: 'Jemanden einladen' }),
     ).toBeVisible()
 
     const cta = page.getByTestId('sandra-entry-cta')
     await expect(cta).toBeVisible()
-    await expect(cta).toHaveText(/Loslegen/i)
+    await expect(cta).toHaveText(/Einladung erstellen/i)
     await cta.click()
 
     // After clicking, we're on the Sandra-flow landing — assert the hero

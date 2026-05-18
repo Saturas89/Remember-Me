@@ -475,6 +475,46 @@ export function isPersonalQuestionPack(pack: QuestionPack | null | undefined): p
   return isPersonalPack(pack)
 }
 
+// ── Combined Sandra-invite URL (personal pack + contact handshake) ────────────
+//
+// The Sandra-first flow generates ONE link carrying both the personal question
+// pack (the trigger) and the sender's ContactHandshake (to establish a
+// permanent connection). Detection requires both qp and contact params to be
+// present simultaneously. When only contact is present it is a standalone
+// Familienmodus handshake; when only qp is present it is a standalone pack.
+
+/** True when the URL carries both a question pack and a contact handshake. */
+export function isSandraInviteHash(): boolean {
+  const p = new URLSearchParams(window.location.search)
+  return (p.has('qp') || p.has('qp-plain')) && p.has('contact')
+}
+
+/**
+ * Generate a combined invite URL synchronously (plain, no compression).
+ * Use inside a click handler that calls navigator.share() to avoid breaking
+ * Safari's user-gesture context.
+ */
+export function generateSandraInviteUrlSync(pack: QuestionPack, contact: ContactHandshake): string {
+  const packPart = encodeURIComponent(encodeQuestionPack(pack))
+  const contactPart = toB64u(new TextEncoder().encode(JSON.stringify(contact)))
+  return `${window.location.origin}/?qp-plain=${packPart}&contact=${contactPart}`
+}
+
+/**
+ * Generate a combined invite URL asynchronously (compressed pack).
+ * Falls back to the sync plain form when CompressionStream is unavailable.
+ */
+export async function generateSandraInviteUrl(pack: QuestionPack, contact: ContactHandshake): Promise<string> {
+  const contactPart = toB64u(new TextEncoder().encode(JSON.stringify(contact)))
+  if (typeof CompressionStream !== 'undefined') {
+    try {
+      const compressed = await compress(JSON.stringify(pack))
+      return `${window.location.origin}/?qp=${toB64u(compressed)}&contact=${contactPart}`
+    } catch { /* fall through */ }
+  }
+  return generateSandraInviteUrlSync(pack, contact)
+}
+
 /**
  * Open the native Web Share sheet, or fall back to clipboard copy.
  * Returns `true` if Web Share was successfully invoked.
