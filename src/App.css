@@ -5578,6 +5578,11 @@ details[open] .faq-item__chevron {
   border-color: var(--accent);
 }
 
+/* Ergänzung-senden-Button: min 44 px Tap-Target (WCAG 2.5.5 / Apple HIG) für Ingrid-Persona */
+.shared-memory-compose button {
+  min-height: 44px;
+}
+
 /* ── Online sharing: onboarding screen ─────────────────────────────────────── */
 
 .online-onboarding {
