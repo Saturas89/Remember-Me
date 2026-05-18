@@ -92,7 +92,17 @@ export async function reopenFamilyHub(page: Page) {
 
 async function waitForHubReady(page: Page) {
   await expect(page.getByRole('heading', { name: 'Online teilen', exact: true })).toBeVisible({ timeout: 35_000 })
-  await expect(page.getByText(/Verbinde mit Server …/)).toHaveCount(0, { timeout: 35_000 })
+  // Wait for a positive signal: deviceId set in state means bootstrapSession()
+  // succeeded. "Verbinde mit Server …" disappears on both success AND error, so
+  // its absence is not a reliable sentinel — it leads to 35 s readDeviceIdentity
+  // timeouts whenever bootstrapSession() throws.
+  await page.waitForFunction(() => {
+    try {
+      const p = (window as unknown as { __rmState?: { get: () => Record<string, unknown> | null } }).__rmState?.get()
+      const os = p?.onlineSharing as Record<string, unknown> | undefined
+      return Boolean(os?.deviceId && os?.publicKey)
+    } catch { return false }
+  }, undefined, { timeout: 45_000 })
 }
 
 export async function readDeviceIdentity(page: Page): Promise<{ deviceId: string; publicKey: string }> {

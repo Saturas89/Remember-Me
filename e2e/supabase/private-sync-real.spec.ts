@@ -67,10 +67,12 @@ async function runSetupWizard(
   const recoveryHeading = page.getByRole('heading', { name: 'Dein Sicherheitsschlüssel' })
   const pendingHeading  = page.getByRole('heading', { name: 'Bestätige deine E-Mail' })
 
-  const needsEmailConfirm = await Promise.race([
-    recoveryHeading.waitFor({ state: 'visible', timeout: 20_000 }).then(() => false),
-    pendingHeading.waitFor({ state: 'visible', timeout: 20_000 }).then(() => true),
-  ])
+  // .or() waits atomically until EITHER heading is visible. Promise.race with two
+  // competing waitFor timeouts is flaky: both reject near-simultaneously when
+  // Supabase is slow (> 20 s), and JS event-loop ordering determines which
+  // rejection wins — not which heading actually appeared.
+  await expect(recoveryHeading.or(pendingHeading)).toBeVisible({ timeout: 45_000 })
+  const needsEmailConfirm = await pendingHeading.isVisible()
 
   if (needsEmailConfirm) {
     // 1. Admin-confirm the email server-side.
