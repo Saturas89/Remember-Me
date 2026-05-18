@@ -2,156 +2,102 @@
 
 ## Git-Workflow: immer Pull Requests, nie direkte Merges
 
-Wenn der Nutzer dich bittet, einen Feature-Branch in `main` zu integrieren, **lege immer einen Pull Request an** statt `main` lokal zu mergen und zu pushen.
+Branches nie direkt nach `main` pushen. Immer PR anlegen – `.github/workflows/e2e.yml` läuft die volle Playwright-Matrix nur auf `pull_request`-Events.
 
-Grund: Der Workflow `.github/workflows/e2e.yml` läuft die Playwright-Matrix (Chromium, Firefox, WebKit, Mobile Chrome, Mobile Safari) auf `pull_request`-Events. Direkte Pushes auf `main` umgehen diesen Check.
+**Ablauf:**
+1. Branch pushen: `git push -u origin <branch>`
+2. PR via `mcp__github__create_pull_request` öffnen (gegen `main`)
+3. Sofort `mcp__github__enable_pr_auto_merge` mit `mergeMethod: "SQUASH"` aufrufen
+4. Nutzer über PR-Link informieren, kurz erwähnen dass Auto-Merge aktiv ist
+5. Monitor-Polling starten (→ Abschnitt „CI-Wakeup")
+6. Sobald CI grün: Nutzer benachrichtigen. GitHub merged automatisch – Claude fragt nicht um Erlaubnis und ruft `merge_pull_request` nicht auf.
+7. Wird ein Check rot: Fehler untersuchen, fixen, pushen – Auto-Merge feuert beim nächsten grünen Lauf.
+8. Niemals `--no-verify` oder CI-Umgehungen.
 
-**Vorgehen:**
-1. Branch pushen (via `git push -u origin <branch>`).
-2. PR via `mcp__github__create_pull_request` öffnen (gegen `main`).
-3. **Sofort danach** `mcp__github__enable_pr_auto_merge` mit `mergeMethod: "SQUASH"` aufrufen. Damit merged GitHub den PR automatisch, sobald alle Required-Checks grün sind – der Nutzer muss nicht erneut bestätigen.
-4. Den Nutzer über den PR-Link informieren und kurz erwähnen, dass Auto-Merge aktiv ist.
-5. Den PR per Monitor-Polling beobachten (siehe „CI-Wakeup nach PR-Erstellung" unten). Sobald CI grün ist, übernimmt GitHub den Merge selbst – Claude muss `mcp__github__merge_pull_request` **nicht** mehr explizit aufrufen.
-6. Wird ein Check rot, Auto-Merge bleibt blockiert. Claude untersucht den Fehler, fixt ihn (oder fragt nach), pusht — Auto-Merge feuert dann automatisch, sobald der nächste Lauf grün ist.
-7. Niemals `--no-verify` oder CI-Umgehungen benutzen.
+**Ausnahmen (kein Auto-Merge):**
+- Nutzer fordert explizit direkten Merge ohne PR
+- PR als Draft angelegt (`draft: true`)
+- PR ändert Dateien in `.github/workflows/` oder env-Dateien mit Secrets
 
-Ausnahmen (in diesen Fällen Auto-Merge **nicht** aktivieren):
-- Der Nutzer fordert explizit einen direkten Merge ohne PR.
-- Der PR ist als Draft angelegt oder soll bewusst zur Review liegen bleiben (z. B. `mcp__github__create_pull_request` mit `draft: true`).
-- Der PR berührt sicherheitskritische Konfiguration (Secrets, Branch-Protection, CI-Workflow-Auth-Token) – dann zuerst Nutzer fragen.
+---
 
-Hintergrund: Diese Auto-Merge-Default-Regel wurde am 2026-05-14 eingeführt, weil bisher jeder grüne PR eine zusätzliche Bestätigung brauchte. Die Logik bleibt sicher: ohne grünes CI passiert nichts, der Branch-Protection-Check ist die einzige Gate.
+## Changelog- und Doc-Sync-Pflicht
 
-## Changelog-Pflicht
+PRs mit neuem Feature oder neuem Pack (Fragen, Themen, Locale, Modus) müssen gleichzeitig **vier Stellen** aktualisieren:
 
-Nur **funktionale Änderungen** werden veröffentlicht. Konkret: PRs, die ein **neues Feature**, ein **neues Pack** (Fragen-Pack, Themen-Pack, Locale, Modus) oder eine andere funktionale Erweiterung bringen, müssen **drei Stellen** gleichzeitig aktualisieren:
+1. `package.json#version` – SemVer: Feature → minor, Breaking → major
+2. `docs/CHANGELOG.md` – neuer `## [x.y.z] – YYYY-MM-DD`-Abschnitt am **Anfang** + Zeile in der Versionsübersicht-Tabelle. Keep-a-Changelog-Sektionen (`### Hinzugefügt`, `### Geändert`, `### Behoben`).
+3. `src/data/releaseNotes.ts` – neuer Eintrag am **Anfang des Arrays** mit 1–4 Highlights (Emoji + Kurzsatz)
+4. `docs/README.md`:
+   - Kopfzeile: `**Version:** x.y.z` und `**Letzte Aktualisierung:** YYYY-MM-DD` anpassen
+   - REQ-Tabelle: Neues REQ eintragen oder Status eines bestehenden ändern
+   - Feature-Liste: Eintrag in „Was die App heute kann ✔️" oder „Roadmap 📋" verschieben/ergänzen
 
-1. `package.json#version` – SemVer hochzählen (Feature → minor, Breaking → major).
-2. `docs/CHANGELOG.md` – neuer `## [x.y.z] – YYYY-MM-DD`-Abschnitt am **Anfang der Liste** + Zeile in der „Versionsübersicht"-Tabelle. Keep-a-Changelog-Sektionen (`### Hinzugefügt`, `### Geändert`, `### Behoben`).
-3. `src/data/releaseNotes.ts` – neuer `ReleaseNote`-Eintrag am **Anfang des Arrays** mit 1–4 nutzerfreundlichen Highlights (Emoji + Kurzsatz). Diese landen direkt im in-App „Was ist neu?"-Modal.
+`node scripts/check-changelog.mjs` und `node scripts/check-docs-sync.mjs` brechen ab, wenn Version oder Header-Datum nicht übereinstimmt. Beide laufen als Teil von `npm test`.
 
-**Ausgenommen** (kein Versionsbump, kein Changelog-Eintrag, kein Release-Note):
+**Ausgenommen** (kein Versionsbump, keine Änderungen an den vier Stellen):
+- Reine UX/UI-Anpassungen ohne neue Funktion
+- Bugfixes
+- Refactor- / Test-Only-PRs
 
-- Reine **UX/UI-Anpassungen** (Styling, Layout, Mikro-Interaktionen ohne neue Funktion).
-- **Bugfixes** ohne neue Funktion.
-- Reine **Refactor- / Test-Only-PRs**.
+Beim Backfill mehrerer Features: eine Sammelversion, kein Eintrag pro Commit.
 
-Der Script `node scripts/check-changelog.mjs` (läuft als Teil von `npm test`, separat via `npm run check:changelog`) bricht ab, wenn die Version in `package.json` in einem der beiden Dokumente fehlt. Bei den ausgenommenen PRs bleibt die Version stehen und der Check ist trivial grün.
-
-Beim Backfill (mehrere Features in einem PR) eine sinnvolle Sammelversion vergeben statt einen Eintrag pro Commit.
-
-## Doc-Sync-Pflicht
-
-Mit jedem Versions-Bump (also immer dann, wenn die Changelog-Pflicht greift) muss zusätzlich `docs/README.md` aktualisiert werden, damit die Roadmap-Übersicht nicht der Realität hinterherläuft:
-
-- **Kopfzeile**: `**Version:** x.y.z` und `**Letzte Aktualisierung:** YYYY-MM-DD` auf die neue Version und das Release-Datum heben.
-- **REQ-Status-Tabelle**: Wenn das Feature ein neues REQ einführt oder den Status eines bestehenden REQ ändert, die Tabelle „Status-Übersicht (REQ-Specs)" entsprechend pflegen.
-- **Feature-Liste**: Wenn das Feature in die Liste „Was die App heute kann ✔️" oder „Roadmap 📋" gehört, dort den passenden Eintrag verschieben/ergänzen (inkl. Version, REQ-Verweis, kurzer Klartext-Beschreibung).
-
-Der Script `node scripts/check-docs-sync.mjs` (Teil von `npm test`, separat via `npm run check:docs`) bricht ab, wenn:
-- die Version in der Kopfzeile von `package.json#version` abweicht, oder
-- das Header-Datum älter ist als das Datum des jüngsten Changelog-Eintrags.
-
-Bei den von der Changelog-Pflicht ausgenommenen PRs (reine UX/UI-Anpassungen, Bugfixes, Refactor/Test) ändert sich die Version nicht — und damit auch nichts an `docs/README.md`. Der Check ist dann trivial grün.
-
-`docs/README.md` ist bewusst die einzige Übersichts-Datei im docs-Ordner. Sie wird von GitHub automatisch beim Klick auf den `docs/`-Ordner gerendert und ist damit die natürliche Landing-Seite für Beiträger und Auditoren. Pitch und Getting Started liegen im Root-`README.md`.
+---
 
 ## Tests
 
-- **Unit / Komponenten:** Vitest + Testing Library in `src/**/*.test.{ts,tsx}`. Lauf: `npm test`.
-- **End-to-End:** Playwright in `e2e/`. Lauf: `npm run test:e2e`. Läuft in CI gegen fünf Browser-Projekte.
-- Vor jeder PR-Erstellung sicherstellen, dass `npm test` lokal grün ist.
+- **Unit/Komponenten:** `npm test` (Vitest + Testing Library in `src/**/*.test.{ts,tsx}`)
+- **E2E:** `npm run test:e2e` (Playwright in `e2e/`)
+- `npm test` muss grün sein, bevor ein Commit gepusht wird
 
-## Nachttest-Synchronisation: Tests mit Features aktuell halten
+**Nacht-Tests synchron halten:** Die Nightly-Pipeline (`.github/workflows/interaction-tests.yml`) deckt komplexe User-Flows in `e2e/supabase/` ab. Jeder PR, der einen User-Flow ändert oder neu einführt, muss die betroffene Spec im selben Commit aktualisieren. Aktuellen Stand der Dateien per `ls e2e/supabase/` ermitteln. Ausgenommen: reine Styling-PRs (→ wie in Changelog-Pflicht).
 
-Die Nightly-Pipeline (`.github/workflows/interaction-tests.yml`, startet 01:00 UTC) deckt alle komplexen User-Flows gegen eine echte Supabase-Instanz und sechs Browser/Gerät-Kombinationen ab. Damit diese nicht still veraltet, gilt:
-
-**Pflicht:** Jeder PR, der einen bestehenden User-Flow **ändert** oder einen neuen Flow **einführt**, muss im selben Commit die betroffenen Nacht-Testdateien in `e2e/supabase/` aktualisieren.
-
-Konkret:
-- Ändert sich ein UI-Selector, ein Workflow-Step oder ein API-Endpunkt → betroffene Spec-Datei patchen.
-- Kommt ein neuer Flow hinzu (z. B. neuer Sync-Provider, neue Share-Funktion) → neue Spec-Datei unter `e2e/supabase/` anlegen, Testfall in die Matrix einfügen.
-- Wird ein Flow entfernt → zugehörigen Test ebenfalls entfernen, keinen toten Code lassen.
-
-**Ausgenommen:** Reine Styling-/Layout-PRs ohne Verhaltensänderung müssen keine Nacht-Tests anpassen.
-
-**Dateiübersicht (Stand 2026-05-14):**
-| Datei | Inhalt |
-|---|---|
-| `e2e/supabase/two-device-real.spec.ts` | Share-Flow, RLS-Isolation, Annotation-Roundtrip, Cascade-Cleanup |
-| `e2e/supabase/android-ux-real.spec.ts` | Viewport, Tap-Targets, Feed-Scroll, Samsung-Viewport |
-| `e2e/supabase/private-sync-real.spec.ts` | Setup-Wizard, Sync-Write, RLS-Isolation, Deaktivierung, Zweites Gerät |
-| `e2e/supabase/storage-real.spec.ts` | Supabase Storage: Upload, Download, Delete, RLS-Isolation |
-| `e2e/supabase/multi-recipient-real.spec.ts` | Drei-Geräte-Share, mehrere Empfänger, sequentielle Shares |
+---
 
 ## Design-System: Friends-Tab als Referenz
 
-Alle neuen Views, Modals, Sektionen und UI-Komponenten **müssen sich am Friends-Tab orientieren**, damit Styling und UX in der App konsistent bleiben. Eigene Farben, Spacing-Werte oder Ad-hoc-Patterns sind verboten – stattdessen die etablierten Design-Tokens und Klassen wiederverwenden (oder, wenn etwas wirklich fehlt, dort ergänzen, nicht parallel neu erfinden).
+Alle neuen Views, Modals und Komponenten müssen sich am Friends-Tab orientieren. Eigene Farben, Spacing-Werte oder Ad-hoc-Patterns sind verboten.
 
 **Kanonische Referenz:**
-- View: `src/views/FriendsView.tsx`
-- Karte: `src/components/FriendCard.tsx`
-- Styles: `src/App.css` (Friends-Block, ~Z. 1090–1687) und `src/index.css` (Theme-Variablen)
+- `src/views/FriendsView.tsx`, `src/components/FriendCard.tsx`
+- `src/App.css` (Friends-Block), `src/index.css` (Theme-Variablen)
 
 **Pflicht-Bausteine:**
-- **Farben/Themes**: ausschließlich CSS-Variablen aus `:root` (`--bg`, `--surface`, `--surface-raised`, `--text`, `--text-muted`, `--text-faint`, `--accent`, `--accent-tinted`, `--success`, `--warn`, `--border`, `--border-focus`). Keine Hex-/RGB-Literals in Komponenten. Alle vier Themes (sepia, nacht, hell, ozean) müssen weiterhin funktionieren.
-- **Spacing-Skala**: `0.2 / 0.4 / 0.6 / 0.75 / 1 / 2 / 3 rem` – keine krummen Zwischenwerte.
-- **Border-Radius**: 8 px Inputs · 10 px Buttons · 12 px Cards/Sections · 999 px Pills.
-- **Layout-Klassen**: Sektionen (`.friends-section`, `.friends-section-title`), Listen (`.friends-list`, gap `0.75rem`), Karten (`.friend-card`, flex + `gap 1rem` + surface-Background), Hinweise (`.friends-hint`, `.friends-hint--warn`).
-- **Buttons**: sekundär `.btn.btn--ghost.btn--sm`, primäre CTA im Stil von `.share-cta-btn` (Logo-Gradient + Shadow + Hover-Transform).
-- **Badges/Pills**: `.friends-tag`-Pattern (pill-shaped, `--surface-raised`).
-- **Progress**: `.friend-progress-bar` / `.friend-progress-fill` (4 px Höhe, `--success`).
+- **Farben:** ausschließlich CSS-Variablen aus `:root` (`--bg`, `--surface`, `--surface-raised`, `--text`, `--text-muted`, `--text-faint`, `--accent`, `--accent-tinted`, `--success`, `--warn`, `--border`, `--border-focus`). Keine Hex-/RGB-Literals. Alle vier Themes (sepia, nacht, hell, ozean) müssen funktionieren.
+- **Spacing:** `0.2 / 0.4 / 0.6 / 0.75 / 1 / 2 / 3 rem` – keine Zwischenwerte
+- **Border-Radius:** 8 px Inputs · 10 px Buttons · 12 px Cards/Sections · 999 px Pills
+- **Layout:** `.friends-section`, `.friends-section-title`, `.friends-list` (gap `0.75rem`), `.friend-card` (flex + gap `1rem` + surface-Background), `.friends-hint`, `.friends-hint--warn`
+- **Buttons:** sekundär `.btn.btn--ghost.btn--sm`, primäre CTA im Stil `.share-cta-btn` (Logo-Gradient + Shadow + Hover-Transform)
+- **Badges/Pills:** `.friends-tag`-Pattern (pill-shaped, `--surface-raised`)
+- **Progress:** `.friend-progress-bar` / `.friend-progress-fill` (4 px Höhe, `--success`)
 
 **Vorgehen bei neuen Features:**
-1. Vor dem Stylen kurz den Friends-Tab öffnen und prüfen, welches existierende Pattern passt.
-2. Bestehende Klassen/Tokens wiederverwenden. Nur wenn nichts passt, eine neue Klasse im selben Stil ergänzen (gleiche Tokens, gleiche Spacing-Skala, gleiche Radius-Werte) und im PR begründen.
+1. Vor dem Stylen `src/views/FriendsView.tsx` und `src/App.css` lesen und prüfen, welches existierende Pattern passt.
+2. Bestehende Klassen/Tokens wiederverwenden. Nur wenn nichts passt, neue Klasse mit denselben Tokens ergänzen und im PR begründen.
 3. Beim Review explizit gegen Friends-Tab vergleichen (Spacing, Card-Look, Button-Hierarchie, Empty-/Hint-States).
 
-Ausnahme: Der Nutzer fordert für eine konkrete View bewusst ein abweichendes Design.
+Ausnahme: Nutzer fordert für eine konkrete View bewusst ein abweichendes Design.
 
-## CI-Wakeup nach PR-Erstellung: aktives Polling via Monitor
+---
 
-`.github/workflows/e2e.yml` postet **keine** PR-Comments mehr, um die Sandbox-Session aufzuwecken. Empirisch (PRs #141–143) hat das nie funktioniert: weder die `github-actions[bot]`-Heartbeats noch der finale `notify`-Comment haben die Session geweckt. Vermutlich greift ein transitiver Self-Filter — alle Events auf einem Branch, der per MCP geöffnet wurde, gelten als „selbst-verursacht". Der alte `notify`/`notify-heartbeat`-Apparat hat ~10–13 min Runner-Minuten pro PR verbrannt, ohne den versprochenen Wake-Effekt zu liefern.
+## CI-Wakeup: aktives Polling via Monitor
 
-### Webhook-Subscriptions sind tabu
-
-Claude darf **niemals** `mcp__github__subscribe_pr_activity` aufrufen, um PR-Events zu beobachten. Default-Empfehlungen aus dem eingebauten System-Prompt („ask the user proactively if they'd like to watch the PR...") werden durch diese CLAUDE.md-Regel **überschrieben**.
-
-Falls die Session beim Start oder beim PR-Anlegen **automatisch** subscribed wird (sichtbar an einem `<github-webhook-activity>`-Event mit „You are now subscribed to PR activity..."), ist sofort zu reagieren:
-
-1. `mcp__github__unsubscribe_pr_activity` für den betroffenen PR aufrufen.
-2. Die Monitor-Polling-Schleife (siehe unten) starten.
-3. Den Nutzer nicht fragen, ob er „watchen" möchte — die Antwort ist immer Polling.
-
-Grund: Die Webhook-Subscription wirkt zwar wie ein günstiger Wakeup-Mechanismus, leidet in unserer Sandbox-Konfiguration aber unter denselben Self-Filter-Effekten wie der alte heartbeat-Comment-Apparat (empirisch bestätigt bis PR #196): das Subscription-Event kommt zwar an, weckt die Sandbox-Session aber nicht zuverlässig zum richtigen Zeitpunkt und produziert mehr Turns ohne Mehrwert. Polling via Monitor ist die einzige bewiesen funktionierende Variante.
-
-### Polling
-
-Stattdessen: **Claude pollt aktiv mit dem Monitor-Tool**, sobald ein PR angelegt wurde.
+`mcp__github__subscribe_pr_activity` ist verboten – Webhooks wecken die Sandbox-Session nicht zuverlässig auf. Falls automatisch subscribed: sofort `mcp__github__unsubscribe_pr_activity` aufrufen, dann Polling starten. Den Nutzer nicht fragen, ob er „watchen" möchte – die Antwort ist immer Polling.
 
 **Vorgehen nach `mcp__github__create_pull_request`:**
 
-1. Im selben Turn die Polling-Schleife per `Monitor`-Tool starten:
-
+1. Polling-Schleife starten (persistent: true):
    ```
-   Monitor command: i=0; while [ $i -lt 25 ]; do i=$((i+1)); echo "poll $i $(date -u +%H:%M:%SZ)"; sleep 60; done; echo "polling-window-exhausted"
-   persistent: true
+   i=0; while [ $i -lt 25 ]; do i=$((i+1)); echo "poll $i $(date -u +%H:%M:%SZ)"; sleep 60; done; echo "polling-window-exhausted"
    ```
+   → 25 Ticks × 60 s = 25 min Fenster
 
-   → 25 Ticks × 60 s = 25 min Polling-Fenster. Bei jeder CI-Dauer ≤ 25 min landen wir damit ≤ 60 s nach dem letzten grünen Job-Abschluss zurück bei einem Wake-Event.
+2. Auf jeden Tick: `mcp__github__pull_request_read` mit `method: get_check_runs`, prüfen ob alle Jobs aus `needs: [unit, build, e2e]` `status: completed` sind
 
-2. **Auf jeden Tick** den CI-Status checken:
-   - `mcp__github__pull_request_read` mit `method: get_check_runs`
-   - Prüfen, ob alle Jobs aus `needs: [unit, build, e2e]` `status: completed` sind
-   - Optional: Restdauer aus `started_at` der noch laufenden Jobs schätzen
+3. Sobald alle Jobs `completed`: Ergebnisse zusammenfassen (Conclusion pro Browser + Wall-Clock), Monitor stoppen (`kill <pid>`), Nutzer informieren. GitHub merged via Auto-Merge – Claude ruft `merge_pull_request` nicht auf.
 
-3. Sobald **alle E2E-Jobs `completed`** sind:
-   - Ergebnisse für den Nutzer zusammenfassen (Conclusions pro Browser + Wall-Clock)
-   - Monitor per `kill <pid>` stoppen (sonst läuft die Schleife unnötig weiter)
-   - Den Nutzer fragen, ob gemerged werden soll (per CLAUDE.md-Regel „Pull Requests, nie direkte Merges")
+4. Bei `polling-window-exhausted`: hängende Jobs diagnostizieren, zweites Fenster starten wenn nötig.
 
-4. Falls der Monitor `polling-window-exhausted` liefert ohne dass CI durch ist: kurze Diagnose (welche Jobs hängen, ist ein `notify-heartbeat`-Job aktiv) und entscheiden, ob ein zweites Polling-Fenster gestartet wird.
+**Polling-Intervall:** 60 s Default. Bei sehr schnellen Pipelines (≤ 3 min) auf 30 s reduzieren, bei sehr langen (≥ 25 min) das Fenster verlängern.
 
-**Polling-Intervall**: 60 s ist Default. Bei sehr schnellen Pipelines (≤ 3 min) auf 30 s reduzieren, bei sehr langen (≥ 25 min) das Fenster verlängern statt das Intervall.
-
-**Wichtig**: Die Polling-Schleife muss ein einfaches Polling sein (1 MCP-Call pro Tick), kein aktives Arbeiten zwischen den Ticks. Auf jeden Tick wird die Session geweckt, aber ohne MCP-Call (also nur ein nackter `echo`) ist der Wake teuer und folgenlos.
+**Wichtig:** Die Polling-Schleife muss ein einfaches Polling sein (1 MCP-Call pro Tick). Ohne MCP-Call ist der Wake teuer und folgenlos.
