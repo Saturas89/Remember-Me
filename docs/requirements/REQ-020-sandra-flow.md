@@ -1,9 +1,9 @@
-# Anforderung: Sandra-First Flow – persönliche Fragen formulieren
+# Anforderung: Sandra-First Flow – persönliche Fragen & dauerhafter Verbindungsaufbau
 
-**Status:** 🟢 IN PROGRESS → ✔️ COMPLETED (v2.7.0)
+**Status:** ✔️ COMPLETED (v2.7.0 Grundflow; v2.11.0 Dauerverbindung)
 **ID:** REQ-020
-**Version:** 2.7.0
-**Letzte Aktualisierung:** 2026-05-12
+**Version:** 2.11.0
+**Letzte Aktualisierung:** 2026-05-18
 **Modul:** Sharing / UX
 **Priorität:** Medium
 
@@ -11,16 +11,20 @@
 
 ## 1. Zusammenfassung
 
-Ein neuer Einstiegs-Flow für die tech-affinere Käuferin Sandra (~42), damit
-sie **eigene** Fragen in **eigenen Worten** an einen Verwandten (z. B. Mama
-Ingrid, ~67) formulieren und per Web-Share-Link verschicken kann. Resultat
-ist ein erweitertes Question-Pack im bestehenden Pack-Schema, das auf der
-Empfänger-Seite zu einer sanfteren, One-Question-at-a-Time-Ansicht führt und
-einmalig den Vereinfachten Bedienmodus (REQ-019) vorschlägt.
+Ein Einstiegs-Flow für die tech-affinere Käuferin Sandra (~42), damit sie
+**eigene** Fragen in **eigenen Worten** an einen Verwandten (z. B. Mama
+Ingrid, ~67) formulieren und per Web-Share-Link verschicken kann.
+
+Ab v2.11.0 sind die Fragen nicht mehr Selbstzweck, sondern **Trigger**: der
+Link enthält neben dem Fragenpaket auch Sandras `ContactHandshake` (deviceId
++ ECDH-Public-Key). Wenn Mama den Link öffnet, beantwortet sie die Fragen
+(sanfte Onboarding-Erfahrung) und wird gleichzeitig dauerhaft mit Sandra
+verbunden. Sandra sieht Mamas neue Erinnerungen laufend – kein separater
+Familienmodus-Setup-Schritt notwendig.
 
 Diese Anforderung füllt die Lücke, dass das bisherige Freunde-Feature
 ausschließlich vorgegebene Themen-Packs anbot – Sandra konnte zwar
-**senden**, aber nicht **kuratieren**, was gesendet wird.
+**senden**, aber weder **kuratieren** noch eine **Dauerverbindung** aufbauen.
 
 ---
 
@@ -44,10 +48,17 @@ ausschließlich vorgegebene Themen-Packs anbot – Sandra konnte zwar
   direkt in die Fragen-Liste (Sandras Hand bleibt am Steuer).
 - **FR-020.6** Fragen-Liste erlaubt Edit / Reorder / Delete. Es gibt **kein
   Private-Toggle** – jede Frage in der Liste wird gesendet.
-- **FR-020.7** Versand öffnet die Web-Share-API mit einem Link, der den
-  Pack-Code im URL-Hash trägt (`?qp=…` komprimiert, `?qp-plain=…` Fallback).
-  Der Pack-Code wird niemals als Text gezeigt. Bei fehlender Web-Share-API
-  fällt der Versand auf `navigator.clipboard.writeText` zurück.
+- **FR-020.7** Versand öffnet die Web-Share-API mit einem kombinierten Link:
+  - Wenn Supabase konfiguriert und Sandras Identität bereit ist:
+    `?qp=…&contact=…` (bzw. `?qp-plain=…&contact=…` Fallback). Dieser Link
+    löst auf Mamas Seite sowohl die Fragen-Ansicht als auch den
+    `ContactHandshake`-Flow aus → Dauerverbindung in einem Schritt.
+  - Ohne Supabase oder bevor die Identität bereit ist: `?qp=…` Fallback
+    (einmaliges Fragenpaket, kein Kontakt-Handshake).
+  - Der Pack-Code wird niemals als Klartext gezeigt. Bei fehlender
+    Web-Share-API fällt der Versand auf `navigator.clipboard.writeText`
+    zurück. Der Share-CTA ist nie disabled – er fällt intern automatisch
+    auf den jeweils verfügbaren URL-Typ zurück.
 - **FR-020.8** Hinweis-Banner bei mindestens einer `relationship`-Frage im
   Pack: „Ein paar Fragen sind sehr persönlich. Vielleicht magst du {anrede}
   kurz anrufen, bevor du den Link schickst." (i18n).
@@ -126,12 +137,25 @@ gesendet.
 ## 5. URL-Format
 
 ```
-{origin}/?qp={base64url(deflate-raw(JSON))}       // bevorzugt
-{origin}/?qp-plain={base64url(JSON)}              // Fallback
+// Sandra-Invite (Supabase konfiguriert + Identität bereit) – bevorzugt
+{origin}/?qp={base64url(deflate-raw(JSON))}&contact={base64url(JSON)}
+
+// Sandra-Invite Fallback (keine Kompression verfügbar)
+{origin}/?qp-plain={base64url(JSON)}&contact={base64url(JSON)}
+
+// Pack-only (kein Supabase / Identität noch nicht bereit)
+{origin}/?qp={base64url(deflate-raw(JSON))}
+{origin}/?qp-plain={base64url(JSON)}
 ```
 
-Detection synchron (`isQuestionPackHash`), Parsing asynchron mit Reuse der
-bestehenden `decodeQuestionPack`-Schema-Guards (Max-Längen, enum-types).
+Detection:
+- `isSandraInviteHash()` → true wenn `qp` (oder `qp-plain`) **und** `contact`
+  gleichzeitig vorhanden → kombinierter Flow.
+- `isQuestionPackHash()` → true wenn nur `qp`/`qp-plain` vorhanden → Legacy
+  Pack-only Flow.
+
+Parsing synchron (`isSandraInviteHash`), Pack-Parsing asynchron mit Reuse
+der bestehenden `decodeQuestionPack`-Schema-Guards (Max-Längen, enum-types).
 
 ---
 

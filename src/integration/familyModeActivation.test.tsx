@@ -93,7 +93,7 @@ describe('Familienmodus – Aktivierung (FR-15.1 – FR-15.3)', () => {
     await gotoFriendsTab()
 
     const cta = await screen.findByTestId('open-online-sharing')
-    expect(cta.textContent).toMatch(/Einrichten/)
+    expect(cta.textContent).toMatch(/Geteilte Erinnerungen öffnen/)
   })
 
   it('Consent-Screen erzwingt die Pflicht-Checkbox bevor "Aktivieren" klickbar ist', async () => {
@@ -139,7 +139,7 @@ describe('Familienmodus – Aktivierung (FR-15.1 – FR-15.3)', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Zurück' }))
 
-    expect(await screen.findByRole('heading', { name: /Erinnerung einsammeln/ })).toBeTruthy()
+    expect(await screen.findByRole('heading', { name: /Einladen & verbinden/, level: 2 })).toBeTruthy()
     expect(bootstrapSession).not.toHaveBeenCalled()
     expect(readState().onlineSharing).toBeUndefined()
   })

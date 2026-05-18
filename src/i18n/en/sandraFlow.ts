@@ -15,9 +15,9 @@ export const SANDRA_FLOW_EN: SandraFlowStrings = {
       'Share the link with {anrede} as a gift',
     ],
     privacyBadges: [
-      'No account',
-      'No cloud',
-      "Stays on {anrede}'s device",
+      'Private',
+      'Encrypted',
+      'Just for you two',
     ],
     crossHintToOwnTitle: 'Capture your own memories?',
     crossHintToOwnBody: 'If you\'d rather write your own stories instead of sending questions to someone else, head to the "My Memories" card on the Journey tab.',
@@ -113,7 +113,8 @@ export const SANDRA_FLOW_EN: SandraFlowStrings = {
     sending: 'Opening…',
     copied: '✓ Link copied!',
     error: '⚠ Try again',
-    privacyHint: "{anrede}'s answers stay on their device too.",
+    privacyHint: 'Private & encrypted – only {anrede} and you can read everything.',
+    connectingHint: 'Setting up connection…',
     relationshipHint:
       'Some of these are very personal. You might want to call {anrede} before sending.',
     backToList: 'Back to the list',
@@ -123,7 +124,7 @@ export const SANDRA_FLOW_EN: SandraFlowStrings = {
     recipientPreviewLines: [
       'A short greeting with your name.',
       'Your questions, one at a time.',
-      'Answers via typing or voice – no app installation needed.',
+      "You'll stay connected going forward – you see {anrede}'s new memories as they add them.",
     ],
     preferSimpleModeLabel: 'Pre-set large-text mode for {anrede}',
     preferSimpleModeHint: 'Recommended if {anrede} is hesitant with apps – only the essential buttons, large text. {anrede} can switch this later any time.',
@@ -153,9 +154,9 @@ export const SANDRA_FLOW_EN: SandraFlowStrings = {
 
   // ── Friends-tab entry ──────────────────────────────────────────────
   entryCard: {
-    title: 'Compose your own questions for someone',
-    desc: 'Ask your own questions – in your own words, to Mom, Dad, Grandma. They answer when they\'re ready.',
-    cta: 'Get started',
+    title: 'Invite someone',
+    desc: "Ask personal questions in your own words – to Mom, Dad, Grandma. You'll stay connected going forward.",
+    cta: 'Create invitation',
   },
 
   // ── Global ─────────────────────────────────────────────────────────

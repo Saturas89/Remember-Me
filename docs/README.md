@@ -1,8 +1,8 @@
 # Storyhold – Projekt-Übersicht
 
 **Status:** 🔵 IN PROGRESS
-**Version:** 2.10.0
-**Letzte Aktualisierung:** 2026-05-15
+**Version:** 2.11.0
+**Letzte Aktualisierung:** 2026-05-18
 
 > Version und Datum werden per `npm test` (`scripts/check-docs-sync.mjs`)
 > gegen `package.json` und das jüngste `docs/CHANGELOG.md`-Datum
@@ -135,6 +135,7 @@ Teilen / Exportieren (PDF, Markdown, JSON, ZIP-Archiv, KI-Export, Freunde einlad
 - [x] **Sync-Setup: Wartebildschirm für E-Mail-Bestätigung** – Wizard zeigt jetzt Hinweistext + Resend-Button statt stummem Skip – v2.6.0
 - [x] **Mehrsprachigkeit DE / EN** – alle UI-Strings, Onboarding, FAQ, Release Notes, Kategorien und Fragen lokalisiert (`src/locales/de/`, `src/locales/en/`, `detectLocale.ts`)
 - [x] **Sandra-First Flow** – tech-affinerer Käufer formuliert eigene Fragen und schickt sie als Pack-Link an Mama/Papa/Oma (REQ-020) – v2.7.0
+- [x] **Sandra-Flow: dauerhafter Verbindungsaufbau** – kombinierter `?qp=&contact=`-Link etabliert sofortige Dauerverbindung; Privacy-Badges neu formuliert; Freunde-Tab-Struktur vereinfacht (REQ-020, REQ-015) – v2.11.0
 - [x] **Leichtgewichtiges In-App-Feedback** – 5-Smiley-Modal mit optionalem Kommentar im Profil, anonyme Insert-Tabelle (REQ-021) – v2.8.0
 - [x] **Trust-Badges in Impressum + README** – „🔓 Open Source · AGPL-3.0" und „🇩🇪 Made in Germany" als Pills im Friends-Tab-Stil, zusätzlich shields.io-Badges im Root-README – v2.9.0
 - [x] **PostHog Analytics (EU Cloud, cookie-less)** – Quiz-Flows, Onboarding, Tab-Wechsel und Feature-Öffner werden anonym getrackt; kein Cookie, kein Autocapture, kein Fingerprinting; deaktiviert wenn `VITE_POSTHOG_KEY` fehlt – v2.10.0

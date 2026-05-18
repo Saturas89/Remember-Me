@@ -6,6 +6,15 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '2.11.0',
+    date: '2026-05-18',
+    highlights: [
+      '🔗 Sandra-Flow verbindet jetzt dauerhaft – Mama antwortet auf deine Fragen und ihr bleibt automatisch in Kontakt.',
+      '🔒 Privat & verschlüsselt – nur ihr beide seht, was geteilt wird.',
+      '✨ Der Freunde-Tab ist jetzt übersichtlicher: eine Einladung, eine Verbindung.',
+    ],
+  },
+  {
     version: '2.10.0',
     date: '2026-05-15',
     highlights: [

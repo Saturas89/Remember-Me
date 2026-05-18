@@ -10,6 +10,27 @@ Versionierung folgt [Semantic Versioning](https://semver.org/lang/de/).
 > Der Check `npm run check:changelog` (Teil von `npm test`) bricht sonst ab.
 > Details: `CLAUDE.md` → „Changelog-Pflicht".
 
+## [2.11.0] – 2026-05-18
+
+### Geändert
+
+- **Sandra-Flow: dauerhafter Verbindungsaufbau statt Einmal-Link** – Der
+  Sandra-Flow (`#/ask`) sendet jetzt einen kombinierten Link mit Fragenpaket
+  (`?qp=`) **und** dem eigenen ContactHandshake (`?contact=`). Wenn Mama den
+  Link öffnet, beantwortet sie die Fragen (als Trigger) und wird gleichzeitig
+  dauerhaft verbunden – Sandra sieht neue Erinnerungen laufend, kein zweiter
+  Schritt notwendig. Voraussetzung: Supabase-Build (Familienmodus).
+- **Privacy-Versprechen neu formuliert** – Badges auf der Landing-Seite des
+  Sandra-Flows zeigen jetzt „Privat", „Verschlüsselt", „Nur für euch beide"
+  statt der alten „Keine Anmeldung / Keine Cloud"-Formulierung, die zur
+  tatsächlichen Supabase-Architektur im Widerspruch stand.
+- **Freunde-Tab klarere Struktur** – Primärer CTA ist jetzt „Einladung
+  erstellen" (Sandra-Flow). Der bisherige Familienmodus-CTA „Einrichten" wurde
+  zu „Geteilte Erinnerungen öffnen" umbenannt und ist nur noch sichtbar, wenn
+  Supabase konfiguriert ist.
+
+---
+
 ## [2.10.0] – 2026-05-15
 
 ### Hinzugefügt

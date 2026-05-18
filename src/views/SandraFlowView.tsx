@@ -7,7 +7,10 @@ import { encodeQuestionPack } from '../utils/sharing'
 import {
   generateQuestionPackUrl,
   generateQuestionPackUrlSync,
+  generateSandraInviteUrl,
+  generateSandraInviteUrlSync,
 } from '../utils/secureLink'
+import type { ContactHandshake } from '../types'
 import type {
   ComposedQuestion,
   SandraAnchor,
@@ -23,6 +26,16 @@ import { SandraShareStep } from '../components/sandraFlow/SandraShareStep'
 interface Props {
   profileName: string
   onBack: () => void
+  /** Whether Supabase is configured in this build. When false the share link
+   *  falls back to a pack-only URL (no ContactHandshake embedded). */
+  onlineSharingConfigured: boolean
+  /** Whether the user has already opted in to online sharing. */
+  onlineSharingEnabled: boolean
+  /** Device identity – available once online sharing has bootstrapped. */
+  myDeviceId: string | null
+  myPublicKey: string | null
+  /** Called at the share step to trigger online-sharing bootstrap if needed. */
+  onEnableOnlineSharing: () => void
 }
 
 export type SandraStep =
@@ -84,7 +97,15 @@ function newQuestionId(): string {
   return `cq-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
 }
 
-export function SandraFlowView({ profileName, onBack }: Props) {
+export function SandraFlowView({
+  profileName,
+  onBack,
+  onlineSharingConfigured,
+  onlineSharingEnabled,
+  myDeviceId,
+  myPublicKey,
+  onEnableOnlineSharing,
+}: Props) {
   const { locale } = useTranslation()
   const t = useSandraFlowStrings()
 
@@ -168,6 +189,16 @@ export function SandraFlowView({ profileName, onBack }: Props) {
     setDraftState(emptyDraft())
     onBack()
   }
+
+  // When Sandra reaches the share step and Supabase is configured, eagerly
+  // trigger online-sharing bootstrap so her ContactHandshake is ready by the
+  // time she hits "Send". If it isn't ready yet the share still works – it
+  // falls back to a pack-only URL – but the handshake will be absent.
+  useEffect(() => {
+    if (step === 'share' && onlineSharingConfigured && !onlineSharingEnabled) {
+      onEnableOnlineSharing()
+    }
+  }, [step, onlineSharingConfigured, onlineSharingEnabled, onEnableOnlineSharing])
 
   // Locale-aware fallback so an EN user on a fresh tab reads "Mom" on the
   // landing/trigger screens — not the German "Mama". Once the user has
@@ -254,6 +285,20 @@ export function SandraFlowView({ profileName, onBack }: Props) {
   }
 
   // step === 'share'
+  const handshakeReady = Boolean(myDeviceId && myPublicKey)
+  const waitingForIdentity = onlineSharingConfigured && onlineSharingEnabled && !handshakeReady
+
+  function buildHandshake(): ContactHandshake | null {
+    if (!myDeviceId || !myPublicKey) return null
+    return {
+      $type: 'remember-me-contact',
+      version: 1,
+      deviceId: myDeviceId,
+      publicKey: myPublicKey,
+      displayName: profileName,
+    }
+  }
+
   return (
     <SandraShareStep
       t={t}
@@ -265,9 +310,16 @@ export function SandraFlowView({ profileName, onBack }: Props) {
       preferSimpleMode={draft.preferSimpleMode ?? true}
       onTogglePreferSimpleMode={next => setDraftState({ ...draft, preferSimpleMode: next })}
       onBack={() => setStep('list')}
+      waitingForIdentity={waitingForIdentity}
       onShareSync={() => {
         const pack = buildPersonalPack(draft, profileName)
-        // Synchronous URL for Web Share inside the click handler.
+        const handshake = buildHandshake()
+        if (handshake) {
+          return {
+            url: generateSandraInviteUrlSync(pack, handshake),
+            encoded: encodeQuestionPack(pack),
+          }
+        }
         return {
           url: generateQuestionPackUrlSync(pack),
           encoded: encodeQuestionPack(pack),
@@ -275,6 +327,8 @@ export function SandraFlowView({ profileName, onBack }: Props) {
       }}
       onShareUpgrade={async () => {
         const pack = buildPersonalPack(draft, profileName)
+        const handshake = buildHandshake()
+        if (handshake) return await generateSandraInviteUrl(pack, handshake)
         return await generateQuestionPackUrl(pack)
       }}
       onClearDraft={handleResetAndExit}

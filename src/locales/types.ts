@@ -255,36 +255,13 @@ export interface Translations {
     pageTitle: string
     topbarTitle: string
     intro: string
-    inviteLinkHeading: string
-    inviteHintNoName: string
-    inviteHint: string
-    inviteSecondarySummary: string
-    inviteSecondaryHint: string
-    opening: string
-    messageCopied: string
-    copyRetry: string
-    shareCta: string
+    connectedHeading: string
+    connectedCta: string
+    connectedEmptyHint: string
     friendsFromHeading: string
     attachmentsHeading: string
     attachmentsHint: string
     openGift: string
-    shareMessage: string
-    /** Tags above the invite-link description. */
-    tagOneTime: string
-    tagNoAccount: string
-    tagOffline: string
-    /** Share-card metadata for the offline invite link. */
-    inviteShareCardTitleWithName: string
-    inviteShareCardTitleFallback: string
-    inviteShareCardSubtitle: string
-    /** Familienmodus opt-in section in the friends view. */
-    familienmodusHeading: string
-    familienmodusHint: string
-    familienmodusTagPermanent: string
-    familienmodusTagMutual: string
-    familienmodusTagEncrypted: string
-    familienmodusCtaSetup: string
-    familienmodusCtaOpen: string
     lastActiveToday: string
     lastActiveYesterday: string
     lastActiveDays: string

@@ -8,14 +8,13 @@ import {
   isMemoryShareHash,
   isContactHash,
   isQuestionPackHash,
+  isSandraInviteHash,
   parseSecureInviteFromHash,
   parseAnswerFromHash,
   parseMemoryShareFromHash,
   parseContactFromHash,
   parseQuestionPackFromHash,
   isPersonalQuestionPack,
-  generatePlainInviteUrl,
-  generateSecureInviteUrl,
 } from './utils/secureLink'
 import type { QuestionPack } from './types'
 import type { PersonalQuestionPack } from './types/sandraFlow'
@@ -84,12 +83,18 @@ type View =
 
 type MainTab = 'home' | 'friends' | 'archive' | 'sync' | 'profile'
 
-// Detect URL type synchronously to show a loading state before async parse
+// Detect URL type synchronously to show a loading state before async parse.
+// A Sandra invite carries BOTH qp (pack) and contact (handshake) — it must be
+// detected before the standalone-contact check so the pack is parsed first.
+const isSandraInvite = isSandraInviteHash()
 const needsAsyncParse =
   isSecureInviteHash() || isAnswerHash() || isMemoryShareHash() || isQuestionPackHash()
-// #contact/ is parsed synchronously (no crypto, no compression)
-const initialContactHandshake = isContactHash() ? parseContactFromHash() : null
-const initialSandraHash = !needsAsyncParse && !initialContactHandshake && window.location.hash.startsWith('#/ask')
+// Standalone #contact/ is parsed synchronously. For Sandra invites the
+// contact is stored separately so the quiz runs before the handshake screen.
+const initialContactHandshake = !isSandraInvite && isContactHash() ? parseContactFromHash() : null
+// Embedded contact from a Sandra invite — also parsed synchronously.
+const initialEmbeddedContact: ContactHandshake | null = isSandraInvite ? parseContactFromHash() : null
+const initialSandraHash = !needsAsyncParse && !initialContactHandshake && !isSandraInvite && window.location.hash.startsWith('#/ask')
 
 // ── Pathname ↔ View mapping (for Vercel Analytics page tracking) ──────────
 function pathToView(pathname: string): View {
@@ -102,23 +107,10 @@ function pathToView(pathname: string): View {
   }
 }
 
-const INVITE_URL_STORAGE_KEY = 'remember-me-invite-url'
-
 // Views that are hidden in Simple Mode (also blocked from deep-links).
 const HIDDEN_IN_SIMPLE: ReadonlySet<View['name']> = new Set([
   'friends', 'sync', 'online-intro', 'online-hub', 'custom-questions', 'sandra-flow',
 ])
-
-function loadCachedInviteUrl(): string {
-  try {
-    const raw = localStorage.getItem(INVITE_URL_STORAGE_KEY)
-    if (raw) {
-      const parsed = JSON.parse(raw) as { url?: string }
-      if (typeof parsed.url === 'string') return parsed.url
-    }
-  } catch {}
-  return ''
-}
 
 export default function App() {
   // State for async URL parsing (#mi/ secure invite, #ma/ answer import, #ms/ memory share, ?qp/ question pack)
@@ -127,11 +119,6 @@ export default function App() {
   const [sharedMemory, setSharedMemory] = useState<MemorySharePayload | null>(null)
   const [incomingPack, setIncomingPack] = useState<QuestionPack | null>(null)
   const [urlParsing, setUrlParsing] = useState(needsAsyncParse)
-
-  // Permanent invite URL – generated once at app open, same link for all friends.
-  // Initialized synchronously from localStorage (fast path for returning users),
-  // then upgraded to the encrypted URL as soon as the profile name is known.
-  const [inviteUrl, setInviteUrl] = useState<string>(loadCachedInviteUrl)
   const {
     isLoaded,
     profile,
@@ -192,6 +179,12 @@ export default function App() {
     initialContactHandshake,
   )
 
+  // Contact handshake embedded inside a Sandra invite (combined ?qp+?contact
+  // link). Stored separately so the quiz runs before the handshake screen.
+  const [embeddedContact, setEmbeddedContact] = useState<ContactHandshake | null>(
+    initialEmbeddedContact,
+  )
+
   // Online-sync is a no-op unless the user has opted in. The hook internally
   // dynamic-imports the Supabase client module only when enabled === true.
   const onlineSync = useOnlineSync(onlineSharing, (deviceId, publicKey) => {
@@ -229,41 +222,6 @@ export default function App() {
     setView({ name: 'friends' })
   }, [pendingAnswerImport, isLoaded]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Generate the permanent invite URL as soon as the profile is known.
-  // Sets a plain URL immediately (synchronous), then upgrades to the
-  // encrypted URL in the background. Result is cached in localStorage so
-  // subsequent visits are instant and the button is ready on first render.
-  useEffect(() => {
-    if (!isLoaded) return
-    const name = profile?.name ?? 'mir'
-
-    // Use cached URL if it already matches the current profile name
-    try {
-      const raw = localStorage.getItem(INVITE_URL_STORAGE_KEY)
-      if (raw) {
-        const parsed = JSON.parse(raw) as { profileName?: string; url?: string }
-        if (parsed.profileName === name && typeof parsed.url === 'string') {
-          setInviteUrl(parsed.url)
-          return
-        }
-      }
-    } catch {}
-
-    // Instant fallback: plain Base64 URL, no crypto needed
-    setInviteUrl(generatePlainInviteUrl({ profileName: name }))
-
-    // Background upgrade to encrypted URL
-    generateSecureInviteUrl({ profileName: name })
-      .then(url => {
-        setInviteUrl(url)
-        try {
-          localStorage.setItem(INVITE_URL_STORAGE_KEY, JSON.stringify({ profileName: name, url }))
-        } catch {}
-      })
-      .catch(err => {
-        console.error('[App] invite URL generation failed:', err)
-      })
-  }, [isLoaded, profile?.name])
 
   const exportData = { profile, answers, friends, friendAnswers, customQuestions }
   const safeName = (profile?.name ?? 'lebensarchiv').replace(/\s+/g, '-').toLowerCase()
@@ -425,22 +383,30 @@ export default function App() {
   }
 
   if (incomingPack && isPersonalQuestionPack(incomingPack)) {
+    const embedded = embeddedContact
     return (
       <AppModeProvider appMode={appMode} setAppMode={saveAppMode}>
         <PersonalPackReceiveView
           pack={incomingPack as PersonalQuestionPack}
           onSubmit={() => {
-            // Store the answers on the receiving device's "custom questions"
-            // archive for now — the receiver can revisit them later. Sending
-            // them back to the sender is out of scope for v2.7.0 (see REQ-020
-            // Future Work / Backlog).
+            // Save the questions into the receiver's own archive.
             importCustomQuestions(incomingPack.questions)
             setIncomingPack(null)
-            history.replaceState({}, '', '/')
-            setView({ name: 'archive' })
+            if (embedded) {
+              // Sandra invite: after the quiz, hand off to ContactHandshakeView
+              // so the bidirectional connection is established (the receiver
+              // sends their own link back to the sender).
+              setEmbeddedContact(null)
+              setPendingContact(embedded)
+              history.replaceState({}, '', '/friends')
+            } else {
+              history.replaceState({}, '', '/')
+              setView({ name: 'archive' })
+            }
           }}
           onDismiss={() => {
             setIncomingPack(null)
+            setEmbeddedContact(null)
             history.replaceState({}, '', '/')
             setView({ name: 'home' })
           }}
@@ -597,8 +563,6 @@ export default function App() {
 
       {view.name === 'friends' && (
         <FriendsView
-          profileName={profile?.name ?? ''}
-          inviteUrl={inviteUrl}
           friends={friends}
           friendAnswers={friendAnswers}
           onRemoveFriend={removeFriend}
@@ -732,6 +696,11 @@ export default function App() {
       {view.name === 'sandra-flow' && (
         <SandraFlowView
           profileName={profile?.name ?? ''}
+          onlineSharingConfigured={ONLINE_SHARING_CONFIGURED}
+          onlineSharingEnabled={Boolean(onlineSharing?.enabled)}
+          myDeviceId={onlineSync.deviceId}
+          myPublicKey={onlineSync.publicKeyB64}
+          onEnableOnlineSharing={() => enableOnlineSharing()}
           onBack={() => {
             if (window.location.hash.startsWith('#/ask')) {
               history.replaceState({}, '', '/friends')

@@ -16,9 +16,9 @@ export const SANDRA_FLOW_DE = {
       'Per Link an {anrede} verschenken',
     ],
     privacyBadges: [
-      'Keine Anmeldung',
-      'Keine Cloud',
-      'Bleibt auf {anrede}s Gerät',
+      'Privat',
+      'Verschlüsselt',
+      'Nur für euch beide',
     ],
     /** Cross-Hint Richtung CustomQuestionsView (ADR-002, #178). */
     crossHintToOwnTitle: 'Eigene Erinnerungen festhalten?',
@@ -118,7 +118,8 @@ export const SANDRA_FLOW_DE = {
     sending: 'Wird geöffnet…',
     copied: '✓ Link kopiert!',
     error: '⚠ Nochmal versuchen',
-    privacyHint: 'Auch {anrede}s Antworten bleiben auf {anrede}s Gerät.',
+    privacyHint: 'Privat & verschlüsselt – nur {anrede} und du könnt alles lesen.',
+    connectingHint: 'Verbindung wird vorbereitet…',
     relationshipHint:
       'Ein paar Fragen sind sehr persönlich. Vielleicht magst du {anrede} kurz anrufen, bevor du den Link schickst.',
     backToList: 'Zurück zur Liste',
@@ -132,7 +133,7 @@ export const SANDRA_FLOW_DE = {
     recipientPreviewLines: [
       'Eine kurze Begrüßung mit deinem Namen.',
       'Deine Fragen, eine nach der anderen.',
-      'Antworten per Tippen oder Spracheingabe – keine App-Installation nötig.',
+      'Danach bleibt ihr dauerhaft verbunden – du siehst {anrede}s neue Erinnerungen laufend.',
     ],
     /** #163 — Sandra-side opt-in: aktiviert für {anrede} vorab den
      *  Vereinfachten Bedienmodus, damit Mama die Modus-Wahl nicht selbst
@@ -165,9 +166,9 @@ export const SANDRA_FLOW_DE = {
 
   // ── Friends-tab entry ──────────────────────────────────────────────
   entryCard: {
-    title: 'Eigene Fragen für jemanden formulieren',
-    desc: 'Stell deine eigenen Fragen – in deinen Worten, an Mama, Papa, Oma. Sie antwortet, wenn sie mag.',
-    cta: 'Loslegen',
+    title: 'Jemanden einladen',
+    desc: 'Stell persönliche Fragen in deinen Worten – an Mama, Papa, Oma. Ihr bleibt danach dauerhaft verbunden.',
+    cta: 'Einladung erstellen',
   },
 
   // ── Global ─────────────────────────────────────────────────────────

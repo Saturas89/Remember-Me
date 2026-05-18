@@ -34,6 +34,11 @@ interface Props {
   onShareUpgrade: () => Promise<string>
   onBack: () => void
   onClearDraft: () => void
+  /** True while online sharing is enabled but the device identity isn't ready
+   *  yet (Supabase bootstrap in progress). The share CTA is not disabled –
+   *  the sync URL falls back to pack-only in this window – but a small hint
+   *  reassures the sender that the connection is being prepared. */
+  waitingForIdentity?: boolean
 }
 
 export function SandraShareStep({
@@ -46,6 +51,7 @@ export function SandraShareStep({
   onShareUpgrade,
   onBack,
   onClearDraft,
+  waitingForIdentity,
 }: Props) {
   const [isSharing, setIsSharing] = useState(false)
   const [status, setStatus] = useState<'idle' | 'copied' | 'error' | 'sent'>('idle')
@@ -147,7 +153,9 @@ export function SandraShareStep({
           </p>
           <ul className="sandra-share__preview-list">
             {t.share.recipientPreviewLines.map((line, i) => (
-              <li key={i} className="sandra-share__preview-line">{line}</li>
+              <li key={i} className="sandra-share__preview-line">
+                {line.split('{anrede}').join(anchor.anrede)}
+              </li>
             ))}
           </ul>
         </div>
@@ -173,6 +181,10 @@ export function SandraShareStep({
             </span>
           </span>
         </label>
+
+        {waitingForIdentity && (
+          <p className="friends-hint">{t.share.connectingHint}</p>
+        )}
 
         <div className="friends-share">
           <button

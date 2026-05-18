@@ -24,26 +24,20 @@ async function completeOnboarding(page: Page, name: string) {
 async function openFriendsTab(page: Page) {
   const nav = page.getByRole('navigation', { name: 'Hauptnavigation' })
   await nav.getByRole('button', { name: 'Freunde', exact: true }).click()
-  await expect(page.getByRole('heading', { name: /Erinnerung einsammeln/ })).toBeVisible()
+  await expect(page.getByRole('heading', { name: /Einladen & verbinden/, level: 2 })).toBeVisible()
 }
 
 test.describe('Storyhold – Freunde-Einladung', () => {
-  test('shows share button and invitation explainer', async ({ page }) => {
+  test('shows invitation CTA and ZIP import button', async ({ page }) => {
     await completeOnboarding(page, 'Anna')
     await openFriendsTab(page)
 
-    // Primary CTA in the merged invitation section is the Sandra-Flow entry.
+    // Primary CTA in the invitation section is the Sandra-Flow entry.
     await expect(page.getByTestId('sandra-entry-cta')).toBeVisible()
+    await expect(page.getByTestId('sandra-entry-cta')).toBeEnabled()
 
-    // The Themenpack fallback is hidden behind a collapsible <details>;
-    // expand it before asserting on the secondary share button and copy.
-    await page.getByText('Lieber vorbereitete Fragen?').click()
-    const shareBtn = page.getByRole('button', { name: /Themen-Link teilen/ })
-    await expect(shareBtn).toBeVisible()
-    await expect(shareBtn).toBeEnabled()
-
-    await expect(page.getByText(/Du teilst den Link/)).toBeVisible()
-    await expect(page.getByText(/Ganz ohne App oder Account/)).toBeVisible()
+    // ZIP import is available for receiving offline memory packages.
+    await expect(page.getByRole('button', { name: /Erinnerungen öffnen/ })).toBeVisible()
   })
 
   test('does NOT show the personalisation warning once a profile name is set', async ({ page }) => {
