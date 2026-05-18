@@ -133,11 +133,12 @@ jobs:
           path: playwright-report/
           retention-days: 14
 
-# ── Track 2: Real-DB Supabase suite (alle 6 Browser, sequenziell) ─────────────
+# ── Track 2: Real-DB Supabase suite (6 Browser, parallel) ────────────────────
 #
 # Runs the full e2e/supabase/ suite against the live production Supabase.
-# Workers: 1 to prevent test-data interference across the shared database.
-# Runtime budget: ≈ 90 min.
+# Each browser runs in its own job (matrix), so all 6 run in parallel.
+# Within each job: workers: 1 to prevent test-data interference on the shared DB.
+# Runtime budget: ≈ 20 min (down from ≈ 90 min sequential).
 #
 # Test suites:
 #   • e2e/supabase/two-device-real.spec.ts      – Alice→Bob share, RLS, Annotations
@@ -146,9 +147,19 @@ jobs:
 #   • e2e/supabase/private-sync-real.spec.ts    – Storyhold Server sync wizard
 #   • e2e/supabase/storage-real.spec.ts         – CORS + browser context storage RLS
   production-supabase:
-    name: Production Supabase (real-DB, alle Browser)
+    name: Production Supabase – ${{ matrix.entry.name }}
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        entry:
+          - { name: chromium,            project: chromium,            engine: chromium }
+          - { name: firefox,             project: firefox,             engine: firefox  }
+          - { name: android-pixel7,      project: android-pixel7,      engine: chromium }
+          - { name: android-samsung-s23, project: android-samsung-s23, engine: chromium }
+          - { name: ios-iphone14,        project: ios-iphone14,        engine: webkit   }
+          - { name: ios-iphone14promax,  project: ios-iphone14promax,  engine: webkit   }
     steps:
       - uses: actions/checkout@v4
         with:
@@ -179,34 +190,38 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ steps.pw.outputs.version }}-all-engines
+          key: playwright-${{ runner.os }}-${{ steps.pw.outputs.version }}-${{ matrix.entry.engine }}
 
-      - name: Install Playwright browsers (cached)
+      - name: Install Playwright browser (cached)
         if: steps.pw-cache.outputs.cache-hit == 'true'
-        run: npx playwright install-deps chromium firefox webkit
+        run: npx playwright install-deps ${{ matrix.entry.engine }}
 
-      - name: Install Playwright browsers (fresh)
+      - name: Install Playwright browser (fresh)
         if: steps.pw-cache.outputs.cache-hit != 'true'
-        run: npx playwright install --with-deps chromium firefox webkit
+        run: npx playwright install --with-deps ${{ matrix.entry.engine }}
 
-      - name: Run production Supabase E2E tests (alle 6 Projekte, sequenziell)
+      - name: Run production Supabase E2E tests
         env:
           GITHUB_RUN_ID: ${{ github.run_id }}
+          BROWSER_PROFILE: ${{ matrix.entry.project }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-        run: npx playwright test --config=playwright.production-supabase.config.ts
+        run: >
+          npx playwright test
+          --config=playwright.production-supabase.config.ts
+          --project=${{ matrix.entry.project }}
 
       - name: Summarize flaky tests
         if: ${{ !cancelled() }}
-        run: node scripts/summarize-flaky-tests.mjs "production-supabase"
+        run: node scripts/summarize-flaky-tests.mjs "${{ matrix.entry.name }}"
 
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:
-          # Named production-report-supabase so it matches the production-report-* pattern
+          # Named production-report-supabase-<browser> to match the production-report-* pattern
           # in the create-issue download step.
-          name: production-report-supabase
+          name: production-report-supabase-${{ matrix.entry.name }}
           path: playwright-report/
           retention-days: 14
 
