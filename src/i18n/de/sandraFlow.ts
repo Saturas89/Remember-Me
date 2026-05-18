@@ -113,17 +113,17 @@ export const SANDRA_FLOW_DE = {
 
   // ── Share / send (Screen 6) ────────────────────────────────────────
   share: {
-    title: 'Schick {anrede} deine {count} Fragen',
+    title: '{anrede} antwortet – und ihr bleibt dauerhaft verbunden',
     primaryCta: 'An {anrede} senden',
     sending: 'Wird geöffnet…',
     copied: '✓ Link kopiert!',
     error: '⚠ Nochmal versuchen',
     privacyHint: 'Privat & verschlüsselt – nur {anrede} und du könnt alles lesen.',
-    connectingHint: 'Verbindung wird vorbereitet…',
+    connectingHint: 'Eure sichere Verbindung wird gerade eingerichtet – dauert nur einen Moment.',
     relationshipHint:
       'Ein paar Fragen sind sehr persönlich. Vielleicht magst du {anrede} kurz anrufen, bevor du den Link schickst.',
     backToList: 'Zurück zur Liste',
-    shareMessage: 'Ich habe ein paar Fragen für dich aufgeschrieben ✨\n\n{url}',
+    shareMessage: 'Ich habe dir ein paar Fragen aufgeschrieben, die ich dir schon lange stellen wollte 💌 Beantworte sie, wann es dir passt:\n\n{url}',
     shareTitle: '{anrede}, ich habe Fragen für dich',
     /** What the recipient sees when they open the link – shown to the sender
      *  before they hit send, so they don't share blind. The `{pronoun}` is
@@ -131,9 +131,9 @@ export const SANDRA_FLOW_DE = {
      *  reads naturally as „wenn er den Link öffnet". */
     recipientPreviewHeading: 'Das sieht {anrede}, wenn {pronoun} den Link öffnet:',
     recipientPreviewLines: [
-      'Eine kurze Begrüßung mit deinem Namen.',
-      'Deine Fragen, eine nach der anderen.',
-      'Danach bleibt ihr dauerhaft verbunden – du siehst {anrede}s neue Erinnerungen laufend.',
+      'Ihr bleibt dauerhaft verbunden – du siehst {anrede}s neue Erinnerungen laufend.',
+      'Deine Fragen kommen einzeln, in Ruhe – {anrede} antwortet in eigenem Tempo.',
+      'Alles beginnt mit einer kurzen Begrüßung mit deinem Namen.',
     ],
     /** #163 — Sandra-side opt-in: aktiviert für {anrede} vorab den
      *  Vereinfachten Bedienmodus, damit Mama die Modus-Wahl nicht selbst
@@ -159,7 +159,8 @@ export const SANDRA_FLOW_DE = {
     done: 'Fertig',
     answerPlaceholder: 'Deine Antwort…',
     progressDotAria: 'Frage {n} von {total}',
-    welcomeNameLabel: 'Wie heißt du?',
+    welcomeNameLabel: 'Wie soll {senderName} dich nennen?',
+    welcomePrivacyHint: 'Nur {senderName} sieht deine Antworten.',
     welcomeNamePlaceholder: 'Dein Name',
     welcomeStart: 'Anfangen',
   },

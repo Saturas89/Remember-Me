@@ -158,9 +158,12 @@ export function PersonalPackReceiveView({ pack, onSubmit, onDismiss }: Props) {
               .replace('{n}', String(pack.questions.length))}
           </h1>
           <p className="friends-hint sandra-receive__subline">{t.receiver.headerSubline}</p>
+          <p className="friends-hint">
+            {t.receiver.welcomePrivacyHint.replace('{senderName}', pack.senderName)}
+          </p>
 
           <label className="input-label" htmlFor="sandra-receive-name">
-            {t.receiver.welcomeNameLabel}
+            {t.receiver.welcomeNameLabel.replace('{senderName}', pack.senderName)}
           </label>
           <input
             id="sandra-receive-name"

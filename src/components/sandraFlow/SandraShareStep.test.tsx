@@ -13,7 +13,7 @@ import type { ComposedQuestion, SandraAnchor } from '../../types/sandraFlow'
 //   Share CTA: data-testid="sandra-share-cta"
 //
 // SPEC contract (§4 Screen 6):
-//   - Header: „Schick {anrede} deine {count} Fragen"
+//   - Header: „{anrede} antwortet – und ihr bleibt dauerhaft verbunden"
 //   - No QR-code element
 //   - No visible pack-code string
 //   - Relationship-send hint appears IFF ≥1 question has group='relationship'
@@ -59,24 +59,24 @@ function makeProps(
 }
 
 describe('SandraShareStep – header (DE)', () => {
-  it('shows DE header containing the anrede and the question count', () => {
+  it('shows DE header containing the anrede and the permanent-connection promise', () => {
     const { container } = render(<SandraShareStep {...makeProps({ questions: [makeQ('q1')] })} />)
     const text = container.textContent ?? ''
     expect(text).toContain('Mama')
-    expect(text).toContain('1')
+    expect(text).toContain('dauerhaft verbunden')
   })
 
-  it('shows the count = 3 when three questions are present', () => {
+  it('still contains anrede with multiple questions', () => {
     const qs = [makeQ('q1'), makeQ('q2'), makeQ('q3')]
     const { container } = render(<SandraShareStep {...makeProps({ questions: qs })} />)
     const text = container.textContent ?? ''
-    expect(text).toContain('3')
     expect(text).toContain('Mama')
+    expect(text).toContain('dauerhaft verbunden')
   })
 })
 
 describe('SandraShareStep – header (EN)', () => {
-  it('shows EN header containing the anrede and the question count', () => {
+  it('shows EN header containing the anrede and the permanent-connection promise', () => {
     const qs = [makeQ('q1'), makeQ('q2')]
     const { container } = render(
       <SandraShareStep
@@ -85,7 +85,7 @@ describe('SandraShareStep – header (EN)', () => {
     )
     const text = container.textContent ?? ''
     expect(text).toContain('Mom')
-    expect(text).toContain('2')
+    expect(text).toContain('connected')
   })
 })
 
