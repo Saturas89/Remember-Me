@@ -1,34 +1,42 @@
 name: Nightly Production Tests
 
-# Runs the full production smoke + E2E suite against https://storyhold.app.
+# Single nightly pipeline: all tests run against https://storyhold.app.
+# Replaces the old interaction-tests.yml (deleted).
 #
-# No local build step: the app is already live in production.
-# Tests run across all six browser/device profiles and inject traffic_type=e2e
-# so PostHog can separate nightly traffic from real users.
+# Two parallel tracks:
+#   production-e2e      – smoke tests, 6 browsers in parallel (no Supabase needed)
+#   production-supabase – full share/RLS/storage suite against real Supabase, sequential
 #
-# Secret management (store in GitHub Repository → Settings → Secrets → Actions):
+# Traffic isolation: traffic_type=e2e is injected via localStorage so PostHog
+# can separate nightly sessions from real users without a separate instance.
+# PostHog → Settings → Internal and test users → add rules:
+#   traffic_type = e2e
+#   traffic_type = internal
 #
-#   Required secrets (will be available to tests when accounts are set up):
+# Secret management (GitHub Repository → Settings → Secrets → Actions):
+#
+#   Production Supabase (required for production-supabase job):
+#     SUPABASE_URL              – production Supabase API URL
+#     SUPABASE_ANON_KEY         – production anon/public JWT
+#     SUPABASE_SERVICE_ROLE_KEY – service-role JWT for admin cleanup
+#
+#   OAuth test accounts (required when OAuth flow tests are added):
 #     GOOGLE_TEST_EMAIL         – storyhold.e2e.google@gmail.com
 #     GOOGLE_TEST_PASSWORD      – Google test account password
 #     MICROSOFT_TEST_EMAIL      – storyhold.e2e.microsoft@outlook.com
 #     MICROSOFT_TEST_PASSWORD   – Microsoft test account password
 #
-#   Optional (enables PostHog replay links in failure issues):
+#   PostHog correlation (optional, enables replay links in failure issues):
 #     POSTHOG_PERSONAL_API_KEY  – PostHog Personal API Key
 #     POSTHOG_PROJECT_ID        – PostHog Project ID (numeric)
 #
-# IMPORTANT: NEVER store these as VITE_* env vars in Vercel — VITE_* values
-# are baked into the public JS bundle. Nightly credentials belong only here.
+# IMPORTANT: Never store credentials as VITE_* Vercel env vars — those values
+# are baked into the public JS bundle and visible to anyone.
 #
-# Traffic isolation:
-#   All nightly sessions carry traffic_type=e2e via localStorage.
-#   In PostHog: Settings → Internal and test users → add rule traffic_type = e2e
-#   to exclude them from product analytics.
-#
-# Cleanup:
-#   Test data written to production Supabase is prefixed with e2e/ or nightly/.
-#   Add a scheduled cleanup job later to delete data older than 7 days.
+# Cleanup: test data is created as anonymous Supabase users and deleted in
+# afterEach via cleanupUsers(). Orphaned data (from crashed runs) should be
+# cleaned up by a scheduled job (to be added) that removes e2e-prefixed rows
+# older than 7 days.
 
 on:
   workflow_dispatch:
@@ -38,16 +46,17 @@ on:
         required: false
         default: ''
   schedule:
-    # 02:00 UTC – offset from interaction-tests.yml (01:00 UTC) to avoid overlap
+    # 02:00 UTC every night
     - cron: '0 2 * * *'
 
 concurrency:
   group: nightly-production-${{ github.ref }}
   cancel-in-progress: true
 
+# ── Track 1: Smoke tests (6 browsers in parallel) ────────────────────────────
 jobs:
   production-e2e:
-    name: Production – ${{ matrix.entry.name }}
+    name: Production Smoke – ${{ matrix.entry.name }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     strategy:
@@ -100,7 +109,7 @@ jobs:
         if: steps.pw-cache.outputs.cache-hit != 'true'
         run: npx playwright install --with-deps ${{ matrix.entry.engine }}
 
-      - name: Run production E2E tests
+      - name: Run production smoke tests
         env:
           GITHUB_RUN_ID: ${{ github.run_id }}
           BROWSER_PROFILE: ${{ matrix.entry.project }}
@@ -108,8 +117,6 @@ jobs:
           GOOGLE_TEST_PASSWORD: ${{ secrets.GOOGLE_TEST_PASSWORD }}
           MICROSOFT_TEST_EMAIL: ${{ secrets.MICROSOFT_TEST_EMAIL }}
           MICROSOFT_TEST_PASSWORD: ${{ secrets.MICROSOFT_TEST_PASSWORD }}
-          POSTHOG_PERSONAL_API_KEY: ${{ secrets.POSTHOG_PERSONAL_API_KEY }}
-          POSTHOG_PROJECT_ID: ${{ secrets.POSTHOG_PROJECT_ID }}
         run: >
           npx playwright test
           --config=playwright.production.config.ts
@@ -126,10 +133,88 @@ jobs:
           path: playwright-report/
           retention-days: 14
 
+# ── Track 2: Real-DB Supabase suite (alle 6 Browser, sequenziell) ─────────────
+#
+# Runs the full e2e/supabase/ suite against the live production Supabase.
+# Workers: 1 to prevent test-data interference across the shared database.
+# Runtime budget: ≈ 90 min.
+#
+# Test suites:
+#   • e2e/supabase/two-device-real.spec.ts      – Alice→Bob share, RLS, Annotations
+#   • e2e/supabase/android-ux-real.spec.ts      – Mobile UX, tap targets, feed scroll
+#   • e2e/supabase/multi-recipient-real.spec.ts – Drei Geräte, mehrere Empfänger
+#   • e2e/supabase/private-sync-real.spec.ts    – Storyhold Server sync wizard
+#   • e2e/supabase/storage-real.spec.ts         – CORS + browser context storage RLS
+  production-supabase:
+    name: Production Supabase (real-DB, alle Browser)
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Cache node_modules
+        id: nm-cache
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: nm-${{ runner.os }}-node22-${{ hashFiles('package-lock.json') }}
+
+      - name: Install dependencies
+        if: steps.nm-cache.outputs.cache-hit != 'true'
+        run: npm ci
+
+      - name: Resolve Playwright version
+        id: pw
+        run: echo "version=$(node -p "require('@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Playwright browsers
+        id: pw-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.pw.outputs.version }}-all-engines
+
+      - name: Install Playwright browsers (cached)
+        if: steps.pw-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium firefox webkit
+
+      - name: Install Playwright browsers (fresh)
+        if: steps.pw-cache.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps chromium firefox webkit
+
+      - name: Run production Supabase E2E tests (alle 6 Projekte, sequenziell)
+        env:
+          GITHUB_RUN_ID: ${{ github.run_id }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: npx playwright test --config=playwright.production-supabase.config.ts
+
+      - name: Summarize flaky tests
+        if: ${{ !cancelled() }}
+        run: node scripts/summarize-flaky-tests.mjs "production-supabase"
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          # Named production-report-supabase so it matches the production-report-* pattern
+          # in the create-issue download step.
+          name: production-report-supabase
+          path: playwright-report/
+          retention-days: 14
+
+# ── Issue creation ────────────────────────────────────────────────────────────
   create-issue:
     name: Open GitHub Issue on failure / flakiness
-    needs: [production-e2e]
-    if: always() && needs.production-e2e.result != 'cancelled'
+    needs: [production-e2e, production-supabase]
+    if: always() && needs.production-e2e.result != 'cancelled' && needs.production-supabase.result != 'cancelled'
     runs-on: ubuntu-latest
     permissions:
       issues: write
@@ -152,6 +237,8 @@ jobs:
         if: steps.nm-cache.outputs.cache-hit != 'true'
         run: npm ci
 
+      # Downloads all production-report-* artifacts into production-reports/
+      # (both production-report-{browser} and production-report-supabase).
       - name: Download all Playwright reports
         uses: actions/download-artifact@v4
         with:
@@ -162,6 +249,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PRODUCTION_RESULT: ${{ needs.production-e2e.result }}
+          PRODUCTION_SUPABASE_RESULT: ${{ needs.production-supabase.result }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           GITHUB_RUN_ID: ${{ github.run_id }}
           POSTHOG_PROJECT_ID: ${{ secrets.POSTHOG_PROJECT_ID }}

@@ -18,19 +18,33 @@ export function supabaseAdmin(): SupabaseClient {
 }
 
 // Creates a browser context that talks to the real Supabase (no mock installed).
+// Injects traffic_type=e2e and CI correlation IDs into localStorage so every
+// session is filterable in PostHog regardless of which config runs the tests.
 export async function spawnRealDevice(
   browser: Browser,
 ): Promise<{ ctx: BrowserContext; page: Page }> {
+  const githubRunId    = process.env.GITHUB_RUN_ID   ?? null
+  const browserProfile = process.env.BROWSER_PROFILE ?? null
+
   const ctx = await browser.newContext({ serviceWorkers: 'block' })
-  await ctx.addInitScript(() => {
-    localStorage.setItem('rm-install-dismissed', '1')
-    if (!localStorage.getItem('remember-me-state')) {
-      localStorage.setItem('remember-me-state', JSON.stringify({
-        profile: null, answers: {}, friends: [], friendAnswers: [],
-        customQuestions: [], appMode: 'full',
-      }))
-    }
-  })
+  await ctx.addInitScript(
+    ({ runId, profile }) => {
+      localStorage.setItem('rm-install-dismissed', '1')
+      localStorage.setItem('traffic_type', 'e2e')
+      if (!localStorage.getItem('remember-me-state')) {
+        localStorage.setItem('remember-me-state', JSON.stringify({
+          profile: null, answers: {}, friends: [], friendAnswers: [],
+          customQuestions: [], appMode: 'full',
+        }))
+      }
+      if (runId) {
+        localStorage.setItem('github_run_id', runId)
+        localStorage.setItem('test_run_id', `gh-${runId}`)
+      }
+      if (profile) localStorage.setItem('browser_profile', profile)
+    },
+    { runId: githubRunId, profile: browserProfile },
+  )
   const page = await ctx.newPage()
   return { ctx, page }
 }

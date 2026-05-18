@@ -12,13 +12,14 @@ import { execSync }                                  from 'node:child_process'
 import { readdirSync, readFileSync, writeFileSync, existsSync } from 'node:fs'
 import { join }                                      from 'node:path'
 
-const REPORTS_DIR       = 'production-reports'
-const HARD_FAILED       = process.env.PRODUCTION_RESULT === 'failure'
-const RUN_URL           = process.env.RUN_URL         ?? '(no URL)'
-const GITHUB_RUN_ID     = process.env.GITHUB_RUN_ID   ?? ''
-const POSTHOG_PROJECT   = process.env.POSTHOG_PROJECT_ID ?? ''
-const TEST_RUN_ID       = GITHUB_RUN_ID ? `gh-${GITHUB_RUN_ID}` : ''
-const TODAY             = new Date().toISOString().slice(0, 10)
+const REPORTS_DIR              = 'production-reports'
+const HARD_FAILED              = process.env.PRODUCTION_RESULT === 'failure' ||
+                                 process.env.PRODUCTION_SUPABASE_RESULT === 'failure'
+const RUN_URL                  = process.env.RUN_URL         ?? '(no URL)'
+const GITHUB_RUN_ID            = process.env.GITHUB_RUN_ID   ?? ''
+const POSTHOG_PROJECT          = process.env.POSTHOG_PROJECT_ID ?? ''
+const TEST_RUN_ID              = GITHUB_RUN_ID ? `gh-${GITHUB_RUN_ID}` : ''
+const TODAY                    = new Date().toISOString().slice(0, 10)
 
 // ── Collect failures and flaky tests from all per-browser JSON reports ────
 
