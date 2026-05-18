@@ -1,4 +1,4 @@
-// Mobile UX tests against a real local Supabase instance.
+// Mobile UX tests against the production Supabase instance.
 //
 // Covers the same ground as e2e/interaction/android-ux.spec.ts but uses
 // spawnRealDevice() (no in-memory mock) so every Supabase call — auth,

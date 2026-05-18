@@ -89,7 +89,7 @@ lines.push(`|---|---|`)
 lines.push(`| GitHub Run | [#${GITHUB_RUN_ID}](${RUN_URL}) |`)
 lines.push(`| Test Run ID | \`${TEST_RUN_ID || '(lokal)'}\` |`)
 lines.push(`| Traffic Type | \`e2e\` |`)
-lines.push(`| Environment | production (https://storyhold.app) |`)
+lines.push(`| Environment | production (https://www.storyhold.app) |`)
 lines.push('')
 
 if (POSTHOG_PROJECT && TEST_RUN_ID) {

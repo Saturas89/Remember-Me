@@ -1,10 +1,10 @@
-// End-to-end tests against a real local Supabase instance.
+// End-to-end tests against the production Supabase instance.
 //
-// These tests are run by the interaction-real-db CI job in
-// .github/workflows/interaction-tests.yml. They require:
-//   SUPABASE_URL             – http://127.0.0.1:54321
-//   SUPABASE_ANON_KEY        – anon JWT from `supabase status`
-//   SUPABASE_SERVICE_ROLE_KEY – service-role JWT for cleanup
+// These tests are run by the production-supabase job in
+// .github/workflows/nightly-production.yml. They require:
+//   SUPABASE_URL              – production Supabase API URL
+//   SUPABASE_ANON_KEY         – production anon/public JWT
+//   SUPABASE_SERVICE_ROLE_KEY – service-role JWT for admin cleanup
 //
 // Unlike the mock-based family-mode-*.spec.ts files, every Supabase call here
 // goes to the real PostgREST/GoTrue/Storage stack, so RLS policies, FK

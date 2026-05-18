@@ -1,4 +1,4 @@
-// Multi-recipient and three-device interaction tests against a real local Supabase instance.
+// Multi-recipient and three-device interaction tests against the production Supabase instance.
 //
 // Covers scenarios that require more than two devices:
 //   • Alice shares with Bob AND Carol simultaneously; both see it in their feed

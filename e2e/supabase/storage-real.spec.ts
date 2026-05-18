@@ -5,18 +5,18 @@
 // This catches CORS misconfigurations, CSP violations, and browser security
 // model issues that Vitest (Node.js) cannot detect.
 //
-// Runs via playwright.supabase.config.ts against a local Supabase instance.
+// Runs via playwright.production-supabase.config.ts against the production Supabase instance.
 // Requires:
-//   SUPABASE_URL              – http://127.0.0.1:54321
-//   SUPABASE_ANON_KEY         – anon JWT from `supabase status`
-//   SUPABASE_SERVICE_ROLE_KEY – service-role JWT for cleanup
+//   SUPABASE_URL              – production Supabase API URL
+//   SUPABASE_ANON_KEY         – production anon/public JWT
+//   SUPABASE_SERVICE_ROLE_KEY – service-role JWT for admin cleanup
 
 import { test, expect } from '@playwright/test'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { cleanupUsers, spawnRealDevice, supabaseAdmin } from './helpers'
 
-const SUPABASE_URL      = process.env.SUPABASE_URL      ?? 'http://127.0.0.1:54321'
-const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY ?? ''
+const SUPABASE_URL      = process.env.SUPABASE_URL      || 'http://127.0.0.1:54321'
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || ''
 
 const FAKE_KEY = '\\x' + '00'.repeat(65)  // ECDH P-256 SPKI placeholder
 const FAKE_CT  = '\\x' + '00'.repeat(32)  // AES-GCM ciphertext placeholder

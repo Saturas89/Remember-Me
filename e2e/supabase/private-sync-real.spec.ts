@@ -1,4 +1,4 @@
-// Private Sync E2E tests against a real local Supabase instance.
+// Private Sync E2E tests against the production Supabase instance.
 //
 // Tests the "Storyhold Server" (Supabase) sync provider end-to-end:
 // the setup wizard creates a real auth.users row, sync operations write
