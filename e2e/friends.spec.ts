@@ -37,7 +37,8 @@ test.describe('Storyhold – Freunde-Einladung', () => {
     await expect(page.getByTestId('sandra-entry-cta')).toBeEnabled()
 
     // ZIP import is available for receiving offline memory packages.
-    await expect(page.getByRole('button', { name: /Erinnerungen öffnen/ })).toBeVisible()
+    // Use the emoji prefix to distinguish from 'Geteilte Erinnerungen öffnen' (online-sharing CTA).
+    await expect(page.getByRole('button', { name: /🎁 Erinnerungen öffnen/ })).toBeVisible()
   })
 
   test('does NOT show the personalisation warning once a profile name is set', async ({ page }) => {
@@ -51,7 +52,7 @@ test.describe('Storyhold – Freunde-Einladung', () => {
     await openFriendsTab(page)
 
     const fileChooserPromise = page.waitForEvent('filechooser')
-    await page.getByRole('button', { name: /Erinnerungen öffnen/ }).click()
+    await page.getByRole('button', { name: /🎁 Erinnerungen öffnen/ }).click()
     const chooser = await fileChooserPromise
     expect(chooser.isMultiple()).toBe(false)
   })
