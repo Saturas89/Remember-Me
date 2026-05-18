@@ -350,7 +350,7 @@ export function FriendAnswerView({ invite }: Props) {
           )}
 
           <div className="export-done__own-cta">
-            <a href="https://rememberme.dad" target="_blank" rel="noopener noreferrer">
+            <a href="https://storyhold.app" target="_blank" rel="noopener noreferrer">
               <img
                 src="/friend-invite-promo.jpeg"
                 alt={t.friendAnswer.ownCtaImgAlt}
@@ -359,7 +359,7 @@ export function FriendAnswerView({ invite }: Props) {
             </a>
             <p>
               {t.friendAnswer.ownCtaText}{' '}
-              <a href="https://rememberme.dad" target="_blank" rel="noopener noreferrer">
+              <a href="https://storyhold.app" target="_blank" rel="noopener noreferrer">
                 {t.friendAnswer.ownCtaLink}
               </a>
             </p>

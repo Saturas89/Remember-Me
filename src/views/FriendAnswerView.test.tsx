@@ -109,13 +109,13 @@ describe('FriendAnswerView – Quiz-Screen', () => {
 // ── Fertig-Screen ─────────────────────────────────────────────────────────────
 
 describe('FriendAnswerView – Fertig-Screen CTA', () => {
-  it('zeigt den Link auf rememberme.dad', () => {
+  it('zeigt den Link auf storyhold.app', () => {
     const { container } = render(<FriendAnswerView invite={invite} />)
     reachDoneScreen(container)
 
     const link = container.querySelector<HTMLAnchorElement>('.export-done__own-cta a')
     expect(link).toBeTruthy()
-    expect(link?.href).toBe('https://rememberme.dad/')
+    expect(link?.href).toBe('https://storyhold.app/')
   })
 
   it('zeigt das Promo-Bild', () => {
@@ -127,14 +127,14 @@ describe('FriendAnswerView – Fertig-Screen CTA', () => {
     expect(img?.src).toContain('friend-invite-promo.jpeg')
   })
 
-  it('das Promo-Bild ist mit rememberme.dad verlinkt', () => {
+  it('das Promo-Bild ist mit storyhold.app verlinkt', () => {
     const { container } = render(<FriendAnswerView invite={invite} />)
     reachDoneScreen(container)
 
     const img = container.querySelector('.export-done__own-cta-img')
     const parentLink = img?.closest('a') as HTMLAnchorElement | null
     expect(parentLink).toBeTruthy()
-    expect(parentLink?.href).toBe('https://rememberme.dad/')
+    expect(parentLink?.href).toBe('https://storyhold.app/')
     expect(parentLink?.target).toBe('_blank')
   })
 

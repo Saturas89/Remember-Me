@@ -111,7 +111,7 @@ export async function generateShareCard(
     // ── Domain footer ─────────────────────────────────────────────────────
     ctx.fillStyle = '#c4a882'
     ctx.font = `24px system-ui, -apple-system, sans-serif`
-    ctx.fillText('rememberme.dad', SIZE / 2, SIZE - 48)
+    ctx.fillText('storyhold.app', SIZE / 2, SIZE - 48)
 
     // Bottom bar
     ctx.fillStyle = '#7b3f00'

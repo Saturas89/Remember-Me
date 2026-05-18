@@ -553,7 +553,7 @@ Der manuelle Antwort-Code-Export wurde durch einen vollautomatischen Share-Link-
 - Beantworter: *„Hey {Name}! Ich habe gerade ein paar Fragen über dich beantwortet …"*
 
 **CTA auf Fertig-Screen:**
-- Promo-Bild (`/friend-invite-promo.jpeg`) verlinkt auf [rememberme.dad](https://rememberme.dad)
+- Promo-Bild (`/friend-invite-promo.jpeg`) verlinkt auf [storyhold.app](https://storyhold.app)
 - Datenschutzhinweis: „deine Daten bleiben komplett privat"
 
 **Tests:**

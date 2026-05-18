@@ -9,13 +9,13 @@ interface SEOHeadProps {
 type SeoView = keyof Translations['seo']
 
 const CANONICAL: Record<SeoView, string> = {
-  home: 'https://rememberme.dad/',
-  archive: 'https://rememberme.dad/archive',
-  friends: 'https://rememberme.dad/friends',
-  profile: 'https://rememberme.dad/profile',
-  feature: 'https://rememberme.dad/feature',
-  faq: 'https://rememberme.dad/',
-  impressum: 'https://rememberme.dad/impressum',
+  home: 'https://storyhold.app/',
+  archive: 'https://storyhold.app/archive',
+  friends: 'https://storyhold.app/friends',
+  profile: 'https://storyhold.app/profile',
+  feature: 'https://storyhold.app/feature',
+  faq: 'https://storyhold.app/',
+  impressum: 'https://storyhold.app/impressum',
 }
 
 function isSeoView(name: string, seo: Translations['seo']): name is SeoView {
