@@ -37,6 +37,7 @@ import { OnlineSharingHubView } from './views/OnlineSharingHubView'
 import { ContactHandshakeView } from './views/ContactHandshakeView'
 import { SandraFlowView } from './views/SandraFlowView'
 import { PersonalPackReceiveView } from './views/PersonalPackReceiveView'
+import { DebugPostHogView } from './views/DebugPostHogView'
 import { useOnlineSync } from './hooks/useOnlineSync'
 import { usePrivateSync } from './hooks/usePrivateSync'
 import { defaultMediaAdapter } from './utils/privateSyncMediaAdapter'
@@ -80,6 +81,7 @@ type View =
   | { name: 'online-intro' }
   | { name: 'online-hub' }
   | { name: 'sandra-flow' }
+  | { name: 'debug' }
 
 type MainTab = 'home' | 'friends' | 'archive' | 'sync' | 'profile'
 
@@ -103,6 +105,7 @@ function pathToView(pathname: string): View {
     case 'archive': return { name: 'archive' }
     case 'profile': return { name: 'profile' }
     case 'sync':    return { name: 'sync' }
+    case 'debug':   return { name: 'debug' }
     default:        return { name: 'home' }
   }
 }
@@ -372,6 +375,10 @@ export default function App() {
 
   if (!isLoaded || urlParsing) {
     return null // avoid flicker while loading or parsing URL
+  }
+
+  if (view.name === 'debug') {
+    return <DebugPostHogView />
   }
 
   if (asyncInvite) {

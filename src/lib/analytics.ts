@@ -6,9 +6,18 @@
  */
 import posthog from 'posthog-js'
 
+export type TrafficType = 'real-user' | 'internal' | 'e2e'
+
+export function getTrafficType(): TrafficType {
+  const stored = localStorage.getItem('traffic_type')
+  if (stored === 'internal' || stored === 'e2e') return stored
+  return 'real-user'
+}
+
 export function initPostHog(): void {
   const key = import.meta.env.VITE_POSTHOG_KEY as string | undefined
   if (!key) return
+
   posthog.init(key, {
     api_host: 'https://eu.i.posthog.com',
     ui_host: 'https://eu.posthog.com',
@@ -17,10 +26,34 @@ export function initPostHog(): void {
     autocapture: false,
     capture_pageview: false,
     capture_pageleave: false,
-    disable_session_recording: true,
+    disable_session_recording: false,
     // IP disabled by default on EU Cloud, make it explicit
     ip: false,
   })
+
+  const trafficType = getTrafficType()
+  const githubRunId = localStorage.getItem('github_run_id') ?? undefined
+  const testRunId = localStorage.getItem('test_run_id') ?? undefined
+  const browserProfile = localStorage.getItem('browser_profile') ?? undefined
+  const deviceProfile = localStorage.getItem('device_profile') ?? undefined
+
+  posthog.register({
+    traffic_type: trafficType,
+    ...(githubRunId !== undefined && { github_run_id: githubRunId }),
+    ...(testRunId !== undefined && { test_run_id: testRunId }),
+    ...(browserProfile !== undefined && { browser_profile: browserProfile }),
+    ...(deviceProfile !== undefined && { device_profile: deviceProfile }),
+    app_environment: 'production',
+  })
+
+  posthog.setPersonProperties({ traffic_type: trafficType })
+
+  if (trafficType === 'internal') {
+    posthog.identify('internal-device')
+  } else if (trafficType === 'e2e') {
+    const id = browserProfile ? `e2e-${browserProfile}` : 'e2e-playwright'
+    posthog.identify(id)
+  }
 }
 
 // ── Quiz ────────────────────────────────────────────────────────────────────
