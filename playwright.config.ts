@@ -13,7 +13,7 @@ const SUPABASE_E2E_ANON_KEY = 'e2e-anon-key'
 
 export default defineConfig({
   testDir: './e2e',
-  testIgnore: ['**/interaction/**', '**/supabase/**'],
+  testIgnore: ['**/interaction/**', '**/supabase/**', '**/production/**'],
   globalSetup: './e2e/global-setup.ts',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
