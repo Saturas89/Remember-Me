@@ -7,8 +7,8 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { expect, type Browser, type BrowserContext, type Page } from '@playwright/test'
 
-const SUPABASE_URL      = process.env.SUPABASE_URL      ?? 'http://127.0.0.1:54321'
-const SERVICE_KEY       = process.env.SUPABASE_SERVICE_ROLE_KEY ?? ''
+const SUPABASE_URL = process.env.SUPABASE_URL || 'http://127.0.0.1:54321'
+const SERVICE_KEY  = process.env.SUPABASE_SERVICE_ROLE_KEY || ''
 
 // Returns a service-role client for test cleanup (admin.auth.admin.deleteUser).
 export function supabaseAdmin(): SupabaseClient {
