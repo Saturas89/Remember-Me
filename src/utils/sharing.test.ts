@@ -6,6 +6,7 @@ import {
   decodeQuestionPack,
 } from './sharing'
 import type { AnswerExport, QuestionPack } from '../types'
+import type { PersonalQuestionPack } from '../types/sandraFlow'
 
 // ── encodeAnswerExport / decodeAnswerExport ───────────────────────────────────
 
@@ -139,5 +140,39 @@ describe('encodeQuestionPack / decodeQuestionPack', () => {
       }],
     }
     expect(decodeQuestionPack(encodeQuestionPack(choicePack))).toEqual(choicePack)
+  })
+
+  it('round-trips a personal pack with preferSimpleMode: true', () => {
+    const personalPack: PersonalQuestionPack = {
+      questions: [{ id: 'q1', text: 'Was?', type: 'text', createdAt: '2026-01-01T00:00:00.000Z' }],
+      personalPack: true,
+      senderName: 'Sandra',
+      recipientLabel: 'mama',
+      anrede: 'Mama',
+      preferSimpleMode: true,
+    }
+    expect(decodeQuestionPack(encodeQuestionPack(personalPack))).toEqual(personalPack)
+  })
+
+  it('round-trips a personal pack with preferSimpleMode: false', () => {
+    const personalPack: PersonalQuestionPack = {
+      questions: [{ id: 'q1', text: 'Was?', type: 'text', createdAt: '2026-01-01T00:00:00.000Z' }],
+      personalPack: true,
+      senderName: 'Sandra',
+      recipientLabel: 'mama',
+      anrede: 'Mama',
+      preferSimpleMode: false,
+    }
+    expect(decodeQuestionPack(encodeQuestionPack(personalPack))).toEqual(personalPack)
+  })
+
+  it('drops preferSimpleMode when pack is not a personal pack', () => {
+    const plain = btoa(encodeURIComponent(JSON.stringify({
+      questions: [{ id: 'q1', text: 'Was?', type: 'text', createdAt: 'x' }],
+      preferSimpleMode: true,
+    })))
+    const decoded = decodeQuestionPack(plain)
+    expect(decoded).not.toBeNull()
+    expect((decoded as unknown as Record<string, unknown>).preferSimpleMode).toBeUndefined()
   })
 })

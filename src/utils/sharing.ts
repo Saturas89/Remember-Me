@@ -87,7 +87,7 @@ export function decodeQuestionPack(code: string): QuestionPack | null {
       if (!valid) return null
       questions.push(valid)
     }
-    const out: QuestionPack & Partial<Record<'personalPack' | 'senderName' | 'recipientLabel' | 'anrede', unknown>> = {
+    const out: QuestionPack & Partial<Record<'personalPack' | 'senderName' | 'recipientLabel' | 'anrede' | 'preferSimpleMode', unknown>> = {
       questions,
       createdBy: r.createdBy as string | undefined,
     }
@@ -102,6 +102,11 @@ export function decodeQuestionPack(code: string): QuestionPack | null {
       out.senderName = r.senderName
       out.recipientLabel = r.recipientLabel
       out.anrede = r.anrede
+      // #163: preserve the simple-mode handoff flag so the receiver skips the
+      // auto-suggest prompt when the sender already made the choice.
+      if (typeof r.preferSimpleMode === 'boolean') {
+        out.preferSimpleMode = r.preferSimpleMode
+      }
     }
     return out as QuestionPack
   } catch {
