@@ -23,6 +23,8 @@ name: Nightly Production Tests
 #   OAuth test accounts (required when OAuth flow tests are added):
 #     GOOGLE_TEST_EMAIL         – storyhold.e2e.google@gmail.com
 #     GOOGLE_TEST_PASSWORD      – Google test account password
+#
+#   Microsoft OneDrive (noch nicht integriert – Secrets erst anlegen wenn OneDrive-OAuth fertig ist):
 #     MICROSOFT_TEST_EMAIL      – storyhold.e2e.microsoft@outlook.com
 #     MICROSOFT_TEST_PASSWORD   – Microsoft test account password
 #
@@ -115,8 +117,7 @@ jobs:
           BROWSER_PROFILE: ${{ matrix.entry.project }}
           GOOGLE_TEST_EMAIL: ${{ secrets.GOOGLE_TEST_EMAIL }}
           GOOGLE_TEST_PASSWORD: ${{ secrets.GOOGLE_TEST_PASSWORD }}
-          MICROSOFT_TEST_EMAIL: ${{ secrets.MICROSOFT_TEST_EMAIL }}
-          MICROSOFT_TEST_PASSWORD: ${{ secrets.MICROSOFT_TEST_PASSWORD }}
+          # MICROSOFT_TEST_EMAIL / MICROSOFT_TEST_PASSWORD: OneDrive noch nicht integriert
         run: >
           npx playwright test
           --config=playwright.production.config.ts
