@@ -327,7 +327,7 @@ test.describe('Sandra-Flow – Receiver Path (Ingrid)', () => {
     await sPage.getByTestId('sandra-anchor-chip-mama').click()
     await sPage.getByTestId('sandra-anchor-next').click()
     await sPage.locator('[data-testid^="sandra-trigger-"]').first().click()
-    await sPage.getByTestId('sandra-composer-seed').fill('Kindheit')
+    await sPage.getByTestId('sandra-composer-seed').fill('Schulzeit')
     await sPage.locator('[data-testid^="sandra-suggestion-"]').first().click()
     await sPage.locator('[data-testid^="sandra-suggestion-use-"]').first().click()
     await sPage.getByTestId('sandra-list-send').click()
