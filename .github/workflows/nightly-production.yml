@@ -16,9 +16,9 @@ name: Nightly Production Tests
 # Secret management (GitHub Repository → Settings → Secrets → Actions):
 #
 #   Production Supabase (required for production-supabase job):
-#     SUPABASE_URL              – production Supabase API URL
-#     SUPABASE_ANON_KEY         – production anon/public JWT
-#     SUPABASE_SERVICE_ROLE_KEY – service-role JWT for admin cleanup
+#     SUPABASE_URL              – selber Wert wie VITE_SUPABASE_URL in Vercel (nicht geheim)
+#     SUPABASE_ANON_KEY         – selber Wert wie VITE_SUPABASE_ANON_KEY in Vercel (nicht geheim)
+#     SUPABASE_SERVICE_ROLE_KEY – service-role JWT für Admin-Cleanup, umgeht RLS (wirklich geheim!)
 #
 #   OAuth test accounts (required when OAuth flow tests are added):
 #     GOOGLE_TEST_EMAIL         – storyhold.e2e.google@gmail.com
@@ -29,8 +29,7 @@ name: Nightly Production Tests
 #     MICROSOFT_TEST_PASSWORD   – Microsoft test account password
 #
 #   PostHog correlation (optional, enables replay links in failure issues):
-#     POSTHOG_PERSONAL_API_KEY  – PostHog Personal API Key
-#     POSTHOG_PROJECT_ID        – PostHog Project ID (numeric)
+#     POSTHOG_PROJECT_ID        – PostHog Project ID (numeric, aus der PostHog-URL)
 #
 # IMPORTANT: Never store credentials as VITE_* Vercel env vars — those values
 # are baked into the public JS bundle and visible to anyone.
