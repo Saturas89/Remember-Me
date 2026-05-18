@@ -1,0 +1,168 @@
+name: Nightly Production Tests
+
+# Runs the full production smoke + E2E suite against https://storyhold.app.
+#
+# No local build step: the app is already live in production.
+# Tests run across all six browser/device profiles and inject traffic_type=e2e
+# so PostHog can separate nightly traffic from real users.
+#
+# Secret management (store in GitHub Repository → Settings → Secrets → Actions):
+#
+#   Required secrets (will be available to tests when accounts are set up):
+#     GOOGLE_TEST_EMAIL         – storyhold.e2e.google@gmail.com
+#     GOOGLE_TEST_PASSWORD      – Google test account password
+#     MICROSOFT_TEST_EMAIL      – storyhold.e2e.microsoft@outlook.com
+#     MICROSOFT_TEST_PASSWORD   – Microsoft test account password
+#
+#   Optional (enables PostHog replay links in failure issues):
+#     POSTHOG_PERSONAL_API_KEY  – PostHog Personal API Key
+#     POSTHOG_PROJECT_ID        – PostHog Project ID (numeric)
+#
+# IMPORTANT: NEVER store these as VITE_* env vars in Vercel — VITE_* values
+# are baked into the public JS bundle. Nightly credentials belong only here.
+#
+# Traffic isolation:
+#   All nightly sessions carry traffic_type=e2e via localStorage.
+#   In PostHog: Settings → Internal and test users → add rule traffic_type = e2e
+#   to exclude them from product analytics.
+#
+# Cleanup:
+#   Test data written to production Supabase is prefixed with e2e/ or nightly/.
+#   Add a scheduled cleanup job later to delete data older than 7 days.
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Branch or SHA to test (default: main)'
+        required: false
+        default: ''
+  schedule:
+    # 02:00 UTC – offset from interaction-tests.yml (01:00 UTC) to avoid overlap
+    - cron: '0 2 * * *'
+
+concurrency:
+  group: nightly-production-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  production-e2e:
+    name: Production – ${{ matrix.entry.name }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        entry:
+          - { name: chromium,            project: chromium,            engine: chromium }
+          - { name: firefox,             project: firefox,             engine: firefox  }
+          - { name: android-pixel7,      project: android-pixel7,      engine: chromium }
+          - { name: android-samsung-s23, project: android-samsung-s23, engine: chromium }
+          - { name: ios-iphone14,        project: ios-iphone14,        engine: webkit   }
+          - { name: ios-iphone14promax,  project: ios-iphone14promax,  engine: webkit   }
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Cache node_modules
+        id: nm-cache
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: nm-${{ runner.os }}-node22-${{ hashFiles('package-lock.json') }}
+
+      - name: Install dependencies
+        if: steps.nm-cache.outputs.cache-hit != 'true'
+        run: npm ci
+
+      - name: Resolve Playwright version
+        id: pw
+        run: echo "version=$(node -p "require('@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Playwright browsers
+        id: pw-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.pw.outputs.version }}-${{ matrix.entry.engine }}
+
+      - name: Install Playwright browser (cached)
+        if: steps.pw-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps ${{ matrix.entry.engine }}
+
+      - name: Install Playwright browser (fresh)
+        if: steps.pw-cache.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps ${{ matrix.entry.engine }}
+
+      - name: Run production E2E tests
+        env:
+          GITHUB_RUN_ID: ${{ github.run_id }}
+          BROWSER_PROFILE: ${{ matrix.entry.project }}
+          GOOGLE_TEST_EMAIL: ${{ secrets.GOOGLE_TEST_EMAIL }}
+          GOOGLE_TEST_PASSWORD: ${{ secrets.GOOGLE_TEST_PASSWORD }}
+          MICROSOFT_TEST_EMAIL: ${{ secrets.MICROSOFT_TEST_EMAIL }}
+          MICROSOFT_TEST_PASSWORD: ${{ secrets.MICROSOFT_TEST_PASSWORD }}
+          POSTHOG_PERSONAL_API_KEY: ${{ secrets.POSTHOG_PERSONAL_API_KEY }}
+          POSTHOG_PROJECT_ID: ${{ secrets.POSTHOG_PROJECT_ID }}
+        run: >
+          npx playwright test
+          --config=playwright.production.config.ts
+          --project=${{ matrix.entry.project }}
+
+      - name: Summarize flaky tests
+        if: ${{ !cancelled() }}
+        run: node scripts/summarize-flaky-tests.mjs "${{ matrix.entry.name }}"
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: production-report-${{ matrix.entry.name }}
+          path: playwright-report/
+          retention-days: 14
+
+  create-issue:
+    name: Open GitHub Issue on failure / flakiness
+    needs: [production-e2e]
+    if: always() && needs.production-e2e.result != 'cancelled'
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Cache node_modules
+        id: nm-cache
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: nm-${{ runner.os }}-node22-${{ hashFiles('package-lock.json') }}
+
+      - name: Install dependencies
+        if: steps.nm-cache.outputs.cache-hit != 'true'
+        run: npm ci
+
+      - name: Download all Playwright reports
+        uses: actions/download-artifact@v4
+        with:
+          pattern: production-report-*
+          path: production-reports/
+
+      - name: Create GitHub Issue if needed
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PRODUCTION_RESULT: ${{ needs.production-e2e.result }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+          POSTHOG_PROJECT_ID: ${{ secrets.POSTHOG_PROJECT_ID }}
+        run: node scripts/create-production-issue.mjs

@@ -179,10 +179,13 @@ jobs:
   # Nightly runtime budget is ≈ 90 min.
   #
   # Test suites covered:
-  #   • src/integration/supabaseRLS.test.ts  – 8 Vitest RLS unit tests
-  #   • e2e/supabase/two-device-real.spec.ts – full Alice→Bob share flow
-  #   • e2e/supabase/android-ux-real.spec.ts – mobile UX (skip on desktop)
-  #   • e2e/supabase/private-sync-real.spec.ts – Storyhold Server sync wizard
+  #   • src/integration/supabaseRLS.test.ts     – Vitest RLS unit tests
+  #   • src/integration/supabaseStorage.test.ts – Vitest Storage bucket + feedback RLS tests
+  #   • e2e/supabase/two-device-real.spec.ts    – full Alice→Bob share flow
+  #   • e2e/supabase/android-ux-real.spec.ts    – mobile UX (skip on desktop)
+  #   • e2e/supabase/multi-recipient-real.spec.ts – drei Geräte, mehrere Empfänger
+  #   • e2e/supabase/private-sync-real.spec.ts  – Storyhold Server sync wizard
+  #   • e2e/supabase/storage-real.spec.ts       – Storage CORS + browser context RLS
   #
   # OneDrive and Google Drive providers are intentionally NOT tested here:
   # they require OAuth2 authorization code flows against cloud services
