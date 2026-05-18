@@ -395,6 +395,7 @@ export default function App() {
       <AppModeProvider appMode={appMode} setAppMode={saveAppMode}>
         <PersonalPackReceiveView
           pack={incomingPack as PersonalQuestionPack}
+          existingProfileName={profile?.name || undefined}
           onSubmit={() => {
             // Save the questions into the receiver's own archive.
             importCustomQuestions(incomingPack.questions)

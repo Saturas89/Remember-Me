@@ -5,6 +5,9 @@ import type { PersonalQuestionPack } from '../lib/sandraFlow/packBuilder'
 
 interface Props {
   pack: PersonalQuestionPack
+  /** When set, the recipient already has a Storyhold profile. The name-entry
+   *  step is skipped and a tailored "existing user" welcome is shown instead. */
+  existingProfileName?: string
   /** Called when the recipient finished or skipped all questions and wants
    *  to send the answers back. The view itself stages the answers in memory;
    *  the parent decides what to do with them. */
@@ -16,7 +19,7 @@ interface Props {
   onDismiss: () => void
 }
 
-type Phase = 'auto-suggest' | 'welcome' | 'quiz'
+type Phase = 'auto-suggest' | 'welcome' | 'existing-welcome' | 'quiz'
 
 /** Big-button minimum size for the senior persona (REQ-019). Used by the
  *  primary "Antwort speichern" CTA in the quiz phase – the e2e Ingrid path
@@ -34,7 +37,7 @@ const PRIMARY_CTA_MIN_SIZE = 80
  *  - Progress = dot indicator, no percentages
  *  - No pack-code / no edit tools / no settings sidebar
  */
-export function PersonalPackReceiveView({ pack, onSubmit, onDismiss }: Props) {
+export function PersonalPackReceiveView({ pack, existingProfileName, onSubmit, onDismiss }: Props) {
   const t = useSandraFlowStrings()
   const { appMode, setAppMode } = useAppMode()
 
@@ -43,19 +46,23 @@ export function PersonalPackReceiveView({ pack, onSubmit, onDismiss }: Props) {
   // by skipping the auto-suggest screen and activating Simple Mode silently —
   // so the senior persona never has to make the choice. Effect runs once; if
   // the user later opts out via Profile, that decision stands.
+  //
+  // Existing users (existingProfileName set) skip the auto-suggest and
+  // name-entry steps entirely — they land on a tailored welcome instead.
   const [phase, setPhase] = useState<Phase>(() => {
+    if (existingProfileName) return 'existing-welcome'
     if (appMode === 'simple') return 'welcome'
     if (pack.preferSimpleMode === true) return 'welcome'
     return 'auto-suggest'
   })
   useEffect(() => {
-    if (pack.preferSimpleMode === true && appMode !== 'simple') {
+    if (pack.preferSimpleMode === true && appMode !== 'simple' && !existingProfileName) {
       setAppMode('simple')
     }
     // run once on mount so a later toggle from Profile doesn't fight us
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
-  const [name, setName] = useState('')
+  const [name, setName] = useState(existingProfileName ?? '')
   const [index, setIndex] = useState(0)
   const [answers, setAnswers] = useState<Record<string, string>>({})
   const [draft, setDraft] = useState('')
@@ -113,6 +120,45 @@ export function PersonalPackReceiveView({ pack, onSubmit, onDismiss }: Props) {
     } else {
       submit(answers)
     }
+  }
+
+  // ── Existing-user welcome (skips name-entry and mode-suggest) ────
+  if (phase === 'existing-welcome') {
+    const title = t.receiver.existingUserTitle
+      .replace('{recipientName}', existingProfileName ?? '')
+      .replace('{senderName}', pack.senderName)
+      .replace('{n}', String(pack.questions.length))
+    return (
+      <div className="sandra-flow-view sandra-receive">
+        <section className="friends-section sandra-receive__welcome">
+          <h1 className="sandra-receive__title" data-testid="sandra-receive-existing-title">
+            {title}
+          </h1>
+          <p className="friends-hint sandra-receive__subline">
+            {t.receiver.existingUserHint}
+          </p>
+          <div className="friends-share">
+            <button
+              type="button"
+              className="share-cta-btn"
+              onClick={() => { setIndex(0); setPhase('quiz') }}
+              data-testid="sandra-receive-existing-start"
+            >
+              {t.receiver.existingUserStart}
+            </button>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'center', marginTop: '0.6rem' }}>
+            <button
+              type="button"
+              className="btn btn--ghost btn--sm"
+              onClick={onDismiss}
+            >
+              {t.back}
+            </button>
+          </div>
+        </section>
+      </div>
+    )
   }
 
   // ── Auto-suggest Vereinfachter Bedienmodus ────────────────────────

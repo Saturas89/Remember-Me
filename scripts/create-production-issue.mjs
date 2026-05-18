@@ -62,15 +62,41 @@ if (!hasFailures && !hasFlakies) {
   process.exit(0)
 }
 
-// ── Deduplicate: skip if today's issue is already open ───────────────────
+// ── Deduplicate: comment on today's issue if already open ────────────────
 
 try {
-  const open = execSync(
-    `gh issue list --label "nightly-production" --state open --json title --jq '.[].title'`,
+  const openJson = execSync(
+    `gh issue list --label "nightly-production" --state open --json number,title`,
     { encoding: 'utf8' },
   ).trim()
-  if (open.includes(TODAY)) {
-    console.log(`Open issue for ${TODAY} already exists – skipping.`)
+  const openIssues = JSON.parse(openJson || '[]')
+  const existing = openIssues.find(i => i.title.includes(TODAY))
+  if (existing) {
+    const commentLines = []
+    commentLines.push(`## Weiterer fehlgeschlagener Run – [#${GITHUB_RUN_ID}](${RUN_URL})`)
+    commentLines.push('')
+    if (failures.length > 0) {
+      commentLines.push('### ❌ Fehlgeschlagene Tests')
+      commentLines.push('')
+      for (const f of failures) commentLines.push(`- \`[${f.project}]\` ${f.title}`)
+      commentLines.push('')
+    }
+    if (flakies.length > 0) {
+      commentLines.push('### ⚠️ Flaky Tests')
+      commentLines.push('')
+      for (const f of flakies) commentLines.push(`- \`[${f.project}]\` ${f.title} *(${f.retries} Retry/s)*`)
+      commentLines.push('')
+    }
+    if (HARD_FAILED && failures.length === 0) {
+      commentLines.push('Job fehlgeschlagen, aber kein JSON-Report vorhanden (Browser-Start-Fehler, Netzwerkproblem oder Timeout).')
+      commentLines.push('')
+    }
+    writeFileSync('/tmp/production-comment-body.md', commentLines.join('\n'))
+    execSync(
+      `gh issue comment ${existing.number} --body-file /tmp/production-comment-body.md`,
+      { stdio: 'inherit' },
+    )
+    console.log(`Kommentar an bestehendes Issue #${existing.number} angehängt.`)
     process.exit(0)
   }
 } catch {
