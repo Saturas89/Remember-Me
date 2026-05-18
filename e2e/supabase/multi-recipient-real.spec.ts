@@ -88,6 +88,10 @@ test.describe('Multi-Empfänger und Drei-Geräte (Real-DB)', () => {
 
     await alice.page.reload()
     await openFamilyHub(alice.page)
+    await alice.page.getByRole('tab', { name: 'Teilen', exact: true }).click()
+    await alice.page.getByText('Gemeinsame Erinnerung für alle.').click()
+    await alice.page.locator('.share-recipient-chip', { hasText: 'Bob' }).click()
+    await alice.page.locator('.share-recipient-chip', { hasText: 'Carol' }).click()
     await alice.page.getByTestId('send-memories').click()
     await expect(alice.page.getByTestId('share-success')).toBeVisible({ timeout: 30_000 })
 
@@ -133,6 +137,10 @@ test.describe('Multi-Empfänger und Drei-Geräte (Real-DB)', () => {
 
     await alice.page.reload()
     await openFamilyHub(alice.page)
+    await alice.page.getByRole('tab', { name: 'Teilen', exact: true }).click()
+    await alice.page.getByText('Nur für Bob und Carol.').click()
+    await alice.page.locator('.share-recipient-chip', { hasText: 'Bob' }).click()
+    await alice.page.locator('.share-recipient-chip', { hasText: 'Carol' }).click()
     await alice.page.getByTestId('send-memories').click()
     await expect(alice.page.getByTestId('share-success')).toBeVisible({ timeout: 30_000 })
 
@@ -184,6 +192,10 @@ test.describe('Multi-Empfänger und Drei-Geräte (Real-DB)', () => {
 
     await alice.page.reload()
     await openFamilyHub(alice.page)
+    await alice.page.getByRole('tab', { name: 'Teilen', exact: true }).click()
+    await alice.page.getByText('Erste Erinnerung.').click()
+    await alice.page.locator('.share-recipient-chip', { hasText: 'Bob2' }).click()
+    await alice.page.locator('.share-recipient-chip', { hasText: 'Carol2' }).click()
     await alice.page.getByTestId('send-memories').click()
     await expect(alice.page.getByTestId('share-success')).toBeVisible({ timeout: 30_000 })
 
@@ -228,6 +240,10 @@ test.describe('Multi-Empfänger und Drei-Geräte (Real-DB)', () => {
 
     await alice.page.reload()
     await openFamilyHub(alice.page)
+    await alice.page.getByRole('tab', { name: 'Teilen', exact: true }).click()
+    await alice.page.getByText('Erinnerung zum Kommentieren.').click()
+    await alice.page.locator('.share-recipient-chip', { hasText: 'Bob3' }).click()
+    await alice.page.locator('.share-recipient-chip', { hasText: 'Carol3' }).click()
     await alice.page.getByTestId('send-memories').click()
     await expect(alice.page.getByTestId('share-success')).toBeVisible({ timeout: 30_000 })
 
@@ -305,6 +321,10 @@ test.describe('Multi-Empfänger und Drei-Geräte (Real-DB)', () => {
 
     await alice.page.reload()
     await openFamilyHub(alice.page)
+    await alice.page.getByRole('tab', { name: 'Teilen', exact: true }).click()
+    await alice.page.getByText('Strukturtest-Erinnerung.').click()
+    await alice.page.locator('.share-recipient-chip', { hasText: 'Bob4' }).click()
+    await alice.page.locator('.share-recipient-chip', { hasText: 'Carol4' }).click()
     await alice.page.getByTestId('send-memories').click()
     await expect(alice.page.getByTestId('share-success')).toBeVisible({ timeout: 30_000 })
 
