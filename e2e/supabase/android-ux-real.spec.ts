@@ -122,7 +122,9 @@ test.describe('Mobile-UX (Real-DB) – Touch, Viewport, Tap-Targets', () => {
 
   test('Annotation-Eingabe ist auf mobilem Viewport absendbar und landet in DB', async ({
     browser,
+    isMobile,
   }) => {
+    test.skip(!isMobile, 'tap()-Simulation nur auf Touch-Geräten valide')
     test.setTimeout(120_000)
 
     const { ctx: aliceCtx, page: alice } = await spawnRealDevice(browser)
@@ -254,7 +256,7 @@ test.describe('Mobile-UX (Real-DB) – Touch, Viewport, Tap-Targets', () => {
     expect(box!.y + box!.height).toBeLessThanOrEqual(viewport.height + 2)
 
     await nameInput.fill('Sandra')
-    await alice.getByRole('button', { name: /Loslegen/ }).tap()
+    await alice.getByRole('button', { name: /Loslegen/ }).click()
     await expect(alice.getByText(/Hallo,\s*Sandra/)).toBeVisible()
 
     await openFamilyHub(alice)

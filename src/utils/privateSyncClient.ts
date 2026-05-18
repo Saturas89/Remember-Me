@@ -52,6 +52,12 @@ export function getSyncSupabaseClient(): SupabaseClient {
     ;(_syncClient as unknown as { auth: GoTrueClient }).auth = injectedAuth
   }
 
+  // Expose to E2E tests so they can call auth.setSession() directly, bypassing
+  // BroadcastChannel (which only fires _notifyAllSubscribers, not _saveSession).
+  if (typeof window !== 'undefined' && localStorage.getItem('traffic_type') === 'e2e') {
+    ;(window as unknown as { __rmSyncClient: typeof _syncClient }).__rmSyncClient = _syncClient
+  }
+
   return _syncClient
 }
 

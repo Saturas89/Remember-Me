@@ -23,6 +23,7 @@ import {
   openFamilyHub,
   readDeviceIdentity,
   injectOnlineFriend,
+  reopenFamilyHub,
   seedAnswer,
 } from '../helpers/family-mode-helpers'
 import { cleanupUsers, readDeviceId, spawnRealDevice, supabaseAdmin } from './helpers'
@@ -64,8 +65,10 @@ test.describe('Real-DB: Vollständiger Alice → Bob Share-Flow', () => {
     // ── Alice befüllt eine Antwort und teilt sie ─────────────────────────────
     await seedAnswer(alice, 'real-q-1', 'childhood', 'Meine Kindheitserinnerung an den See.')
 
-    await alice.reload()
-    await openFamilyHub(alice)
+    // reopenFamilyHub navigates to /friends and waits for the tablist –
+    // more robust than reload+openFamilyHub on mobile where the tablist
+    // renders slightly later than the hub heading.
+    await reopenFamilyHub(alice)
     await alice.getByRole('tab', { name: 'Teilen', exact: true }).click()
     await alice.getByText('Meine Kindheitserinnerung an den See.').click()
     await alice.locator('.share-recipient-chip', { hasText: 'Bob' }).click()
@@ -73,15 +76,14 @@ test.describe('Real-DB: Vollständiger Alice → Bob Share-Flow', () => {
     await expect(alice.getByTestId('share-success')).toBeVisible({ timeout: 30_000 })
 
     // ── Bob lädt die Seite neu und erwartet den Share ─────────────────────────
-    await bob.reload()
-    await openFamilyHub(bob)
+    await reopenFamilyHub(bob)
 
     const feedItem = bob.getByTestId('feed-item').first()
     await expect(feedItem).toBeVisible({ timeout: 30_000 })
 
-    // Ciphertext darf nicht den Klartext enthalten – verschlüsselt angekommen
+    // Bob sieht die entschlüsselte Erinnerung (SharedMemory.value ist post-decryption)
     const itemText = await feedItem.textContent()
-    expect(itemText).not.toContain('Meine Kindheitserinnerung')
+    expect(itemText).toContain('Meine Kindheitserinnerung')
 
     await aliceCtx.close()
     await bobCtx.close()
@@ -115,8 +117,7 @@ test.describe('Real-DB: Vollständiger Alice → Bob Share-Flow', () => {
     await injectOnlineFriend(bob, 'Alice', aliceId.deviceId, aliceId.publicKey)
 
     await seedAnswer(alice, 'real-q-2', 'family', 'Geheimnis für Bob.')
-    await alice.reload()
-    await openFamilyHub(alice)
+    await reopenFamilyHub(alice)
     await alice.getByRole('tab', { name: 'Teilen', exact: true }).click()
     await alice.getByText('Geheimnis für Bob.').click()
     await alice.locator('.share-recipient-chip', { hasText: 'Bob' }).click()
@@ -124,8 +125,7 @@ test.describe('Real-DB: Vollständiger Alice → Bob Share-Flow', () => {
     await expect(alice.getByTestId('share-success')).toBeVisible({ timeout: 30_000 })
 
     // Bob sieht den Share
-    await bob.reload()
-    await openFamilyHub(bob)
+    await reopenFamilyHub(bob)
     await expect(bob.getByTestId('feed-item').first()).toBeVisible({ timeout: 30_000 })
 
     // Eve sieht KEINEN Share (RLS greift)
@@ -162,8 +162,7 @@ test.describe('Real-DB: Vollständiger Alice → Bob Share-Flow', () => {
 
     // Alice teilt
     await seedAnswer(alice, 'real-q-3', 'childhood', 'Erinnerung für Annotation.')
-    await alice.reload()
-    await openFamilyHub(alice)
+    await reopenFamilyHub(alice)
     await alice.getByRole('tab', { name: 'Teilen', exact: true }).click()
     await alice.getByText('Erinnerung für Annotation.').click()
     await alice.locator('.share-recipient-chip', { hasText: 'Bob' }).click()
@@ -171,8 +170,7 @@ test.describe('Real-DB: Vollständiger Alice → Bob Share-Flow', () => {
     await expect(alice.getByTestId('share-success')).toBeVisible({ timeout: 30_000 })
 
     // Bob öffnet den Share und schreibt eine Annotation
-    await bob.reload()
-    await openFamilyHub(bob)
+    await reopenFamilyHub(bob)
     const feedItem = bob.getByTestId('feed-item').first()
     await expect(feedItem).toBeVisible({ timeout: 30_000 })
     await feedItem.click()
@@ -184,8 +182,7 @@ test.describe('Real-DB: Vollständiger Alice → Bob Share-Flow', () => {
     await expect(bob.getByTestId('annotation-sent')).toBeVisible({ timeout: 15_000 })
 
     // Alice lädt neu und sieht die Annotation auf ihrem Share
-    await alice.reload()
-    await openFamilyHub(alice)
+    await reopenFamilyHub(alice)
     const aliceFeedItem = alice.getByTestId('feed-item').first()
     await expect(aliceFeedItem).toBeVisible({ timeout: 30_000 })
     await aliceFeedItem.click()
@@ -217,8 +214,7 @@ test.describe('Real-DB: Vollständiger Alice → Bob Share-Flow', () => {
     await injectOnlineFriend(bob,   'Alice', aliceId.deviceId, aliceId.publicKey)
 
     await seedAnswer(alice, 'real-q-4', 'family', 'Wird bald gelöscht.')
-    await alice.reload()
-    await openFamilyHub(alice)
+    await reopenFamilyHub(alice)
     await alice.getByRole('tab', { name: 'Teilen', exact: true }).click()
     await alice.getByText('Wird bald gelöscht.').click()
     await alice.locator('.share-recipient-chip', { hasText: 'Bob' }).click()
