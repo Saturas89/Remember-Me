@@ -239,7 +239,7 @@ export const UI_EN = {
   },
 
   friends: {
-    pageTitle: 'Invite & connect',
+    pageTitle: 'Invite friends',
     topbarTitle: 'Invite & connect',
     intro: 'Invite someone with personal questions. You\'ll stay connected going forward.',
     connectedHeading: 'Connected memories',

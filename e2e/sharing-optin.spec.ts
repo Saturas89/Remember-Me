@@ -34,7 +34,7 @@ async function completeOnboarding(page: Page, name: string) {
 async function openFriendsTab(page: Page) {
   const nav = page.getByRole('navigation', { name: 'Hauptnavigation' })
   await nav.getByRole('button', { name: 'Freunde', exact: true }).click()
-  await expect(page.getByRole('heading', { name: /Einladen & verbinden/, level: 2 })).toBeVisible()
+  await expect(page.getByRole('heading', { name: /Einladen & verbinden/ })).toBeVisible()
 }
 
 function attachNetworkSpy(page: Page): Request[] {

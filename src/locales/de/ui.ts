@@ -239,7 +239,7 @@ export const UI_DE = {
   },
 
   friends: {
-    pageTitle: 'Einladen & verbinden',
+    pageTitle: 'Freunde einladen',
     topbarTitle: 'Einladen & verbinden',
     intro: 'Lade jemanden mit persönlichen Fragen ein. Ihr bleibt danach dauerhaft verbunden.',
     connectedHeading: 'Verbundene Erinnerungen',
