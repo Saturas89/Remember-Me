@@ -153,6 +153,9 @@ export const SANDRA_FLOW_EN: SandraFlowStrings = {
     welcomePrivacyHint: 'Only {senderName} sees your answers.',
     welcomeNamePlaceholder: 'Your name',
     welcomeStart: 'Begin',
+    existingUserTitle: 'Hey {recipientName}! {senderName} sent you {n} questions.',
+    existingUserHint: 'These questions will be added to your existing collection.',
+    existingUserStart: 'Begin',
   },
 
   // ── Friends-tab entry ──────────────────────────────────────────────

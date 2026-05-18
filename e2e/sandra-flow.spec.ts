@@ -315,6 +315,54 @@ test.describe('Sandra-Flow – Receiver Path (Ingrid)', () => {
     await expect(i.getByText(/Sandra hat dir/i)).toBeVisible()
     await iCtx.close()
   })
+
+  test('existing Storyhold user skips name-entry and sees tailored welcome', async ({ browser }) => {
+    // Build a share URL via the sender flow.
+    const sCtx = await browser.newContext()
+    await seedContext(sCtx, { lang: 'de', profile: 'sandra' })
+    await stubWebShare(sCtx)
+    const sPage = await sCtx.newPage()
+    await sPage.goto('/#/ask')
+    await sPage.getByTestId('sandra-landing-cta').click()
+    await sPage.getByTestId('sandra-anchor-chip-mama').click()
+    await sPage.getByTestId('sandra-anchor-next').click()
+    await sPage.locator('[data-testid^="sandra-trigger-"]').first().click()
+    await sPage.getByTestId('sandra-composer-seed').fill('Kindheit')
+    await sPage.locator('[data-testid^="sandra-suggestion-"]').first().click()
+    await sPage.locator('[data-testid^="sandra-suggestion-use-"]').first().click()
+    await sPage.getByTestId('sandra-list-send').click()
+    await sPage.getByTestId('sandra-share-cta').click()
+    await expect.poll(async () => (await getSharedPayloads(sPage)).length).toBeGreaterThanOrEqual(1)
+    const shareUrl = (await getSharedPayloads(sPage))[0].url ?? ''
+    await sCtx.close()
+
+    // Open the URL as an existing Storyhold user (Ingrid already has a profile).
+    const ingridCtx = await browser.newContext()
+    await seedContext(ingridCtx, { lang: 'de', profile: 'none' })
+    await ingridCtx.addInitScript(() => {
+      localStorage.setItem('remember-me-state', JSON.stringify({
+        profile: { name: 'Ingrid', createdAt: '2025-01-01T00:00:00.000Z' },
+        answers: { 'q-childhood': 'Ich bin auf dem Land aufgewachsen.' },
+        friends: [], friendAnswers: [], customQuestions: [], appMode: 'full',
+      }))
+    })
+    const ingrid = await ingridCtx.newPage()
+    await ingrid.goto(shareUrl)
+
+    // Existing user: name-entry input must NOT be visible.
+    await expect(ingrid.getByTestId('sandra-receive-name')).not.toBeVisible()
+
+    // Tailored welcome title mentioning both Ingrid and Sandra.
+    await expect(ingrid.getByTestId('sandra-receive-existing-title')).toBeVisible()
+    await expect(ingrid.getByTestId('sandra-receive-existing-title')).toContainText('Ingrid')
+    await expect(ingrid.getByTestId('sandra-receive-existing-title')).toContainText('Sandra')
+
+    // One click straight into the quiz.
+    await ingrid.getByTestId('sandra-receive-existing-start').click()
+    await expect(ingrid.getByTestId('sandra-receive-answer')).toBeVisible()
+
+    await ingridCtx.close()
+  })
 })
 
 // ─────────────────────────────────────────────────────────────────────────────
