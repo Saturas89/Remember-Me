@@ -219,7 +219,7 @@ test.describe('Sandra-Flow – EN Happy Path', () => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 test.describe('Sandra-Flow – Receiver Path (Ingrid)', () => {
-  test('shared `?qp-plain=…` URL triggers simple-mode prompt + one-question view', async ({ browser }) => {
+  test('shared `?qp-plain=…` URL activates simple-mode silently + one-question view', async ({ browser }) => {
     // ── Step 1: Sandra builds the URL (drive the real flow) ────────────────
     const senderContext = await browser.newContext()
     await seedContext(senderContext, { lang: 'de', profile: 'sandra' })
@@ -235,6 +235,7 @@ test.describe('Sandra-Flow – Receiver Path (Ingrid)', () => {
     await sender.locator('[data-testid^="sandra-suggestion-"]').first().click()
     await sender.locator('[data-testid^="sandra-suggestion-use-"]').first().click()
     await sender.getByTestId('sandra-list-send').click()
+    // Sandra leaves the "Großschrift-Modus voreinstellen" checkbox checked (default).
     await sender.getByTestId('sandra-share-cta').click()
     await expect.poll(async () => (await getSharedPayloads(sender)).length).toBeGreaterThanOrEqual(1)
     const payloads = await getSharedPayloads(sender)
@@ -248,10 +249,9 @@ test.describe('Sandra-Flow – Receiver Path (Ingrid)', () => {
     const ingrid = await ingridContext.newPage()
     await ingrid.goto(shareUrl)
 
-    // ── Modal prompts Vereinfachter Bedienmodus ─────────────────────────────
-    const acceptSimple = ingrid.getByTestId('sandra-receive-simple-yes')
-    await expect(acceptSimple).toBeVisible({ timeout: 15_000 })
-    await acceptSimple.click()
+    // ── Auto-suggest is SKIPPED: preferSimpleMode=true was pre-selected by Sandra
+    // and survives the URL round-trip → Ingrid lands directly on welcome. ────
+    await expect(ingrid.getByTestId('sandra-receive-simple-yes')).not.toBeVisible()
 
     // ── Welcome screen header: "{senderName} hat dir {n} Fragen geschickt" ─
     await expect(ingrid.getByText(/Sandra hat dir/i)).toBeVisible()
@@ -296,6 +296,8 @@ test.describe('Sandra-Flow – Receiver Path (Ingrid)', () => {
     await sPage.locator('[data-testid^="sandra-suggestion-"]').first().click()
     await sPage.locator('[data-testid^="sandra-suggestion-use-"]').first().click()
     await sPage.getByTestId('sandra-list-send').click()
+    // Uncheck "Großschrift-Modus voreinstellen" so Ingrid sees the choice prompt.
+    await sPage.getByTestId('sandra-share-prefer-simple').click()
     await sPage.getByTestId('sandra-share-cta').click()
     await expect.poll(async () => (await getSharedPayloads(sPage)).length).toBeGreaterThanOrEqual(1)
     const shareUrl = (await getSharedPayloads(sPage))[0].url ?? ''
@@ -471,6 +473,8 @@ test.describe('Sandra-Flow – Two-person integration', () => {
     await sender.locator('[data-testid^="sandra-suggestion-"]').first().click()
     await sender.locator('[data-testid^="sandra-suggestion-use-"]').first().click()
     await sender.getByTestId('sandra-list-send').click()
+    // preferSimpleMode checkbox is checked by default → simple mode activates
+    // silently on Ingrid's side without a prompt (no click needed).
     await sender.getByTestId('sandra-share-cta').click()
 
     await expect.poll(async () => (await getSharedPayloads(sender)).length).toBeGreaterThanOrEqual(1)
@@ -484,10 +488,9 @@ test.describe('Sandra-Flow – Two-person integration', () => {
     const ingrid = await ingridContext.newPage()
     await ingrid.goto(shareUrl)
 
-    // Simple-mode prompt → accept (FR-020.9 happy path).
-    const acceptSimple = ingrid.getByTestId('sandra-receive-simple-yes')
-    await expect(acceptSimple).toBeVisible({ timeout: 15_000 })
-    await acceptSimple.click()
+    // Auto-suggest is skipped: preferSimpleMode=true survives the URL round-trip.
+    // Ingrid lands directly on welcome; simple mode is activated silently.
+    await expect(ingrid.getByTestId('sandra-receive-simple-yes')).not.toBeVisible()
 
     // Regression for the decodeQuestionPack metadata-roundtrip bug:
     // the welcome header MUST contain Sandra's name (not "undefined").
