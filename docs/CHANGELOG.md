@@ -14,20 +14,20 @@ Versionierung folgt [Semantic Versioning](https://semver.org/lang/de/).
 
 ### Geändert
 
-- **Sandra-Flow: dauerhafter Verbindungsaufbau statt Einmal-Link** – Der
-  Sandra-Flow (`#/ask`) sendet jetzt einen kombinierten Link mit Fragenpaket
+- **Einladungslink: dauerhafter Verbindungsaufbau statt Einmal-Link** – Der
+  Einladungs-Flow (`#/ask`) sendet jetzt einen kombinierten Link mit Fragenpaket
   (`?qp=`) **und** dem eigenen ContactHandshake (`?contact=`). Wenn Mama den
   Link öffnet, beantwortet sie die Fragen (als Trigger) und wird gleichzeitig
-  dauerhaft verbunden – Sandra sieht neue Erinnerungen laufend, kein zweiter
-  Schritt notwendig. Voraussetzung: Supabase-Build (Familienmodus).
+  dauerhaft verbunden – der Einladende sieht neue Erinnerungen laufend, kein
+  zweiter Schritt notwendig. Voraussetzung: Supabase-Build (Familienmodus).
 - **Privacy-Versprechen neu formuliert** – Badges auf der Landing-Seite des
-  Sandra-Flows zeigen jetzt „Privat", „Verschlüsselt", „Nur für euch beide"
+  Einladungs-Flows zeigen jetzt „Privat", „Verschlüsselt", „Nur für euch beide"
   statt der alten „Keine Anmeldung / Keine Cloud"-Formulierung, die zur
   tatsächlichen Supabase-Architektur im Widerspruch stand.
 - **Freunde-Tab klarere Struktur** – Primärer CTA ist jetzt „Einladung
-  erstellen" (Sandra-Flow). Der bisherige Familienmodus-CTA „Einrichten" wurde
-  zu „Geteilte Erinnerungen öffnen" umbenannt und ist nur noch sichtbar, wenn
-  Supabase konfiguriert ist.
+  erstellen". Der bisherige Familienmodus-CTA „Einrichten" wurde zu „Geteilte
+  Erinnerungen öffnen" umbenannt und ist nur noch sichtbar, wenn Supabase
+  konfiguriert ist.
 
 ---
 
@@ -81,7 +81,7 @@ Versionierung folgt [Semantic Versioning](https://semver.org/lang/de/).
   Smiley-Buttons auf 72 × 72 px (statt 56 × 56 px im Full-Mode). Wording ist
   bewusst alltagssprachlich gehalten („Dein Name wird nirgends gespeichert"
   statt „anonym"), nach Persona-Review mit Ingrid-Novice / -Routine und
-  Sandra-Family-Manager / -Gift-Buyer.
+  Familien- und Käufer-Persona-Review.
 
 ---
 
@@ -89,8 +89,8 @@ Versionierung folgt [Semantic Versioning](https://semver.org/lang/de/).
 
 ### Hinzugefügt
 
-- **Sandra-First Flow: persönliche Fragen formulieren und an Verwandte
-  schicken** – die neue Einstiegs-Route `#/ask` führt durch sechs Schritte
+- **Persönliche Fragen formulieren und an Verwandte schicken** – die neue
+  Einstiegs-Route `#/ask` führt durch sechs Schritte
   (Landing → Beziehungs-Anker → Trigger-Wahl → Composer → Fragen-Sammlung →
   Versand), damit der tech-affinere Käufer eigene Fragen in eigenen Worten
   formulieren und per Web Share API als Link an Mama/Papa/Oma schicken kann.
@@ -113,8 +113,8 @@ Versionierung folgt [Semantic Versioning](https://semver.org/lang/de/).
 - Eintrag im Freunde-Tab: neue Karte „Eigene Fragen für jemanden formulieren"
   führt direkt in den Flow.
 
-> Bekannte Lücke / Geplant: Empfänger ohne eigenes Smartphone – Sandra als
-> „Proxy" mit Audio-Aufnahme über ihr Gerät. Backlog in
+> Bekannte Lücke / Geplant: Empfänger ohne eigenes Smartphone – stellvertretende
+> Audio-Aufnahme über ein anderes Gerät. Backlog in
 > [REQ-020](./requirements/REQ-020-sandra-flow.md) §Future Work.
 
 ---
@@ -1018,7 +1018,7 @@ Wenn im Hintergrund eine neue Version der App als Service Worker bereit steht, e
 | **2.4.0** | Vereinfachter Bedienmodus für ältere Nutzer (Mode-Auswahl im Onboarding & Profil, große Buttons, reduzierte UI) | ✔️ Fertig |
 | **2.5.0** | Impressum-Seite (§ 5 DDG, § 18 MStV) im Profil – Anbieter, Kontakt, Streitbeilegung, Haftung, Urheberrecht | ✔️ Fertig |
 | **2.6.0** | Sync-Setup: Wartebildschirm für E-Mail-Bestätigung + Resend-Button, automatischer Sprung nach Verifikation | ✔️ Fertig |
-| **2.7.0** | Sandra-First Flow: persönliche Fragen formulieren, Trigger-Bank DE+EN, Inspirations-Schublade, Ingrid-Empfang mit One-Question-View (REQ-020) | ✔️ Fertig |
+| **2.7.0** | Persönliche Fragen formulieren, Trigger-Bank DE+EN, Inspirations-Schublade, One-Question-View-Empfang (REQ-020) | ✔️ Fertig |
 | **2.8.0** | Leichtgewichtiges In-App-Feedback: 5-Smiley-Modal + optionaler Kommentar im Profil, anonyme Supabase-Tabelle (REQ-021) | ✔️ Fertig |
 | **2.9.0** | Trust-Badges „Open Source · AGPL-3.0" und „Made in Germany" in der Impressum-Seite + README-Shields | ✔️ Fertig |
 | — | **Geplante Features** | — |
