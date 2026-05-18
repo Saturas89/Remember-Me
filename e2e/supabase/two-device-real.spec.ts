@@ -1,10 +1,10 @@
-// End-to-end tests against a real local Supabase instance.
+// End-to-end tests against the production Supabase instance.
 //
-// These tests are run by the interaction-real-db CI job in
-// .github/workflows/interaction-tests.yml. They require:
-//   SUPABASE_URL             – http://127.0.0.1:54321
-//   SUPABASE_ANON_KEY        – anon JWT from `supabase status`
-//   SUPABASE_SERVICE_ROLE_KEY – service-role JWT for cleanup
+// These tests are run by the production-supabase job in
+// .github/workflows/nightly-production.yml. They require:
+//   SUPABASE_URL              – production Supabase API URL
+//   SUPABASE_ANON_KEY         – production anon/public JWT
+//   SUPABASE_SERVICE_ROLE_KEY – service-role JWT for admin cleanup
 //
 // Unlike the mock-based family-mode-*.spec.ts files, every Supabase call here
 // goes to the real PostgREST/GoTrue/Storage stack, so RLS policies, FK
@@ -64,15 +64,13 @@ test.describe('Real-DB: Vollständiger Alice → Bob Share-Flow', () => {
     // ── Alice befüllt eine Antwort und teilt sie ─────────────────────────────
     await seedAnswer(alice, 'real-q-1', 'childhood', 'Meine Kindheitserinnerung an den See.')
 
-    // Navigiere zum Share-Tab und löse den Share aus
     await alice.reload()
     await openFamilyHub(alice)
-    const sendBtn = alice.getByTestId('send-memories')
-    await expect(sendBtn).toBeVisible({ timeout: 20_000 })
-    await sendBtn.click()
-
-    const successIndicator = alice.getByTestId('share-success')
-    await expect(successIndicator).toBeVisible({ timeout: 30_000 })
+    await alice.getByRole('tab', { name: 'Teilen', exact: true }).click()
+    await alice.getByText('Meine Kindheitserinnerung an den See.').click()
+    await alice.locator('.share-recipient-chip', { hasText: 'Bob' }).click()
+    await alice.getByTestId('send-memories').click()
+    await expect(alice.getByTestId('share-success')).toBeVisible({ timeout: 30_000 })
 
     // ── Bob lädt die Seite neu und erwartet den Share ─────────────────────────
     await bob.reload()
@@ -119,6 +117,9 @@ test.describe('Real-DB: Vollständiger Alice → Bob Share-Flow', () => {
     await seedAnswer(alice, 'real-q-2', 'family', 'Geheimnis für Bob.')
     await alice.reload()
     await openFamilyHub(alice)
+    await alice.getByRole('tab', { name: 'Teilen', exact: true }).click()
+    await alice.getByText('Geheimnis für Bob.').click()
+    await alice.locator('.share-recipient-chip', { hasText: 'Bob' }).click()
     await alice.getByTestId('send-memories').click()
     await expect(alice.getByTestId('share-success')).toBeVisible({ timeout: 30_000 })
 
@@ -163,6 +164,9 @@ test.describe('Real-DB: Vollständiger Alice → Bob Share-Flow', () => {
     await seedAnswer(alice, 'real-q-3', 'childhood', 'Erinnerung für Annotation.')
     await alice.reload()
     await openFamilyHub(alice)
+    await alice.getByRole('tab', { name: 'Teilen', exact: true }).click()
+    await alice.getByText('Erinnerung für Annotation.').click()
+    await alice.locator('.share-recipient-chip', { hasText: 'Bob' }).click()
     await alice.getByTestId('send-memories').click()
     await expect(alice.getByTestId('share-success')).toBeVisible({ timeout: 30_000 })
 
@@ -215,6 +219,9 @@ test.describe('Real-DB: Vollständiger Alice → Bob Share-Flow', () => {
     await seedAnswer(alice, 'real-q-4', 'family', 'Wird bald gelöscht.')
     await alice.reload()
     await openFamilyHub(alice)
+    await alice.getByRole('tab', { name: 'Teilen', exact: true }).click()
+    await alice.getByText('Wird bald gelöscht.').click()
+    await alice.locator('.share-recipient-chip', { hasText: 'Bob' }).click()
     await alice.getByTestId('send-memories').click()
     await expect(alice.getByTestId('share-success')).toBeVisible({ timeout: 30_000 })
 
@@ -226,6 +233,7 @@ test.describe('Real-DB: Vollständiger Alice → Bob Share-Flow', () => {
     expect(sharesBefore?.length ?? 0).toBeGreaterThan(0)
 
     // Alice löscht ihr Gerät (= Familienmodus deaktivieren)
+    await alice.getByRole('tab', { name: 'Einstellungen', exact: true }).click()
     await alice.getByTestId('deactivate-sharing').click()
     await alice.getByTestId('confirm-deactivate').click()
 

@@ -1,4 +1,4 @@
-// Mobile UX tests against a real local Supabase instance.
+// Mobile UX tests against the production Supabase instance.
 //
 // Covers the same ground as e2e/interaction/android-ux.spec.ts but uses
 // spawnRealDevice() (no in-memory mock) so every Supabase call — auth,
@@ -213,8 +213,8 @@ test.describe('Mobile-UX (Real-DB) – Touch, Viewport, Tap-Targets', () => {
       await seedAnswer(alice, m.id, m.cat, m.text)
     }
 
-    for (const [i, m] of memories.entries()) {
-      if (i > 0) await reopenFamilyHub(alice)
+    for (const m of memories) {
+      await reopenFamilyHub(alice)
       await alice.getByRole('tab', { name: 'Teilen', exact: true }).click()
       await alice.getByText(m.text).click()
       await alice.locator('.share-recipient-chip', { hasText: 'Bob' }).click()

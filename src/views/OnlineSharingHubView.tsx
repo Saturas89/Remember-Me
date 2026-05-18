@@ -409,12 +409,17 @@ function SharedMemoryCard({
   }
 
   return (
-    <article className="shared-memory-card">
+    <article className="shared-memory-card" data-testid="feed-item">
       <header>
         <strong>{memory.ownerName}</strong>
         <span className="shared-memory-date">
           {new Date(memory.createdAt).toLocaleDateString(locale === 'en' ? 'en-GB' : 'de-DE')}
         </span>
+        {annotations.length > 0 && (
+          <span data-testid="annotation-count" className="shared-memory-annotation-count">
+            {annotations.length}
+          </span>
+        )}
       </header>
       <p className="shared-memory-question">{memory.questionText}</p>
       <p className="shared-memory-value">{memory.value}</p>
@@ -433,6 +438,7 @@ function SharedMemoryCard({
         <label>
           {a.label}
           <textarea
+            data-testid="annotation-input"
             value={draft}
             onChange={e => setDraft(e.target.value)}
             rows={3}
@@ -440,6 +446,7 @@ function SharedMemoryCard({
           />
         </label>
         <button
+          data-testid={status === 'sent' ? 'annotation-sent' : 'send-annotation'}
           className="btn btn--ghost btn--sm"
           onClick={submit}
           disabled={status === 'sending' || !draft.trim()}
@@ -583,6 +590,7 @@ function ShareTab({
 
       <div className="share-tab__actions">
         <button
+          data-testid={status === 'sent' ? 'share-success' : 'send-memories'}
           className={`share-cta-btn${status === 'sent' ? ' share-cta-btn--success' : ''}`}
           disabled={!selectedQ || selectedFriends.size === 0 || status === 'sending' || !sync.service}
           onClick={send}
@@ -734,6 +742,7 @@ function SettingsTab({ onDeactivate }: { onDeactivate: () => void }) {
       <p className="friends-hint">{s.hint}</p>
       {!confirming ? (
         <button
+          data-testid="deactivate-sharing"
           className="btn btn--ghost btn--sm"
           onClick={() => setConfirming(true)}
         >
@@ -743,6 +752,7 @@ function SettingsTab({ onDeactivate }: { onDeactivate: () => void }) {
         <div className="online-confirm">
           <p><strong>{s.confirmStrong}</strong>{s.confirmRest}</p>
           <button
+            data-testid="confirm-deactivate"
             className="share-cta-btn share-cta-btn--error"
             onClick={onDeactivate}
           >
