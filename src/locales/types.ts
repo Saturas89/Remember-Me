@@ -352,6 +352,7 @@ export interface Translations {
     syncErrorQuota: string
     syncErrorConflict: string
     syncErrorDetailsToggle: string
+    syncErrorRetry: string
     connecting: string
 
     tabs: {

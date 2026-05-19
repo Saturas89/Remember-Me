@@ -1,8 +1,8 @@
 # Storyhold – Projekt-Übersicht
 
 **Status:** 🔵 IN PROGRESS
-**Version:** 2.11.0
-**Letzte Aktualisierung:** 2026-05-18
+**Version:** 2.12.0
+**Letzte Aktualisierung:** 2026-05-19
 
 > Version und Datum werden per `npm test` (`scripts/check-docs-sync.mjs`)
 > gegen `package.json` und das jüngste `docs/CHANGELOG.md`-Datum

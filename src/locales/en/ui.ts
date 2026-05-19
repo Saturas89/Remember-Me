@@ -329,6 +329,7 @@ export const UI_EN = {
     syncErrorQuota: 'The server is out of storage room. Please reach out to support or try again later.',
     syncErrorConflict: 'We\'re reconciling changes. Please wait a moment – this should resolve on its own.',
     syncErrorDetailsToggle: 'Show technical details',
+    syncErrorRetry: '↺ Try again',
     connecting: 'Connecting to server …',
     tabs: {
       feed: 'Feed',

@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { OnlineSharingState, SharedMemory, Annotation } from '../types'
 
-// Type of the dynamically-loaded service module. We list only the pieces
-// the hook actually uses so a missing or unconfigured backend doesn't break
-// type checking.
 type SharingServiceModule = typeof import('../utils/sharingService')
+
+// Delays between bootstrap retries: 3 s → 9 s → 27 s.
+const RETRY_DELAYS_MS = [3_000, 9_000, 27_000]
 
 export interface OnlineSyncAPI {
   ready: boolean
@@ -15,6 +15,8 @@ export interface OnlineSyncAPI {
   annotations: Annotation[]
   /** Refresh the incoming feed. */
   refresh: () => Promise<void>
+  /** Clears the error state and re-attempts bootstrapSession (with full retry). */
+  retryBootstrap: () => void
   /** Async-loaded service module so callers (views) can invoke operations
    *  without triggering another dynamic import. Null until `ready`. */
   service: SharingServiceModule | null
@@ -38,6 +40,7 @@ export function useOnlineSync(
   const [publicKeyB64, setPublicKeyB64] = useState<string | null>(null)
   const [memories, setMemories] = useState<SharedMemory[]>([])
   const [annotations, setAnnotations] = useState<Annotation[]>([])
+  const [retryKey, setRetryKey] = useState(0)
   const serviceRef = useRef<SharingServiceModule | null>(null)
   const onRegisteredRef = useRef(onRegistered)
   onRegisteredRef.current = onRegistered
@@ -52,6 +55,12 @@ export function useOnlineSync(
     } catch (e) {
       setError((e as Error).message ?? 'sync failed')
     }
+  }, [])
+
+  const retryBootstrap = useCallback(() => {
+    setError(null)
+    setReady(false)
+    setRetryKey(k => k + 1)
   }, [])
 
   useEffect(() => {
@@ -76,18 +85,39 @@ export function useOnlineSync(
         if (cancelled) return
         serviceRef.current = svc
 
-        const session = await svc.bootstrapSession()
-        if (cancelled) return
+        // Retry loop: 1 initial attempt + up to 3 retries (3 s / 9 s / 27 s).
+        let lastError: Error | null = null
+        for (let attempt = 0; attempt <= RETRY_DELAYS_MS.length; attempt++) {
+          try {
+            const session = await svc.bootstrapSession()
+            if (cancelled) return
 
-        setDeviceId(session.deviceId)
-        setPublicKeyB64(session.publicKeyB64)
-        onRegisteredRef.current?.(session.deviceId, session.publicKeyB64)
-        setReady(true)
+            setDeviceId(session.deviceId)
+            setPublicKeyB64(session.publicKeyB64)
+            onRegisteredRef.current?.(session.deviceId, session.publicKeyB64)
+            setReady(true)
 
-        const incoming = await svc.fetchIncomingShares()
-        if (cancelled) return
-        setMemories(incoming.memories)
-        setAnnotations(incoming.annotations)
+            const incoming = await svc.fetchIncomingShares()
+            if (cancelled) return
+            setMemories(incoming.memories)
+            setAnnotations(incoming.annotations)
+            return // success – exit the loop
+          } catch (e) {
+            if (cancelled) return
+            lastError = e as Error
+            if (attempt < RETRY_DELAYS_MS.length) {
+              await new Promise<void>(resolve =>
+                setTimeout(resolve, RETRY_DELAYS_MS[attempt]),
+              )
+              if (cancelled) return
+            }
+          }
+        }
+
+        // All attempts exhausted.
+        if (!cancelled) {
+          setError(lastError?.message ?? 'online sharing unavailable')
+        }
       } catch (e) {
         if (cancelled) return
         setError((e as Error).message ?? 'online sharing unavailable')
@@ -95,7 +125,7 @@ export function useOnlineSync(
     })()
 
     return () => { cancelled = true }
-  }, [onlineSharing?.enabled])
+  }, [onlineSharing?.enabled, retryKey])
 
   return {
     ready,
@@ -105,6 +135,7 @@ export function useOnlineSync(
     memories,
     annotations,
     refresh,
+    retryBootstrap,
     service: serviceRef.current,
   }
 }

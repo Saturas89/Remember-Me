@@ -331,6 +331,7 @@ export const UI_DE = {
     syncErrorQuota: 'Der Speicherplatz auf dem Server reicht nicht. Bitte melde dich beim Support oder versuche es später.',
     syncErrorConflict: 'Wir gleichen gerade Änderungen ab. Bitte kurz warten – das sollte sich von selbst lösen.',
     syncErrorDetailsToggle: 'Technische Details anzeigen',
+    syncErrorRetry: '↺ Erneut versuchen',
     connecting: 'Verbinde mit Server …',
     tabs: {
       feed: 'Feed',

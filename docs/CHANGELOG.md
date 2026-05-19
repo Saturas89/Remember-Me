@@ -10,6 +10,18 @@ Versionierung folgt [Semantic Versioning](https://semver.org/lang/de/).
 > Der Check `npm run check:changelog` (Teil von `npm test`) bricht sonst ab.
 > Details: `CLAUDE.md` → „Changelog-Pflicht".
 
+## [2.12.0] – 2026-05-19
+
+### Hinzugefügt
+
+- **Automatischer Retry bei Verbindungsfehlern** – Wenn `bootstrapSession()`
+  scheitert, versucht der Hub es bis zu 3-mal erneut (Exponential Backoff:
+  3 s → 9 s → 27 s), ohne dem Nutzer sofort eine Fehlermeldung zu zeigen.
+  Erst wenn alle Versuche fehlschlagen, erscheint der Fehler-Banner.
+- **Retry-Button im Fehler-State** – Nach erschöpften Versuchen zeigt der
+  Hub einen „↺ Erneut versuchen"-Button, mit dem der Nutzer die gesamte
+  Bootstrap-Sequenz manuell neu starten kann.
+
 ## [2.11.0] – 2026-05-18
 
 ### Geändert

@@ -145,6 +145,12 @@ export function OnlineSharingHubView({
           <p className="friends-hint friends-hint--warn">
             {friendlySyncError(sync.error, h)}
           </p>
+          <button
+            className="btn btn--ghost btn--sm"
+            onClick={sync.retryBootstrap}
+          >
+            {h.syncErrorRetry}
+          </button>
           {/* The raw error.message is kept as a collapsed <details> so
               technically inclined users (or bug reporters) can still grab it
               without scaring the Senior persona on first sight. */}
