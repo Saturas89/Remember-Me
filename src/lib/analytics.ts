@@ -46,14 +46,14 @@ export function initPostHog(): void {
     app_environment: 'production',
   })
 
-  posthog.setPersonProperties({ traffic_type: trafficType })
-
   if (trafficType === 'internal') {
     posthog.identify('internal-device')
   } else if (trafficType === 'e2e') {
     const id = browserProfile ? `e2e-${browserProfile}` : 'e2e-playwright'
     posthog.identify(id)
   }
+
+  posthog.setPersonProperties({ traffic_type: trafficType })
 }
 
 // ── Quiz ────────────────────────────────────────────────────────────────────
