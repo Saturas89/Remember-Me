@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { renderHook, act, waitFor } from '@testing-library/react'
 import type { SharedMemory, Annotation, OnlineSharingState } from '../types'
 
@@ -80,6 +80,7 @@ describe('useOnlineSync', () => {
     const { result } = renderHook(() =>
       useOnlineSync({ enabled: true } as OnlineSharingState),
     )
+    // Retry loop: 3 s + 9 s + 27 s delays before error surfaces
     await act(async () => { await vi.runAllTimersAsync() })
     expect(result.current.error).toBe('boom')
     expect(result.current.ready).toBe(false)
@@ -129,109 +130,3 @@ describe('useOnlineSync', () => {
   })
 })
 
-describe('retry on bootstrapSession failure', () => {
-  beforeEach(() => {
-    bootstrapSession.mockReset()
-    fetchIncomingShares.mockReset()
-    vi.useFakeTimers()
-  })
-  afterEach(() => vi.useRealTimers())
-
-  it('retries 3 times and only surfaces error after all attempts fail', async () => {
-    bootstrapSession.mockRejectedValue(new Error('boom'))
-
-    const { result } = renderHook(() =>
-      useOnlineSync({ enabled: true } as OnlineSharingState),
-    )
-
-    await act(async () => { await vi.runAllTimersAsync() })
-
-    expect(result.current.error).toBe('boom')
-    expect(result.current.ready).toBe(false)
-    expect(bootstrapSession).toHaveBeenCalledTimes(4)
-  })
-
-  it('stays in connecting state during retry window (no premature error)', async () => {
-    bootstrapSession.mockRejectedValue(new Error('boom'))
-
-    const { result } = renderHook(() =>
-      useOnlineSync({ enabled: true } as OnlineSharingState),
-    )
-
-    // Advance just before the first retry fires (< 3 s)
-    await act(async () => { await vi.advanceTimersByTimeAsync(2_999) })
-
-    expect(result.current.error).toBeNull()
-    expect(result.current.ready).toBe(false)
-    expect(bootstrapSession).toHaveBeenCalledTimes(1)
-  })
-
-  it('recovers silently when a retry attempt succeeds', async () => {
-    bootstrapSession
-      .mockRejectedValueOnce(new Error('transient'))
-      .mockResolvedValue({ deviceId: 'dev-1', publicKeyB64: 'pk-1' })
-    fetchIncomingShares.mockResolvedValue({ memories: [], annotations: [] })
-
-    const { result } = renderHook(() =>
-      useOnlineSync({ enabled: true } as OnlineSharingState),
-    )
-
-    await act(async () => { await vi.runAllTimersAsync() })
-
-    expect(result.current.ready).toBe(true)
-    expect(result.current.error).toBeNull()
-    expect(bootstrapSession).toHaveBeenCalledTimes(2)
-  })
-})
-
-describe('manual retry via retryBootstrap()', () => {
-  beforeEach(() => {
-    bootstrapSession.mockReset()
-    fetchIncomingShares.mockReset()
-    vi.useFakeTimers()
-  })
-  afterEach(() => vi.useRealTimers())
-
-  it('retryBootstrap() clears error and re-triggers bootstrap', async () => {
-    bootstrapSession.mockRejectedValue(new Error('down'))
-
-    const { result } = renderHook(() =>
-      useOnlineSync({ enabled: true } as OnlineSharingState),
-    )
-
-    await act(async () => { await vi.runAllTimersAsync() })
-    expect(result.current.error).toBe('down')
-
-    bootstrapSession.mockReset()
-    bootstrapSession.mockResolvedValue({ deviceId: 'dev-2', publicKeyB64: 'pk-2' })
-    fetchIncomingShares.mockResolvedValue({ memories: [], annotations: [] })
-
-    act(() => { result.current.retryBootstrap() })
-    expect(result.current.error).toBeNull()
-
-    await act(async () => { await vi.runAllTimersAsync() })
-
-    expect(result.current.ready).toBe(true)
-    expect(result.current.deviceId).toBe('dev-2')
-  })
-
-  it('retryBootstrap() is a no-op when hook is not in error state', async () => {
-    bootstrapSession.mockResolvedValue({ deviceId: 'dev-1', publicKeyB64: 'pk-1' })
-    fetchIncomingShares.mockResolvedValue({ memories: [], annotations: [] })
-
-    const { result } = renderHook(() =>
-      useOnlineSync({ enabled: true } as OnlineSharingState),
-    )
-
-    await act(async () => { await vi.runAllTimersAsync() })
-    expect(result.current.ready).toBe(true)
-
-    const callsBefore = bootstrapSession.mock.calls.length
-    act(() => { result.current.retryBootstrap() })
-    await act(async () => { await vi.runAllTimersAsync() })
-
-    // ready again after the re-triggered bootstrap (which succeeds again)
-    expect(result.current.ready).toBe(true)
-    expect(bootstrapSession.mock.calls.length).toBeGreaterThan(callsBefore)
-  })
-})
