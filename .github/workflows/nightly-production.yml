@@ -9,9 +9,9 @@ name: Nightly Production Tests
 #
 # Traffic isolation: traffic_type=e2e is injected via localStorage so PostHog
 # can separate nightly sessions from real users without a separate instance.
-# PostHog → Settings → Internal and test users → add rules:
-#   traffic_type = e2e
-#   traffic_type = internal
+# PostHog → Settings → Internal and test users → Cohort "Internal / Test users"
+# (ID 129449) matches all persons where traffic_type ≠ real-user (e2e + internal).
+# Project filter: id in cohort 129449 → excluded from all insights by default.
 #
 # Secret management (GitHub Repository → Settings → Secrets → Actions):
 #
