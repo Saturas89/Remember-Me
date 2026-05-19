@@ -1,6 +1,6 @@
-// Playwright config for production Supabase tests.
+// Playwright config for production nightly tests.
 //
-// Runs e2e/supabase/* against the live production Supabase instance.
+// Runs e2e/nightly/* against the live production Supabase instance.
 // The app is accessed at https://storyhold.app (no local server started).
 //
 // Tests run sequentially (workers: 1) to avoid test-data interference across
@@ -18,7 +18,7 @@
 import { defineConfig, devices } from '@playwright/test'
 
 export default defineConfig({
-  testDir: './e2e/supabase',
+  testDir: './e2e/nightly',
   fullyParallel: false,
   workers: 1,
   forbidOnly: !!process.env.CI,

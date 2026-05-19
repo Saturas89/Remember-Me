@@ -1,6 +1,6 @@
 // End-to-end tests against the production Supabase instance.
 //
-// These tests are run by the production-supabase job in
+// These tests are run by the production-nightly job in
 // .github/workflows/nightly-production.yml. They require:
 //   SUPABASE_URL              – production Supabase API URL
 //   SUPABASE_ANON_KEY         – production anon/public JWT
