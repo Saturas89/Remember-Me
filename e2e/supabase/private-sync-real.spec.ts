@@ -160,14 +160,22 @@ async function runSetupWizard(
   return codeText
 }
 
-/** Reads the privateSync.userId from app state (= auth.uid() after signup). */
+/** Reads the privateSync.userId from the in-memory app state bridge.
+ *
+ * Reads from window.__rmState.get() instead of localStorage because in the
+ * production build the app encrypts the localStorage value asynchronously
+ * (AES-GCM, "enc1:" prefix). By the time this helper runs the encrypted
+ * ciphertext is already written and JSON.parse() on it throws, returning null.
+ * The in-memory bridge (_currentState in stateStorage.ts) is always plaintext
+ * and updated synchronously inside saveState(), so it reflects the true value
+ * the moment onComplete() writes it. */
 async function readSyncUserId(page: import('@playwright/test').Page): Promise<string | null> {
   return page.evaluate(() => {
     try {
-      const raw = localStorage.getItem('remember-me-state')
-      if (!raw) return null
-      const s = JSON.parse(raw)
-      return (s.privateSync as { userId?: string } | undefined)?.userId ?? null
+      const s = (window as unknown as {
+        __rmState?: { get: () => Record<string, unknown> | null }
+      }).__rmState?.get()
+      return (s?.privateSync as { userId?: string } | undefined)?.userId ?? null
     } catch { return null }
   })
 }
