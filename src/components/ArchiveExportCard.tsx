@@ -23,7 +23,7 @@ export function ArchiveExportCard({ data, safeName, onBackupRecorded }: Props) {
   const [errMsg,   setErrMsg]   = useState('')
 
   const date     = new Date().toISOString().split('T')[0]
-  const filename = `remember-me-${safeName}-archiv-${date}.zip`
+  const filename = `storyhold-${safeName}-archiv-${date}.zip`
 
   // ── Stats for idle display ──────────────────────────────
   const answerCount = Object.values(data.answers).filter(a => a.value.trim()).length
