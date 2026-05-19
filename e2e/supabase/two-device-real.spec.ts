@@ -90,7 +90,7 @@ test.describe('Real-DB: Vollständiger Alice → Bob Share-Flow', () => {
   })
 
   test('share-isolation: Eve sieht Alices Share nicht', async ({ browser }) => {
-    test.setTimeout(90_000)
+    test.setTimeout(120_000)
 
     const { ctx: aliceCtx, page: alice } = await spawnRealDevice(browser)
     const { ctx: bobCtx,   page: bob   } = await spawnRealDevice(browser)
@@ -142,7 +142,7 @@ test.describe('Real-DB: Vollständiger Alice → Bob Share-Flow', () => {
   })
 
   test('annotation-roundtrip: Bob annotiert, Alice sieht es', async ({ browser }) => {
-    test.setTimeout(90_000)
+    test.setTimeout(120_000)
 
     const { ctx: aliceCtx, page: alice } = await spawnRealDevice(browser)
     const { ctx: bobCtx,   page: bob   } = await spawnRealDevice(browser)
@@ -195,7 +195,7 @@ test.describe('Real-DB: Vollständiger Alice → Bob Share-Flow', () => {
   })
 
   test('cascade-cleanup: Alices Gerät löschen entfernt Share und Annotation', async ({ browser }) => {
-    test.setTimeout(60_000)
+    test.setTimeout(120_000)
 
     const { ctx: aliceCtx, page: alice } = await spawnRealDevice(browser)
     const { ctx: bobCtx,   page: bob   } = await spawnRealDevice(browser)

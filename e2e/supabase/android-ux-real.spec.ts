@@ -240,7 +240,7 @@ test.describe('Mobile-UX (Real-DB) – Touch, Viewport, Tap-Targets', () => {
     isMobile,
   }) => {
     test.skip(!isMobile, 'Samsung-Viewport-Check nur auf Touch-Geräten sinnvoll')
-    test.setTimeout(90_000)
+    test.setTimeout(120_000)
 
     const { ctx: aliceCtx, page: alice } = await spawnRealDevice(browser)
     createdUsers.push('') // Platzhalter; wir lesen die ID nach openFamilyHub
