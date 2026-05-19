@@ -74,13 +74,17 @@ describe('useOnlineSync', () => {
     expect(onRegistered).toHaveBeenCalledWith('dev-1', 'pk-1')
   })
 
-  it('surfaces errors from bootstrap through the error state', async () => {
+  it('surfaces errors from bootstrap through the error state (after all retries)', async () => {
+    vi.useFakeTimers()
     bootstrapSession.mockRejectedValue(new Error('boom'))
     const { result } = renderHook(() =>
       useOnlineSync({ enabled: true } as OnlineSharingState),
     )
-    await waitFor(() => expect(result.current.error).toBe('boom'))
+    // Retry loop: 3 s + 9 s + 27 s delays before error surfaces
+    await act(async () => { await vi.runAllTimersAsync() })
+    expect(result.current.error).toBe('boom')
     expect(result.current.ready).toBe(false)
+    vi.useRealTimers()
   })
 
   it('refresh() re-fetches incoming shares and updates state', async () => {
@@ -125,3 +129,4 @@ describe('useOnlineSync', () => {
     expect(result.current.memories).toEqual([])
   })
 })
+

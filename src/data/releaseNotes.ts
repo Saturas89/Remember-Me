@@ -6,6 +6,14 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '2.12.0',
+    date: '2026-05-19',
+    highlights: [
+      '🔄 Verbindungsfehler werden automatisch bis zu 3× wiederholt – ohne sofortige Fehlermeldung.',
+      '↺ Neuer „Erneut versuchen"-Button nach erschöpften Verbindungsversuchen.',
+    ],
+  },
+  {
     version: '2.11.0',
     date: '2026-05-18',
     highlights: [

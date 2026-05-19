@@ -47,6 +47,7 @@ function makeSync(overrides: Partial<OnlineSyncAPI> = {}): OnlineSyncAPI {
     memories: [],
     annotations: [],
     refresh: vi.fn(async () => {}),
+    retryBootstrap: vi.fn(),
     service: {
       shareMemory: vi.fn(async () => ({ shareId: 'share-1' })),
       addAnnotation: vi.fn(async () => ({ annotationId: 'anno-1' })),
