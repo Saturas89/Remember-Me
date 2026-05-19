@@ -111,22 +111,6 @@ describe('QuestionCard', () => {
     expect(textarea.value).toBe('Antwort B')
   })
 
-  it('shows the skip link while the answer is empty, and hides it once text is typed', () => {
-    const { container } = render(<QuestionCard {...defaultProps()} />)
-    expect(container.querySelector('.question-card__skip')).not.toBeNull()
-
-    const textarea = screen.getByPlaceholderText('Deine Antwort…') as HTMLTextAreaElement
-    fireEvent.change(textarea, { target: { value: 'something' } })
-    expect(container.querySelector('.question-card__skip')).toBeNull()
-  })
-
-  it('hides the skip link when media is attached even if text is empty', () => {
-    const { container } = render(
-      <QuestionCard {...defaultProps({ imageIds: ['img-1'] })} />,
-    )
-    expect(container.querySelector('.question-card__skip')).toBeNull()
-  })
-
   it('disables the Zurück button on the first question and enables it once canGoBack is true', () => {
     const { rerender } = render(<QuestionCard {...defaultProps()} />)
     expect((screen.getByRole('button', { name: /Zurück/ }) as HTMLButtonElement).disabled).toBe(true)

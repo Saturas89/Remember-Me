@@ -9,6 +9,7 @@ import { useImageStore } from '../hooks/useImageStore'
 import { addAudio, removeAudio } from '../hooks/useAudioStore'
 import { addVideo, removeVideo } from '../hooks/useVideoStore'
 import { useTranslation } from '../locales'
+import { trackQuizQuestionSkipped } from '../lib/analytics'
 import type { InviteData, AnswerExport } from '../types'
 
 interface Props {
@@ -100,6 +101,17 @@ export function FriendAnswerView({ invite }: Props) {
   }
 
   function handleNext() {
+    const q = questions[index]
+    const hasAnswer =
+      q.type === 'text'
+        ? (localAnswers[q.id] ?? '').trim() !== '' ||
+          (localImageIds[q.id] ?? []).length > 0 ||
+          (localVideoIds[q.id] ?? []).length > 0 ||
+          !!localAudioIds[q.id]
+        : (localAnswers[q.id] ?? '') !== ''
+    if (!hasAnswer) {
+      trackQuizQuestionSkipped(topic.id, q.id, index, questions.length)
+    }
     if (index + 1 < questions.length) {
       setIndex(i => i + 1)
     } else {
