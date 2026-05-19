@@ -429,7 +429,7 @@ test.describe('Private Sync – Storyhold Server (Real-DB)', () => {
     await page2.getByRole('button', { name: 'Einrichten' }).click()
     await page2.getByRole('button', { name: /Storyhold Server/ }).click()
     await page2.getByRole('button', { name: 'Weiter' }).click()
-    await page2.getByRole('button', { name: /Ja, ich habe bereits ein Konto/ }).click()
+    await page2.getByRole('button', { name: /Ja, ich melde mich an/ }).click()
 
     // Sign-in Formular
     await expect(page2.getByRole('heading', { name: /Anmelden/, exact: false })).toBeVisible()
