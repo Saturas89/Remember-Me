@@ -116,7 +116,10 @@ export async function ensureAnonymousSession(): Promise<string> {
   const { data: existing } = await supabase.auth.getSession()
   if (existing.session?.user?.id) return existing.session.user.id
 
-  const { data, error } = await supabase.auth.signInAnonymously()
+  const isE2E = localStorage.getItem('traffic_type') === 'e2e'
+  const { data, error } = await supabase.auth.signInAnonymously(
+    isE2E ? { options: { data: { traffic_type: 'e2e' } } } : {},
+  )
   if (error) throw error
   if (!data.user?.id) throw new Error('supabase anonymous sign-in returned no user id')
   return data.user.id

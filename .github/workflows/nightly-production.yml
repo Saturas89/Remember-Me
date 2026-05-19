@@ -272,3 +272,34 @@ jobs:
           GITHUB_RUN_ID: ${{ github.run_id }}
           POSTHOG_PROJECT_ID: ${{ secrets.POSTHOG_PROJECT_ID }}
         run: node scripts/create-production-issue.mjs
+
+# ── Orphan cleanup ────────────────────────────────────────────────────────────
+  cleanup-e2e-users:
+    name: Cleanup orphaned e2e test users
+    needs: [production-nightly]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Cache node_modules
+        id: nm-cache
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: nm-${{ runner.os }}-node22-${{ hashFiles('package-lock.json') }}
+
+      - name: Install dependencies
+        if: steps.nm-cache.outputs.cache-hit != 'true'
+        run: npm ci
+
+      - name: Delete orphaned e2e users (older than 7 days)
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node scripts/cleanup-e2e-users.mjs
