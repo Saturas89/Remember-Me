@@ -1,4 +1,4 @@
-// Helpers for the real-DB Playwright suite (playwright.supabase.config.ts).
+// Helpers for the real-DB Playwright suite (playwright.nightly.config.ts).
 //
 // Key difference from e2e/helpers/family-mode-helpers.ts: spawnRealDevice does
 // NOT install the in-memory Supabase mock. Every Supabase call from the app

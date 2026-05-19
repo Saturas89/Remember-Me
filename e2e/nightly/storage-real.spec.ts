@@ -5,7 +5,7 @@
 // This catches CORS misconfigurations, CSP violations, and browser security
 // model issues that Vitest (Node.js) cannot detect.
 //
-// Runs via playwright.production-supabase.config.ts against the production Supabase instance.
+// Runs via playwright.production-nightly.config.ts against the production Supabase instance.
 // Requires:
 //   SUPABASE_URL              – production Supabase API URL
 //   SUPABASE_ANON_KEY         – production anon/public JWT

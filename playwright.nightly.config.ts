@@ -25,7 +25,7 @@ const SUPABASE_URL      = process.env.SUPABASE_URL      ?? 'http://127.0.0.1:543
 const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY ?? ''
 
 export default defineConfig({
-  testDir: './e2e/supabase',
+  testDir: './e2e/nightly',
   fullyParallel: false,
   workers: 1,
   forbidOnly: !!process.env.CI,

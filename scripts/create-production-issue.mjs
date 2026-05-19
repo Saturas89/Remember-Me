@@ -14,7 +14,7 @@ import { join }                                      from 'node:path'
 
 const REPORTS_DIR              = 'production-reports'
 const HARD_FAILED              = process.env.PRODUCTION_RESULT === 'failure' ||
-                                 process.env.PRODUCTION_SUPABASE_RESULT === 'failure'
+                                 process.env.PRODUCTION_NIGHTLY_RESULT === 'failure'
 const RUN_URL                  = process.env.RUN_URL         ?? '(no URL)'
 const GITHUB_RUN_ID            = process.env.GITHUB_RUN_ID   ?? ''
 const POSTHOG_PROJECT          = process.env.POSTHOG_PROJECT_ID ?? ''

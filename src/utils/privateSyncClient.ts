@@ -13,7 +13,7 @@ export function getSyncSupabaseClient(): SupabaseClient {
   }
   // In the production bundle VITE_E2E is compiled to 'false', so also check the
   // runtime localStorage marker that spawnRealDevice() sets. This activates the
-  // iPhone lock bypass in real-DB E2E runs (playwright.production-supabase.config)
+  // iPhone lock bypass in real-DB E2E runs (playwright.production-nightly.config)
   // where the bundle is served as-is from storyhold.app.
   const e2eMode = import.meta.env.VITE_E2E === 'true'
     || (typeof localStorage !== 'undefined' && localStorage.getItem('traffic_type') === 'e2e')

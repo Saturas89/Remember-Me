@@ -5,7 +5,7 @@ name: Nightly Production Tests
 #
 # Two parallel tracks:
 #   production-e2e      – smoke tests, 6 browsers in parallel (no Supabase needed)
-#   production-supabase – full share/RLS/storage suite against real Supabase, sequential
+#   production-nightly  – full real-DB suite (Supabase + Drive), sequential
 #
 # Traffic isolation: traffic_type=e2e is injected via localStorage so PostHog
 # can separate nightly sessions from real users without a separate instance.
@@ -15,7 +15,7 @@ name: Nightly Production Tests
 #
 # Secret management (GitHub Repository → Settings → Secrets → Actions):
 #
-#   Production Supabase (required for production-supabase job):
+#   Production backend (required for production-nightly job):
 #     SUPABASE_URL              – selber Wert wie VITE_SUPABASE_URL in Vercel (nicht geheim)
 #     SUPABASE_ANON_KEY         – selber Wert wie VITE_SUPABASE_ANON_KEY in Vercel (nicht geheim)
 #     SUPABASE_SERVICE_ROLE_KEY – service-role JWT für Admin-Cleanup, umgeht RLS (wirklich geheim!)
@@ -133,21 +133,24 @@ jobs:
           path: playwright-report/
           retention-days: 14
 
-# ── Track 2: Real-DB Supabase suite (6 Browser, parallel) ────────────────────
+# ── Track 2: Nightly Real-DB suite (6 Browser, parallel) ─────────────────────
 #
-# Runs the full e2e/supabase/ suite against the live production Supabase.
+# Runs the full e2e/nightly/ suite against the live production Supabase.
 # Each browser runs in its own job (matrix), so all 6 run in parallel.
 # Within each job: workers: 1 to prevent test-data interference on the shared DB.
 # Runtime budget: ≈ 20 min (down from ≈ 90 min sequential).
 #
 # Test suites:
-#   • e2e/supabase/two-device-real.spec.ts      – Alice→Bob share, RLS, Annotations
-#   • e2e/supabase/android-ux-real.spec.ts      – Mobile UX, tap targets, feed scroll
-#   • e2e/supabase/multi-recipient-real.spec.ts – Drei Geräte, mehrere Empfänger
-#   • e2e/supabase/private-sync-real.spec.ts    – Storyhold Server sync wizard
-#   • e2e/supabase/storage-real.spec.ts         – CORS + browser context storage RLS
-  production-supabase:
-    name: Production Supabase – ${{ matrix.entry.name }}
+#   • e2e/nightly/two-device-real.spec.ts              – Alice→Bob share, RLS, Annotations
+#   • e2e/nightly/android-ux-real.spec.ts              – Mobile UX, tap targets, feed scroll
+#   • e2e/nightly/multi-recipient-real.spec.ts         – Drei Geräte, mehrere Empfänger
+#   • e2e/nightly/private-sync-real.spec.ts            – Storyhold Server sync wizard
+#   • e2e/nightly/storage-real.spec.ts                 – CORS + browser context storage RLS
+#   • e2e/nightly/chaos-real.spec.ts                   – Abbruch-Pfade, falsche Credentials
+#   • e2e/nightly/gdrive-device-switch.spec.ts         – Google Drive Gerätewechsel
+#   • e2e/nightly/invitation-existing-profile.spec.ts  – Einladungslink Datenschutz
+  production-nightly:
+    name: Production Nightly – ${{ matrix.entry.name }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     strategy:
@@ -200,7 +203,7 @@ jobs:
         if: steps.pw-cache.outputs.cache-hit != 'true'
         run: npx playwright install --with-deps ${{ matrix.entry.engine }}
 
-      - name: Run production Supabase E2E tests
+      - name: Run production nightly E2E tests
         env:
           GITHUB_RUN_ID: ${{ github.run_id }}
           BROWSER_PROFILE: ${{ matrix.entry.project }}
@@ -209,7 +212,7 @@ jobs:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: >
           npx playwright test
-          --config=playwright.production-supabase.config.ts
+          --config=playwright.production-nightly.config.ts
           --project=${{ matrix.entry.project }}
 
       - name: Summarize flaky tests
@@ -219,17 +222,17 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:
-          # Named production-report-supabase-<browser> to match the production-report-* pattern
+          # Named production-report-nightly-<browser> to match the production-report-* pattern
           # in the create-issue download step.
-          name: production-report-supabase-${{ matrix.entry.name }}
+          name: production-report-nightly-${{ matrix.entry.name }}
           path: playwright-report/
           retention-days: 14
 
 # ── Issue creation ────────────────────────────────────────────────────────────
   create-issue:
     name: Open GitHub Issue on failure / flakiness
-    needs: [production-e2e, production-supabase]
-    if: always() && needs.production-e2e.result != 'cancelled' && needs.production-supabase.result != 'cancelled'
+    needs: [production-e2e, production-nightly]
+    if: always() && needs.production-e2e.result != 'cancelled' && needs.production-nightly.result != 'cancelled'
     runs-on: ubuntu-latest
     permissions:
       issues: write
@@ -253,7 +256,7 @@ jobs:
         run: npm ci
 
       # Downloads all production-report-* artifacts into production-reports/
-      # (both production-report-{browser} and production-report-supabase).
+      # (both production-report-{browser} and production-report-nightly).
       - name: Download all Playwright reports
         uses: actions/download-artifact@v4
         with:
@@ -264,7 +267,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PRODUCTION_RESULT: ${{ needs.production-e2e.result }}
-          PRODUCTION_SUPABASE_RESULT: ${{ needs.production-supabase.result }}
+          PRODUCTION_NIGHTLY_RESULT: ${{ needs.production-nightly.result }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           GITHUB_RUN_ID: ${{ github.run_id }}
           POSTHOG_PROJECT_ID: ${{ secrets.POSTHOG_PROJECT_ID }}
