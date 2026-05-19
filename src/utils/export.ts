@@ -56,7 +56,7 @@ export function downloadFile(content: string, filename: string, mime: string): v
 }
 
 // ── Raw backup (for restore / re-install) ─────────────────
-export const BACKUP_TYPE = 'remember-me-backup'
+export const BACKUP_TYPE = 'storyhold-backup'
 
 export interface BackupPayload {
   $type: typeof BACKUP_TYPE
