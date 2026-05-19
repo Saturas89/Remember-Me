@@ -63,7 +63,7 @@ describe('exportAsBackup', () => {
   })
 
   it('sets BACKUP_TYPE to the expected value', () => {
-    expect(BACKUP_TYPE).toBe('remember-me-backup')
+    expect(BACKUP_TYPE).toBe('storyhold-backup')
   })
 
   it('sets version to 2', () => {
