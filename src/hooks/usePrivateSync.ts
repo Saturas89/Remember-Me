@@ -99,9 +99,12 @@ export function usePrivateSync(
     // headless WebKit reports `navigator.onLine === false` and the
     // property cannot be overridden via Object.defineProperty on Safari
     // (non-configurable), so the E2E suite would otherwise be unable to
-    // exercise the sync pipeline at all. The VITE_E2E gate keeps the
-    // production guard intact for real users.
-    if (!navigator.onLine && import.meta.env.VITE_E2E !== 'true') return
+    // exercise the sync pipeline at all. VITE_E2E covers the local dev
+    // suite; the localStorage marker covers real-DB nightly runs against
+    // the production bundle (where VITE_E2E is compiled to 'false').
+    const isE2ESession = import.meta.env.VITE_E2E === 'true'
+      || (typeof localStorage !== 'undefined' && localStorage.getItem('traffic_type') === 'e2e')
+    if (!navigator.onLine && !isE2ESession) return
     const provider = await getProvider()
     if (!provider) return
 

@@ -218,7 +218,7 @@ test.describe('Private Sync – Storyhold Server (Real-DB)', () => {
   test('sync-write: nach Sync liegt ein verschlüsselter Blob in private_sync_state', async ({
     browser,
   }) => {
-    test.setTimeout(90_000)
+    test.setTimeout(150_000)
     const { ctx, page } = await spawnRealDevice(browser)
 
     await completeOnboarding(page, 'Berta')
@@ -229,8 +229,11 @@ test.describe('Private Sync – Storyhold Server (Real-DB)', () => {
     expect(userId).toBeTruthy()
     createdUsers.push(userId!)
 
-    // Trigger a state change → auto-sync fires after 5 s.
-    // Add an answer so the app has something to sync.
+    // Trigger a state change so the debounce (DEBOUNCE_MS = 30 s) fires.
+    // bridge.save() writes to localStorage/_currentState without going
+    // through React state, so the debounce is not reset — it fires once,
+    // 30 s after providerType changed from null→'supabase' at wizard end.
+    // Poll timeout must exceed DEBOUNCE_MS + sync round-trip time.
     await page.evaluate(() => {
       const bridge = (window as unknown as { __rmState?: { get: () => Record<string, unknown> | null; save: (s: unknown) => void } }).__rmState
       const state = bridge?.get() ?? {}
@@ -241,7 +244,6 @@ test.describe('Private Sync – Storyhold Server (Real-DB)', () => {
       bridge?.save(state)
     })
 
-    // Wait up to 15 s for auto-sync to fire
     await expect
       .poll(
         async () => {
@@ -252,7 +254,7 @@ test.describe('Private Sync – Storyhold Server (Real-DB)', () => {
             .maybeSingle()
           return Boolean(data?.state_ct)
         },
-        { timeout: 30_000, intervals: [2_000] },
+        { timeout: 90_000, intervals: [3_000] },
       )
       .toBe(true)
 
@@ -272,7 +274,7 @@ test.describe('Private Sync – Storyhold Server (Real-DB)', () => {
   // ── RLS-Isolation ─────────────────────────────────────────────────────────
 
   test('rls-isolation: User B kann User As Sync-Zeile nicht lesen', async ({ browser }) => {
-    test.setTimeout(90_000)
+    test.setTimeout(210_000)
     const { ctx: ctxA, page: pageA } = await spawnRealDevice(browser)
     const { ctx: ctxB, page: pageB } = await spawnRealDevice(browser)
 
@@ -306,7 +308,7 @@ test.describe('Private Sync – Storyhold Server (Real-DB)', () => {
           const { data } = await admin.from('private_sync_state').select('user_id').eq('user_id', userIdA!)
           return (data?.length ?? 0) > 0
         },
-        { timeout: 30_000, intervals: [2_000] },
+        { timeout: 90_000, intervals: [3_000] },
       )
       .toBe(true)
 
@@ -332,7 +334,7 @@ test.describe('Private Sync – Storyhold Server (Real-DB)', () => {
   // ── Deaktivierung ─────────────────────────────────────────────────────────
 
   test('deactivate: „Cloud löschen" entfernt Zeile aus private_sync_state', async ({ browser }) => {
-    test.setTimeout(90_000)
+    test.setTimeout(180_000)
     const { ctx, page } = await spawnRealDevice(browser)
 
     await completeOnboarding(page, 'Cara')
@@ -359,7 +361,7 @@ test.describe('Private Sync – Storyhold Server (Real-DB)', () => {
           const { data } = await admin.from('private_sync_state').select('user_id').eq('user_id', userId!)
           return (data?.length ?? 0) > 0
         },
-        { timeout: 30_000, intervals: [2_000] },
+        { timeout: 90_000, intervals: [3_000] },
       )
       .toBe(true)
 
@@ -389,7 +391,7 @@ test.describe('Private Sync – Storyhold Server (Real-DB)', () => {
   // ── Zweites Gerät / Sign-in ───────────────────────────────────────────────
 
   test('new-device: Sign-in auf zweitem Gerät stellt Sync wieder her', async ({ browser }) => {
-    test.setTimeout(120_000)
+    test.setTimeout(210_000)
     const { ctx: ctx1, page: page1 } = await spawnRealDevice(browser)
     const { ctx: ctx2, page: page2 } = await spawnRealDevice(browser)
 
@@ -417,7 +419,7 @@ test.describe('Private Sync – Storyhold Server (Real-DB)', () => {
           const { data } = await admin.from('private_sync_state').select('user_id').eq('user_id', userId!)
           return (data?.length ?? 0) > 0
         },
-        { timeout: 30_000, intervals: [2_000] },
+        { timeout: 90_000, intervals: [3_000] },
       )
       .toBe(true)
 
