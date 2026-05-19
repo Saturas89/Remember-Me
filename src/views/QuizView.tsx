@@ -7,6 +7,7 @@ import { addAudio, removeAudio } from '../hooks/useAudioStore'
 import { addVideo, removeVideo } from '../hooks/useVideoStore'
 import {
   trackQuizStarted, trackQuizCompleted, trackQuizAbandoned, trackQuizMediaAdded,
+  trackQuizQuestionSkipped,
 } from '../lib/analytics'
 import type { Category } from '../types'
 
@@ -101,6 +102,13 @@ export function QuizView({
   }
 
   function handleNext() {
+    const hasAnswer =
+      question.type === 'text'
+        ? getAnswer(question.id).trim() !== '' || imageIds.length > 0 || videoIds.length > 0 || !!audioId
+        : getAnswer(question.id) !== ''
+    if (!hasAnswer) {
+      trackQuizQuestionSkipped(category.id, question.id, index, category.questions.length)
+    }
     if (index + 1 < category.questions.length) {
       setIndex(i => i + 1)
     } else {

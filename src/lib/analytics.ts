@@ -81,6 +81,20 @@ export function trackQuizMediaAdded(categoryId: string, mediaType: 'image' | 'vi
   posthog.capture('quiz_media_added', { category_id: categoryId, media_type: mediaType })
 }
 
+export function trackQuizQuestionSkipped(
+  categoryId: string,
+  questionId: string,
+  questionIndex: number,
+  questionCount: number,
+): void {
+  posthog.capture('quiz_question_skipped', {
+    category_id: categoryId,
+    question_id: questionId,
+    question_index: questionIndex,
+    question_count: questionCount,
+  })
+}
+
 // ── Onboarding ───────────────────────────────────────────────────────────────
 
 export function trackOnboardingStarted(): void {

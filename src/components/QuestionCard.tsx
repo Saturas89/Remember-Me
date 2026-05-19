@@ -44,11 +44,6 @@ export function QuestionCard({
     onSave(next)
   }
 
-  const hasAnswer =
-    question.type === 'text'
-      ? value.trim() !== '' || imageIds.length > 0 || videoIds.length > 0 || !!audioId
-      : value !== ''
-
   return (
     <div className="question-card">
       <div className="question-card__meta">
@@ -145,11 +140,6 @@ export function QuestionCard({
         </button>
       </div>
 
-      {!hasAnswer && (
-        <button type="button" className="question-card__skip" onClick={onNext}>
-          {t.questionCard.skipButton}
-        </button>
-      )}
     </div>
   )
 }
