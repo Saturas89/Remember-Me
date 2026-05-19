@@ -18,6 +18,8 @@ export function initPostHog(): void {
   const key = import.meta.env.VITE_POSTHOG_KEY as string | undefined
   if (!key) return
 
+  const trafficType = getTrafficType()
+
   posthog.init(key, {
     api_host: 'https://eu.i.posthog.com',
     ui_host: 'https://eu.posthog.com',
@@ -29,9 +31,10 @@ export function initPostHog(): void {
     disable_session_recording: false,
     // IP disabled by default on EU Cloud, make it explicit
     ip: false,
+    // Disable batching for e2e/internal so events are sent immediately –
+    // Playwright closes the browser before the 3 s flush window expires.
+    request_batching: trafficType === 'real-user',
   })
-
-  const trafficType = getTrafficType()
   const githubRunId = localStorage.getItem('github_run_id') ?? undefined
   const testRunId = localStorage.getItem('test_run_id') ?? undefined
   const browserProfile = localStorage.getItem('browser_profile') ?? undefined
