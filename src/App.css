@@ -5326,10 +5326,17 @@ details[open] .faq-item__chevron {
 .online-tabs {
   display: flex;
   gap: 0.4rem;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
   border-bottom: 1px solid var(--border);
   margin-bottom: 1.25rem;
   padding-bottom: 0.25rem;
+}
+
+.online-tabs::-webkit-scrollbar {
+  display: none;
 }
 
 .online-tab {
