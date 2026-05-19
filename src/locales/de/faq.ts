@@ -25,7 +25,7 @@ export const FAQ_DE = [
       },
       {
         q: 'Warum steht Storyhold unter der AGPL-Lizenz?',
-        a: 'Wir wollen ein Versprechen einlösen, nicht nur Marketing: Storyhold bleibt offen. Du kannst den Quellcode auf GitHub einsehen und dich selbst davon überzeugen, dass deine Lebensgeschichte privat bleibt – und du kannst Storyhold sogar selbst hosten, wenn du das möchtest. Die AGPL-3.0-Lizenz stellt zusätzlich sicher, dass auch zukünftige Versionen offen bleiben, auch wenn jemand anders Storyhold weiterbetreibt. Mehr Details zur Trennung zwischen offenem Kern und serverseitigen Premium-Komponenten findest du in der Projekt-Dokumentation.',
+        a: 'Wir wollen ein Versprechen einlösen, nicht nur Marketing: Storyhold bleibt offen. Du kannst den Quellcode auf GitHub einsehen und dich selbst davon überzeugen, dass deine Lebensgeschichte privat bleibt – und du kannst Storyhold sogar selbst hosten, wenn du das möchtest. Die AGPL-3.0-Lizenz stellt zusätzlich sicher, dass auch zukünftige Versionen offen bleiben, auch wenn jemand anders Storyhold weiterbetreibt.',
       },
     ],
   },

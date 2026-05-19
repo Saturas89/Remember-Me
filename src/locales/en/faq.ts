@@ -25,7 +25,7 @@ export const FAQ_EN = [
       },
       {
         q: 'Why is Storyhold released under the AGPL license?',
-        a: 'We want to back up a promise, not just marketing: Storyhold stays open. You can inspect the source code on GitHub and verify for yourself that your life story stays private – and you can even self-host Storyhold if you want to. On top of that, the AGPL-3.0 license makes sure future versions stay open too, even if somebody else takes over running Storyhold. More details on how the open core is separated from the server-side premium components are in the project documentation.',
+        a: 'We want to back up a promise, not just marketing: Storyhold stays open. You can inspect the source code on GitHub and verify for yourself that your life story stays private – and you can even self-host Storyhold if you want to. On top of that, the AGPL-3.0 license makes sure future versions stay open too, even if somebody else takes over running Storyhold.',
       },
     ],
   },
