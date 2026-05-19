@@ -11,6 +11,14 @@ export function getSyncSupabaseClient(): SupabaseClient {
   if (!url || !anonKey) {
     throw new Error('Supabase not configured (missing VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY)')
   }
+  // In the production bundle VITE_E2E is compiled to 'false', so also check the
+  // runtime localStorage marker that spawnRealDevice() sets. This activates the
+  // iPhone lock bypass in real-DB E2E runs (playwright.production-supabase.config)
+  // where the bundle is served as-is from storyhold.app.
+  const e2eMode = import.meta.env.VITE_E2E === 'true'
+    || (typeof localStorage !== 'undefined' && localStorage.getItem('traffic_type') === 'e2e')
+  const iPhoneInE2E = e2eMode && typeof navigator !== 'undefined' && /iPhone/.test(navigator.userAgent)
+
   _syncClient = createClient(url, anonKey, {
     auth: {
       persistSession: true,
@@ -24,9 +32,9 @@ export function getSyncSupabaseClient(): SupabaseClient {
       // the OAuth-CSRF window the implicit flow left open. See REQ-017
       // security audit Critical #2.
       flowType: 'pkce',
-      ...(import.meta.env.VITE_E2E === 'true'
+      ...(e2eMode
         ? {
-            lock: typeof navigator !== 'undefined' && /iPhone/.test(navigator.userAgent)
+            lock: iPhoneInE2E
               ? <R>(_: string, __: number, fn: () => Promise<R>) => fn()
               : undefined,
           }
@@ -35,7 +43,7 @@ export function getSyncSupabaseClient(): SupabaseClient {
     global: { fetch: fetchWithTimeout },
   })
 
-  if (import.meta.env.VITE_E2E === 'true' && typeof navigator !== 'undefined' && /iPhone/.test(navigator.userAgent)) {
+  if (iPhoneInE2E) {
     const iPhoneLock = <R>(_: string, __: number, fn: () => Promise<R>) => fn()
     const injectedAuth = new GoTrueClient({
       url: `${url}/auth/v1`,

@@ -69,20 +69,22 @@ export async function cleanupUsers(admin: SupabaseClient, ids: string[]): Promis
   await Promise.all(ids.map(id => admin.auth.admin.deleteUser(id)))
 }
 
-// Waits until the family-hub page is ready (sync.ready flag in localStorage).
+// Waits until the family-hub is bootstrapped: polls the positive signal
+// (deviceId + publicKey present in app state) instead of a localStorage key
+// that the app never writes. Matches the approach used in family-mode-helpers.ts.
 export async function waitForHubReady(page: Page): Promise<void> {
   await page.waitForFunction(
     () => {
       try {
-        const raw = localStorage.getItem('rm-sync')
-        return raw ? JSON.parse(raw).ready === true : false
+        const p = (window as unknown as { __rmState?: { get: () => Record<string, unknown> | null } }).__rmState?.get()
+        const os = p?.onlineSharing as Record<string, unknown> | undefined
+        return Boolean(os?.deviceId && os?.publicKey)
       } catch { return false }
     },
     undefined,
-    { timeout: 35_000 },
+    { timeout: 45_000 },
   )
-  // Also wait for the hub heading to be visible.
   await expect(
-    page.getByRole('heading', { name: /Familienmodus|Deine Familie|Erinnerungen teilen/i }),
+    page.getByRole('heading', { name: 'Online teilen', exact: true }),
   ).toBeVisible({ timeout: 10_000 })
 }

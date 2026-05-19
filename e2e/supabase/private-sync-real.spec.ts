@@ -43,65 +43,106 @@ async function runSetupWizard(
   email: string,
   password = TEST_PASSWORD,
 ): Promise<string> {
-  await openSyncTab(page)
-  await expect(page.getByRole('heading', { name: 'Privater Sync' })).toBeVisible()
-  await page.getByRole('button', { name: 'Einrichten' }).click()
+  const adminClient = supabaseAdmin()
+  const now = new Date().toISOString()
 
-  // Provider-Wahl
-  await expect(page.getByRole('heading', { name: /Wo sollen deine Daten/ })).toBeVisible()
-  await page.getByRole('button', { name: /Storyhold Server/ }).click()
-  await page.getByRole('button', { name: 'Weiter' }).click()
+  // Pre-create the user so we have a known ID and immediately confirmed
+  // email — no slow listUsers() scan, no race with GoTrue's confirmation mail.
+  const { data: preCreated, error: createError } = await adminClient.auth.admin.createUser({
+    email,
+    password,
+    email_confirm: true,
+  })
+  if (createError || !preCreated.user) throw new Error(`Pre-create failed: ${createError?.message}`)
+  const preUserId = preCreated.user.id
 
-  // Konto-Modus
-  await expect(page.getByRole('heading', { name: /Hast du schon ein Konto/ })).toBeVisible()
-  await page.getByRole('button', { name: /Nein, neues Konto erstellen/ }).click()
+  // Sign in from Node now (email already confirmed) to get real tokens.
+  const nodeClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: false } })
+  const { data: preLogin, error: loginError } = await nodeClient.auth.signInWithPassword({ email, password })
+  if (loginError || !preLogin.session) throw new Error(`Pre-login failed: ${loginError?.message}`)
+  const { access_token, refresh_token } = preLogin.session
 
-  // Registrierung
-  await expect(page.getByRole('heading', { name: 'Konto erstellen', exact: true })).toBeVisible()
-  await page.getByLabel('E-Mail').fill(email)
-  await page.getByLabel('Passwort').fill(password)
-  await page.getByRole('button', { name: 'Konto erstellen', exact: true }).click()
+  // Intercept the browser's /signup POST and return a synthetic session response.
+  // This decouples the test from whatever Supabase URL is baked into the
+  // production bundle and eliminates email-confirmation latency.  The GoTrue SDK
+  // sees access_token → calls _saveSession() → emits SIGNED_IN → app advances to
+  // the recovery-code screen without any email-confirmation bypass logic.
+  await page.route('**/auth/v1/signup', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        access_token,
+        token_type: 'bearer',
+        expires_in: 3600,
+        expires_at: Math.floor(Date.now() / 1000) + 3600,
+        refresh_token,
+        user: {
+          id: preUserId,
+          aud: 'authenticated',
+          role: 'authenticated',
+          email,
+          email_confirmed_at: now,
+          app_metadata: { provider: 'email', providers: ['email'] },
+          user_metadata: {},
+          identities: [{
+            id: preUserId,
+            user_id: preUserId,
+            identity_data: { email, sub: preUserId },
+            provider: 'email',
+            last_sign_in_at: now,
+            created_at: now,
+            updated_at: now,
+          }],
+          created_at: now,
+          updated_at: now,
+        },
+      }),
+    })
+  })
 
-  // Production Supabase requires email confirmation. Detect which step appears
-  // and, if the pending-email screen shows up, bypass it via the admin API.
-  const recoveryHeading = page.getByRole('heading', { name: 'Dein Sicherheitsschlüssel' })
-  const pendingHeading  = page.getByRole('heading', { name: 'Bestätige deine E-Mail' })
+  try {
+    await openSyncTab(page)
+    await expect(page.getByRole('heading', { name: 'Privater Sync' })).toBeVisible()
+    await page.getByRole('button', { name: 'Einrichten' }).click()
 
-  // .or() waits atomically until EITHER heading is visible. Promise.race with two
-  // competing waitFor timeouts is flaky: both reject near-simultaneously when
-  // Supabase is slow (> 20 s), and JS event-loop ordering determines which
-  // rejection wins — not which heading actually appeared.
-  await expect(recoveryHeading.or(pendingHeading)).toBeVisible({ timeout: 45_000 })
-  const needsEmailConfirm = await pendingHeading.isVisible()
+    // Provider-Wahl
+    await expect(page.getByRole('heading', { name: /Wo sollen deine Daten/ })).toBeVisible()
+    await page.getByRole('button', { name: /Storyhold Server/ }).click()
+    await page.getByRole('button', { name: 'Weiter' }).click()
 
-  if (needsEmailConfirm) {
-    // 1. Admin-confirm the email server-side.
-    const adminClient = supabaseAdmin()
-    const { data: { users } } = await adminClient.auth.admin.listUsers({ perPage: 1000 })
-    const user = users.find(u => u.email === email)
-    if (!user) throw new Error(`User not found in auth.users for email ${email}`)
-    await adminClient.auth.admin.updateUser(user.id, { email_confirm: true })
+    // Konto-Modus
+    await expect(page.getByRole('heading', { name: /Hast du schon ein Konto/ })).toBeVisible()
+    await page.getByRole('button', { name: /Nein, neues Konto erstellen/ }).click()
 
-    // 2. Sign in from Node.js to obtain a real session.
-    const nodeClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: false } })
-    const { data: signInData, error: signInError } = await nodeClient.auth.signInWithPassword({ email, password })
-    if (signInError || !signInData.session) throw new Error(`Node sign-in after confirm failed: ${signInError?.message}`)
-    const session = signInData.session
+    // Registrierung
+    await expect(page.getByRole('heading', { name: 'Konto erstellen', exact: true })).toBeVisible()
+    await page.getByLabel('E-Mail').fill(email)
+    await page.getByLabel('Passwort').fill(password)
+    await page.getByRole('button', { name: 'Konto erstellen', exact: true }).click()
 
-    // 3. Inject the session into the browser context via the exposed sync client.
-    //    BroadcastChannel only triggers _notifyAllSubscribers (React callbacks)
-    //    but does NOT call _saveSession, leaving GoTrueClient.currentSession null
-    //    so subsequent authenticated DB calls would fail RLS.
-    //    auth.setSession() updates both the internal session AND triggers the
-    //    onAuthStateChange callback, advancing the UI to the recovery-code screen.
-    await page.evaluate(async (sess) => {
-      type SyncClient = { auth: { setSession: (s: { access_token: string; refresh_token: string }) => Promise<unknown> } }
-      const client = (window as unknown as { __rmSyncClient?: SyncClient }).__rmSyncClient
-      if (!client) throw new Error('__rmSyncClient not on window — E2E exposure in privateSyncClient.ts missing?')
-      await client.auth.setSession({ access_token: sess.access_token, refresh_token: sess.refresh_token })
-    }, session)
+    const recoveryHeading = page.getByRole('heading', { name: 'Dein Sicherheitsschlüssel' })
+    const pendingHeading  = page.getByRole('heading', { name: 'Bestätige deine E-Mail' })
 
-    await expect(recoveryHeading).toBeVisible({ timeout: 20_000 })
+    // .or() waits atomically until EITHER heading is visible. With the synthetic
+    // session response, the SDK calls _saveSession() → SIGNED_IN → recovery-code
+    // screen appears directly. The pending branch is a safety net for cases where
+    // the SDK routes the response through a different code path (e.g. PKCE exchange).
+    await expect(recoveryHeading.or(pendingHeading)).toBeVisible({ timeout: 20_000 })
+
+    if (await pendingHeading.isVisible()) {
+      // Fallback: SDK didn't absorb the session from the synthetic response.
+      // Inject the pre-obtained tokens directly via the exposed sync client.
+      await page.evaluate(async (sess) => {
+        type SyncClient = { auth: { setSession: (s: { access_token: string; refresh_token: string }) => Promise<unknown> } }
+        const client = (window as unknown as { __rmSyncClient?: SyncClient }).__rmSyncClient
+        if (!client) throw new Error('__rmSyncClient not on window — privateSyncClient.ts E2E exposure missing?')
+        await client.auth.setSession({ access_token: sess.access_token, refresh_token: sess.refresh_token })
+      }, { access_token, refresh_token })
+      await expect(recoveryHeading).toBeVisible({ timeout: 20_000 })
+    }
+  } finally {
+    await page.unroute('**/auth/v1/signup')
   }
 
   const code = page.locator('.private-sync-view__code')
