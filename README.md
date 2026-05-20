@@ -66,9 +66,4 @@ Repository ist Open Source — du kannst ihn inspizieren, selbst hosten und
 weiterentwickeln, solange Modifikationen (auch von Netzwerk-Diensten) unter
 derselben Lizenz veröffentlicht werden.
 
-Die serverseitigen Premium-Komponenten (`saturas89/remember-me-pro`,
-Supabase Edge Functions) sind **proprietär** und nicht Teil dieses Repos.
-Die Architektur-Begründung steht in
-[ADR-001](./docs/architecture/ADR-001-open-source-vs-proprietary.md).
-
 Beiträge sind willkommen – siehe [`CONTRIBUTING.md`](./docs/guides/CONTRIBUTING.md).
