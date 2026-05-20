@@ -1,0 +1,8 @@
+title: "[Announcement] "
+labels:
+  - announcement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Official announcements from the Storyhold maintainers.
