@@ -1,7 +1,7 @@
-import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest'
+import { describe, it, expect, vi, afterEach } from 'vitest'
 import { render, cleanup, fireEvent, act, waitFor } from '@testing-library/react'
 import { OnlineSharingHubView } from './OnlineSharingHubView'
-import type { Friend, Answer } from '../types'
+import type { Friend } from '../types'
 import type { OnlineSyncAPI } from '../hooks/useOnlineSync'
 
 // ── Module mocks ──────────────────────────────────────────────────────────────
@@ -18,24 +18,23 @@ afterEach(cleanup)
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────
 
-const FRIEND: Friend = {
+const FRIEND_SHARING: Friend = {
   id: 'friend-1',
-  name: 'H',
+  name: 'Henrietta',
   addedAt: '2024-01-01T00:00:00.000Z',
   online: {
     deviceId: 'device-h',
     publicKey: 'pubKeyH',
     linkedAt: '2024-01-01T00:00:00.000Z',
+    shareAll: true,
   },
 }
 
-const ANSWER: Answer = {
-  id: 'q-test-1',
-  questionId: 'q-test-1',
-  categoryId: 'test',
-  value: 'Jj',
-  createdAt: '2024-01-01T00:00:00.000Z',
-  updatedAt: '2024-01-01T00:00:00.000Z',
+const FRIEND_PAUSED: Friend = {
+  ...FRIEND_SHARING,
+  id: 'friend-2',
+  name: 'Pauline',
+  online: { ...FRIEND_SHARING.online!, deviceId: 'device-p', shareAll: false },
 }
 
 function makeSync(overrides: Partial<OnlineSyncAPI> = {}): OnlineSyncAPI {
@@ -50,6 +49,8 @@ function makeSync(overrides: Partial<OnlineSyncAPI> = {}): OnlineSyncAPI {
     retryBootstrap: vi.fn(),
     service: {
       shareMemory: vi.fn(async () => ({ shareId: 'share-1' })),
+      shareMemoryToAllFriends: vi.fn(async () => ({ shareId: 'share-1' })),
+      unshareAllWithFriend: vi.fn(async () => {}),
       addAnnotation: vi.fn(async () => ({ annotationId: 'anno-1' })),
       fetchIncomingShares: vi.fn(async () => ({ memories: [], annotations: [] })),
     } as unknown as OnlineSyncAPI['service'],
@@ -57,215 +58,162 @@ function makeSync(overrides: Partial<OnlineSyncAPI> = {}): OnlineSyncAPI {
   }
 }
 
-function renderHub(
-  syncOverrides: Partial<OnlineSyncAPI> = {},
-  friends: Friend[] = [FRIEND],
-  answers: Record<string, Answer> = { [ANSWER.id]: ANSWER },
-) {
+interface RenderArgs {
+  syncOverrides?: Partial<OnlineSyncAPI>
+  friends?: Friend[]
+}
+
+function renderHub({ syncOverrides = {}, friends = [FRIEND_SHARING] }: RenderArgs = {}) {
   const sync = makeSync(syncOverrides)
   const onBack = vi.fn()
   const onDeactivate = vi.fn()
   const onRemoveContact = vi.fn()
-  const { container } = render(
+  const onOpenSandraFlow = vi.fn()
+  const onSetFriendShareAll = vi.fn()
+  const view = render(
     <OnlineSharingHubView
       profileName="Test"
       friends={friends}
-      answers={answers}
       sync={sync}
       onBack={onBack}
       onDeactivate={onDeactivate}
       onRemoveContact={onRemoveContact}
+      onOpenSandraFlow={onOpenSandraFlow}
+      onSetFriendShareAll={onSetFriendShareAll}
     />,
   )
+  return {
+    ...view,
+    sync,
+    onBack,
+    onDeactivate,
+    onRemoveContact,
+    onOpenSandraFlow,
+    onSetFriendShareAll,
+  }
+}
 
-  // Navigate to the Teilen tab
+function switchToTab(container: HTMLElement, label: string) {
   const tabs = container.querySelectorAll<HTMLButtonElement>('[role="tab"]')
-  const teilenTab = Array.from(tabs).find(t => t.textContent?.trim() === 'Teilen')
-  if (teilenTab) fireEvent.click(teilenTab)
-
-  return { container, sync, onBack, onDeactivate, onRemoveContact }
+  const target = Array.from(tabs).find(t => t.textContent?.trim().startsWith(label))
+  expect(target, `Tab "${label}" must exist`).toBeTruthy()
+  fireEvent.click(target!)
 }
 
-function renderContactsTab(
-  friends: Friend[] = [FRIEND],
-) {
-  const sync = makeSync()
-  const onRemoveContact = vi.fn()
-  const { container } = render(
-    <OnlineSharingHubView
-      profileName="Test"
-      friends={friends}
-      answers={{ [ANSWER.id]: ANSWER }}
-      sync={sync}
-      onBack={vi.fn()}
-      onDeactivate={vi.fn()}
-      onRemoveContact={onRemoveContact}
-    />,
-  )
+// ── Tab-Konfiguration ────────────────────────────────────────────────────────
 
-  // Navigate to the Einladen (contacts) tab
-  const tabs = container.querySelectorAll<HTMLButtonElement>('[role="tab"]')
-  const contactsTab = Array.from(tabs).find(t => t.textContent?.trim() === 'Einladen')
-  if (contactsTab) fireEvent.click(contactsTab)
-
-  return { container, onRemoveContact }
-}
-
-function getShareBtn(container: HTMLElement) {
-  return container.querySelector<HTMLButtonElement>('.share-cta-btn')
-}
-
-function selectMemory(container: HTMLElement) {
-  const radio = container.querySelector<HTMLInputElement>(`input[type="radio"][value="${ANSWER.id}"]`)!
-  fireEvent.click(radio)
-}
-
-function checkFriend(container: HTMLElement) {
-  const checkbox = container.querySelector<HTMLInputElement>('input[type="checkbox"]')!
-  fireEvent.click(checkbox)
-}
-
-// ── ShareTab – Button-Zustand ─────────────────────────────────────────────────
-
-describe('ShareTab – Button-Zustand', () => {
-  it('zeigt "Verschlüssele & sende" im Idle-Zustand', () => {
+describe('OnlineSharingHubView – Tabs', () => {
+  it('zeigt nur Feed / Kontakte / Einstellungen (kein "Teilen" mehr)', () => {
     const { container } = renderHub()
-    const btn = getShareBtn(container)!
-    expect(btn.textContent?.trim()).toBe('Verschlüssele & sende')
-  })
-
-  it('Button ist deaktiviert wenn keine Erinnerung gewählt ist', () => {
-    const { container } = renderHub()
-    checkFriend(container)
-    expect(getShareBtn(container)!.disabled).toBe(true)
-  })
-
-  it('Button ist deaktiviert wenn kein Empfänger gewählt ist', () => {
-    const { container } = renderHub()
-    selectMemory(container)
-    expect(getShareBtn(container)!.disabled).toBe(true)
-  })
-
-  it('Button ist deaktiviert wenn sync.service null ist', () => {
-    const { container } = renderHub({ service: null })
-    selectMemory(container)
-    checkFriend(container)
-    expect(getShareBtn(container)!.disabled).toBe(true)
-  })
-
-  it('Button ist aktiv wenn Erinnerung + Empfänger + Service vorhanden sind', () => {
-    const { container } = renderHub()
-    selectMemory(container)
-    checkFriend(container)
-    expect(getShareBtn(container)!.disabled).toBe(false)
+    const labels = Array.from(
+      container.querySelectorAll<HTMLButtonElement>('[role="tab"]'),
+    ).map(t => t.textContent?.trim())
+    expect(labels.some(l => l?.startsWith('Feed'))).toBe(true)
+    expect(labels.some(l => l?.startsWith('Kontakte'))).toBe(true)
+    expect(labels.some(l => l?.startsWith('Einstellungen'))).toBe(true)
+    expect(labels.some(l => l === 'Teilen')).toBe(false)
   })
 })
 
-// ── ShareTab – Sende-Flow ─────────────────────────────────────────────────────
+// ── FeedTab Empty-States ──────────────────────────────────────────────────────
 
-describe('ShareTab – Sende-Flow', () => {
-  it('deaktiviert den Button während des Sendens', async () => {
-    let resolve!: () => void
-    const hanging = new Promise<{ shareId: string }>(r => { resolve = () => r({ shareId: 'x' }) })
-    const { container } = renderHub({
-      service: { shareMemory: vi.fn(() => hanging) } as unknown as OnlineSyncAPI['service'],
-    })
-    selectMemory(container)
-    checkFriend(container)
-
-    await act(async () => { fireEvent.click(getShareBtn(container)!) })
-
-    expect(getShareBtn(container)!.disabled).toBe(true)
-    expect(getShareBtn(container)!.textContent?.trim()).toBe('Verschlüssele & sende …')
-    resolve()
+describe('FeedTab – Empty-States', () => {
+  it('mit aktiven Sharings zeigt "Sobald deine Kontakte etwas Neues schreiben"', () => {
+    const { container } = renderHub({ friends: [FRIEND_SHARING] })
+    const hint = container.querySelector('[data-testid="feed-empty-hint"]')!
+    expect(hint.textContent).toContain('Sobald deine Kontakte')
   })
 
-  it('zeigt "Gesendet ✓" nach erfolgreichem Senden', async () => {
-    const { container } = renderHub()
-    selectMemory(container)
-    checkFriend(container)
+  it('mit ausschließlich pausierten Kontakten zeigt allPausedHint', () => {
+    const { container } = renderHub({ friends: [FRIEND_PAUSED] })
+    const hint = container.querySelector('[data-testid="feed-empty-hint"]')!
+    expect(hint.textContent).toContain('Du teilst aktuell mit niemandem')
+  })
+})
 
-    await act(async () => { fireEvent.click(getShareBtn(container)!) })
+// ── ContactsTab – Toggle + Pause-Dialog ──────────────────────────────────────
+
+describe('ContactsTab – Auto-Share-Toggle', () => {
+  it('zeigt einen Switch pro Online-Freund mit korrektem Initialzustand', () => {
+    const { container } = renderHub({ friends: [FRIEND_SHARING, FRIEND_PAUSED] })
+    switchToTab(container, 'Kontakte')
+    const t1 = container.querySelector<HTMLInputElement>(
+      '[data-testid="shareall-toggle-friend-1"] input[type="checkbox"]',
+    )!
+    const t2 = container.querySelector<HTMLInputElement>(
+      '[data-testid="shareall-toggle-friend-2"] input[type="checkbox"]',
+    )!
+    expect(t1.checked).toBe(true)
+    expect(t2.checked).toBe(false)
+  })
+
+  it('off → on schaltet sofort durch ohne Dialog', () => {
+    const { container, onSetFriendShareAll, sync } = renderHub({ friends: [FRIEND_PAUSED] })
+    switchToTab(container, 'Kontakte')
+    const toggle = container.querySelector<HTMLInputElement>(
+      '[data-testid="shareall-toggle-friend-2"] input[type="checkbox"]',
+    )!
+    fireEvent.click(toggle)
+    expect(onSetFriendShareAll).toHaveBeenCalledWith('friend-2', true)
+    expect(sync.service!.unshareAllWithFriend).not.toHaveBeenCalled()
+  })
+
+  it('on → off zeigt Pause-Dialog (kein sofortiger Aufruf)', () => {
+    const { container, onSetFriendShareAll, sync } = renderHub({ friends: [FRIEND_SHARING] })
+    switchToTab(container, 'Kontakte')
+    const toggle = container.querySelector<HTMLInputElement>(
+      '[data-testid="shareall-toggle-friend-1"] input[type="checkbox"]',
+    )!
+    fireEvent.click(toggle)
+    const dialog = container.querySelector('[data-testid="pause-confirm-friend-1"]')
+    expect(dialog).not.toBeNull()
+    expect(dialog!.textContent).toContain('Henrietta')
+    expect(onSetFriendShareAll).not.toHaveBeenCalled()
+    expect(sync.service!.unshareAllWithFriend).not.toHaveBeenCalled()
+  })
+
+  it('Pause-Dialog bestätigen ruft unshareAllWithFriend + setShareAll(false)', async () => {
+    const { container, onSetFriendShareAll, sync } = renderHub({ friends: [FRIEND_SHARING] })
+    switchToTab(container, 'Kontakte')
+    const toggle = container.querySelector<HTMLInputElement>(
+      '[data-testid="shareall-toggle-friend-1"] input[type="checkbox"]',
+    )!
+    fireEvent.click(toggle)
+    const confirmYes = container.querySelector<HTMLButtonElement>(
+      '[data-testid="pause-confirm-yes-friend-1"]',
+    )!
+    await act(async () => { fireEvent.click(confirmYes) })
 
     await waitFor(() =>
-      expect(getShareBtn(container)!.textContent?.trim()).toBe('Gesendet ✓'),
+      expect(sync.service!.unshareAllWithFriend).toHaveBeenCalledWith('device-h'),
     )
+    expect(onSetFriendShareAll).toHaveBeenCalledWith('friend-1', false)
   })
 
-  it('ruft shareMemory mit korrekten Empfängerdaten auf', async () => {
-    const shareMemory = vi.fn(async () => ({ shareId: 'share-1' }))
-    const { container } = renderHub({
-      service: { shareMemory } as unknown as OnlineSyncAPI['service'],
-    })
-    selectMemory(container)
-    checkFriend(container)
-
-    await act(async () => { fireEvent.click(getShareBtn(container)!) })
-
-    await waitFor(() => expect(shareMemory).toHaveBeenCalledOnce())
-    expect(shareMemory).toHaveBeenCalledWith(
-      expect.objectContaining({
-        body: expect.objectContaining({ $type: 'remember-me-share', value: 'Jj' }),
-        recipients: expect.arrayContaining([
-          expect.objectContaining({ deviceId: 'device-h', publicKey: 'pubKeyH' }),
-        ]),
-        images: [],
-      }),
-    )
+  it('Pause-Dialog abbrechen lässt den Switch unverändert', () => {
+    const { container, onSetFriendShareAll, sync } = renderHub({ friends: [FRIEND_SHARING] })
+    switchToTab(container, 'Kontakte')
+    const toggle = container.querySelector<HTMLInputElement>(
+      '[data-testid="shareall-toggle-friend-1"] input[type="checkbox"]',
+    )!
+    fireEvent.click(toggle)
+    const cancelBtn = Array.from(
+      container.querySelectorAll<HTMLButtonElement>('[data-testid="pause-confirm-friend-1"] button'),
+    ).find(b => b.textContent?.trim() === 'Abbrechen')!
+    fireEvent.click(cancelBtn)
+    expect(container.querySelector('[data-testid="pause-confirm-friend-1"]')).toBeNull()
+    expect(onSetFriendShareAll).not.toHaveBeenCalled()
+    expect(sync.service!.unshareAllWithFriend).not.toHaveBeenCalled()
   })
 
-  it('zeigt Fehlermeldung bei shareMemory-Fehler', async () => {
-    const { container } = renderHub({
-      service: {
-        shareMemory: vi.fn(async () => { throw new Error('Netzwerkfehler') }),
-      } as unknown as OnlineSyncAPI['service'],
-    })
-    selectMemory(container)
-    checkFriend(container)
-
-    await act(async () => { fireEvent.click(getShareBtn(container)!) })
-
-    await waitFor(() =>
-      expect(container.textContent).toContain('Netzwerkfehler'),
-    )
-    expect(getShareBtn(container)!.textContent?.trim()).toBe('Verschlüssele & sende')
-  })
-})
-
-// ── ShareTab – 30-Sekunden-Timeout ───────────────────────────────────────────
-
-describe('ShareTab – Timeout nach 30 Sekunden', () => {
-  beforeEach(() => { vi.useFakeTimers() })
-  afterEach(() => { vi.useRealTimers() })
-
-  it('wechselt nach 30 s in den Fehlerzustand wenn shareMemory hängt', async () => {
-    const { container } = renderHub({
-      service: {
-        shareMemory: vi.fn(() => new Promise(() => { /* never resolves */ })),
-      } as unknown as OnlineSyncAPI['service'],
-    })
-    selectMemory(container)
-    checkFriend(container)
-
-    await act(async () => { fireEvent.click(getShareBtn(container)!) })
-
-    expect(getShareBtn(container)!.textContent?.trim()).toBe('Verschlüssele & sende …')
-
-    await act(async () => { vi.advanceTimersByTime(30_000) })
-
-    expect(getShareBtn(container)!.textContent?.trim()).toBe('Verschlüssele & sende')
-    expect(container.textContent).toContain('Zeitüberschreitung')
-  })
-
-})
-
-// ── ShareTab – leere Antwortliste ─────────────────────────────────────────────
-
-describe('ShareTab – keine Antworten', () => {
-  it('zeigt Hinweistext wenn keine Antworten vorhanden sind', () => {
-    const { container } = renderHub({}, [FRIEND], {})
-    expect(container.textContent).toContain('Beantworte erst eine Frage')
-    expect(getShareBtn(container)).toBeNull()
+  it('Neue-Person-Verbinden CTA ruft onOpenSandraFlow', () => {
+    const { container, onOpenSandraFlow } = renderHub({ friends: [FRIEND_SHARING] })
+    switchToTab(container, 'Kontakte')
+    const cta = container.querySelector<HTMLButtonElement>(
+      '[data-testid="contacts-new-connection"]',
+    )!
+    fireEvent.click(cta)
+    expect(onOpenSandraFlow).toHaveBeenCalledOnce()
   })
 })
 
@@ -281,23 +229,17 @@ function swipeLeft(el: HTMLElement, dx = 90) {
   fireEvent.pointerUp(el, { clientX: 200 - dx, pointerId: 1 })
 }
 
-describe('ContactsTab – Kontaktliste', () => {
-  it('zeigt verknüpften Kontakt in der Liste', () => {
-    const { container } = renderContactsTab()
-    expect(container.textContent).toContain('H')
-    expect(container.querySelector('.online-contact-swipe')).not.toBeNull()
-  })
-})
-
 describe('ContactsTab – Swipe-to-Remove', () => {
   it('kurzes Swipen ruft onRemoveContact nicht auf', () => {
-    const { onRemoveContact } = renderContactsTab()
-    swipeLeft(getSwipeEl(renderContactsTab().container)!, 30) // < SWIPE_THRESHOLD (80)
+    const { container, onRemoveContact } = renderHub({ friends: [FRIEND_SHARING] })
+    switchToTab(container, 'Kontakte')
+    swipeLeft(getSwipeEl(container)!, 30)
     expect(onRemoveContact).not.toHaveBeenCalled()
   })
 
   it('vollständiges Swipen fügt fly-out Klasse hinzu', () => {
-    const { container } = renderContactsTab()
+    const { container } = renderHub({ friends: [FRIEND_SHARING] })
+    switchToTab(container, 'Kontakte')
     swipeLeft(getSwipeEl(container)!)
     expect(getSwipeEl(container)!.classList.contains('online-contact-swipe--fly-out')).toBe(true)
   })
@@ -305,14 +247,27 @@ describe('ContactsTab – Swipe-to-Remove', () => {
   it('vollständiges Swipen ruft onRemoveContact nach der Animation auf', () => {
     vi.useFakeTimers()
     try {
-      const { container, onRemoveContact } = renderContactsTab()
+      const { container, onRemoveContact } = renderHub({ friends: [FRIEND_SHARING] })
+      switchToTab(container, 'Kontakte')
       swipeLeft(getSwipeEl(container)!)
       expect(onRemoveContact).not.toHaveBeenCalled()
       act(() => { vi.advanceTimersByTime(300) })
       expect(onRemoveContact).toHaveBeenCalledOnce()
-      expect(onRemoveContact).toHaveBeenCalledWith(FRIEND.id)
+      expect(onRemoveContact).toHaveBeenCalledWith('friend-1')
     } finally {
       vi.useRealTimers()
     }
+  })
+})
+
+// ── Onboarding (0 Kontakte) ───────────────────────────────────────────────────
+
+describe('OnboardingScreen', () => {
+  it('zeigt Sandra-Flow CTA und ruft onOpenSandraFlow', () => {
+    const { container, onOpenSandraFlow } = renderHub({ friends: [] })
+    const cta = container.querySelector<HTMLButtonElement>('[data-testid="onboarding-open-sandra"]')!
+    expect(cta).toBeTruthy()
+    fireEvent.click(cta)
+    expect(onOpenSandraFlow).toHaveBeenCalledOnce()
   })
 })

@@ -309,6 +309,14 @@ export interface Translations {
     activateButton: string
   }
 
+  /** REQ-022 §4.6 — one-time migration banner shown after upgrading to v2.13.0. */
+  shareMigration: {
+    title: string
+    body: string
+    openContacts: string
+    dismiss: string
+  }
+
   contactHandshake: {
     cancel: string
     title: string
@@ -361,7 +369,6 @@ export interface Translations {
 
     tabs: {
       feed: string
-      share: string
       contacts: string
       settings: string
     }
@@ -369,8 +376,9 @@ export interface Translations {
     onboarding: {
       heading: string
       hint: string
-      shareCta: string
-      copied: string
+      /** Primary CTA in the 0-contacts state – opens Sandra-flow
+       *  (REQ-022 FR-22.19). Replaces the legacy direct-link path. */
+      sandraFlowCta: string
       step1: string
       step2: string
       step3: string
@@ -379,8 +387,12 @@ export interface Translations {
     }
 
     feedEmpty: {
+      /** Used when at least one online friend has shareAll === true. */
       hint: string
-      shareCta: string
+      /** Used when every online friend is paused (shareAll === false).
+       *  Encourages the user to re-enable in Contacts. */
+      allPausedHint: string
+      /** Ghost CTA that navigates to the Contacts tab. */
       inviteCta: string
     }
 
@@ -393,28 +405,22 @@ export interface Translations {
       error: string
     }
 
-    share: {
-      needsAnswerHint: string
-      whichMemoryLabel: string
-      memoryListAriaLabel: string
-      whichRecipientLabel: string
-      recipientListAriaLabel: string
-      sendButton: string
-      sendingButton: string
-      sentButton: string
-      timeoutMessage: string
-      unknownError: string
-    }
-
     contacts: {
-      linkHeading: string
-      linkHint: string
-      shareLinkButton: string
-      copied: string
       contactsHeading: string
       noContactsHint: string
       removeContactButton: string
       removeContactAriaLabel: string
+      /** Switch label on a contact card (REQ-022 FR-22.12). */
+      shareToggleLabel: string
+      /** Confirmation dialog when toggling from on → off (FR-22.13). Uses {name}. */
+      shareTogglePauseConfirmTitle: string
+      shareTogglePauseConfirmBody: string
+      shareTogglePauseConfirmYes: string
+      shareTogglePauseConfirmNo: string
+      shareTogglePausePending: string
+      shareTogglePauseError: string
+      /** Primary CTA "Neue Person verbinden" → Sandra-flow (FR-22.17). */
+      newConnectionCta: string
     }
 
     settings: {

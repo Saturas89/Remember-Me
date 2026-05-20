@@ -54,6 +54,7 @@ import { SEOHead } from './components/SEOHead'
 import { InstallBanner } from './components/InstallBanner'
 import { UpdateBanner } from './components/UpdateBanner'
 import { ReleaseNotesModal } from './components/ReleaseNotesModal'
+import { ShareMigrationBanner } from './components/ShareMigrationBanner'
 import { ReminderBanner } from './components/ReminderBanner'
 import { WelcomeBackBanner } from './components/WelcomeBackBanner'
 import { BottomNav } from './components/BottomNav'
@@ -138,6 +139,7 @@ export default function App() {
     saveProfile,
     addFriend,
     removeFriend,
+    setFriendShareAll,
     importFriendAnswers,
     importFriendAnswerZipData,
     addCustomQuestion,
@@ -328,6 +330,29 @@ export default function App() {
     return pathToView(window.location.pathname)
   })
   const [showReleaseNotes, setShowReleaseNotes] = useState(false)
+  // REQ-022 §4.6 one-time migration banner.
+  const SHARE_MIGRATION_MARKER = 'rm-share-migration-v213'
+  const [showShareMigration, setShowShareMigration] = useState(false)
+  useEffect(() => {
+    if (!isLoaded) return
+    try {
+      if (localStorage.getItem(SHARE_MIGRATION_MARKER)) return
+      const hasOnlineFriends = friends.some(f => f.online)
+      if (!hasOnlineFriends) {
+        // Fresh installs / users without legacy connections – pre-set the
+        // marker so a future connection doesn't trigger the migration banner.
+        localStorage.setItem(SHARE_MIGRATION_MARKER, new Date().toISOString())
+        return
+      }
+      setShowShareMigration(true)
+    } catch {
+      // localStorage unavailable (private mode etc.) – silently skip.
+    }
+  }, [isLoaded, friends])
+  const dismissShareMigration = useCallback(() => {
+    try { localStorage.setItem(SHARE_MIGRATION_MARKER, new Date().toISOString()) } catch { /* noop */ }
+    setShowShareMigration(false)
+  }, [])
   const { state: installState, visible: installVisible, triggerInstall, dismiss: dismissInstall } = useInstallPrompt()
   const { needRefresh, applyUpdate, dismiss: dismissUpdate } = useServiceWorker()
   const { showPrompt: showReminderPrompt, requestPermission: enableReminder, dismissPrompt: dismissReminder, reschedule } = useReminder()
@@ -642,10 +667,11 @@ export default function App() {
         <OnlineSharingHubView
           profileName={profile?.name ?? ''}
           friends={friends}
-          answers={answers}
           sync={onlineSync}
           onBack={() => goTo({ name: 'friends' })}
           onRemoveContact={removeFriend}
+          onOpenSandraFlow={() => goTo({ name: 'sandra-flow' })}
+          onSetFriendShareAll={setFriendShareAll}
           onDeactivate={async () => {
             const svc = onlineSync.service
             if (svc) {
@@ -777,7 +803,16 @@ export default function App() {
 
       {installVisible && <InstallBanner state={installState} onInstall={triggerInstall} onDismiss={dismissInstall} />}
       {needRefresh && <UpdateBanner onUpdate={applyUpdate} onDismiss={dismissUpdate} onViewNotes={() => setShowReleaseNotes(true)} />}
-      {!installVisible && !needRefresh && !showWelcomeBack && !welcomeBackShownThisSession && showReminderPrompt && (
+      {showShareMigration && !installVisible && !needRefresh && (
+        <ShareMigrationBanner
+          onOpenContacts={() => {
+            dismissShareMigration()
+            goTo({ name: 'online-hub' })
+          }}
+          onDismiss={dismissShareMigration}
+        />
+      )}
+      {!installVisible && !needRefresh && !showShareMigration && !showWelcomeBack && !welcomeBackShownThisSession && showReminderPrompt && (
         <ReminderBanner
           visible={showReminderPrompt}
           onEnable={enableReminder}
