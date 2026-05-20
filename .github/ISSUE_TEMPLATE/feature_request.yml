@@ -1,0 +1,55 @@
+name: Feature Request
+description: Suggest a new feature or improvement for Storyhold
+title: "feat: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting a feature! Please describe what you'd like and why it matters for Storyhold's users.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: Describe the user need or pain point this feature addresses.
+      placeholder: "As a family member, I find it hard to ... because ..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: How would you like this to work? Feel free to include mockups or examples.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Have you considered any workarounds or alternative approaches?
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Feature area
+      multiple: true
+      options:
+        - Stories / Recording
+        - Timeline / Life Map
+        - Sharing / Friends
+        - Export / Print
+        - Privacy / Offline
+        - Accessibility
+        - Onboarding
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Any other context, links, or references.

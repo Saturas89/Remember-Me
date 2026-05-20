@@ -1,0 +1,19 @@
+title: "[Q] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Ask anything about using Storyhold, self-hosting, contributing, or the project in general.
+
+  - type: textarea
+    id: question
+    attributes:
+      label: Your question
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: What have you already tried or found?

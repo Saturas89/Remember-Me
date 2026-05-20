@@ -1,0 +1,20 @@
+title: "[Idea] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Share feature ideas or product direction thoughts. This is a lighter-weight alternative to opening a full Feature Request issue.
+
+  - type: textarea
+    id: idea
+    attributes:
+      label: The idea
+      description: What would you like to see in Storyhold?
+    validations:
+      required: true
+
+  - type: textarea
+    id: why
+    attributes:
+      label: Why it matters
+      description: Who would benefit and how?

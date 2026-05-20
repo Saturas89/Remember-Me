@@ -1,0 +1,13 @@
+title: ""
+body:
+  - type: markdown
+    attributes:
+      value: |
+        General conversation about Storyhold — share your experience, stories, or anything on your mind.
+
+  - type: textarea
+    id: content
+    attributes:
+      label: What's on your mind?
+    validations:
+      required: true
