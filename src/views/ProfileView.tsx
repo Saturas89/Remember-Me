@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useCallback } from 'react'
 import { getCategoriesForLocale } from '../data/categories'
 import { THEMES, useTheme } from '../hooks/useTheme'
 import { useAppMode } from '../hooks/useAppMode'
@@ -24,10 +24,10 @@ interface Props {
   onExportMarkdown: () => void
   onExportJson: () => void
   onImportBackup: (json: string) => { ok: boolean; error?: string }
-  onOpenImport: () => void
   onOpenFaq: () => void
   onOpenImpressum: () => void
   onShowReleaseNotes: () => void
+  onOpenDebug?: () => void
 }
 
 function TreeProgressLogo({ pct, size = 80 }: { pct: number; size?: number }) {
@@ -74,7 +74,7 @@ export function ProfileView({
   exportData, safeName,
   onSave, onBack,
   onExportMarkdown, onExportJson, onImportBackup,
-  onOpenImport, onOpenFaq, onOpenImpressum, onShowReleaseNotes,
+  onOpenFaq, onOpenImpressum, onShowReleaseNotes, onOpenDebug,
 }: Props) {
   const { t, locale, setLocale } = useTranslation()
   const { theme, setTheme } = useTheme()
@@ -89,6 +89,19 @@ export function ProfileView({
   const [showFeedback, setShowFeedback] = useState(false)
   const [feedbackAck, setFeedbackAck] = useState<boolean>(() => feedbackRecentlySubmitted())
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const debugTapCount = useRef(0)
+  const debugTapTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const handleVersionTap = useCallback(() => {
+    debugTapCount.current += 1
+    if (debugTapTimer.current) clearTimeout(debugTapTimer.current)
+    debugTapTimer.current = setTimeout(() => { debugTapCount.current = 0 }, 3000)
+    if (debugTapCount.current >= 7) {
+      debugTapCount.current = 0
+      if (debugTapTimer.current) clearTimeout(debugTapTimer.current)
+      onOpenDebug?.()
+    }
+  }, [onOpenDebug])
 
   const categories = getCategoriesForLocale(locale)
   const totalQuestions = categories.reduce((s, c) => s + c.questions.length, 0)
@@ -326,19 +339,7 @@ export function ProfileView({
         </section>
       )}
 
-      {!isSimple && (
-        <section className="profile-card">
-          <h2 className="profile-card__heading">{t.profile.importHeading}</h2>
-          <button type="button" className="profile-import-card" onClick={onOpenImport}>
-            <span className="profile-import-card__icon">📥</span>
-            <span className="profile-import-card__body">
-              <span className="profile-import-card__title">{t.profile.socialTitle}</span>
-              <span className="profile-import-card__desc">{t.profile.socialDesc}</span>
-            </span>
-            <span className="profile-import-card__arrow">›</span>
-          </button>
-        </section>
-      )}
+      {/* Social Media Import temporarily disabled (issue #265) */}
 
       {!isSimple && (
       <section className="profile-card">
@@ -426,7 +427,11 @@ export function ProfileView({
             <span className="profile-import-card__icon">🆕</span>
             <span className="profile-import-card__body">
               <span className="profile-import-card__title">{t.releaseNotes.title}</span>
-              <span className="profile-import-card__desc">
+              <span
+                className="profile-import-card__desc"
+                onClick={handleVersionTap}
+                aria-hidden="true"
+              >
                 {t.releaseNotes.versionPrefix} {RELEASE_NOTES[0]?.version ?? ''}
               </span>
             </span>

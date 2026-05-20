@@ -297,7 +297,7 @@ test.describe('Sandra-Flow – Receiver Path (Ingrid)', () => {
     await ingridContext.close()
   })
 
-  test('receiver can DECLINE simple mode and still see the welcome', async ({ browser }) => {
+  test('receiver lands directly on welcome without auto-suggest (issue #260)', async ({ browser }) => {
     // Pre-build a URL via the sender flow (compact version).
     const sCtx = await browser.newContext()
     await seedContext(sCtx, { lang: 'de', profile: 'sandra' })
@@ -312,8 +312,6 @@ test.describe('Sandra-Flow – Receiver Path (Ingrid)', () => {
     await sPage.locator('[data-testid^="sandra-suggestion-"]').first().click()
     await sPage.locator('[data-testid^="sandra-suggestion-use-"]').first().click()
     await sPage.getByTestId('sandra-list-send').click()
-    // Uncheck "Großschrift-Modus voreinstellen" so Ingrid sees the choice prompt.
-    await sPage.getByTestId('sandra-share-prefer-simple').click()
     await sPage.getByTestId('sandra-share-cta').click()
     await expect.poll(async () => (await getSharedPayloads(sPage)).length).toBeGreaterThanOrEqual(1)
     const shareUrl = (await getSharedPayloads(sPage))[0].url ?? ''
@@ -323,11 +321,10 @@ test.describe('Sandra-Flow – Receiver Path (Ingrid)', () => {
     await seedContext(iCtx, { lang: 'de', profile: 'none' })
     const i = await iCtx.newPage()
     await i.goto(shareUrl)
-    await expect(i.getByTestId('sandra-receive-simple-no')).toBeVisible({ timeout: 15_000 })
-    await i.getByTestId('sandra-receive-simple-no').click()
-    // Simple mode should NOT be active after decline.
-    await expect(i.locator('html')).not.toHaveAttribute('data-app-mode', 'simple')
-    // Welcome header still appears.
+    // Auto-suggest is gone – receiver lands directly on the welcome/name-entry screen.
+    await expect(i.getByTestId('sandra-receive-simple-no')).not.toBeVisible({ timeout: 15_000 })
+    await expect(i.getByTestId('sandra-receive-name')).toBeVisible()
+    // Welcome header appears.
     await expect(i.getByText(/Sandra hat dir/i)).toBeVisible()
     await iCtx.close()
   })

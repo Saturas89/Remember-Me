@@ -51,9 +51,7 @@ export function PersonalPackReceiveView({ pack, existingProfileName, onSubmit, o
   // name-entry steps entirely — they land on a tailored welcome instead.
   const [phase, setPhase] = useState<Phase>(() => {
     if (existingProfileName) return 'existing-welcome'
-    if (appMode === 'simple') return 'welcome'
-    if (pack.preferSimpleMode === true) return 'welcome'
-    return 'auto-suggest'
+    return 'welcome'  // auto-suggest step removed (issue #260)
   })
   useEffect(() => {
     if (pack.preferSimpleMode === true && appMode !== 'simple' && !existingProfileName) {

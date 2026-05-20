@@ -4,6 +4,7 @@ import {
   exportAsBackup,
   exportAsMarkdown,
   exportAsEnrichedJSON,
+  toSafeFilename,
   BACKUP_TYPE,
   type ExportData,
 } from './export'
@@ -373,5 +374,27 @@ describe('downloadFile', () => {
     // Restore all mocks and stubs
     vi.restoreAllMocks()
     vi.unstubAllGlobals()
+  })
+})
+
+describe('toSafeFilename', () => {
+  it('converts umlauts to two-letter equivalents', () => {
+    expect(toSafeFilename('Oma Größ')).toBe('oma-groess')
+  })
+  it('handles ä ö ü ß in lowercase and uppercase', () => {
+    expect(toSafeFilename('Ärger Öko Über')).toBe('aerger-oeko-ueber')
+    expect(toSafeFilename('äöüß')).toBe('aeoeuess')
+  })
+  it('replaces spaces with dashes and lowercases', () => {
+    expect(toSafeFilename('Max Mustermann')).toBe('max-mustermann')
+  })
+  it('strips non-alphanumeric characters after umlaut replacement', () => {
+    expect(toSafeFilename('Anna (2024)!')).toBe('anna-2024')
+  })
+  it('collapses multiple spaces to one dash', () => {
+    expect(toSafeFilename('Hans  Peter')).toBe('hans-peter')
+  })
+  it('falls back to "lebensarchiv" for empty string', () => {
+    expect(toSafeFilename('')).toBe('lebensarchiv')
   })
 })

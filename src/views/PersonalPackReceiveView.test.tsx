@@ -78,21 +78,15 @@ describe('PersonalPackReceiveView', () => {
     })
   })
 
-  describe('Simple-mode auto-suggest (FR-020.9)', () => {
-    it('shows the auto-suggest phase when appMode !== "simple"', () => {
+  describe('Simple-mode auto-suggest removed (issue #260)', () => {
+    it('skips auto-suggest and shows name entry directly for any appMode', () => {
       renderWith(makePack(), 'full')
-      expect(screen.getByTestId('sandra-receive-simple-yes')).toBeTruthy()
-      expect(screen.getByTestId('sandra-receive-simple-no')).toBeTruthy()
-    })
-
-    it('skips the auto-suggest phase when appMode === "simple"', () => {
-      renderWith(makePack(), 'simple')
       expect(screen.queryByTestId('sandra-receive-simple-yes')).toBeNull()
       expect(screen.getByTestId('sandra-receive-name')).toBeTruthy()
     })
 
-    it('skips the auto-suggest phase when pack.preferSimpleMode is true, regardless of appMode', () => {
-      renderWith(makePack({ preferSimpleMode: true }), 'full')
+    it('skips auto-suggest when appMode is "simple"', () => {
+      renderWith(makePack(), 'simple')
       expect(screen.queryByTestId('sandra-receive-simple-yes')).toBeNull()
       expect(screen.getByTestId('sandra-receive-name')).toBeTruthy()
     })
@@ -100,20 +94,6 @@ describe('PersonalPackReceiveView', () => {
     it('activates simple mode on mount when pack.preferSimpleMode is true', () => {
       const { setAppMode } = renderWith(makePack({ preferSimpleMode: true }), 'full')
       expect(setAppMode).toHaveBeenCalledWith('simple')
-    })
-
-    it('activates simple mode + advances to welcome on "Ja, einfach machen"', () => {
-      const { setAppMode } = renderWith(makePack(), 'full')
-      fireEvent.click(screen.getByTestId('sandra-receive-simple-yes'))
-      expect(setAppMode).toHaveBeenCalledWith('simple')
-      expect(screen.getByTestId('sandra-receive-name')).toBeTruthy()
-    })
-
-    it('advances to welcome without activating simple mode on "Wie gewohnt"', () => {
-      const { setAppMode } = renderWith(makePack(), 'full')
-      fireEvent.click(screen.getByTestId('sandra-receive-simple-no'))
-      expect(setAppMode).not.toHaveBeenCalled()
-      expect(screen.getByTestId('sandra-receive-name')).toBeTruthy()
     })
   })
 

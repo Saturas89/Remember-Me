@@ -12,6 +12,16 @@ export interface ExportData {
 
 // ── Helpers ──────────────────────────────────────────────
 
+/** Convert a user-supplied name to a safe ASCII filename segment. */
+export function toSafeFilename(name: string): string {
+  return name
+    .replace(/[äÄ]/g, 'ae').replace(/[öÖ]/g, 'oe').replace(/[üÜ]/g, 'ue').replace(/ß/g, 'ss')
+    .replace(/\s+/g, '-')
+    .toLowerCase()
+    .replace(/[^a-z0-9-]/g, '')
+    || 'lebensarchiv'
+}
+
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString('de-DE', {
     day: 'numeric', month: 'long', year: 'numeric',
@@ -256,7 +266,7 @@ export function exportAsEnrichedJSON(data: ExportData): string {
     .filter(Boolean)
 
   const payload = {
-    $schema: 'https://remember-me.app/schema/export/v1.json',
+    $schema: 'https://storyhold.app/schema/export/v1.json',
     exportVersion: '1',
     exportedAt: new Date().toISOString(),
     app: 'Storyhold',

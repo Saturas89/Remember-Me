@@ -25,7 +25,6 @@ import { FriendsView } from './views/FriendsView'
 import { FriendAnswerView } from './views/FriendAnswerView'
 import { ProfileView } from './views/ProfileView'
 import { CustomQuestionsView } from './views/CustomQuestionsView'
-import { ImportView } from './views/ImportView'
 import { FaqView } from './views/FaqView'
 import { ImpressumView } from './views/ImpressumView'
 import { OnboardingView } from './views/OnboardingView'
@@ -61,7 +60,7 @@ import { useServiceWorker } from './hooks/useServiceWorker'
 import { useReminder } from './hooks/useReminder'
 import { useStreak } from './hooks/useStreak'
 import { AppModeProvider } from './hooks/useAppMode'
-import { exportAsMarkdown, exportAsEnrichedJSON, downloadFile } from './utils/export'
+import { exportAsMarkdown, exportAsEnrichedJSON, downloadFile, toSafeFilename } from './utils/export'
 import { importFile } from './utils/archiveImport'
 import { trackTabChanged, trackFeatureOpened } from './lib/analytics'
 import type { Category, InviteData, AnswerExport, MemorySharePayload, ContactHandshake } from './types'
@@ -75,7 +74,6 @@ type View =
   | { name: 'profile' }
   | { name: 'sync' }
   | { name: 'custom-questions' }
-  | { name: 'import' }
   | { name: 'faq'; from: 'profile' | 'home' }
   | { name: 'impressum'; from: 'profile' | 'home' }
   | { name: 'online-intro' }
@@ -144,7 +142,7 @@ export default function App() {
     addCustomQuestion,
     removeCustomQuestion,
     importCustomQuestions,
-    importSocialMediaEntries,
+    importPersonalPackAnswers,
     deleteAnswer,
     setAnswerAudio,
     restoreBackup,
@@ -227,13 +225,15 @@ export default function App() {
 
 
   const exportData = { profile, answers, friends, friendAnswers, customQuestions }
-  const safeName = (profile?.name ?? 'lebensarchiv').replace(/\s+/g, '-').toLowerCase()
+  const safeName = toSafeFilename(profile?.name ?? '')
 
   function handleExportMarkdown() {
-    downloadFile(exportAsMarkdown(exportData), `${safeName}.md`, 'text/markdown')
+    const date = new Date().toISOString().split('T')[0]
+    downloadFile(exportAsMarkdown(exportData), `storyhold-${safeName}-${date}.md`, 'text/markdown')
   }
   function handleExportJson() {
-    downloadFile(exportAsEnrichedJSON(exportData), `${safeName}.json`, 'application/json')
+    const date = new Date().toISOString().split('T')[0]
+    downloadFile(exportAsEnrichedJSON(exportData), `storyhold-${safeName}-${date}.json`, 'application/json')
   }
 
   // Enhanced answer saving with streak tracking
@@ -396,9 +396,17 @@ export default function App() {
         <PersonalPackReceiveView
           pack={incomingPack as PersonalQuestionPack}
           existingProfileName={profile?.name || undefined}
-          onSubmit={() => {
-            // Save the questions into the receiver's own archive.
-            importCustomQuestions(incomingPack.questions)
+          onSubmit={(recipientName, answers) => {
+            // #261: pre-fill profile name so onboarding doesn't ask again
+            if (!profile?.name && recipientName) {
+              saveProfile({ name: recipientName, createdAt: new Date().toISOString() })
+            }
+            // #261: set default mode if not yet chosen to skip mode-choice in onboarding
+            if (!appMode) {
+              saveAppMode('full')
+            }
+            // #262: save questions AND answers into the archive
+            importPersonalPackAnswers(incomingPack.questions, answers)
             setIncomingPack(null)
             if (embedded) {
               // Sandra invite: after the quiz, hand off to ContactHandshakeView
@@ -629,18 +637,10 @@ export default function App() {
           onExportMarkdown={handleExportMarkdown}
           onExportJson={handleExportJson}
           onImportBackup={restoreBackup}
-          onOpenImport={() => setView({ name: 'import' })}
           onOpenFaq={() => { window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior }); setView({ name: 'faq', from: 'profile' }) }}
           onOpenImpressum={() => { window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior }); setView({ name: 'impressum', from: 'profile' }) }}
           onShowReleaseNotes={() => setShowReleaseNotes(true)}
-        />
-      )}
-
-      {view.name === 'import' && (
-        <ImportView
-          onImport={importSocialMediaEntries}
-          onBack={() => goTo({ name: 'profile' })}
-          onDone={() => goTo({ name: 'archive' })}
+          onOpenDebug={() => setView({ name: 'debug' })}
         />
       )}
 

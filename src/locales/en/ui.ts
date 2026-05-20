@@ -599,7 +599,7 @@ export const UI_EN = {
     futureFeatureLabel: 'Future feature',
     comingSoonTitle: 'Not yet available',
     comingSoonDesc: 'This feature is planned – we\'re already working on it!',
-    feedbackNote: 'Do you have ideas or wishes for this feature? Write to us at remember-me.app – we look forward to your feedback! 🙏',
+    feedbackNote: 'Do you have ideas or wishes for this feature? Write to us at storyhold.app – we look forward to your feedback! 🙏',
     listTitle: '✨ What\'s coming next?',
     listIntro: 'Here you can see what we\'re developing next for Storyhold – from the first idea to implementation.',
   },

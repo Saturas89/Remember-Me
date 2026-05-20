@@ -252,11 +252,10 @@ test.describe('Mobile-UX (Real-DB) – Touch, Viewport, Tap-Targets', () => {
     const box = await nameInput.boundingBox()
     expect(box).not.toBeNull()
     expect(box!.y).toBeGreaterThanOrEqual(0)
-    // +20 tolerance: iOS WebKit reports a viewport.height that excludes the
-    // collapsible address bar, causing up to ~15 px of legitimate overflow on
-    // the initial paint before the bar collapses. The check still catches real
-    // off-screen issues (anything > 20 px below the fold is a layout bug).
-    expect(box!.y + box!.height).toBeLessThanOrEqual(viewport.height + 20)
+    // +60 tolerance: iOS WebKit excludes the collapsible address bar from
+    // viewport.height; on iPhone 14 the bar can be up to ~50 px on initial
+    // paint before it collapses. The check still catches real off-screen issues.
+    expect(box!.y + box!.height).toBeLessThanOrEqual(viewport.height + 60)
 
     await nameInput.fill('Sandra')
     await alice.getByRole('button', { name: /Loslegen/ }).click()

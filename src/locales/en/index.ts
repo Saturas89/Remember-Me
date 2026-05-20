@@ -11,7 +11,7 @@ export const en: Translations = {
   faq: {
     topbarTitle: 'Help & FAQ',
     intro: 'Your memories are safe – here\'s how and why.',
-    footer: 'Have another question? Report feedback or bugs at remember-me.app.',
+    footer: 'Have another question? Report feedback or bugs at storyhold.app.',
     sections: FAQ_EN,
   },
   impressum: {
