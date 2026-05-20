@@ -119,6 +119,24 @@ export async function runSetupWizard(
   await continueBtn.click()
 
   await expect(page.getByRole('heading', { name: 'Privater Sync', exact: true })).toBeVisible({ timeout: 20_000 })
+
+  // Wait until device1's first sync has written the encrypted state to the DB.
+  // Without this, device2 might enter the recovery-code step before `state_ct`
+  // exists – handleEnterCode skips decryption when the row is absent, so any
+  // key (including a wrong one) would appear to succeed, breaking the
+  // wrong-recovery-code chaos test.
+  await expect.poll(
+    async () => {
+      const { data } = await adminClient
+        .from('private_sync_state')
+        .select('user_id')
+        .eq('user_id', preUserId)
+        .maybeSingle()
+      return data?.user_id ?? null
+    },
+    { timeout: 30_000, message: 'Device1 first sync did not reach private_sync_state within 30 s' },
+  ).not.toBeNull()
+
   return codeText
 }
 

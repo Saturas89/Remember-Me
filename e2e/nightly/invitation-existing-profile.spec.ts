@@ -81,10 +81,13 @@ test.describe('Einladungslink – bestehende Daten bleiben erhalten', () => {
     // Hub aktivieren (löst onAcceptContact aus sobald deviceId verfügbar)
     await bob.getByRole('button', { name: /Aktivieren/ }).click()
 
-    // Warten bis Bobs Hub gestartet ist und Alice als Kontakt gespeichert wurde
+    // Warten bis Bobs Hub gestartet ist und Alice als Kontakt gespeichert wurde.
+    // 65 s: bootstrapSession kann bis zu 4 Versuche benötigen (3 s + 9 s + 27 s
+    // Wartezeit zwischen Retries, eingeführt in #273), was bei schlechter
+    // Netzwerkverbindung den ursprünglichen 35-s-Grenzwert überschreitet.
     await expect(
       bob.getByRole('button', { name: /Meinen Link zurück senden/ }),
-    ).toBeVisible({ timeout: 35_000 })
+    ).toBeVisible({ timeout: 65_000 })
 
     // Bob-DeviceId für Cleanup sichern
     const bobId = await readDeviceIdentity(bob)
