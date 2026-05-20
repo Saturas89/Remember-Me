@@ -25,7 +25,6 @@ import { FriendsView } from './views/FriendsView'
 import { FriendAnswerView } from './views/FriendAnswerView'
 import { ProfileView } from './views/ProfileView'
 import { CustomQuestionsView } from './views/CustomQuestionsView'
-import { ImportView } from './views/ImportView'
 import { FaqView } from './views/FaqView'
 import { ImpressumView } from './views/ImpressumView'
 import { OnboardingView } from './views/OnboardingView'
@@ -61,7 +60,7 @@ import { useServiceWorker } from './hooks/useServiceWorker'
 import { useReminder } from './hooks/useReminder'
 import { useStreak } from './hooks/useStreak'
 import { AppModeProvider } from './hooks/useAppMode'
-import { exportAsMarkdown, exportAsEnrichedJSON, downloadFile } from './utils/export'
+import { exportAsMarkdown, exportAsEnrichedJSON, downloadFile, toSafeFilename } from './utils/export'
 import { importFile } from './utils/archiveImport'
 import { trackTabChanged, trackFeatureOpened } from './lib/analytics'
 import type { Category, InviteData, AnswerExport, MemorySharePayload, ContactHandshake } from './types'
@@ -75,7 +74,6 @@ type View =
   | { name: 'profile' }
   | { name: 'sync' }
   | { name: 'custom-questions' }
-  | { name: 'import' }
   | { name: 'faq'; from: 'profile' | 'home' }
   | { name: 'impressum'; from: 'profile' | 'home' }
   | { name: 'online-intro' }
@@ -145,7 +143,6 @@ export default function App() {
     removeCustomQuestion,
     importCustomQuestions,
     importPersonalPackAnswers,
-    importSocialMediaEntries,
     deleteAnswer,
     setAnswerAudio,
     restoreBackup,
@@ -228,7 +225,7 @@ export default function App() {
 
 
   const exportData = { profile, answers, friends, friendAnswers, customQuestions }
-  const safeName = (profile?.name ?? 'lebensarchiv').replace(/\s+/g, '-').toLowerCase()
+  const safeName = toSafeFilename(profile?.name ?? '')
 
   function handleExportMarkdown() {
     const date = new Date().toISOString().split('T')[0]
@@ -644,14 +641,6 @@ export default function App() {
           onOpenImpressum={() => { window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior }); setView({ name: 'impressum', from: 'profile' }) }}
           onShowReleaseNotes={() => setShowReleaseNotes(true)}
           onOpenDebug={() => setView({ name: 'debug' })}
-        />
-      )}
-
-      {view.name === 'import' && (
-        <ImportView
-          onImport={importSocialMediaEntries}
-          onBack={() => goTo({ name: 'profile' })}
-          onDone={() => goTo({ name: 'archive' })}
         />
       )}
 

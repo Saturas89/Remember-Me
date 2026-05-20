@@ -57,9 +57,53 @@ test.describe('Real: ZIP-Export – Dateiname verwendet Storyhold-Branding', () 
       await ctx.close()
     }
   })
+
+  test('ZIP-Dateiname enthält keine Umlaute bei Namen mit Sonderzeichen (issue #267)', async ({ browser }) => {
+    test.setTimeout(60_000)
+
+    const { ctx, page } = await spawnRealDevice(browser)
+    try {
+      await completeOnboarding(page, 'Oma Größ')
+      await goToProfile(page)
+
+      await page.getByRole('button', { name: /Jetzt sichern/ }).click()
+      await expect(page.locator('.arc-done-icon')).toBeVisible({ timeout: 30_000 })
+
+      const [download] = await Promise.all([
+        page.waitForEvent('download'),
+        page.getByRole('button', { name: /Auf Gerät sichern/ }).click(),
+      ])
+
+      const filename = download.suggestedFilename()
+      expect(filename, `umlaut still present in: ${filename}`).not.toMatch(/[äöüÄÖÜß]/)
+      expect(filename, `expected sanitized name in: ${filename}`).toContain('oma-groess')
+    } finally {
+      await ctx.close()
+    }
+  })
 })
 
-// ── Suite 2: Restore-Fehlerfälle ─────────────────────────────────────────────
+// ── Suite 3: Social Media Import deaktiviert ──────────────────────────────────
+
+test.describe('Real: Profil – Social Media Import deaktiviert (issue #265)', () => {
+  test('Kein Import-Button im Profil sichtbar', async ({ browser }) => {
+    test.setTimeout(30_000)
+
+    const { ctx, page } = await spawnRealDevice(browser)
+    try {
+      await completeOnboarding(page, 'Import-Test')
+      await goToProfile(page)
+
+      // The social media import button must not be reachable.
+      await expect(page.locator('[data-testid="profile-open-import"]')).not.toBeVisible()
+      await expect(page.getByText(/Social Media importieren/i)).not.toBeVisible()
+    } finally {
+      await ctx.close()
+    }
+  })
+})
+
+// ── Suite 2 (renumbered): Restore-Fehlerfälle ────────────────────────────────
 
 test.describe('Real: Restore – Fehlerfälle', () => {
   test('JSON mit legacy-Typ "remember-me-backup" wird abgelehnt', async ({ browser }) => {

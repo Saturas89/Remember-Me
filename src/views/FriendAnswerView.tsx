@@ -5,6 +5,7 @@ import { getFriendTopicsForLocale } from '../data/friendQuestions'
 import { encodeAnswerExport } from '../utils/sharing'
 import { generateAnswerUrl, generatePlainAnswerUrl } from '../utils/secureLink'
 import { buildFriendAnswerArchive, fmtBytes } from '../utils/archiveExport'
+import { toSafeFilename } from '../utils/export'
 import { useImageStore } from '../hooks/useImageStore'
 import { addAudio, removeAudio } from '../hooks/useAudioStore'
 import { addVideo, removeVideo } from '../hooks/useVideoStore'
@@ -271,7 +272,7 @@ export function FriendAnswerView({ invite }: Props) {
 
   function handleShareZip() {
     if (!zipBlob || isSharing) return
-    const safeName  = invite.profileName.replace(/\s+/g, '-').toLowerCase()
+    const safeName  = toSafeFilename(invite.profileName)
     const zipFile   = new File([zipBlob], `erinnerungen-an-${safeName}.zip`, { type: 'application/zip' })
     const importUrl = `${window.location.origin}/friends`
     setIsSharing(true)
