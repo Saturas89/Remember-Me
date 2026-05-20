@@ -605,7 +605,7 @@ export const UI_DE = {
     futureFeatureLabel: 'Zukunfts-Feature',
     comingSoonTitle: 'Noch nicht verfügbar',
     comingSoonDesc: 'Dieses Feature ist in Planung – wir arbeiten bereits daran!',
-    feedbackNote: 'Hast du Ideen oder Wünsche zu diesem Feature? Schreib uns unter remember-me.app – wir freuen uns auf dein Feedback! 🙏',
+    feedbackNote: 'Hast du Ideen oder Wünsche zu diesem Feature? Schreib uns unter storyhold.app – wir freuen uns auf dein Feedback! 🙏',
     listTitle: '✨ Was kommt als Nächstes?',
     listIntro: 'Hier siehst du, was wir als Nächstes für Storyhold entwickeln – von der ersten Idee bis zur Umsetzung.',
   },

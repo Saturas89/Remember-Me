@@ -353,6 +353,37 @@ export function useAnswers() {
     })
   }, [])
 
+  /** Import a personal pack: adds questions and stores provided answers in one transaction (issue #262) */
+  const importPersonalPackAnswers = useCallback((
+    questions: CustomQuestion[],
+    answeredItems: Array<{ questionId: string; questionText: string; value: string }>,
+  ) => {
+    setState(prev => {
+      const now = new Date().toISOString()
+      const existingTexts = new Set(prev.customQuestions.map(q => q.text.trim().toLowerCase()))
+      const toAdd = questions.filter(q => !existingTexts.has(q.text.trim().toLowerCase()))
+      const newAnswers: Record<string, Answer> = {}
+      for (const a of answeredItems) {
+        if (!a.value.trim()) continue
+        newAnswers[a.questionId] = {
+          id: a.questionId,
+          questionId: a.questionId,
+          categoryId: 'custom',
+          value: a.value.trim(),
+          createdAt: now,
+          updatedAt: now,
+        }
+      }
+      const next: AppState = {
+        ...prev,
+        customQuestions: [...prev.customQuestions, ...toAdd],
+        answers: { ...prev.answers, ...newAnswers },
+      }
+      saveState(next)
+      return next
+    })
+  }, [])
+
   /** Import a batch of social-media entries as custom questions + answers in one transaction */
   const importSocialMediaEntries = useCallback((
     entries: Array<{
@@ -597,6 +628,7 @@ export function useAnswers() {
     addCustomQuestion,
     removeCustomQuestion,
     importCustomQuestions,
+    importPersonalPackAnswers,
     importSocialMediaEntries,
     clearAll,
     restoreBackup,

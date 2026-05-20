@@ -256,7 +256,7 @@ export function exportAsEnrichedJSON(data: ExportData): string {
     .filter(Boolean)
 
   const payload = {
-    $schema: 'https://remember-me.app/schema/export/v1.json',
+    $schema: 'https://storyhold.app/schema/export/v1.json',
     exportVersion: '1',
     exportedAt: new Date().toISOString(),
     app: 'Storyhold',
