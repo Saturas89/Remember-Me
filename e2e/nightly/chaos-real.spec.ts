@@ -29,7 +29,10 @@ test.describe('Private Sync – Chaos Tests (Storyhold Server)', () => {
   // ── 1. Back-Navigation ───────────────────────────────────────────────────────
 
   test('wizard-back-navigation: ← Zurück-Buttons kehren zur vorherigen Stufe zurück', async ({ browser }) => {
-    test.setTimeout(60_000)
+    // 90 s: completeOnboarding + goto production + navigation steps can sum to
+    // ~60 s on narrow-viewport Samsung S23 simulation; the extra headroom
+    // prevents the test from hitting the timer before the final assertion.
+    test.setTimeout(90_000)
     const { ctx, page } = await spawnRealDevice(browser)
     await completeOnboarding(page, 'Toni')
 
@@ -50,7 +53,10 @@ test.describe('Private Sync – Chaos Tests (Storyhold Server)', () => {
 
     // ← Zurück → Intro
     await page.getByRole('button', { name: /← Zurück/ }).click()
-    await expect(page.getByRole('button', { name: 'Einrichten' })).toBeVisible()
+    // Explicit timeout: on narrow-viewport devices (e.g. Samsung S23, 360 px)
+    // a page-top scroll may be needed before the button enters the hit area.
+    await page.evaluate(() => window.scrollTo(0, 0))
+    await expect(page.getByRole('button', { name: 'Einrichten' })).toBeVisible({ timeout: 10_000 })
 
     // Kein Auth-User angelegt
     const { data: users } = await admin.auth.admin.listUsers()
