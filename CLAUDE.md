@@ -21,6 +21,12 @@ Branches nie direkt nach `main` pushen. Immer PR anlegen – `.github/workflows/
 
 ---
 
+## Issue-Abschluss nach Fix
+
+Wenn ein PR einen GitHub-Issue behebt: Issue nach dem Merge mit `mcp__github__issue_write` schließen (`state: "closed"`, `state_reason: "completed"`). Kein separater Kommentar nötig – der Merge-Commit im PR reicht als Referenz.
+
+---
+
 ## Changelog- und Doc-Sync-Pflicht
 
 PRs mit neuem Feature oder neuem Pack (Fragen, Themen, Locale, Modus) müssen gleichzeitig **vier Stellen** aktualisieren:
