@@ -70,8 +70,10 @@ export function ArchiveExportCard({ data, safeName, onBackupRecorded }: Props) {
   async function handleShare() {
     if (!zipBlob) return
     const file = new File([zipBlob], filename, { type: 'application/zip' })
-    try {
-      if (typeof navigator.canShare === 'function' && navigator.canShare({ files: [file] })) {
+
+    // 1. Try file-based share (ideal: native sheet includes the ZIP).
+    if (typeof navigator.canShare === 'function' && navigator.canShare({ files: [file] })) {
+      try {
         await navigator.share({
           files: [file],
           title: t.archiveExport.shareTitle,
@@ -80,11 +82,27 @@ export function ArchiveExportCard({ data, safeName, onBackupRecorded }: Props) {
         recordBackup()
         onBackupRecorded?.()
         return
+      } catch (e) {
+        if ((e as Error).name === 'AbortError') return
+        // NotSupportedError or similar – fall through
       }
-    } catch (e) {
-      if ((e as Error).name === 'AbortError') return  // user cancelled – no fallback
     }
-    handleSave()  // fallback (also calls recordBackup)
+
+    // 2. File sharing unavailable (e.g. Android PWA standalone, Samsung Internet).
+    //    Open the native share sheet with text so the user sees visible feedback,
+    //    then save the file to device so they actually have it.
+    if ('share' in navigator) {
+      try {
+        await navigator.share({
+          title: t.archiveExport.shareTitle,
+          text:  t.archiveExport.shareText,
+          url:   window.location.href,
+        })
+      } catch (e) {
+        if ((e as Error).name === 'AbortError') return
+      }
+    }
+    handleSave()
   }
 
   const canShare = typeof navigator !== 'undefined' && 'share' in navigator

@@ -30,8 +30,11 @@ export function useTheme() {
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
-    const meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]')
-    if (meta) meta.content = THEME_BG[theme]
+    const metaColor = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]')
+    if (metaColor) metaColor.content = THEME_BG[theme]
+    // Prevent Android Chrome's auto-dark algorithm from overriding light themes.
+    const metaScheme = document.querySelector<HTMLMetaElement>('meta[name="color-scheme"]')
+    if (metaScheme) metaScheme.content = (theme === 'sepia' || theme === 'hell') ? 'only light' : 'dark'
     try { localStorage.setItem(STORAGE_KEY, theme) } catch { /* noop */ }
   }, [theme])
 
