@@ -259,6 +259,77 @@ describe('sharingService', () => {
     expect(annotations).toEqual([])
   })
 
+  // ── REQ-022: auto-share entry point ────────────────────────────────────
+
+  it('shareMemoryToAllFriends builds a ShareBody and delegates to shareMemory', async () => {
+    await svc.bootstrapSession()
+    recorder.nextInsertedId = t => t === 'shares' ? { id: 'share-multicast' } : { id: 'x' }
+
+    await svc.shareMemoryToAllFriends(
+      {
+        id: 'answer-1',
+        questionId: 'q-text-1',
+        categoryId: 'childhood',
+        value: 'Sommer am See',
+        createdAt: '2026-05-20T10:00:00.000Z',
+        updatedAt: '2026-05-20T10:00:00.000Z',
+      },
+      'Was war ein schöner Sommer?',
+      [{ deviceId: 'friend-1', publicKey: 'PK1' }],
+      'Alice',
+    )
+
+    const shareInsert = recorder.inserts.find(i => i.table === 'shares')
+    expect(shareInsert, 'shareMemoryToAllFriends should insert a share row').toBeDefined()
+    const aclInsert = recorder.inserts.find(i => i.table === 'share_recipients')
+    expect(aclInsert).toBeDefined()
+    const recipients = (aclInsert!.payload as Array<{ recipient_id: string }>).map(r => r.recipient_id)
+    expect(recipients).toContain('device-self')
+    expect(recipients).toContain('friend-1')
+  })
+
+  it('shareMemoryToAllFriends forces imageCount to 0 (text-only auto-share)', async () => {
+    await svc.bootstrapSession()
+    const { encryptShare } = await import('./shareEncryption')
+
+    await svc.shareMemoryToAllFriends(
+      {
+        id: 'a',
+        questionId: 'q1',
+        categoryId: 'c',
+        value: 'v',
+        createdAt: '2026-01-01T00:00:00.000Z',
+        updatedAt: '2026-01-01T00:00:00.000Z',
+      },
+      'Q?',
+      [{ deviceId: 'r', publicKey: 'PK' }],
+      'Anna',
+    )
+
+    expect(encryptShare).toHaveBeenCalled()
+    const firstCall = (encryptShare as ReturnType<typeof vi.fn>).mock.calls[0]
+    expect(firstCall[0].imageCount).toBe(0)
+  })
+
+  it('unshareAllWithFriend deletes share_recipients rows for shares we own', async () => {
+    await svc.bootstrapSession()
+    recorder.selectRows = table => {
+      if (table === 'shares') return [{ id: 's-1' }, { id: 's-2' }]
+      return []
+    }
+    await svc.unshareAllWithFriend('friend-x')
+
+    const recipDelete = recorder.deletes.find(d => d.table === 'share_recipients')
+    expect(recipDelete, 'should issue a DELETE on share_recipients').toBeDefined()
+  })
+
+  it('unshareAllWithFriend skips the delete when the user owns no shares', async () => {
+    await svc.bootstrapSession()
+    recorder.selectRows = () => []
+    await svc.unshareAllWithFriend('friend-x')
+    expect(recorder.deletes.find(d => d.table === 'share_recipients')).toBeUndefined()
+  })
+
   it('fetchIncomingShares decrypts shares and decorates them with owner info', async () => {
     await svc.bootstrapSession()
     recorder.selectRows = table => {

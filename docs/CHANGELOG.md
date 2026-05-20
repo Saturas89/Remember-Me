@@ -10,6 +10,44 @@ Versionierung folgt [Semantic Versioning](https://semver.org/lang/de/).
 > Der Check `npm run check:changelog` (Teil von `npm test`) bricht sonst ab.
 > Details: `CLAUDE.md` → „Changelog-Pflicht".
 
+## [2.13.0] – 2026-05-20
+
+### Geändert
+
+- **Erinnerungs-Teilen radikal vereinfacht (REQ-022)** – Der „Teilen"-Tab im
+  Familienmodus-Hub ist weg; pro verbundenem Kontakt gibt es eine einzige
+  binäre Entscheidung „Erinnerungen teilen" (Default: ein). Wer eingehakt
+  ist, bekommt jede neue Antwort automatisch verschlüsselt zugestellt.
+- **Auto-Share statt manuellem Picker** – Ein neuer `useAutoShare`-Hook
+  beobachtet Antworten + Freunde und verteilt sie per
+  `shareMemoryToAllFriends()` über die bestehende E2EE-Pipeline. Idempotent
+  über einen lokalen `rm-share-log`-IndexedDB-Store. Backfill mit 3 s
+  Debounce nach neuem Kontakt, damit Ingrid die Checkbox noch abhaken kann.
+- **Pause pro Kontakt** – Ein Switch in „Kontakte" pausiert mit Bestätigungs-
+  Dialog: `unshareAllWithFriend()` löscht die `share_recipients`-Einträge
+  dieser Person auf dem Server und räumt den lokalen Share-Log auf. Bob
+  sieht beim nächsten Refresh keine bisherigen Erinnerungen mehr.
+- **ContactHandshake-Checkbox** – Direkt nach dem Handshake fragt
+  Storyhold: „Meine Erinnerungen automatisch mit {name} teilen?" (Default
+  angehakt). Spätere Toggles werden idempotent in `friend.online.shareAll`
+  durchgereicht.
+- **Sandra-Flow als einziger Connection-Entry** – Im OnlineSharingHub
+  öffnen sowohl der 0-Kontakte-CTA als auch „Neue Person verbinden" jetzt
+  ausschließlich den Sandra-Flow (`#/ask`); der alte Direct-Link-Pfad
+  entfällt.
+
+### Hinzugefügt
+
+- **Migrations-Banner v2.13.0** – Einmaliger Hinweis nach Update: „Teilen
+  ist jetzt einfacher. Alle bisherigen Kontakte erhalten ab jetzt
+  automatisch neue Antworten." Marker: `rm-share-migration-v213`.
+
+### Migration
+
+- Bestehende `friends[].online`-Einträge ohne `shareAll`-Feld werden beim
+  Laden (`loadStateAsync`/`mergeRemoteState`/`restoreBackup`) idempotent
+  auf `shareAll: true` gesetzt.
+
 ## [2.12.0] – 2026-05-19
 
 ### Hinzugefügt
@@ -1033,6 +1071,7 @@ Wenn im Hintergrund eine neue Version der App als Service Worker bereit steht, e
 | **2.7.0** | Persönliche Fragen formulieren, Trigger-Bank DE+EN, Inspirations-Schublade, One-Question-View-Empfang (REQ-020) | ✔️ Fertig |
 | **2.8.0** | Leichtgewichtiges In-App-Feedback: 5-Smiley-Modal + optionaler Kommentar im Profil, anonyme Supabase-Tabelle (REQ-021) | ✔️ Fertig |
 | **2.9.0** | Trust-Badges „Open Source · AGPL-3.0" und „Made in Germany" in der Impressum-Seite + README-Shields | ✔️ Fertig |
+| **2.13.0** | Vereinfachtes Erinnerungs-Teilen: binär pro Kontakt, Auto-Share-Queue, Pause-Dialog, Migrations-Banner (REQ-022) | ✔️ Fertig |
 | — | **Geplante Features** | — |
 | **TBD** | Lebenszeitlinie – chronologische visuelle Ansicht | Geplant |
 | **TBD** | Import bestehender Erinnerungen (Social Media, Clouds) | Geplant |
