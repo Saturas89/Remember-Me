@@ -8,14 +8,15 @@ import {
   reopenFamilyHub,
   seedAnswer,
   spawnDevice,
+  waitForShares,
 } from '../helpers/family-mode-helpers'
 
-// Extended two-/three-device interaction scenarios not covered by the isolated
-// family-mode-*.spec.ts suite: multi-recipient sharing, sequential shares,
-// bidirectional flow, and content integrity under rich Unicode payloads.
+// Extended two-/three-device interaction scenarios under the auto-share
+// model (REQ-022). All flows seed answers and rely on useAutoShare to push
+// them out; there is no manual memory picker anymore.
 
 test.describe('Erweiterte Mehrgeräte-Szenarien', () => {
-  test('Drei Geräte: Alice teilt mit Bob und Carol gleichzeitig', async ({ browser }) => {
+  test('Drei Geräte: Alice teilt automatisch mit Bob und Carol', async ({ browser }) => {
     test.setTimeout(150_000)
     const state = createMockState()
     const { ctx: aliceCtx, page: alice } = await spawnDevice(browser, state)
@@ -25,7 +26,6 @@ test.describe('Erweiterte Mehrgeräte-Szenarien', () => {
     await completeOnboarding(alice, 'Alice')
     await openFamilyHub(alice)
     const aliceId = await readDeviceIdentity(alice)
-    await seedAnswer(alice, 'childhood-01', 'childhood', 'Meine liebste Kindheitserinnerung.')
 
     await completeOnboarding(bob, 'Bob')
     await openFamilyHub(bob)
@@ -41,14 +41,9 @@ test.describe('Erweiterte Mehrgeräte-Szenarien', () => {
     await injectOnlineFriend(carol, 'Alice', aliceId.deviceId, aliceId.publicKey)
 
     await reopenFamilyHub(alice)
-    await alice.getByRole('tab', { name: 'Teilen', exact: true }).click()
-    await alice.getByText('Meine liebste Kindheitserinnerung.').click()
-    await alice.locator('.share-recipient-chip', { hasText: 'Bob' }).click()
-    await alice.locator('.share-recipient-chip', { hasText: 'Carol' }).click()
-    await alice.getByRole('button', { name: /Verschlüssele & sende/ }).click()
-    await expect(alice.getByRole('button', { name: /Gesendet/ })).toBeVisible({ timeout: 10_000 })
+    await seedAnswer(alice, 'childhood-01', 'childhood', 'Meine liebste Kindheitserinnerung.')
+    await waitForShares(state, 1, 20_000)
 
-    expect(state.shares).toHaveLength(1)
     const recipients = state.share_recipients
       .filter(r => r.share_id === state.shares[0].id)
       .map(r => r.recipient_id as string)
@@ -106,20 +101,11 @@ test.describe('Erweiterte Mehrgeräte-Szenarien', () => {
       { id: 'seq-q3', cat: 'love', text: 'Sequenz-Erinnerung Nummer drei.' },
     ]
 
+    await reopenFamilyHub(alice)
     for (const m of memories) {
       await seedAnswer(alice, m.id, m.cat, m.text)
     }
-
-    for (const m of memories) {
-      await reopenFamilyHub(alice)
-      await alice.getByRole('tab', { name: 'Teilen', exact: true }).click()
-      await alice.getByText(m.text).click()
-      await alice.locator('.share-recipient-chip', { hasText: 'Bob' }).click()
-      await alice.getByRole('button', { name: /Verschlüssele & sende/ }).click()
-      await expect(alice.getByRole('button', { name: /Gesendet/ })).toBeVisible({ timeout: 10_000 })
-    }
-
-    expect(state.shares).toHaveLength(3)
+    await waitForShares(state, 3, 30_000)
 
     await reopenFamilyHub(bob)
     await bob.getByRole('tab', { name: /^Feed\b/ }).click()
@@ -140,31 +126,21 @@ test.describe('Erweiterte Mehrgeräte-Szenarien', () => {
     await completeOnboarding(alice, 'Alice')
     await openFamilyHub(alice)
     const aliceId = await readDeviceIdentity(alice)
-    await seedAnswer(alice, 'bi-q-alice', 'childhood', 'Alices persönliche Erinnerung.')
 
     await completeOnboarding(bob, 'Bob')
     await openFamilyHub(bob)
     const bobId = await readDeviceIdentity(bob)
-    await seedAnswer(bob, 'bi-q-bob', 'family', 'Bobs persönliche Erinnerung.')
 
     await injectOnlineFriend(alice, 'Bob', bobId.deviceId, bobId.publicKey)
     await injectOnlineFriend(bob, 'Alice', aliceId.deviceId, aliceId.publicKey)
 
     await reopenFamilyHub(alice)
-    await alice.getByRole('tab', { name: 'Teilen', exact: true }).click()
-    await alice.getByText("Alices persönliche Erinnerung.").click()
-    await alice.locator('.share-recipient-chip', { hasText: 'Bob' }).click()
-    await alice.getByRole('button', { name: /Verschlüssele & sende/ }).click()
-    await expect(alice.getByRole('button', { name: /Gesendet/ })).toBeVisible({ timeout: 10_000 })
+    await seedAnswer(alice, 'bi-q-alice', 'childhood', 'Alices persönliche Erinnerung.')
 
     await reopenFamilyHub(bob)
-    await bob.getByRole('tab', { name: 'Teilen', exact: true }).click()
-    await bob.getByText("Bobs persönliche Erinnerung.").click()
-    await bob.locator('.share-recipient-chip', { hasText: 'Alice' }).click()
-    await bob.getByRole('button', { name: /Verschlüssele & sende/ }).click()
-    await expect(bob.getByRole('button', { name: /Gesendet/ })).toBeVisible({ timeout: 10_000 })
+    await seedAnswer(bob, 'bi-q-bob', 'family', 'Bobs persönliche Erinnerung.')
 
-    expect(state.shares).toHaveLength(2)
+    await waitForShares(state, 2, 30_000)
     const owners = state.shares.map(s => s.owner_id as string)
     expect(owners).toContain(aliceId.deviceId)
     expect(owners).toContain(bobId.deviceId)
@@ -195,7 +171,6 @@ test.describe('Erweiterte Mehrgeräte-Szenarien', () => {
     await completeOnboarding(alice, 'Alice')
     await openFamilyHub(alice)
     const aliceId = await readDeviceIdentity(alice)
-    await seedAnswer(alice, 'rich-q', 'childhood', richText)
 
     await completeOnboarding(bob, 'Bob')
     await openFamilyHub(bob)
@@ -205,11 +180,8 @@ test.describe('Erweiterte Mehrgeräte-Szenarien', () => {
     await injectOnlineFriend(bob, 'Alice', aliceId.deviceId, aliceId.publicKey)
 
     await reopenFamilyHub(alice)
-    await alice.getByRole('tab', { name: 'Teilen', exact: true }).click()
-    await alice.getByText(/🏖️ Sommer 1987/).click()
-    await alice.locator('.share-recipient-chip', { hasText: 'Bob' }).click()
-    await alice.getByRole('button', { name: /Verschlüssele & sende/ }).click()
-    await expect(alice.getByRole('button', { name: /Gesendet/ })).toBeVisible({ timeout: 10_000 })
+    await seedAnswer(alice, 'rich-q', 'childhood', richText)
+    await waitForShares(state, 1, 20_000)
 
     // Klartext darf nicht im Wire-Ciphertext stehen
     expect(JSON.stringify(state.shares[0].ciphertext)).not.toContain('Lüneburger')

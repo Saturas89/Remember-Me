@@ -69,6 +69,20 @@ export async function cleanupUsers(admin: SupabaseClient, ids: string[]): Promis
   await Promise.all(ids.map(id => admin.auth.admin.deleteUser(id)))
 }
 
+// Polls the real DB until the given device owns at least `minShares` rows.
+// Used by nightly auto-share specs in lieu of an in-memory mock.
+export async function waitForRealShares(
+  admin: SupabaseClient,
+  ownerDeviceId: string,
+  minShares = 1,
+  timeoutMs = 30_000,
+): Promise<void> {
+  await expect.poll(async () => {
+    const { data } = await admin.from('shares').select('id').eq('owner_id', ownerDeviceId)
+    return data?.length ?? 0
+  }, { timeout: timeoutMs }).toBeGreaterThanOrEqual(minShares)
+}
+
 // Waits until the family-hub is bootstrapped: polls the positive signal
 // (deviceId + publicKey present in app state) instead of a localStorage key
 // that the app never writes. Matches the approach used in family-mode-helpers.ts.

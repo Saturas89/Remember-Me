@@ -21,7 +21,7 @@ import {
   seedAnswer,
 } from '../helpers/family-mode-helpers'
 import { assertTapTarget } from '../interaction/helpers'
-import { cleanupUsers, spawnRealDevice, supabaseAdmin } from './helpers'
+import { cleanupUsers, spawnRealDevice, supabaseAdmin, waitForRealShares } from './helpers'
 
 test.describe('Mobile-UX (Real-DB) – Touch, Viewport, Tap-Targets', () => {
   const createdUsers: string[] = []
@@ -62,7 +62,7 @@ test.describe('Mobile-UX (Real-DB) – Touch, Viewport, Tap-Targets', () => {
     const viewport = alice.viewportSize()!
     const tabs = tablist.getByRole('tab')
     const count = await tabs.count()
-    expect(count, 'Hub sollte vier Tabs haben').toBe(4)
+    expect(count, 'Hub sollte drei Tabs haben (Feed / Kontakte / Einstellungen)').toBe(3)
 
     for (let i = 0; i < count; i++) {
       const box = await tabs.nth(i).boundingBox()
@@ -106,15 +106,10 @@ test.describe('Mobile-UX (Real-DB) – Touch, Viewport, Tap-Targets', () => {
       await assertTapTarget(tablist.getByRole('tab').nth(i))
     }
 
-    await alice.getByRole('tab', { name: 'Teilen', exact: true }).click()
-    await seedAnswer(alice, 'tap-q-real', 'childhood', 'Tap-Target-Erinnerung.')
-    await alice.goto('/friends')
-    await reopenFamilyHub(alice)
-    await alice.getByRole('tab', { name: 'Teilen', exact: true }).click()
-    await alice.getByText('Tap-Target-Erinnerung.').click()
-    await alice.locator('.share-recipient-chip', { hasText: 'Bob' }).click()
-
-    await assertTapTarget(alice.getByRole('button', { name: /Verschlüssele & sende/ }))
+    // REQ-022: Sandra-Flow CTA + Auto-Share-Toggle sind die zentralen Tap-Targets.
+    await alice.getByRole('tab', { name: /Kontakte/ }).click()
+    await assertTapTarget(alice.getByTestId('contacts-new-connection'))
+    await assertTapTarget(alice.locator('[data-testid^="shareall-toggle-friend-"]').first())
 
     await aliceCtx.close()
     await bobCtx.close()
@@ -134,7 +129,6 @@ test.describe('Mobile-UX (Real-DB) – Touch, Viewport, Tap-Targets', () => {
     await openFamilyHub(alice)
     const aliceId = await readDeviceIdentity(alice)
     createdUsers.push(aliceId.deviceId)
-    await seedAnswer(alice, 'mobile-ann-q-real', 'childhood', 'Erinnerung für mobiles Annotieren.')
 
     await completeOnboarding(bob, 'Bob')
     await openFamilyHub(bob)
@@ -145,11 +139,8 @@ test.describe('Mobile-UX (Real-DB) – Touch, Viewport, Tap-Targets', () => {
     await injectOnlineFriend(bob,   'Alice', aliceId.deviceId, aliceId.publicKey)
 
     await reopenFamilyHub(alice)
-    await alice.getByRole('tab', { name: 'Teilen', exact: true }).click()
-    await alice.getByText('Erinnerung für mobiles Annotieren.').click()
-    await alice.locator('.share-recipient-chip', { hasText: 'Bob' }).click()
-    await alice.getByRole('button', { name: /Verschlüssele & sende/ }).click()
-    await expect(alice.getByRole('button', { name: /Gesendet/ })).toBeVisible({ timeout: 20_000 })
+    await seedAnswer(alice, 'mobile-ann-q-real', 'childhood', 'Erinnerung für mobiles Annotieren.')
+    await waitForRealShares(admin, aliceId.deviceId, 1, 30_000)
 
     await reopenFamilyHub(bob)
     await bob.getByRole('tab', { name: /^Feed\b/ }).click()
@@ -211,18 +202,12 @@ test.describe('Mobile-UX (Real-DB) – Touch, Viewport, Tap-Targets', () => {
       cat: 'childhood',
       text: `Scroll-Erinnerung Nummer ${i + 1} mit genug Text, damit die Karte Höhe bekommt.`,
     }))
+
+    await reopenFamilyHub(alice)
     for (const m of memories) {
       await seedAnswer(alice, m.id, m.cat, m.text)
     }
-
-    for (const m of memories) {
-      await reopenFamilyHub(alice)
-      await alice.getByRole('tab', { name: 'Teilen', exact: true }).click()
-      await alice.getByText(m.text).click()
-      await alice.locator('.share-recipient-chip', { hasText: 'Bob' }).click()
-      await alice.getByRole('button', { name: /Verschlüssele & sende/ }).click()
-      await expect(alice.getByRole('button', { name: /Gesendet/ })).toBeVisible({ timeout: 20_000 })
-    }
+    await waitForRealShares(admin, aliceId.deviceId, memories.length, 60_000)
 
     await reopenFamilyHub(bob)
     await bob.getByRole('tab', { name: /^Feed\b/ }).click()

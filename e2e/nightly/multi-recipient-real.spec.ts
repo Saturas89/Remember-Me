@@ -1,11 +1,10 @@
 // Multi-recipient and three-device interaction tests against the production Supabase instance.
 //
 // Covers scenarios that require more than two devices:
-//   • Alice shares with Bob AND Carol simultaneously; both see it in their feed
+//   • Alice auto-shares with Bob AND Carol; both see it in their feed
 //   • Bob and Carol can each annotate; Alice sees both annotations
 //   • Dave (non-recipient) is isolated by RLS
-//   • Sequential shares: Alice sends multiple memories, all appear in both feeds
-//   • Annotation fan-out: three-way annotation from all parties
+//   • Sequential auto-shares: Alice writes multiple memories, all appear in both feeds
 //
 // Cleanup: afterEach deletes all created auth users; FK ON DELETE CASCADE
 // removes devices, shares, share_recipients, and annotations.
@@ -17,9 +16,10 @@ import {
   openFamilyHub,
   readDeviceIdentity,
   injectOnlineFriend,
+  reopenFamilyHub,
   seedAnswer,
 } from '../helpers/family-mode-helpers'
-import { cleanupUsers, readDeviceId, spawnRealDevice, supabaseAdmin } from './helpers'
+import { cleanupUsers, readDeviceId, spawnRealDevice, supabaseAdmin, waitForRealShares } from './helpers'
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -74,28 +74,16 @@ test.describe('Multi-Empfänger und Drei-Geräte (Real-DB)', () => {
     await cleanupUsers(admin, createdUsers.splice(0))
   })
 
-  // ── Share an mehrere Empfänger ─────────────────────────────────────────────
-
-  test('multi-recipient: Alice teilt mit Bob UND Carol, beide sehen den Share', async ({
-    browser,
-  }) => {
+  test('multi-recipient: Alice auto-share landet bei Bob UND Carol', async ({ browser }) => {
     test.setTimeout(120_000)
 
     const { alice, bob, carol } = await setupThreeDevices(browser, ['Alice', 'Bob', 'Carol'])
     createdUsers.push(alice.id.deviceId, bob.id.deviceId, carol.id.deviceId)
 
+    await reopenFamilyHub(alice.page)
     await seedAnswer(alice.page, 'multi-q1', 'childhood', 'Gemeinsame Erinnerung für alle.')
+    await waitForRealShares(admin, alice.id.deviceId, 1, 30_000)
 
-    await alice.page.reload()
-    await openFamilyHub(alice.page)
-    await alice.page.getByRole('tab', { name: 'Teilen', exact: true }).click()
-    await alice.page.getByText('Gemeinsame Erinnerung für alle.').click()
-    await alice.page.locator('.share-recipient-chip', { hasText: 'Bob' }).click()
-    await alice.page.locator('.share-recipient-chip', { hasText: 'Carol' }).click()
-    await alice.page.getByTestId('send-memories').click()
-    await expect(alice.page.getByTestId('share-success')).toBeVisible({ timeout: 30_000 })
-
-    // Admin-API: 2 recipient-Zeilen müssen existieren
     await expect
       .poll(async () => {
         const { data } = await admin.from('share_recipients').select('recipient_id')
@@ -103,12 +91,10 @@ test.describe('Multi-Empfänger und Drei-Geräte (Real-DB)', () => {
       }, { timeout: 20_000, intervals: [2_000] })
       .toBeGreaterThanOrEqual(2)
 
-    // Bob sieht den Share in seinem Feed
     await bob.page.reload()
     await openFamilyHub(bob.page)
     await expect(bob.page.getByTestId('feed-item').first()).toBeVisible({ timeout: 30_000 })
 
-    // Carol sieht den Share ebenfalls
     await carol.page.reload()
     await openFamilyHub(carol.page)
     await expect(carol.page.getByTestId('feed-item').first()).toBeVisible({ timeout: 30_000 })
@@ -118,44 +104,31 @@ test.describe('Multi-Empfänger und Drei-Geräte (Real-DB)', () => {
     await carol.ctx.close()
   })
 
-  // ── Isolation: Nicht-Empfänger (Dave) wird blockiert ──────────────────────
-
   test('dave-isolation: Dave sieht Alices Share nicht (RLS)', async ({ browser }) => {
     test.setTimeout(120_000)
 
     const { alice, bob, carol } = await setupThreeDevices(browser, ['Alice', 'Bob', 'Carol'])
     createdUsers.push(alice.id.deviceId, bob.id.deviceId, carol.id.deviceId)
 
-    // Dave ist ein separates Gerät OHNE Verbindung zu Alice
     const { ctx: daveCtx, page: dave } = await spawnRealDevice(browser)
     await completeOnboarding(dave, 'Dave')
     await openFamilyHub(dave)
     const daveRawId = await readDeviceId(dave)
     createdUsers.push(daveRawId)
 
+    await reopenFamilyHub(alice.page)
     await seedAnswer(alice.page, 'iso-q1', 'family', 'Nur für Bob und Carol.')
+    await waitForRealShares(admin, alice.id.deviceId, 1, 30_000)
 
-    await alice.page.reload()
-    await openFamilyHub(alice.page)
-    await alice.page.getByRole('tab', { name: 'Teilen', exact: true }).click()
-    await alice.page.getByText('Nur für Bob und Carol.').click()
-    await alice.page.locator('.share-recipient-chip', { hasText: 'Bob' }).click()
-    await alice.page.locator('.share-recipient-chip', { hasText: 'Carol' }).click()
-    await alice.page.getByTestId('send-memories').click()
-    await expect(alice.page.getByTestId('share-success')).toBeVisible({ timeout: 30_000 })
-
-    // Bob sieht den Share
     await bob.page.reload()
     await openFamilyHub(bob.page)
     await expect(bob.page.getByTestId('feed-item').first()).toBeVisible({ timeout: 30_000 })
 
-    // Dave (kein Empfänger) sieht keinen Share
     await dave.reload()
     await openFamilyHub(dave)
     await dave.waitForTimeout(4_000)
     expect(await dave.getByTestId('feed-item').count()).toBe(0)
 
-    // Verifikation via direkten API-Zugriff: Dave sieht Alices Shares nicht
     const daveClient = createClient(SUPABASE_URL, ANON_KEY, { auth: { persistSession: false } })
     await daveClient.auth.signInAnonymously()
     const { data: rows } = await daveClient
@@ -170,12 +143,8 @@ test.describe('Multi-Empfänger und Drei-Geräte (Real-DB)', () => {
     await daveCtx.close()
   })
 
-  // ── Mehrere sequentielle Shares an denselben Empfänger ─────────────────────
-
-  test('sequential-shares: Alice sendet drei Erinnerungen, alle landen in Bobs Feed', async ({
-    browser,
-  }) => {
-    test.setTimeout(150_000)
+  test('sequential-shares: Alice schreibt drei Antworten, alle landen in Bobs Feed', async ({ browser }) => {
+    test.setTimeout(180_000)
 
     const { alice, bob, carol } = await setupThreeDevices(browser, ['Alice', 'Bob2', 'Carol2'])
     createdUsers.push(alice.id.deviceId, bob.id.deviceId, carol.id.deviceId)
@@ -186,37 +155,16 @@ test.describe('Multi-Empfänger und Drei-Geräte (Real-DB)', () => {
       { id: 'seq-q3', cat: 'childhood', text: 'Dritte Erinnerung.' },
     ]
 
+    await reopenFamilyHub(alice.page)
     for (const m of memories) {
       await seedAnswer(alice.page, m.id, m.cat, m.text)
     }
+    await waitForRealShares(admin, alice.id.deviceId, memories.length, 90_000)
 
-    await alice.page.reload()
-    await openFamilyHub(alice.page)
-    await alice.page.getByRole('tab', { name: 'Teilen', exact: true }).click()
-    await alice.page.getByText('Erste Erinnerung.').click()
-    await alice.page.locator('.share-recipient-chip', { hasText: 'Bob2' }).click()
-    await alice.page.locator('.share-recipient-chip', { hasText: 'Carol2' }).click()
-    await alice.page.getByTestId('send-memories').click()
-    await expect(alice.page.getByTestId('share-success')).toBeVisible({ timeout: 30_000 })
-
-    // Admin: Anzahl Shares aus Alices Gerät
-    await expect
-      .poll(async () => {
-        const { data } = await admin
-          .from('shares')
-          .select('id')
-          .eq('owner_id', alice.id.deviceId)
-        return data?.length ?? 0
-      }, { timeout: 20_000, intervals: [2_000] })
-      .toBeGreaterThanOrEqual(1)
-
-    // Bob sieht mindestens einen Share
     await bob.page.reload()
     await openFamilyHub(bob.page)
-    const bobItems = bob.page.getByTestId('feed-item')
-    await expect(bobItems.first()).toBeVisible({ timeout: 30_000 })
+    await expect(bob.page.getByTestId('feed-item').first()).toBeVisible({ timeout: 30_000 })
 
-    // Carol auch
     await carol.page.reload()
     await openFamilyHub(carol.page)
     await expect(carol.page.getByTestId('feed-item').first()).toBeVisible({ timeout: 30_000 })
@@ -226,28 +174,16 @@ test.describe('Multi-Empfänger und Drei-Geräte (Real-DB)', () => {
     await carol.ctx.close()
   })
 
-  // ── Annotation-Fan-out: Bob und Carol annotieren, Alice sieht beide ────────
-
-  test('annotation-fanout: Bob und Carol annotieren denselben Share, Alice sieht beide', async ({
-    browser,
-  }) => {
-    test.setTimeout(150_000)
+  test('annotation-fanout: Bob und Carol annotieren denselben Share, Alice sieht beide', async ({ browser }) => {
+    test.setTimeout(180_000)
 
     const { alice, bob, carol } = await setupThreeDevices(browser, ['Alice', 'Bob3', 'Carol3'])
     createdUsers.push(alice.id.deviceId, bob.id.deviceId, carol.id.deviceId)
 
+    await reopenFamilyHub(alice.page)
     await seedAnswer(alice.page, 'fanout-q1', 'childhood', 'Erinnerung zum Kommentieren.')
+    await waitForRealShares(admin, alice.id.deviceId, 1, 30_000)
 
-    await alice.page.reload()
-    await openFamilyHub(alice.page)
-    await alice.page.getByRole('tab', { name: 'Teilen', exact: true }).click()
-    await alice.page.getByText('Erinnerung zum Kommentieren.').click()
-    await alice.page.locator('.share-recipient-chip', { hasText: 'Bob3' }).click()
-    await alice.page.locator('.share-recipient-chip', { hasText: 'Carol3' }).click()
-    await alice.page.getByTestId('send-memories').click()
-    await expect(alice.page.getByTestId('share-success')).toBeVisible({ timeout: 30_000 })
-
-    // Hole die Share-ID aus der DB
     const { data: shareRows } = await admin
       .from('shares')
       .select('id')
@@ -255,7 +191,6 @@ test.describe('Multi-Empfänger und Drei-Geräte (Real-DB)', () => {
       .limit(1)
     const shareId = shareRows![0].id
 
-    // Bob annotiert
     await bob.page.reload()
     await openFamilyHub(bob.page)
     const bobFeedItem = bob.page.getByTestId('feed-item').first()
@@ -267,7 +202,6 @@ test.describe('Multi-Empfänger und Drei-Geräte (Real-DB)', () => {
     await bob.page.getByTestId('send-annotation').click()
     await expect(bob.page.getByTestId('annotation-sent')).toBeVisible({ timeout: 15_000 })
 
-    // Carol annotiert ebenfalls
     await carol.page.reload()
     await openFamilyHub(carol.page)
     const carolFeedItem = carol.page.getByTestId('feed-item').first()
@@ -279,7 +213,6 @@ test.describe('Multi-Empfänger und Drei-Geräte (Real-DB)', () => {
     await carol.page.getByTestId('send-annotation').click()
     await expect(carol.page.getByTestId('annotation-sent')).toBeVisible({ timeout: 15_000 })
 
-    // Admin-API: 2 Annotationen müssen in der DB liegen
     await expect
       .poll(async () => {
         const { data } = await admin
@@ -290,7 +223,6 @@ test.describe('Multi-Empfänger und Drei-Geräte (Real-DB)', () => {
       }, { timeout: 20_000, intervals: [2_000] })
       .toBe(2)
 
-    // Alice sieht beide Annotationen auf ihrem Share
     await alice.page.reload()
     await openFamilyHub(alice.page)
     const aliceFeedItem = alice.page.getByTestId('feed-item').first()
@@ -307,28 +239,16 @@ test.describe('Multi-Empfänger und Drei-Geräte (Real-DB)', () => {
     await carol.ctx.close()
   })
 
-  // ── Admin-API: Share-Struktur korrekt ─────────────────────────────────────
-
-  test('db-structure: share_recipients-Zeilen korrekt für Multi-Empfänger', async ({
-    browser,
-  }) => {
+  test('db-structure: share_recipients-Zeilen korrekt für Multi-Empfänger', async ({ browser }) => {
     test.setTimeout(90_000)
 
     const { alice, bob, carol } = await setupThreeDevices(browser, ['Alice', 'Bob4', 'Carol4'])
     createdUsers.push(alice.id.deviceId, bob.id.deviceId, carol.id.deviceId)
 
+    await reopenFamilyHub(alice.page)
     await seedAnswer(alice.page, 'struct-q1', 'childhood', 'Strukturtest-Erinnerung.')
+    await waitForRealShares(admin, alice.id.deviceId, 1, 30_000)
 
-    await alice.page.reload()
-    await openFamilyHub(alice.page)
-    await alice.page.getByRole('tab', { name: 'Teilen', exact: true }).click()
-    await alice.page.getByText('Strukturtest-Erinnerung.').click()
-    await alice.page.locator('.share-recipient-chip', { hasText: 'Bob4' }).click()
-    await alice.page.locator('.share-recipient-chip', { hasText: 'Carol4' }).click()
-    await alice.page.getByTestId('send-memories').click()
-    await expect(alice.page.getByTestId('share-success')).toBeVisible({ timeout: 30_000 })
-
-    // Admin: Share-Zeile existiert
     const { data: shares } = await admin
       .from('shares')
       .select('id, owner_id')
@@ -337,7 +257,6 @@ test.describe('Multi-Empfänger und Drei-Geräte (Real-DB)', () => {
 
     const shareId = shares![0].id
 
-    // Admin: Empfänger-Zeilen prüfen
     const { data: recipients } = await admin
       .from('share_recipients')
       .select('recipient_id')
@@ -347,7 +266,6 @@ test.describe('Multi-Empfänger und Drei-Geräte (Real-DB)', () => {
     expect(recipientIds).toContain(bob.id.deviceId)
     expect(recipientIds).toContain(carol.id.deviceId)
 
-    // encrypted_keys muss Bob und Carol enthalten
     const { data: shareData } = await admin
       .from('shares')
       .select('encrypted_keys')

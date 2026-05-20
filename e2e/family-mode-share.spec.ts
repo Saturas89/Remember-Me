@@ -9,60 +9,18 @@ import {
   reopenFamilyHub,
   seedAnswer,
   spawnDevice,
+  waitForShares,
 } from './helpers/family-mode-helpers'
 
-// REQ-015 §4.3 – §4.5 Erinnerung teilen, empfangen, ergänzen
-// (FR-15.10 – FR-15.21).
+// REQ-022 §4.3 / §4.4 – auto-share queue + per-contact pause.
 //
-// Two specs:
-//   • the share-tab guard rails (button enables only when both a memory and
-//     at least one recipient are picked),
-//   • the full Alice → Bob roundtrip: encrypt + upload, recipient fetches
-//     and decrypts, recipient adds an Ergänzung, sender receives it back.
-//
-// The send-roundtrip uses `injectOnlineFriend` to skip the handshake reload
-// dance (covered exhaustively in family-mode-handshake.spec.ts) and stay
-// focused on the encryption / sync path.
+// The legacy "Teilen" tab is gone. Sharing is now binary per contact and
+// driven by useAutoShare: every saved Answer flows to every friend whose
+// online.shareAll === true. Pausing a friend deletes the server ACL on shares
+// we own and clears the local share-log so a later toggle-on backfills.
 
-test.describe('Familienmodus – Erinnerung teilen, empfangen, ergänzen (FR-15.10 – FR-15.21)', () => {
-  test('Senden ist gesperrt, solange Empfänger oder Erinnerung fehlen', async ({ browser }) => {
-    const state = createMockState()
-    const { ctx: aliceCtx, page: alice } = await spawnDevice(browser, state)
-    const { ctx: bobCtx, page: bob } = await spawnDevice(browser, state)
-
-    await completeOnboarding(alice, 'Alice')
-    await openFamilyHub(alice)
-    const aliceId = await readDeviceIdentity(alice)
-    await seedAnswer(alice, 'childhood-01', 'childhood', 'Eine kleine Erinnerung.')
-
-    await completeOnboarding(bob, 'Bob')
-    await openFamilyHub(bob)
-    const bobId = await readDeviceIdentity(bob)
-
-    await bob.goto(contactPath('Alice', aliceId.deviceId, aliceId.publicKey))
-    await expect(bob.getByRole('heading', { name: 'Kontakt verknüpfen' })).toBeVisible()
-    await alice.goto(contactPath('Bob', bobId.deviceId, bobId.publicKey))
-    await expect(alice.getByRole('heading', { name: 'Kontakt verknüpfen' })).toBeVisible()
-
-    await reopenFamilyHub(alice)
-    await alice.getByRole('tab', { name: 'Teilen', exact: true }).click()
-
-    const send = alice.getByRole('button', { name: /Verschlüssele & sende/ })
-    await expect(send).toBeDisabled()
-
-    // Pick a memory only → still disabled (no recipient).
-    await alice.getByText('Eine kleine Erinnerung.').click()
-    await expect(send).toBeDisabled()
-
-    // Pick a recipient → enabled.
-    await alice.locator('.share-recipient-chip', { hasText: 'Bob' }).click()
-    await expect(send).toBeEnabled()
-
-    await aliceCtx.close()
-    await bobCtx.close()
-  })
-
-  test('Alice teilt Erinnerung mit Bob, Bob ergänzt sie zurück', async ({ browser }) => {
+test.describe('Familienmodus – Auto-Share & Pause (REQ-022)', () => {
+  test('Alice teilt automatisch mit Bob, Bob ergänzt sie zurück', async ({ browser }) => {
     test.setTimeout(60_000)
     const state = createMockState()
     const { ctx: aliceCtx, page: alice } = await spawnDevice(browser, state)
@@ -71,23 +29,23 @@ test.describe('Familienmodus – Erinnerung teilen, empfangen, ergänzen (FR-15.
     await completeOnboarding(alice, 'Alice')
     await openFamilyHub(alice)
     const aliceId = await readDeviceIdentity(alice)
-    await seedAnswer(alice, 'childhood-01', 'childhood', 'Ich bin in Cuxhaven am Meer aufgewachsen.')
 
     await completeOnboarding(bob, 'Bob')
     await openFamilyHub(bob)
     const bobId = await readDeviceIdentity(bob)
 
-    // Skip the contact-handshake reload dance (covered by handshake spec).
-    await injectOnlineFriend(alice, 'Bob', bobId.deviceId, bobId.publicKey)
-    await injectOnlineFriend(bob, 'Alice', aliceId.deviceId, aliceId.publicKey)
+    // Skip the contact-handshake reload dance (covered by handshake spec) but
+    // mirror what the real flow puts into localStorage – including shareAll.
+    await injectOnlineFriend(alice, 'Bob', bobId.deviceId, bobId.publicKey, true)
+    await injectOnlineFriend(bob, 'Alice', aliceId.deviceId, aliceId.publicKey, true)
 
+    // Reload so useAutoShare picks up the new friend.
     await reopenFamilyHub(alice)
-    await alice.getByRole('tab', { name: 'Teilen', exact: true }).click()
+    await seedAnswer(alice, 'childhood-01', 'childhood', 'Ich bin in Cuxhaven am Meer aufgewachsen.')
 
-    await alice.getByText('Ich bin in Cuxhaven am Meer aufgewachsen.').click()
-    await alice.locator('.share-recipient-chip', { hasText: 'Bob' }).click()
-    await alice.getByRole('button', { name: /Verschlüssele & sende/ }).click()
-    await expect(alice.getByRole('button', { name: /Gesendet/ })).toBeVisible({ timeout: 10_000 })
+    // Auto-share fires after the 3 s debounce – wait up to 15 s for the
+    // resulting shares row.
+    await waitForShares(state, 1, 15_000)
 
     expect(state.shares).toHaveLength(1)
     expect(state.shares[0].owner_id).toBe(aliceId.deviceId)
@@ -116,6 +74,66 @@ test.describe('Familienmodus – Erinnerung teilen, empfangen, ergänzen (FR-15.
     await reopenFamilyHub(alice)
     await expect(alice.getByText('Ich erinnere mich noch an euer Reetdach!')).toBeVisible({ timeout: 15_000 })
     await expect(alice.locator('.shared-memory-annotations')).toContainText('Bob')
+
+    await aliceCtx.close()
+    await bobCtx.close()
+  })
+
+  test('Alice pausiert Bob – Server-ACL für Bob ist weg, sein Feed leer', async ({ browser }) => {
+    test.setTimeout(60_000)
+    const state = createMockState()
+    const { ctx: aliceCtx, page: alice } = await spawnDevice(browser, state)
+    const { ctx: bobCtx, page: bob } = await spawnDevice(browser, state)
+
+    await completeOnboarding(alice, 'Alice')
+    await openFamilyHub(alice)
+    const aliceId = await readDeviceIdentity(alice)
+
+    await completeOnboarding(bob, 'Bob')
+    await openFamilyHub(bob)
+    const bobId = await readDeviceIdentity(bob)
+
+    await injectOnlineFriend(alice, 'Bob', bobId.deviceId, bobId.publicKey, true)
+    await injectOnlineFriend(bob, 'Alice', aliceId.deviceId, aliceId.publicKey, true)
+
+    await reopenFamilyHub(alice)
+    await seedAnswer(alice, 'childhood-02', 'childhood', 'Sommer in den Alpen.')
+    await waitForShares(state, 1, 15_000)
+
+    // Initial: 2 ACL rows (Alice + Bob).
+    expect(state.share_recipients.filter(r => r.share_id === state.shares[0].id)).toHaveLength(2)
+
+    // Bob can see it.
+    await reopenFamilyHub(bob)
+    await bob.getByRole('tab', { name: /^Feed\b/ }).click()
+    await expect(bob.getByText('Sommer in den Alpen.')).toBeVisible({ timeout: 15_000 })
+
+    // Alice opens contacts, toggles Bob off, confirms.
+    await reopenFamilyHub(alice)
+    await alice.getByRole('tab', { name: /Kontakte/ }).click()
+    const friendId = await alice.evaluate((bobDeviceId: string) => {
+      type Bridge = { get: () => Record<string, unknown> | null }
+      const bridge = (window as unknown as { __rmState?: Bridge }).__rmState
+      const state = bridge?.get() ?? {}
+      const friends = (state.friends as Array<{ id: string; online?: { deviceId: string } }>) ?? []
+      return friends.find(f => f.online?.deviceId === bobDeviceId)!.id
+    }, bobId.deviceId)
+    await alice.locator(`[data-testid="shareall-toggle-${friendId}"] input`).click()
+    await expect(alice.locator(`[data-testid="pause-confirm-${friendId}"]`)).toBeVisible()
+    await alice.locator(`[data-testid="pause-confirm-yes-${friendId}"]`).click()
+    await expect(alice.locator(`[data-testid="pause-confirm-${friendId}"]`)).toBeHidden({ timeout: 10_000 })
+
+    // Bob is removed from the ACL; Alice's own ACL row stays.
+    const remaining = state.share_recipients
+      .filter(r => r.share_id === state.shares[0].id)
+      .map(r => r.recipient_id)
+    expect(remaining).toContain(aliceId.deviceId)
+    expect(remaining).not.toContain(bobId.deviceId)
+
+    // Bob refreshes → feed empty.
+    await reopenFamilyHub(bob)
+    await bob.getByRole('tab', { name: /^Feed\b/ }).click()
+    await expect(bob.locator('.shared-memory-card')).toHaveCount(0)
 
     await aliceCtx.close()
     await bobCtx.close()
