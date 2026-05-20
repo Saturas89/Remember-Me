@@ -10,6 +10,7 @@ import {
   reopenFamilyHub,
   seedAnswer,
   spawnDevice,
+  waitForShares,
 } from '../helpers/family-mode-helpers'
 import { installFaultOverlay } from './chaos-mock'
 import { clickAndExpectNoSuccess } from './helpers'
@@ -18,19 +19,15 @@ import { clickAndExpectNoSuccess } from './helpers'
 // nightly interaction workflow (playwright.interaction.config.ts) and are
 // deliberately excluded from the main e2e pipeline via testIgnore.
 //
-// Chaos categories covered:
-//   • HTTP-level errors (503) on share and annotation endpoints
-//   • Network-level aborts (connectionreset) — hard TCP failure
-//   • Race conditions: concurrent sends from both devices
-//   • Replay attack: same contact link opened twice
-//   • Transient server fault with subsequent recovery
-//   • Media upload failure (graceful degradation)
-//   • Multiple annotations from same author (idempotency)
-//   • Clock skew: one device's clock is 1 hour ahead
+// Under REQ-022 the manual "Teilen" tab no longer exists – every saved
+// Answer is auto-shared by useAutoShare. Fault tests now assert on the
+// server state directly (state.shares / state.annotations) instead of UI
+// "Gesendet" badges. The annotation path still has an explicit UI submit
+// because Ergänzungen aren't auto-broadcast.
 
 test.describe('Chaos – Fehlertoleranz und Race-Conditions', () => {
-  test('Server 503 beim Share-Upload: kein falscher Erfolgsindikator', async ({ browser }) => {
-    test.setTimeout(60_000)
+  test('Server 503 beim Auto-Share: kein Share landet im Server, Queue gibt sauber auf', async ({ browser }) => {
+    test.setTimeout(90_000)
     const state = createMockState()
     const { ctx: aliceCtx, page: alice } = await spawnDevice(browser, state)
     const { ctx: bobCtx, page: bob } = await spawnDevice(browser, state)
@@ -38,7 +35,6 @@ test.describe('Chaos – Fehlertoleranz und Race-Conditions', () => {
     await completeOnboarding(alice, 'Alice')
     await openFamilyHub(alice)
     const aliceId = await readDeviceIdentity(alice)
-    await seedAnswer(alice, 'fault-q', 'childhood', 'Diese Erinnerung soll nicht ankommen.')
 
     await completeOnboarding(bob, 'Bob')
     await openFamilyHub(bob)
@@ -47,23 +43,19 @@ test.describe('Chaos – Fehlertoleranz und Race-Conditions', () => {
     await injectOnlineFriend(alice, 'Bob', bobId.deviceId, bobId.publicKey)
     await injectOnlineFriend(bob, 'Alice', aliceId.deviceId, aliceId.publicKey)
 
-    // Dauerhafte 503s auf dem Share-Endpunkt
+    // Persistent 503 on the share endpoint – the auto-share queue will
+    // burn through its 4 retry attempts and then surrender.
     await installFaultOverlay(aliceCtx, state, [
       { urlContains: '/rest/v1/shares', method: 'POST', status: 503, count: 9999 },
     ])
 
     await reopenFamilyHub(alice)
-    await alice.getByRole('tab', { name: 'Teilen', exact: true }).click()
-    await alice.getByText('Diese Erinnerung soll nicht ankommen.').click()
-    await alice.locator('.share-recipient-chip', { hasText: 'Bob' }).click()
+    await seedAnswer(alice, 'fault-q', 'childhood', 'Diese Erinnerung soll nicht ankommen.')
 
-    const noSuccess = await clickAndExpectNoSuccess(
-      alice.getByRole('button', { name: /Verschlüssele & sende/ }),
-      alice.getByRole('button', { name: /Gesendet/ }),
-      8_000,
-    )
-    expect(noSuccess, '"Gesendet" darf bei Server-Fehler nicht erscheinen').toBe(true)
-    expect(state.shares).toHaveLength(0)
+    // Wait through the retry window (2s + 4s + 8s + 16s + jitter) plus
+    // some slack, then confirm nothing landed on the server.
+    await alice.waitForTimeout(35_000)
+    expect(state.shares, 'Share darf bei Server-Fehler nicht persistiert werden').toHaveLength(0)
 
     await aliceCtx.close()
     await bobCtx.close()
@@ -78,7 +70,6 @@ test.describe('Chaos – Fehlertoleranz und Race-Conditions', () => {
     await completeOnboarding(alice, 'Alice')
     await openFamilyHub(alice)
     const aliceId = await readDeviceIdentity(alice)
-    await seedAnswer(alice, 'ann-q', 'childhood', 'Erinnerung zum Annotieren.')
 
     await completeOnboarding(bob, 'Bob')
     await openFamilyHub(bob)
@@ -88,11 +79,8 @@ test.describe('Chaos – Fehlertoleranz und Race-Conditions', () => {
     await injectOnlineFriend(bob, 'Alice', aliceId.deviceId, aliceId.publicKey)
 
     await reopenFamilyHub(alice)
-    await alice.getByRole('tab', { name: 'Teilen', exact: true }).click()
-    await alice.getByText('Erinnerung zum Annotieren.').click()
-    await alice.locator('.share-recipient-chip', { hasText: 'Bob' }).click()
-    await alice.getByRole('button', { name: /Verschlüssele & sende/ }).click()
-    await expect(alice.getByRole('button', { name: /Gesendet/ })).toBeVisible({ timeout: 10_000 })
+    await seedAnswer(alice, 'ann-q', 'childhood', 'Erinnerung zum Annotieren.')
+    await waitForShares(state, 1, 20_000)
 
     await reopenFamilyHub(bob)
     await bob.getByRole('tab', { name: /^Feed\b/ }).click()
@@ -117,7 +105,7 @@ test.describe('Chaos – Fehlertoleranz und Race-Conditions', () => {
     await bobCtx.close()
   })
 
-  test('Gleichzeitiges Senden beider Geräte: kein Cross-Owner-Fehler', async ({ browser }) => {
+  test('Gleichzeitiges Auto-Share beider Geräte: kein Cross-Owner-Fehler', async ({ browser }) => {
     test.setTimeout(120_000)
     const state = createMockState()
     const { ctx: aliceCtx, page: alice } = await spawnDevice(browser, state)
@@ -126,37 +114,25 @@ test.describe('Chaos – Fehlertoleranz und Race-Conditions', () => {
     await completeOnboarding(alice, 'Alice')
     await openFamilyHub(alice)
     const aliceId = await readDeviceIdentity(alice)
-    await seedAnswer(alice, 'race-q-alice', 'childhood', 'Alices gleichzeitige Erinnerung.')
 
     await completeOnboarding(bob, 'Bob')
     await openFamilyHub(bob)
     const bobId = await readDeviceIdentity(bob)
-    await seedAnswer(bob, 'race-q-bob', 'family', 'Bobs gleichzeitige Erinnerung.')
 
     await injectOnlineFriend(alice, 'Bob', bobId.deviceId, bobId.publicKey)
     await injectOnlineFriend(bob, 'Alice', aliceId.deviceId, aliceId.publicKey)
 
-    // Beide bereiten den Teilen-Tab vor, bevor jemand sendet
     await reopenFamilyHub(alice)
-    await alice.getByRole('tab', { name: 'Teilen', exact: true }).click()
-    await alice.getByText("Alices gleichzeitige Erinnerung.").click()
-    await alice.locator('.share-recipient-chip', { hasText: 'Bob' }).click()
-
     await reopenFamilyHub(bob)
-    await bob.getByRole('tab', { name: 'Teilen', exact: true }).click()
-    await bob.getByText("Bobs gleichzeitige Erinnerung.").click()
-    await bob.locator('.share-recipient-chip', { hasText: 'Alice' }).click()
 
-    // Gleichzeitiger Klick
+    // Both seed answers near-simultaneously – useAutoShare on each device
+    // independently encrypts and uploads.
     await Promise.all([
-      alice.getByRole('button', { name: /Verschlüssele & sende/ }).click(),
-      bob.getByRole('button', { name: /Verschlüssele & sende/ }).click(),
+      seedAnswer(alice, 'race-q-alice', 'childhood', 'Alices gleichzeitige Erinnerung.'),
+      seedAnswer(bob, 'race-q-bob', 'family', 'Bobs gleichzeitige Erinnerung.'),
     ])
 
-    await expect(alice.getByRole('button', { name: /Gesendet/ })).toBeVisible({ timeout: 15_000 })
-    await expect(bob.getByRole('button', { name: /Gesendet/ })).toBeVisible({ timeout: 15_000 })
-
-    expect(state.shares).toHaveLength(2)
+    await waitForShares(state, 2, 30_000)
 
     // Kein Share ist dem falschen Owner zugeordnet
     const aliceShare = state.shares.find(s => s.owner_id === aliceId.deviceId)
@@ -202,7 +178,7 @@ test.describe('Chaos – Fehlertoleranz und Race-Conditions', () => {
     await bobCtx.close()
   })
 
-  test('Transienter Server-Fehler (503 einmalig): Share gelingt beim nächsten Versuch', async ({ browser }) => {
+  test('Transienter Server-Fehler (503 einmalig): Auto-Share gelingt beim Retry', async ({ browser }) => {
     test.setTimeout(90_000)
     const state = createMockState()
     const { ctx: aliceCtx, page: alice } = await spawnDevice(browser, state)
@@ -211,7 +187,6 @@ test.describe('Chaos – Fehlertoleranz und Race-Conditions', () => {
     await completeOnboarding(alice, 'Alice')
     await openFamilyHub(alice)
     const aliceId = await readDeviceIdentity(alice)
-    await seedAnswer(alice, 'transient-q', 'childhood', 'Erinnerung mit transientem Fehler.')
 
     await completeOnboarding(bob, 'Bob')
     await openFamilyHub(bob)
@@ -220,49 +195,25 @@ test.describe('Chaos – Fehlertoleranz und Race-Conditions', () => {
     await injectOnlineFriend(alice, 'Bob', bobId.deviceId, bobId.publicKey)
     await injectOnlineFriend(bob, 'Alice', aliceId.deviceId, aliceId.publicKey)
 
-    // Einmaliger 503 – danach gibt der Mock grünes Licht
+    // Einmaliger 503 – danach gibt der Mock grünes Licht. useAutoShare
+    // wartet 2s und versucht es erneut → 2. Versuch landet.
     const faults = await installFaultOverlay(aliceCtx, state, [
       { urlContains: '/rest/v1/shares', method: 'POST', status: 503, count: 1 },
     ])
 
     await reopenFamilyHub(alice)
-    await alice.getByRole('tab', { name: 'Teilen', exact: true }).click()
-    await alice.getByText('Erinnerung mit transientem Fehler.').click()
-    await alice.locator('.share-recipient-chip', { hasText: 'Bob' }).click()
+    await seedAnswer(alice, 'transient-q', 'childhood', 'Erinnerung mit transientem Fehler.')
 
-    // Erster Versuch schlägt fehl (Fault greift einmalig ein)
-    await alice.getByRole('button', { name: /Verschlüssele & sende/ }).click()
-
-    // Wenn die App einen automatischen Retry macht oder der Nutzer erneut klickt,
-    // muss der zweite Versuch gelingen. Wir simulieren hier den manuellen Retry.
-    // Falls der Button bereits "Gesendet" zeigt, hat die App auto-retry.
-    const successAfterFirst = await alice
-      .getByRole('button', { name: /Gesendet/ })
-      .waitFor({ state: 'visible', timeout: 5_000 })
-      .then(() => true)
-      .catch(() => false)
-
-    if (!successAfterFirst) {
-      // Manueller Retry: Button erneut klicken
-      const sendBtn = alice.getByRole('button', { name: /Verschlüssele & sende/ })
-      const isStillPresent = await sendBtn.isVisible()
-      if (isStillPresent) {
-        await sendBtn.click()
-        await expect(alice.getByRole('button', { name: /Gesendet/ })).toBeVisible({ timeout: 10_000 })
-      }
-    }
-
-    // Fault wurde genau einmal ausgelöst
+    await waitForShares(state, 1, 30_000)
     expect(faults[0].hits).toBe(1)
-    // Sobald der Fault erschöpft ist, muss der Share im Mock landen
     expect(state.shares).toHaveLength(1)
 
     await aliceCtx.close()
     await bobCtx.close()
   })
 
-  test('TCP-Abbruch (connectionreset) beim Teilen: kein falscher Erfolgsindikator', async ({ browser }) => {
-    test.setTimeout(60_000)
+  test('TCP-Abbruch (connectionreset) beim Auto-Share: kein Share im Mock', async ({ browser }) => {
+    test.setTimeout(90_000)
     const state = createMockState()
     const { ctx: aliceCtx, page: alice } = await spawnDevice(browser, state)
     const { ctx: bobCtx, page: bob } = await spawnDevice(browser, state)
@@ -270,7 +221,6 @@ test.describe('Chaos – Fehlertoleranz und Race-Conditions', () => {
     await completeOnboarding(alice, 'Alice')
     await openFamilyHub(alice)
     const aliceId = await readDeviceIdentity(alice)
-    await seedAnswer(alice, 'abort-q', 'childhood', 'Erinnerung mit TCP-Abbruch.')
 
     await completeOnboarding(bob, 'Bob')
     await openFamilyHub(bob)
@@ -285,23 +235,16 @@ test.describe('Chaos – Fehlertoleranz und Race-Conditions', () => {
     ])
 
     await reopenFamilyHub(alice)
-    await alice.getByRole('tab', { name: 'Teilen', exact: true }).click()
-    await alice.getByText('Erinnerung mit TCP-Abbruch.').click()
-    await alice.locator('.share-recipient-chip', { hasText: 'Bob' }).click()
+    await seedAnswer(alice, 'abort-q', 'childhood', 'Erinnerung mit TCP-Abbruch.')
 
-    const noSuccess = await clickAndExpectNoSuccess(
-      alice.getByRole('button', { name: /Verschlüssele & sende/ }),
-      alice.getByRole('button', { name: /Gesendet/ }),
-      8_000,
-    )
-    expect(noSuccess, '"Gesendet" darf bei TCP-Abbruch nicht erscheinen').toBe(true)
-    expect(state.shares).toHaveLength(0)
+    await alice.waitForTimeout(35_000)
+    expect(state.shares, 'Share darf bei TCP-Abbruch nicht persistiert werden').toHaveLength(0)
 
     await aliceCtx.close()
     await bobCtx.close()
   })
 
-  test('Medienupload-Fehler: Share-Text trotzdem übermittelt (graceful degradation)', async ({ browser }) => {
+  test('Medienupload-Fehler: Text-Share trotzdem übermittelt (graceful degradation)', async ({ browser }) => {
     test.setTimeout(90_000)
     const state = createMockState()
     const { ctx: aliceCtx, page: alice } = await spawnDevice(browser, state)
@@ -310,7 +253,6 @@ test.describe('Chaos – Fehlertoleranz und Race-Conditions', () => {
     await completeOnboarding(alice, 'Alice')
     await openFamilyHub(alice)
     const aliceId = await readDeviceIdentity(alice)
-    await seedAnswer(alice, 'media-q', 'childhood', 'Erinnerung mit fehlgeschlagenem Medienupload.')
 
     await completeOnboarding(bob, 'Bob')
     await openFamilyHub(bob)
@@ -319,20 +261,17 @@ test.describe('Chaos – Fehlertoleranz und Race-Conditions', () => {
     await injectOnlineFriend(alice, 'Bob', bobId.deviceId, bobId.publicKey)
     await injectOnlineFriend(bob, 'Alice', aliceId.deviceId, aliceId.publicKey)
 
-    // Storage-Uploads blockieren – Text-Shares laufen über /rest/v1/ und sind unberührt
+    // Storage-Uploads blockieren – Auto-Share läuft Text-only (REQ-022 §9),
+    // also ist der Text-Share von blockiertem Storage gar nicht betroffen.
     await installFaultOverlay(aliceCtx, state, [
       { urlContains: '/storage/v1/object/', method: 'POST', status: 503, count: 9999 },
       { urlContains: '/storage/v1/object/', method: 'PUT', status: 503, count: 9999 },
     ])
 
     await reopenFamilyHub(alice)
-    await alice.getByRole('tab', { name: 'Teilen', exact: true }).click()
-    await alice.getByText('Erinnerung mit fehlgeschlagenem Medienupload.').click()
-    await alice.locator('.share-recipient-chip', { hasText: 'Bob' }).click()
-    await alice.getByRole('button', { name: /Verschlüssele & sende/ }).click()
-    await expect(alice.getByRole('button', { name: /Gesendet/ })).toBeVisible({ timeout: 10_000 })
+    await seedAnswer(alice, 'media-q', 'childhood', 'Erinnerung mit fehlgeschlagenem Medienupload.')
 
-    // Text-Share muss im Mock gelandet sein, trotz defektem Storage-Endpunkt
+    await waitForShares(state, 1, 30_000)
     expect(state.shares).toHaveLength(1)
     expect(state.storage.size).toBe(0)
 
@@ -353,7 +292,6 @@ test.describe('Chaos – Fehlertoleranz und Race-Conditions', () => {
     await completeOnboarding(alice, 'Alice')
     await openFamilyHub(alice)
     const aliceId = await readDeviceIdentity(alice)
-    await seedAnswer(alice, 'multi-ann-q', 'childhood', 'Erinnerung mit mehreren Ergänzungen.')
 
     await completeOnboarding(bob, 'Bob')
     await openFamilyHub(bob)
@@ -363,11 +301,8 @@ test.describe('Chaos – Fehlertoleranz und Race-Conditions', () => {
     await injectOnlineFriend(bob, 'Alice', aliceId.deviceId, aliceId.publicKey)
 
     await reopenFamilyHub(alice)
-    await alice.getByRole('tab', { name: 'Teilen', exact: true }).click()
-    await alice.getByText('Erinnerung mit mehreren Ergänzungen.').click()
-    await alice.locator('.share-recipient-chip', { hasText: 'Bob' }).click()
-    await alice.getByRole('button', { name: /Verschlüssele & sende/ }).click()
-    await expect(alice.getByRole('button', { name: /Gesendet/ })).toBeVisible({ timeout: 10_000 })
+    await seedAnswer(alice, 'multi-ann-q', 'childhood', 'Erinnerung mit mehreren Ergänzungen.')
+    await waitForShares(state, 1, 20_000)
 
     await reopenFamilyHub(bob)
     await bob.getByRole('tab', { name: /^Feed\b/ }).click()
@@ -387,14 +322,10 @@ test.describe('Chaos – Fehlertoleranz und Race-Conditions', () => {
     await bob.getByRole('button', { name: 'Ergänzung senden' }).click()
     await expect(bob.getByRole('button', { name: /Gesendet/ })).toBeVisible({ timeout: 10_000 })
 
-    // Mock: beide Annotationen sind eigenständige Einträge, kein Overwrite
     expect(state.annotations).toHaveLength(2)
     expect(state.annotations.every(a => a.author_id === bobId.deviceId)).toBe(true)
-    // Annotationen sind AES-GCM-verschlüsselt – Plaintext nie direkt im Mock sichtbar.
-    // Verschiedene Ciphertexte bestätigen, dass kein Eintrag den anderen überschrieben hat.
     expect(state.annotations[0].ciphertext).not.toBe(state.annotations[1].ciphertext)
 
-    // Alice sieht beide Ergänzungen
     await reopenFamilyHub(alice)
     await expect(alice.getByText('Erste Ergänzung von Bob.')).toBeVisible({ timeout: 15_000 })
     await expect(alice.getByText('Zweite Ergänzung von Bob.')).toBeVisible({ timeout: 15_000 })
@@ -403,7 +334,7 @@ test.describe('Chaos – Fehlertoleranz und Race-Conditions', () => {
     await bobCtx.close()
   })
 
-  test('Uhrzeitversatz (1 Stunde): Handshake und Teilen funktionieren trotzdem', async ({ browser }) => {
+  test('Uhrzeitversatz (1 Stunde): Handshake und Auto-Share funktionieren trotzdem', async ({ browser }) => {
     test.setTimeout(120_000)
     const state = createMockState()
 
@@ -441,7 +372,6 @@ test.describe('Chaos – Fehlertoleranz und Race-Conditions', () => {
     await completeOnboarding(alice, 'Alice')
     await openFamilyHub(alice)
     const aliceId = await readDeviceIdentity(alice)
-    await seedAnswer(alice, 'skew-q', 'childhood', 'Erinnerung trotz Uhrzeitversatz.')
 
     await completeOnboarding(bobPage, 'Bob (Zukunft)')
     await openFamilyHub(bobPage)
@@ -450,7 +380,6 @@ test.describe('Chaos – Fehlertoleranz und Race-Conditions', () => {
     // Handshake mit Uhrzeitversatz
     await bobPage.goto(contactPath('Alice', aliceId.deviceId, aliceId.publicKey))
     await expect(bobPage.getByRole('heading', { name: 'Kontakt verknüpfen' })).toBeVisible()
-    // onAcceptContact runs in a useEffect after paint – poll until state is saved
     await bobPage.waitForFunction(
       () => ((window as any).__rmState?.get()?.friends ?? []).filter((f: any) => f.online).length >= 1,
       undefined,
@@ -469,15 +398,10 @@ test.describe('Chaos – Fehlertoleranz und Race-Conditions', () => {
     const aliceFriends = await readOnlineFriends(alice)
     expect(aliceFriends).toHaveLength(1)
 
-    // Teilen trotz Uhrzeitversatz
+    // Auto-Share trotz Uhrzeitversatz
     await reopenFamilyHub(alice)
-    await alice.getByRole('tab', { name: 'Teilen', exact: true }).click()
-    await alice.getByText('Erinnerung trotz Uhrzeitversatz.').click()
-    await alice.locator('.share-recipient-chip').first().click()
-    await alice.getByRole('button', { name: /Verschlüssele & sende/ }).click()
-    await expect(alice.getByRole('button', { name: /Gesendet/ })).toBeVisible({ timeout: 10_000 })
-
-    expect(state.shares).toHaveLength(1)
+    await seedAnswer(alice, 'skew-q', 'childhood', 'Erinnerung trotz Uhrzeitversatz.')
+    await waitForShares(state, 1, 25_000)
 
     await reopenFamilyHub(bobPage)
     await bobPage.getByRole('tab', { name: /^Feed\b/ }).click()

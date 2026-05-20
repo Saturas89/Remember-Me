@@ -242,16 +242,17 @@ export async function unshareAllWithFriend(
   const session = requireSession()
   const supabase = getSupabaseClient()
 
-  // Find share IDs we own that include this friend as a recipient.
-  const { data: rows, error: selErr } = await supabase
-    .from('share_recipients')
-    .select('share_id, shares!inner(owner_id)')
-    .eq('recipient_id', friendDeviceId)
-    .eq('shares.owner_id', session.deviceId)
-  if (selErr) throw selErr
+  // 1. List share IDs we own. Two-step query (instead of an inner join) so
+  //    we stay compatible with simple REST mocks that don't resolve joins.
+  const { data: myShares, error: ownErr } = await supabase
+    .from('shares')
+    .select('id')
+    .eq('owner_id', session.deviceId)
+  if (ownErr) throw ownErr
+  const shareIds = (myShares ?? []).map(s => (s as { id: string }).id)
 
-  const shareIds = (rows ?? []).map(r => (r as { share_id: string }).share_id)
-
+  // 2. Delete this friend's ACL row on every share we own. RLS lets owners
+  //    delete recipients from their own shares.
   if (shareIds.length > 0) {
     const { error: delErr } = await supabase
       .from('share_recipients')

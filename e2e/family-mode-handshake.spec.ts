@@ -53,10 +53,16 @@ test.describe('Familienmodus – Kontakt-Handshake (FR-15.5 – FR-15.9)', () =>
     await expect(bob.getByText(/Alice/).first()).toBeVisible()
     await expect(bob.getByRole('button', { name: /Meinen Link zurück senden/ })).toBeVisible()
 
+    // REQ-022 §4.2: the share-all opt-in is visible AND checked by default.
+    const shareAllCheckbox = bob.locator('[data-testid="contact-handshake-shareall"] input[type="checkbox"]')
+    await expect(shareAllCheckbox).toBeVisible()
+    await expect(shareAllCheckbox).toBeChecked()
+
     const bobsAlice = await readOnlineFriends(bob)
     expect(bobsAlice).toHaveLength(1)
     expect(bobsAlice[0]).toMatchObject({ name: 'Alice' })
     expect(bobsAlice[0].online?.deviceId).toBe(aliceId.deviceId)
+    expect(bobsAlice[0].online?.shareAll).toBe(true)
 
     // Alice opens Bob's link → mirror-accept.
     await alice.goto(contactPath('Bob', bobId.deviceId, bobId.publicKey))
@@ -65,6 +71,41 @@ test.describe('Familienmodus – Kontakt-Handshake (FR-15.5 – FR-15.9)', () =>
     expect(alicesBob).toHaveLength(1)
     expect(alicesBob[0]).toMatchObject({ name: 'Bob' })
     expect(alicesBob[0].online?.deviceId).toBe(bobId.deviceId)
+    expect(alicesBob[0].online?.shareAll).toBe(true)
+
+    await aliceCtx.close()
+    await bobCtx.close()
+  })
+
+  test('Checkbox abhaken speichert friend.online.shareAll = false', async ({ browser }) => {
+    const state = createMockState()
+    const { ctx: aliceCtx, page: alice } = await spawnDevice(browser, state)
+    const { ctx: bobCtx, page: bob } = await spawnDevice(browser, state)
+
+    await completeOnboarding(alice, 'Alice')
+    await openFamilyHub(alice)
+    const aliceId = await readDeviceIdentity(alice)
+
+    await completeOnboarding(bob, 'Bob')
+    await openFamilyHub(bob)
+
+    await bob.goto(contactPath('Alice', aliceId.deviceId, aliceId.publicKey))
+    const shareAllCheckbox = bob.locator('[data-testid="contact-handshake-shareall"] input[type="checkbox"]')
+    await expect(shareAllCheckbox).toBeChecked()
+    await shareAllCheckbox.uncheck()
+
+    // ContactHandshakeView re-fires onAcceptContact on toggle so the friend
+    // upsert path picks up the new shareAll value.
+    await bob.waitForFunction(() => {
+      type Bridge = { get: () => Record<string, unknown> | null }
+      const bridge = (window as unknown as { __rmState?: Bridge }).__rmState
+      const s = bridge?.get() ?? {}
+      const friends = (s.friends as Array<{ online?: { shareAll?: boolean } }>) ?? []
+      return friends.length > 0 && friends[0].online?.shareAll === false
+    }, undefined, { timeout: 5_000 })
+
+    const bobsAlice = await readOnlineFriends(bob)
+    expect(bobsAlice[0].online?.shareAll).toBe(false)
 
     await aliceCtx.close()
     await bobCtx.close()

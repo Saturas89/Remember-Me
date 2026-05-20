@@ -9,6 +9,7 @@ import {
   reopenFamilyHub,
   seedAnswer,
   spawnDevice,
+  waitForShares,
 } from './helpers/family-mode-helpers'
 
 // REQ-015 – komplette Einladungs- und Teilen-Kette in einem einzigen Lauf.
@@ -54,13 +55,10 @@ test.describe('Familienmodus – Komplette Einladungs- und Teilen-Kette', () => 
     expect(alicesBob[0]).toMatchObject({ name: 'Bob' })
     expect(alicesBob[0].online?.deviceId).toBe(bobId.deviceId)
 
-    // 4) Alice geht zurück in den Hub und sendet die Erinnerung an Bob.
+    // 4) Alice geht zurück in den Hub — die Erinnerung wird per Auto-Share
+    //    automatisch an Bob verschickt (REQ-022). Kein Picker mehr.
     await reopenFamilyHub(alice)
-    await alice.getByRole('tab', { name: 'Teilen', exact: true }).click()
-    await alice.getByText('Ich bin in Cuxhaven am Meer aufgewachsen.').click()
-    await alice.locator('.share-recipient-chip', { hasText: 'Bob' }).click()
-    await alice.getByRole('button', { name: /Verschlüssele & sende/ }).click()
-    await expect(alice.getByRole('button', { name: /Gesendet/ })).toBeVisible({ timeout: 10_000 })
+    await waitForShares(state, 1, 20_000)
 
     // Wire-Encryption: der Klartext darf nicht unverschlüsselt im Share landen.
     expect(state.shares).toHaveLength(1)

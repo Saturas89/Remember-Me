@@ -152,14 +152,18 @@ export async function seedAnswer(
  * Inserts a Friend with `online` block directly into localStorage, bypassing
  * the contact-handshake screen flow. Useful when a test needs the linked
  * state but is not specifically testing the handshake UI.
+ *
+ * Defaults `shareAll: true` (REQ-022 §4.2 default) so subsequent auto-share
+ * tests get the same starting state as the real handshake flow.
  */
 export async function injectOnlineFriend(
   page: Page,
   name: string,
   deviceId: string,
   publicKey: string,
+  shareAll = true,
 ) {
-  await page.evaluate(({ name, deviceId, publicKey }) => {
+  await page.evaluate(({ name, deviceId, publicKey, shareAll }) => {
     type Bridge = { get: () => Record<string, unknown> | null; save: (s: unknown) => void }
     const bridge = (window as unknown as { __rmState?: Bridge }).__rmState
     const state: Record<string, unknown> = bridge?.get() ?? {}
@@ -169,12 +173,27 @@ export async function injectOnlineFriend(
         id: `friend-${deviceId}`,
         name,
         addedAt: new Date().toISOString(),
-        online: { deviceId, publicKey, linkedAt: new Date().toISOString() },
+        online: { deviceId, publicKey, linkedAt: new Date().toISOString(), shareAll },
       })
     }
     state.friends = friends
     bridge?.save(state)
-  }, { name, deviceId, publicKey })
+  }, { name, deviceId, publicKey, shareAll })
+}
+
+/**
+ * Waits until the auto-share queue has produced at least `minShares` shares
+ * in the in-memory Supabase mock. Useful for asserting that
+ * useAutoShare picked up a seeded answer.
+ */
+export async function waitForShares(state: MockState, minShares: number, timeoutMs = 15_000): Promise<void> {
+  const start = Date.now()
+  while (state.shares.length < minShares) {
+    if (Date.now() - start > timeoutMs) {
+      throw new Error(`Timed out waiting for ${minShares} share(s); got ${state.shares.length}`)
+    }
+    await new Promise(r => setTimeout(r, 250))
+  }
 }
 
 export function contactPath(displayName: string, deviceId: string, publicKey: string): string {
