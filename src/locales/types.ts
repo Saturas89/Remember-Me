@@ -338,6 +338,10 @@ export interface Translations {
     shareBackButton: string
     shareBackCopied: string
     doneButton: string
+    /** REQ-022 §4.2: opt-in checkbox below the connection status. Uses {name}. */
+    shareAllOptInLabel: string
+    /** Hint shown next to the checkbox. Uses {name}. */
+    shareAllOptInHint: string
   }
 
   onlineSharingHub: {

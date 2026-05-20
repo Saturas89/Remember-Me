@@ -3,6 +3,18 @@ import { BACKUP_TYPE } from '../utils/export'
 import { initStorageKey, loadStoredState, saveState } from '../utils/stateStorage'
 import type { Profile, AppState, AppMode, Answer, Friend, FriendAnswer, AnswerExport, CustomQuestion, FriendAnswerZipPayload, OnlineSharingState, PrivateSyncState } from '../types'
 
+/** REQ-022 migration: old Friends stored without `online.shareAll` get
+ *  `shareAll: true` so existing connections keep working in the new model. */
+function migrateFriendsShareAll(friends: Friend[] | undefined): Friend[] {
+  if (!friends || friends.length === 0) return friends ?? []
+  return friends.map(f => {
+    if (!f.online) return f
+    const online = f.online as Friend['online'] & { shareAll?: boolean }
+    if (typeof online.shareAll === 'boolean') return f
+    return { ...f, online: { ...online, shareAll: true } as NonNullable<Friend['online']> }
+  })
+}
+
 async function loadStateAsync(): Promise<AppState> {
   await initStorageKey()
   const stored = await loadStoredState()
@@ -10,7 +22,7 @@ async function loadStateAsync(): Promise<AppState> {
     return {
       profile: stored.profile ?? null,
       answers: stored.answers ?? {},
-      friends: stored.friends ?? [],
+      friends: migrateFriendsShareAll(stored.friends),
       friendAnswers: stored.friendAnswers ?? [],
       customQuestions: stored.customQuestions ?? [],
       onlineSharing: stored.onlineSharing,
@@ -490,7 +502,26 @@ export function useAnswers() {
         onlineSharing: prev.onlineSharing,
         privateSync: prev.privateSync,
         streak: prev.streak,
+        // REQ-022 migration: remote backups from older clients may carry
+        // friends without `online.shareAll`; normalize to true.
+        friends: migrateFriendsShareAll(merged.friends),
       }
+      saveState(next)
+      return next
+    })
+  }, [])
+
+  const setFriendShareAll = useCallback((friendId: string, shareAll: boolean) => {
+    setState(prev => {
+      let changed = false
+      const friends = prev.friends.map(f => {
+        if (f.id !== friendId || !f.online) return f
+        if (f.online.shareAll === shareAll) return f
+        changed = true
+        return { ...f, online: { ...f.online, shareAll } }
+      })
+      if (!changed) return prev
+      const next: AppState = { ...prev, friends }
       saveState(next)
       return next
     })
@@ -535,7 +566,7 @@ export function useAnswers() {
         const restored: AppState = {
           profile: s.profile ?? null,
           answers: s.answers ?? {},
-          friends: s.friends ?? [],
+          friends: migrateFriendsShareAll(s.friends),
           friendAnswers: s.friendAnswers ?? [],
           customQuestions: s.customQuestions ?? [],
           streak: s.streak, // optional
@@ -623,6 +654,7 @@ export function useAnswers() {
     saveProfile,
     addFriend,
     removeFriend,
+    setFriendShareAll,
     importFriendAnswers,
     importFriendAnswerZipData,
     addCustomQuestion,

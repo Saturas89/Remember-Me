@@ -317,6 +317,8 @@ export const UI_EN = {
     shareBackButton: 'Send my link back',
     shareBackCopied: 'Link copied ✓',
     doneButton: 'Done',
+    shareAllOptInLabel: 'Auto-share my memories with {name}',
+    shareAllOptInHint: 'New answers go straight to {name}. You can change this anytime in Contacts.',
   },
 
   onlineSharingHub: {

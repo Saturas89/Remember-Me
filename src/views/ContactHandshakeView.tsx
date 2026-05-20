@@ -21,7 +21,10 @@ interface Props {
   myPublicKey: string | null
   enabled: boolean
   onEnable: () => void
-  onAcceptContact: (h: ContactHandshake) => void
+  /** Called once when the handshake auto-accepts AND again whenever the
+   *  user flips the share-all checkbox after acceptance. The parent uses
+   *  the deviceId inside `h` to upsert the friend and propagate `shareAll`. */
+  onAcceptContact: (h: ContactHandshake, shareAll: boolean) => void
   onDismiss: () => void
 }
 
@@ -46,6 +49,11 @@ export function ContactHandshakeView({
   const c = t.contactHandshake
   const [accepted, setAccepted] = useState(false)
   const [copied, setCopied] = useState(false)
+  // REQ-022 §4.2: binary opt-in. Default checked so Ingrid never needs to
+  // think about it. Late toggles re-call onAcceptContact below, which the
+  // parent upserts into friend.online.shareAll.
+  const [shareAllOptIn, setShareAllOptIn] = useState(true)
+  const lastAcceptedShareAllRef = useRef<boolean | null>(null)
   const shareCardRef = useRef<File | null>(null)
 
   // Persona-led waiting feedback (#165) — track how long the
@@ -87,13 +95,15 @@ export function ContactHandshakeView({
   }, [myLink, profileName, c.shareCardTitleWithName, c.shareCardSubtitle])
 
   // Auto-accept once online sharing is ready (the user already consented by
-  // clicking "Aktivieren" in the intro). This is idempotent.
+  // clicking "Aktivieren" in the intro). Idempotent and re-fires on
+  // shareAllOptIn changes after acceptance (REQ-022 FR-22.5).
   useEffect(() => {
-    if (enabled && !accepted) {
-      onAcceptContact(handshake)
-      setAccepted(true)
-    }
-  }, [enabled, accepted, handshake, onAcceptContact])
+    if (!enabled) return
+    if (accepted && lastAcceptedShareAllRef.current === shareAllOptIn) return
+    onAcceptContact(handshake, shareAllOptIn)
+    lastAcceptedShareAllRef.current = shareAllOptIn
+    if (!accepted) setAccepted(true)
+  }, [enabled, accepted, handshake, onAcceptContact, shareAllOptIn])
 
   const shareBack = async () => {
     if (!myLink) return
@@ -166,6 +176,24 @@ export function ContactHandshakeView({
             <p className="friends-hint">
               {c.savedHint.replace('{name}', handshake.displayName || c.savedHintDefaultName)}
             </p>
+
+            <label className="online-consent" data-testid="contact-handshake-shareall">
+              <input
+                type="checkbox"
+                checked={shareAllOptIn}
+                onChange={e => setShareAllOptIn(e.target.checked)}
+              />
+              <span>
+                <strong>
+                  {c.shareAllOptInLabel.replace('{name}', handshake.displayName || c.savedHintDefaultName)}
+                </strong>
+                <br />
+                <small className="friends-hint">
+                  {c.shareAllOptInHint.replace('{name}', handshake.displayName || c.savedHintDefaultName)}
+                </small>
+              </span>
+            </label>
+
             <button className="share-cta-btn" onClick={shareBack}>
               {copied ? c.shareBackCopied : c.shareBackButton}
             </button>

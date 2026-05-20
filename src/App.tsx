@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useAnswers } from './hooks/useAnswers'
 import { useInstallPrompt } from './hooks/useInstallPrompt'
 import { CATEGORIES } from './data/categories'
@@ -38,6 +38,7 @@ import { SandraFlowView } from './views/SandraFlowView'
 import { PersonalPackReceiveView } from './views/PersonalPackReceiveView'
 import { DebugPostHogView } from './views/DebugPostHogView'
 import { useOnlineSync } from './hooks/useOnlineSync'
+import { useAutoShare } from './hooks/useAutoShare'
 import { usePrivateSync } from './hooks/usePrivateSync'
 import { defaultMediaAdapter } from './utils/privateSyncMediaAdapter'
 
@@ -190,6 +191,37 @@ export default function App() {
   // dynamic-imports the Supabase client module only when enabled === true.
   const onlineSync = useOnlineSync(onlineSharing, (deviceId, publicKey) => {
     setOnlineSharing({ deviceId, publicKey })
+  })
+
+  // Resolve a human-readable question text for the auto-share hook. Built-in
+  // category questions come from CATEGORIES; user-added questions from the
+  // customQuestions state. Falls back to the questionId itself so the
+  // recipient never sees an empty header.
+  const customQuestionsById = useMemo(() => {
+    const m = new Map<string, string>()
+    for (const q of customQuestions) m.set(q.id, q.text)
+    return m
+  }, [customQuestions])
+  const resolveAnswerQuestionText = useCallback((ans: { questionId: string; categoryId?: string }) => {
+    for (const cat of CATEGORIES) {
+      const q = cat.questions.find(qq => qq.id === ans.questionId)
+      if (q) return q.text
+    }
+    const custom = customQuestionsById.get(ans.questionId)
+    if (custom) return custom
+    return ans.questionId
+  }, [customQuestionsById])
+
+  // Auto-share (REQ-022): no-op until online sharing is enabled AND there's
+  // at least one friend with online.shareAll === true. Idempotent and
+  // resumable across mounts.
+  useAutoShare({
+    answers,
+    friends,
+    sync: onlineSync,
+    ownerName: profile?.name ?? '',
+    enabled: Boolean(onlineSharing?.enabled),
+    resolveQuestionText: resolveAnswerQuestionText,
   })
 
   // Resolve secure invite / answer-import / memory-share / pack URL asynchronously on first mount
@@ -440,11 +472,12 @@ export default function App() {
         myPublicKey={onlineSync.publicKeyB64}
         enabled={Boolean(onlineSharing?.enabled)}
         onEnable={() => enableOnlineSharing()}
-        onAcceptContact={h => {
+        onAcceptContact={(h, shareAll) => {
           addFriend(h.displayName || 'Kontakt', undefined, {
             deviceId: h.deviceId,
             publicKey: h.publicKey,
             linkedAt: new Date().toISOString(),
+            shareAll,
           })
         }}
         onDismiss={() => {

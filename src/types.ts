@@ -65,6 +65,10 @@ export interface Friend {
     deviceId: string      // opaque UUID, same as Supabase devices.id
     publicKey: string     // ECDH P-256 SPKI as base64url
     linkedAt: string
+    /** Binary share decision (REQ-022). When true, every saved Answer is
+     *  auto-shared with this friend; when false, nothing is sent. Friends
+     *  loaded from older storage without this field are migrated to true. */
+    shareAll: boolean
   }
 }
 
