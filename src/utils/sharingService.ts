@@ -21,11 +21,13 @@ import {
   type ShareEnvelope,
 } from './shareEncryption'
 import { toB64u, fromB64u, type DeviceKeyPair } from './crypto'
+import { deleteShareLogForFriend } from './shareLogStore'
 import type {
   ShareBody,
   AnnotationBody,
   SharedMemory,
   Annotation,
+  Answer,
 } from '../types'
 
 interface Session {
@@ -197,6 +199,71 @@ export async function shareMemory(input: ShareMemoryInput): Promise<{ shareId: s
   }
 
   return { shareId }
+}
+
+// ── Auto-share helpers (REQ-022) ─────────────────────────────────────────────
+
+/**
+ * Multicasts a single Answer to a set of recipients in one share row.
+ * Used by the auto-share queue (useAutoShare) and for backfill. Returns the
+ * created shareId (one row in `shares`). The owner is added to the ACL
+ * implicitly by shareMemory().
+ */
+export async function shareMemoryToAllFriends(
+  answer: Answer,
+  questionText: string,
+  recipients: Recipient[],
+  ownerName: string,
+): Promise<{ shareId: string }> {
+  const body: ShareBody = {
+    $type: 'remember-me-share',
+    version: 1,
+    questionId: answer.questionId,
+    questionText,
+    value: answer.value,
+    // Auto-share is text-only for v2.13.0 (REQ-022 §9 known limitation).
+    // Media auto-share is a follow-up refactor.
+    imageCount: 0,
+    createdAt: answer.createdAt,
+    ownerName,
+  }
+  return shareMemory({ body, recipients, images: [] })
+}
+
+/**
+ * Removes the friend from every share the current device owns and clears the
+ * local share-log entries for that friend (REQ-022 FR-22.14). The friend
+ * sees an empty feed on next refresh; the underlying shares row remains for
+ * the owner and any other recipients.
+ */
+export async function unshareAllWithFriend(
+  friendDeviceId: string,
+): Promise<void> {
+  const session = requireSession()
+  const supabase = getSupabaseClient()
+
+  // Find share IDs we own that include this friend as a recipient.
+  const { data: rows, error: selErr } = await supabase
+    .from('share_recipients')
+    .select('share_id, shares!inner(owner_id)')
+    .eq('recipient_id', friendDeviceId)
+    .eq('shares.owner_id', session.deviceId)
+  if (selErr) throw selErr
+
+  const shareIds = (rows ?? []).map(r => (r as { share_id: string }).share_id)
+
+  if (shareIds.length > 0) {
+    const { error: delErr } = await supabase
+      .from('share_recipients')
+      .delete()
+      .eq('recipient_id', friendDeviceId)
+      .in('share_id', shareIds)
+    if (delErr) throw delErr
+  }
+
+  // Local share-log: drop entries for this friend so a re-enable triggers
+  // a full backfill.
+  await deleteShareLogForFriend(friendDeviceId)
 }
 
 // ── Fetch incoming shares ────────────────────────────────────────────────────

@@ -319,6 +319,8 @@ export const UI_DE = {
     shareBackButton: 'Meinen Link zurück senden',
     shareBackCopied: 'Link kopiert ✓',
     doneButton: 'Fertig',
+    shareAllOptInLabel: 'Meine Erinnerungen automatisch mit {name} teilen',
+    shareAllOptInHint: 'Neue Antworten gehen direkt an {name}. Du kannst das jederzeit in den Kontakten umstellen.',
   },
 
   onlineSharingHub: {
