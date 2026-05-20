@@ -6,6 +6,16 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '2.13.0',
+    date: '2026-05-20',
+    highlights: [
+      '✨ Teilen ist jetzt einfacher: ein Schalter pro Kontakt – entweder ihr seid verbunden oder nicht.',
+      '📤 Neue Antworten gehen automatisch raus – kein manueller Klick mehr nötig.',
+      '⏸️ Mit einem Tipp pausieren – deine bisherigen Erinnerungen verschwinden bei der Person.',
+      '🤝 Neue Verbindungen entstehen jetzt über den Sandra-Flow („Jemanden einladen").',
+    ],
+  },
+  {
     version: '2.12.0',
     date: '2026-05-19',
     highlights: [

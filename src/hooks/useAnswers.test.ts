@@ -248,6 +248,113 @@ describe('useAnswers', () => {
     })
   })
 
+  // ── REQ-022: shareAll opt-in + migration ────────────────────────────────────
+
+  describe('REQ-022 shareAll migration', () => {
+    it('addFriend persists shareAll from the online block', async () => {
+      const { result } = renderHook(() => useAnswers())
+      await waitFor(() => expect(result.current.isLoaded).toBe(true))
+      let friend!: Friend
+      act(() => {
+        friend = result.current.addFriend('Klaus', undefined, {
+          deviceId: 'd-1',
+          publicKey: 'PK1',
+          linkedAt: '2026-05-20T00:00:00.000Z',
+          shareAll: false,
+        })
+      })
+      expect(friend.online?.shareAll).toBe(false)
+    })
+
+    it('addFriend on an existing online friend updates shareAll in place', async () => {
+      const { result } = renderHook(() => useAnswers())
+      await waitFor(() => expect(result.current.isLoaded).toBe(true))
+
+      act(() => {
+        result.current.addFriend('Klaus', undefined, {
+          deviceId: 'd-1', publicKey: 'PK1', linkedAt: '2026-05-20T00:00:00.000Z', shareAll: true,
+        })
+      })
+      act(() => {
+        result.current.addFriend('Klaus', undefined, {
+          deviceId: 'd-1', publicKey: 'PK1', linkedAt: '2026-05-20T00:00:00.000Z', shareAll: false,
+        })
+      })
+      expect(result.current.friends).toHaveLength(1)
+      expect(result.current.friends[0].online?.shareAll).toBe(false)
+    })
+
+    it('setFriendShareAll toggles only the target friend', async () => {
+      const { result } = renderHook(() => useAnswers())
+      await waitFor(() => expect(result.current.isLoaded).toBe(true))
+
+      act(() => {
+        result.current.addFriend('Klaus', undefined, {
+          deviceId: 'd-1', publicKey: 'PK1', linkedAt: '2026-05-20T00:00:00.000Z', shareAll: true,
+        })
+      })
+      const friendId = result.current.friends[0].id
+      act(() => { result.current.setFriendShareAll(friendId, false) })
+      expect(result.current.friends[0].online?.shareAll).toBe(false)
+      act(() => { result.current.setFriendShareAll(friendId, true) })
+      expect(result.current.friends[0].online?.shareAll).toBe(true)
+    })
+
+    it('migrates legacy stored friends without shareAll to true on load', async () => {
+      // Seed pre-v2.13 storage shape – online block without shareAll.
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        profile: null,
+        answers: {},
+        friends: [
+          {
+            id: 'friend-legacy',
+            name: 'Oma',
+            addedAt: '2026-04-01T00:00:00.000Z',
+            online: {
+              deviceId: 'd-legacy',
+              publicKey: 'PKL',
+              linkedAt: '2026-04-01T00:00:00.000Z',
+            },
+          },
+        ],
+        friendAnswers: [],
+        customQuestions: [],
+        appMode: 'full',
+      }))
+
+      const { result } = renderHook(() => useAnswers())
+      await waitFor(() => expect(result.current.isLoaded).toBe(true))
+      expect(result.current.friends[0].online?.shareAll).toBe(true)
+    })
+
+    it('mergeRemoteState applies the same migration to merged friends', async () => {
+      const { result } = renderHook(() => useAnswers())
+      await waitFor(() => expect(result.current.isLoaded).toBe(true))
+
+      act(() => {
+        result.current.mergeRemoteState({
+          profile: null,
+          answers: {},
+          friendAnswers: [],
+          customQuestions: [],
+          friends: [
+            {
+              id: 'remote-1',
+              name: 'Remote',
+              addedAt: '2026-05-01T00:00:00.000Z',
+              online: {
+                deviceId: 'd-remote',
+                publicKey: 'PKR',
+                linkedAt: '2026-05-01T00:00:00.000Z',
+              } as Friend['online'],
+            },
+          ],
+        })
+      })
+      expect(result.current.friends[0].online?.shareAll).toBe(true)
+    })
+  })
+
   describe('removeFriend', () => {
     it('removes the friend from the list', async () => {
       const { result } = renderHook(() => useAnswers())
