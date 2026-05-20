@@ -2,11 +2,17 @@
 
 **Status:** ✔️ COMPLETED  
 **ID:** REQ-015  
-**Version:** 1.0.0  
-**Letzte Aktualisierung:** 2026-04-26  
+**Version:** 2.0.0  
+**Letzte Aktualisierung:** 2026-05-20  
 **Modul:** Sharing / Sync  
 **Priorität:** Medium  
 **Implementiert seit:** v1.7.0  
+
+> ℹ️ **Update v2.13.0:** Das Sub-Verhalten „Erinnerungen teilen" (FR-15.10) wurde
+> radikal vereinfacht — siehe **[REQ-022](./REQ-022-vereinfachtes-teilen.md)**.
+> Pro Kontakt gilt jetzt eine binäre Friend-Level-Entscheidung; der „Teilen"-Tab
+> ist entfernt. Die Krypto-/Server-Infrastruktur dieses REQs bleibt unverändert
+> bestehen.
 
 ---
 
@@ -97,7 +103,7 @@ Bilder werden separat mit dem gleichen ContentKey des zugehörigen Shares versch
 
 ### 4.3 Erinnerungen teilen
 
-- [x] **FR-15.10:** Im Familienmodus-Hub (Tab „Teilen") wählt der Benutzer eine gespeicherte Erinnerung und einen oder mehrere Online-Kontakte als Empfänger
+- [x] **FR-15.10:** ⚠️ **Vereinfacht in v2.13.0 — siehe [REQ-022](./REQ-022-vereinfachtes-teilen.md).** Ursprünglich: Im Familienmodus-Hub (Tab „Teilen") wählt der Benutzer eine gespeicherte Erinnerung und einen oder mehrere Online-Kontakte als Empfänger. Ab v2.13.0: Der „Teilen"-Tab entfällt; pro Kontakt gilt eine binäre Friend-Level-Entscheidung (`friend.online.shareAll`), bei `true` werden alle Antworten automatisch verschlüsselt verschickt.
 - [x] **FR-15.11:** Payload (`ShareBody`) enthält: Frage-ID (optional), Fragetext, Antworttext, Bildanzahl, Erstellungsdatum, Absendername
 - [x] **FR-15.12:** Geteilte Erinnerungen werden für jeden Empfänger einzeln per ECDH-Wrapping verschlüsselt (Gruppen-Key-Wrapping)
 - [x] **FR-15.13:** Bilder werden separat verschlüsselt hochgeladen; Metadaten in `share_media`
@@ -122,6 +128,7 @@ Bilder werden separat mit dem gleichen ContentKey des zugehörigen Shares versch
 - [x] **FR-15.23:** Deaktivierung löscht auf dem Server kaskadierend: Geräteeintrag → Shares → Ergänzungen → Mediaobjekte (via Supabase RLS-Kaskade)
 - [x] **FR-15.24:** Lokal: IndexedDB-Schlüssel wird gelöscht, `onlineSharing`-Block aus localStorage entfernt, Online-Kontakte (`friends[].online`) bereinigt
 - [x] **FR-15.25:** Eigene (lokal gespeicherte) Antworten bleiben vollständig erhalten
+- [x] **FR-15.33** (ab v2.13.0): Feingranulares Pausieren pro Kontakt via `unshareAllWithFriend()` — siehe [REQ-022 §4.4](./REQ-022-vereinfachtes-teilen.md#44-pause--off-toggle). Komplette Deaktivierung (FR-15.22–25) bleibt unverändert als grobe Option erhalten.
 
 ### 4.7 Performance & Offline-Verhalten
 
@@ -385,3 +392,4 @@ interface ContactHandshake {
 | 1.0.0 | 2026-04-26 | Claude | Initiale Dokumentation (Reverse Engineering der Implementierung) |
 | 1.1.0 | 2026-04-29 | Claude | FR-15.29–15.32 hinzugefügt: Kontakt per Swipe-left entfernen |
 | 1.2.0 | 2026-05-01 | Claude | FR-15.29/15.30/15.32 überarbeitet: Full-Swipe-to-Delete ohne Zwischenschritt (Schwelle 80 px, Fly-out-Animation) |
+| 2.0.0 | 2026-05-20 | Claude | FR-15.10 vereinfacht (siehe REQ-022): „Teilen"-Tab entfernt, binäres Friend-Level-Sharing eingeführt. FR-15.33 als feingranulare Pause-Option ergänzt. |

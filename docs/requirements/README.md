@@ -28,6 +28,7 @@ Alle funktionalen und nicht-funktionalen Anforderungen des Projekts.
 | [REQ-018](./REQ-018-sync-key-loss-reset.md) | Sync-Login: „Schlüssel verloren?"-Reset | Sync | Medium | ✔️ COMPLETED |
 | [REQ-019](./REQ-019-einfach-modus.md) | Einfach-Modus (vereinfachter Bedienmodus) | UX | Medium | ✔️ COMPLETED |
 | [REQ-020](./REQ-020-sandra-flow.md) | Sandra-First Flow (persönliche Fragen formulieren, Empfänger-Soft-Receive) | Sharing | Medium | ✔️ COMPLETED |
+| [REQ-022](./REQ-022-vereinfachtes-teilen.md) | Vereinfachtes Erinnerungs-Teilen (binär pro Kontakt) | Sharing | High | ✔️ COMPLETED |
 
 ---
 

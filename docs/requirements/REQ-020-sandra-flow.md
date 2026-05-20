@@ -1,11 +1,16 @@
 # Anforderung: Sandra-First Flow – persönliche Fragen & dauerhafter Verbindungsaufbau
 
-**Status:** ✔️ COMPLETED (v2.7.0 Grundflow; v2.11.0 Dauerverbindung)
+**Status:** ✔️ COMPLETED (v2.7.0 Grundflow; v2.11.0 Dauerverbindung; v2.13.0 einziger Connection-Entry)
 **ID:** REQ-020
-**Version:** 2.11.0
-**Letzte Aktualisierung:** 2026-05-18
+**Version:** 2.13.0
+**Letzte Aktualisierung:** 2026-05-20
 **Modul:** Sharing / UX
 **Priorität:** Medium
+
+> ℹ️ **Update v2.13.0:** Mit der Vereinfachung aus [REQ-022](./REQ-022-vereinfachtes-teilen.md)
+> ist der Sandra-Flow ab v2.13.0 der **einzige** Einstieg für neue
+> Online-Sharing-Verbindungen. Der separate Direkt-Link-Pfad im
+> `OnlineSharingHubView.OnboardingScreen` entfällt — siehe FR-22.19 und FR-22.23.
 
 ---
 
