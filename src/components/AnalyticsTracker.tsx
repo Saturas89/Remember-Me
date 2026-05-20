@@ -2,10 +2,6 @@ import { useEffect, useState } from 'react'
 import { Analytics } from '@vercel/analytics/react'
 import { initPostHog, trackSessionStarted } from '../lib/analytics'
 
-// Initialise PostHog once, before first render. Reads VITE_POSTHOG_KEY; if
-// the key is absent this is a no-op so local dev stays clean.
-initPostHog()
-
 // ── Route pattern ──────────────────────────────────────
 // Groups dynamic segments so Vercel Analytics reports one entry per feature
 // template (e.g. "/feature/[id]") instead of one per concrete URL.
@@ -69,6 +65,10 @@ export function AnalyticsTracker() {
   const path = useCurrentPath()
 
   useEffect(() => {
+    // initPostHog must run inside useEffect so Playwright's storageState
+    // localStorage (traffic_type=e2e) is guaranteed to be set before
+    // getTrafficType() reads it. Module-level execution raced the injection.
+    initPostHog()
     const lastVisit = localStorage.getItem('rm-last-visit')
     trackSessionStarted(!!lastVisit)
     localStorage.setItem('rm-last-visit', new Date().toISOString())

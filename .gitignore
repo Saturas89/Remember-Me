@@ -74,6 +74,7 @@ Thumbs.db
 /blob-report/
 /playwright/.cache/
 /playwright-e2e-state.json
+/playwright-production-state.json
 output.txt
 
 # Vitest coverage
