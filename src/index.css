@@ -19,7 +19,7 @@
 /* ── Theme variables ─────────────────────────────────── */
 
 :root, [data-theme="sepia"] {
-  color-scheme:     light;
+  color-scheme:     only light;
   --bg:             #f2ebe0;
   --surface:        #fdf7ef;
   --surface-raised: #e8d5bc;
@@ -73,7 +73,7 @@
 }
 
 [data-theme="hell"] {
-  color-scheme:     light;
+  color-scheme:     only light;
   --bg:             #f5f5f0;
   --surface:        #ffffff;
   --surface-raised: #ecedef;

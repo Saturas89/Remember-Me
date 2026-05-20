@@ -211,7 +211,7 @@ export function OnboardingView({ needsModeChoice, modeOnly = false, onChooseMode
         <input
           ref={fileInputRef}
           type="file"
-          accept=".zip,.json,application/zip,application/json"
+          accept=".zip,.json"
           style={{ display: 'none' }}
           onChange={handleImportFile}
         />
