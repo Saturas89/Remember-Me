@@ -712,4 +712,76 @@ export const UI_DE = {
     deactivateSectionHint: 'Du kannst nur die Verbindung zu deiner Cloud trennen – die Sync-Datei bleibt dann erhalten – oder sie zusätzlich löschen. Lokale Erinnerungen auf diesem Gerät bleiben in beiden Fällen unverändert.',
     tagEncrypted: 'Verschlüsselt',
   },
+
+  landing: {
+    nav: {
+      features: 'Funktionen',
+      questions: 'Fragen',
+      aboutUs: 'Über uns',
+      privacy: 'Datenschutz',
+      openApp: 'App öffnen',
+    },
+    hero: {
+      eyebrow: 'Bevor es zu spät ist.',
+      headline: 'Eines Tages werden diese Geschichten für immer verloren sein.',
+      subtext: 'Bewahre die Geschichten der Menschen, die dir am meisten bedeuten.',
+      body: 'Die Erinnerungen deiner Eltern, Großeltern und Familienmitglieder sind unbezahlbar. Stelle die Fragen heute, damit sie morgen nie vergessen werden.',
+      ctaPrimary: 'Erinnerungen sichern',
+      ctaSecondary: 'Fragen entdecken',
+      imgAlt: 'Großmutter und Tochter schauen gemeinsam in ein Fotoalbum',
+    },
+    questionsSection: {
+      title: 'Fragen, die du heute stellen kannst.',
+      categories: [
+        { label: 'Kindheit', question: 'Wie war deine Kindheit?' },
+        { label: 'Liebe', question: 'Wie hast du dich verliebt?' },
+        { label: 'Leben', question: 'Was hat dein Leben am meisten geprägt?' },
+        { label: 'Familie', question: 'Welche Traditionen sollen wir bewahren?' },
+        { label: 'Weisheit', question: 'Was sollen wir nie vergessen?' },
+      ],
+    },
+    quote: {
+      text: '„Eines Tages werden deine Kinder deine Geschichten mehr schätzen als alles andere."',
+      attribution: '— Für deine Familie heute und morgen.',
+      imgAlt: 'Frau genießt einen ruhigen Moment mit Kaffee',
+    },
+    why: {
+      title: 'Warum Familien Storyhold lieben',
+      items: [
+        { title: 'Bringt Familien näher', desc: 'Echte Gespräche, die euch enger zusammenbringen.' },
+        { title: 'Bewahrt Erinnerungen', desc: 'Halte besondere Momente fest und behalte sie für immer.' },
+        { title: 'Privat & sicher', desc: 'Deine Daten gehören dir. Immer. Für immer.' },
+        { title: 'Für kommende Generationen', desc: 'Ein Geschenk, das bleibt – für deine Kinder und Enkel.' },
+      ],
+    },
+    legacy: {
+      title: 'Ein digitales Familienerbe, das bleibt.',
+      desc: 'Storyhold hilft dir, die Geschichten deiner Familie durch Fragen, Antworten und Erinnerungen zu bewahren – in Text, Fotos und Aufnahmen.',
+      cta: 'Kostenlos loslegen',
+      imgAlt: 'Familie sitzt zusammen und liest ein Buch',
+    },
+    howItWorks: {
+      title: 'So funktioniert es',
+      steps: [
+        { label: 'Eine Frage stellen', desc: 'Wähle aus bedeutungsvollen Fragen oder erstelle deine eigenen.' },
+        { label: 'Eine Antwort aufzeichnen', desc: 'Als Text, Audio oder Foto – halte fest, was dir wichtig ist.' },
+        { label: 'Für deine Familie bewahren', desc: 'Sicher gespeichert und für deine Liebsten jederzeit verfügbar.' },
+      ],
+    },
+    features: [
+      { label: 'Privat & sicher', desc: 'Deine Daten bleiben bei dir.' },
+      { label: 'Offline nutzbar', desc: 'Auch ohne Internet verfügbar.' },
+      { label: 'Nur für deine Familie', desc: 'Kein Teilen – nur deine Geschichten.' },
+      { label: 'Keine Werbung', desc: 'Kein Tracking. Keine Ablenkung.' },
+      { label: 'Mit Liebe gemacht', desc: 'Für das, was wirklich zählt.' },
+      { label: 'Immer bei dir', desc: 'Auf jedem Gerät, jederzeit.' },
+    ],
+    finalCta: {
+      headline: 'Für heute. Für morgen. Für immer.',
+      subtext: 'Bewahre, was wirklich zählt.',
+      cta: 'Erinnerungen bewahren',
+      socialProof: 'Schließe dich über 10.000 Familien an, die ihre Geschichten mit Storyhold bewahren.',
+      imgAlt: 'Gerahmtes Familienfoto auf einem Tisch mit Blumen',
+    },
+  },
 }

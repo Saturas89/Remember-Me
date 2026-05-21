@@ -779,6 +779,56 @@ export interface Translations {
     tagEncrypted: string
   }
 
+  landing: {
+    nav: {
+      features: string
+      questions: string
+      aboutUs: string
+      privacy: string
+      openApp: string
+    }
+    hero: {
+      eyebrow: string
+      headline: string
+      subtext: string
+      body: string
+      ctaPrimary: string
+      ctaSecondary: string
+      imgAlt: string
+    }
+    questionsSection: {
+      title: string
+      categories: Array<{ label: string; question: string }>
+    }
+    quote: {
+      text: string
+      attribution: string
+      imgAlt: string
+    }
+    why: {
+      title: string
+      items: Array<{ title: string; desc: string }>
+    }
+    legacy: {
+      title: string
+      desc: string
+      cta: string
+      imgAlt: string
+    }
+    howItWorks: {
+      title: string
+      steps: Array<{ label: string; desc: string }>
+    }
+    features: Array<{ label: string; desc: string }>
+    finalCta: {
+      headline: string
+      subtext: string
+      cta: string
+      socialProof: string
+      imgAlt: string
+    }
+  }
+
   categories: Category[]
   friendTopics: FriendTopic[]
 }

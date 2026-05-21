@@ -704,4 +704,76 @@ export const UI_EN = {
     deactivateSectionHint: 'You can either disconnect this device only – your cloud file stays intact – or delete the cloud file as well. Memories stored locally on this device remain unchanged either way.',
     tagEncrypted: 'Encrypted',
   },
+
+  landing: {
+    nav: {
+      features: 'Features',
+      questions: 'Questions',
+      aboutUs: 'About Us',
+      privacy: 'Privacy',
+      openApp: 'Open App',
+    },
+    hero: {
+      eyebrow: 'Before it\'s too late.',
+      headline: 'One day, these stories will be gone forever.',
+      subtext: 'Preserve the stories of the people you love most.',
+      body: 'The memories of your parents, grandparents and family members are priceless. Ask the questions today, so tomorrow they are never forgotten.',
+      ctaPrimary: 'Save Memories Now',
+      ctaSecondary: 'Explore Questions',
+      imgAlt: 'Grandmother and daughter looking at a photo album together',
+    },
+    questionsSection: {
+      title: 'Questions you can ask today.',
+      categories: [
+        { label: 'Childhood', question: 'What was your childhood like?' },
+        { label: 'Love', question: 'How did you fall in love?' },
+        { label: 'Life', question: 'What has shaped your life the most?' },
+        { label: 'Family', question: 'Which traditions should we keep?' },
+        { label: 'Wisdom', question: 'What do you want us to never forget?' },
+      ],
+    },
+    quote: {
+      text: '"Someday, your children will value your stories more than anything else."',
+      attribution: '— For your family today and tomorrow.',
+      imgAlt: 'Woman enjoying a quiet moment with coffee',
+    },
+    why: {
+      title: 'Why families love Storyhold',
+      items: [
+        { title: 'Brings families closer', desc: 'Real conversations that bring you closer together.' },
+        { title: 'Preserves memories', desc: 'Capture special moments and keep them safe forever.' },
+        { title: 'Private & secure', desc: 'Your data belongs to you. Always. For good.' },
+        { title: 'For future generations', desc: 'A gift that lasts – for your children and grandchildren.' },
+      ],
+    },
+    legacy: {
+      title: 'A digital family legacy that lasts.',
+      desc: 'Storyhold helps you preserve your family\'s stories through questions, answers, and memories – in text, photos, and recordings.',
+      cta: 'Get Started for Free',
+      imgAlt: 'Family sitting together reading a book',
+    },
+    howItWorks: {
+      title: 'How it works',
+      steps: [
+        { label: 'Ask a question', desc: 'Choose from meaningful questions or create your own.' },
+        { label: 'Record an answer', desc: 'In text, audio, or photo – capture what matters most.' },
+        { label: 'Preserve for your family', desc: 'Securely saved and available for your loved ones, whenever they need it.' },
+      ],
+    },
+    features: [
+      { label: 'Private & secure', desc: 'Your data stays with you.' },
+      { label: 'Works offline', desc: 'Also available without internet.' },
+      { label: 'Just for your family', desc: 'No sharing – only your stories.' },
+      { label: 'No ads', desc: 'No tracking. No distractions.' },
+      { label: 'Made with love', desc: 'For what truly matters.' },
+      { label: 'Always with you', desc: 'On any device, anytime.' },
+    ],
+    finalCta: {
+      headline: 'For today. For tomorrow. For always.',
+      subtext: 'Preserve what truly matters.',
+      cta: 'Start Preserving Memories',
+      socialProof: 'Join over 10,000 families preserving their stories with Storyhold.',
+      imgAlt: 'Framed family photo on a table with flowers',
+    },
+  },
 }
