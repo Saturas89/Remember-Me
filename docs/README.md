@@ -140,6 +140,57 @@ Teilen / Exportieren (PDF, Markdown, JSON, ZIP-Archiv, KI-Export, Freunde einlad
 - [x] **Trust-Badges in Impressum + README** – „🔓 Open Source · AGPL-3.0" und „🇩🇪 Made in Germany" als Pills im Friends-Tab-Stil, zusätzlich shields.io-Badges im Root-README – v2.9.0
 - [x] **PostHog Analytics (EU Cloud, cookie-less)** – Quiz-Flows, Onboarding, Tab-Wechsel und Feature-Öffner werden anonym getrackt; kein Cookie, kein Autocapture, kein Fingerprinting; deaktiviert wenn `VITE_POSTHOG_KEY` fehlt – v2.10.0
 
+---
+
+## Datenschutz & Analytics – Was wird getrackt?
+
+Storyhold verfolgt einen Privacy-by-Design-Ansatz. Die Analytics-Konfiguration ist vollständig in [`src/lib/analytics.ts`](../src/lib/analytics.ts) einsehbar.
+
+### PostHog-Konfiguration (EU Cloud)
+
+| Einstellung | Wert | Bedeutung |
+|-------------|------|-----------|
+| `persistence` | `'memory'` | Kein Cookie, kein localStorage – anonyme ID nur im RAM |
+| `autocapture` | `false` | Keine automatische Ereignis-Erfassung (Klicks, Formulare, …) |
+| `capture_pageview` | `false` | Keine Seitenaufrufe getrackt |
+| `capture_pageleave` | `false` | Kein Page-Leave-Event |
+| `disable_session_recording` | `true` | Session Replay vollständig deaktiviert |
+| `ip` | `false` | IP-Adresse wird nicht übermittelt |
+| Server | EU Cloud (`eu.i.posthog.com`) | Keine Daten verlassen die EU |
+
+### Explizit getrackte Ereignisse
+
+Nur diese 12 anonymen Ereignisse werden gesendet – ausschließlich Nutzungsstatistiken, kein persönlicher Inhalt:
+
+| Ereignis | Wann | Parameter |
+|----------|------|-----------|
+| `session_started` | App wird geöffnet | `returning_user` |
+| `onboarding_started` | Onboarding beginnt | – |
+| `onboarding_completed` | Onboarding abgeschlossen | `imported_backup` |
+| `quiz_started` | Fragekategorie gestartet | `category_id`, `question_count` |
+| `quiz_completed` | Fragekategorie abgeschlossen | `category_id`, `question_count` |
+| `quiz_abandoned` | Fragekategorie abgebrochen | `category_id`, `at_question`, `question_count` |
+| `quiz_media_added` | Foto/Video/Audio zu Antwort hinzugefügt | `category_id`, `media_type` |
+| `quiz_question_skipped` | Frage übersprungen | `category_id`, `question_id`, `question_index`, `question_count` |
+| `tab_changed` | Tab-Wechsel | `tab` |
+| `feature_opened` | Feature aufgerufen | `feature` |
+| `share_initiated` | Teilen-Funktion gestartet | `method` |
+| `online_sharing_activated` | Online-Teilen aktiviert | – |
+
+### Was niemals getrackt wird
+
+- Antworten, Texteingaben, Namen, Fotos, Sprachaufnahmen, Videos
+- Gerätekennungen, Fingerprinting, Cookies
+- Session-Aufzeichnungen oder Bildschirmmitschnitte
+- IP-Adressen
+- Persönliche Profile oder Konten (Storyhold hat keinen Login)
+
+### Traffic-Isolation für Tests
+
+E2E-Tests und interne Geräte setzen `traffic_type = 'e2e'` bzw. `'internal'` in localStorage. PostHog filtert diese Personen über Cohort „Internal / Test users" (ID 129449) automatisch aus allen Insights heraus.
+
+---
+
 ## Roadmap 📋
 
 - [ ] **Engagement-Benachrichtigungen** – OS-Reminder mit Backoff-Cadence (3/10/24 Tage), iOS-Welcome-Back-Banner, Streak-Tracking & Meilenstein-Glückwünsche (REQ-016)

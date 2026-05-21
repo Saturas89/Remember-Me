@@ -27,6 +27,10 @@ export const FAQ_DE = [
         q: 'Warum steht Storyhold unter der AGPL-Lizenz?',
         a: 'Wir wollen ein Versprechen einlösen, nicht nur Marketing: Storyhold bleibt offen. Du kannst den Quellcode auf GitHub einsehen und dich selbst davon überzeugen, dass deine Lebensgeschichte privat bleibt – und du kannst Storyhold sogar selbst hosten, wenn du das möchtest. Die AGPL-3.0-Lizenz stellt zusätzlich sicher, dass auch zukünftige Versionen offen bleiben, auch wenn jemand anders Storyhold weiterbetreibt.',
       },
+      {
+        q: 'Sammelt Storyhold Nutzungsdaten oder Telemetrie?',
+        a: 'Ja – aber nur anonyme Nutzungsstatistiken, und nur um die App zu verbessern. Wir verwenden PostHog EU (Server in Europa, kein Cookie, keine IP-Adresse). Was wir messen: ob du die App geöffnet hast, welche Fragekategorien gestartet und abgeschlossen wurden, ob Onboarding und Teilen-Funktion funktionieren. Was wir nicht messen: deine Antworten, Fotos, Sprachaufnahmen, deinen Namen oder irgendwelche persönlichen Inhalte. Kein Session Recording, keine automatische Ereignis-Erfassung, kein Fingerprinting. Du kannst das selbst im Quellcode prüfen – Datei: src/lib/analytics.ts.',
+      },
     ],
   },
   {
