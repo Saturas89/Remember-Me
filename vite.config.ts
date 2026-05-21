@@ -83,6 +83,13 @@ export default defineConfig({
   ],
   build: {
     rollupOptions: {
+      input: {
+        main: 'index.html',
+        de: 'de/index.html',
+        en: 'en/index.html',
+        'lp-en-parents': 'en/record-your-parents-stories/index.html',
+        'lp-de-eltern': 'de/lebensgeschichten-der-eltern-bewahren/index.html',
+      },
       output: {
         // Vite 7 (rollup) hat `supabaseClient.ts`, `privateSyncClient.ts` und
         // das Paket `@supabase/supabase-js` standardmäßig in den

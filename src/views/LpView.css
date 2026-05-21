@@ -1,0 +1,73 @@
+/* LpView additions — only for sections not in LandingView.css */
+
+/* ── Problem section ───────────────────────────────────────────── */
+
+.lp-problem {
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.lp-problem__body {
+  font-size: 1rem;
+  color: var(--text-muted);
+  line-height: 1.75;
+  max-width: 680px;
+  margin: 0 auto 1rem;
+  text-align: center;
+}
+
+.lp-problem__body:last-child { margin-bottom: 0; }
+
+/* ── FAQ section ───────────────────────────────────────────────── */
+
+.lp-faq-section {
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+}
+
+.lp-faq {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.lp-faq__item {
+  border-bottom: 1px solid var(--border);
+}
+
+.lp-faq__item:last-child { border-bottom: none; }
+
+.lp-faq__q {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  list-style: none;
+  background: var(--surface-raised);
+}
+
+.lp-faq__q::-webkit-details-marker { display: none; }
+
+.lp-faq__q::after {
+  content: '+';
+  font-size: 1.25rem;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+details[open] .lp-faq__q::after { content: '−'; }
+
+.lp-faq__a {
+  padding: 0.75rem 1.25rem 1rem;
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  line-height: 1.65;
+  background: var(--surface);
+}
