@@ -650,19 +650,46 @@
 }
 
 @media (max-width: 768px) {
+  /* Nav: tighter padding so CTA button fits on narrow screens */
   .landing-nav__links {
     display: none;
   }
 
+  .landing-nav__inner {
+    padding: 0.75rem 1rem;
+    gap: 0.75rem;
+  }
+
+  .landing-nav__cta {
+    font-size: 0.8rem;
+    padding: 0.5rem 0.75rem;
+    white-space: nowrap;
+  }
+
+  /* Hero: full-bleed image (no side padding), content gets its own padding */
   .landing-hero {
     grid-template-columns: 1fr;
-    padding: 2rem 1rem;
+    padding: 0;
     min-height: auto;
-    gap: 2rem;
+    gap: 0;
+  }
+
+  .landing-hero__content {
+    padding: 2rem 1rem;
   }
 
   .landing-hero__media {
     order: -1;
+  }
+
+  /* On mobile the image sits above the text, not beside it.
+     Replace the left-fade + bottom-fade composite with a simple bottom fade
+     so the image blends into the section below without a false right gap. */
+  .landing-hero__media .landing-img-wrap {
+    mask-image: linear-gradient(to bottom, black 55%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, black 55%, transparent 100%);
+    mask-composite: unset;
+    -webkit-mask-composite: unset;
   }
 
   .landing-hero__headline {
