@@ -1,0 +1,319 @@
+/* ===================================================================
+   LpView – keyword-targeted SEO landing pages
+   Same design system as LandingView (CSS vars only, no hardcoded colours)
+   Narrower inner max-width (760 px) for text-focused reading comfort
+   =================================================================== */
+
+.lp {
+  min-height: 100dvh;
+  background: var(--bg);
+  color: var(--text);
+  overflow-x: hidden;
+}
+
+/* ── Nav ───────────────────────────────────────────────────────────── */
+
+.lp-nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.lp-nav__inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0.75rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.lp-nav__logo {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--text);
+  cursor: default;
+}
+
+.lp-logo-icon {
+  width: 1.4rem;
+  height: 1.4rem;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+/* ── Shared layout ─────────────────────────────────────────────────── */
+
+.lp-inner {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+.lp-section {
+  padding: 4rem 0;
+}
+
+.lp-section--surface {
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+/* ── Typography ────────────────────────────────────────────────────── */
+
+.lp-eyebrow {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+  margin-bottom: 0.75rem;
+}
+
+.lp-h1 {
+  font-size: clamp(2rem, 5vw, 3.2rem);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  margin: 0 0 1rem;
+  color: var(--text);
+}
+
+.lp-h2 {
+  font-size: clamp(1.4rem, 3vw, 2rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  margin: 0 0 1.5rem;
+  color: var(--text);
+}
+
+.lp-h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0 0 0.4rem;
+  color: var(--text);
+}
+
+.lp-body {
+  font-size: 1rem;
+  color: var(--text-muted);
+  line-height: 1.7;
+  margin: 0 0 1rem;
+}
+
+.lp-body:last-child { margin-bottom: 0; }
+
+/* ── Hero ──────────────────────────────────────────────────────────── */
+
+.lp-hero {
+  padding: 5rem 0 4rem;
+}
+
+.lp-hero__body {
+  font-size: 1.1rem;
+  margin-bottom: 2rem;
+}
+
+.lp-hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+/* ── Buttons ───────────────────────────────────────────────────────── */
+
+.lp-cta-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.75rem 1.5rem;
+  border-radius: 10px;
+  background: var(--accent);
+  color: var(--bg);
+  border: none;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--accent) 30%, transparent);
+  font-family: inherit;
+  text-decoration: none;
+}
+
+.lp-cta-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--accent) 40%, transparent);
+}
+
+.lp-cta-btn--sm {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+}
+
+.lp-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.75rem 1.5rem;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text);
+  border: 2px solid var(--border);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+  font-family: inherit;
+  text-decoration: none;
+}
+
+.lp-btn-secondary:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ── Steps ─────────────────────────────────────────────────────────── */
+
+.lp-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.lp-step {
+  display: flex;
+  gap: 1.5rem;
+  align-items: flex-start;
+}
+
+.lp-step__num {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 999px;
+  background: var(--surface-raised);
+  border: 2px solid var(--border);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.lp-step__content { flex: 1; }
+
+/* ── Benefits ──────────────────────────────────────────────────────── */
+
+.lp-benefits {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.lp-benefit {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  font-size: 1rem;
+  color: var(--text);
+  line-height: 1.5;
+}
+
+.lp-check-icon {
+  width: 1rem;
+  height: 1rem;
+  color: var(--accent);
+  flex-shrink: 0;
+  margin-top: 0.2rem;
+}
+
+/* ── Emotional proof ───────────────────────────────────────────────── */
+
+.lp-proof {
+  background: var(--accent-tinted, var(--surface));
+}
+
+.lp-proof__inner {
+  text-align: center;
+}
+
+.lp-proof .lp-h2 {
+  font-size: clamp(1.4rem, 3.5vw, 2.2rem);
+  font-style: italic;
+}
+
+/* ── FAQ ───────────────────────────────────────────────────────────── */
+
+.lp-faq {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.lp-faq__item {
+  border-bottom: 1px solid var(--border);
+}
+
+.lp-faq__item:last-child { border-bottom: none; }
+
+.lp-faq__q {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  list-style: none;
+  background: var(--surface-raised);
+  gap: 1rem;
+}
+
+.lp-faq__q::-webkit-details-marker { display: none; }
+
+.lp-faq__q::after {
+  content: '+';
+  font-size: 1.25rem;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+details[open] .lp-faq__q::after { content: '−'; }
+
+.lp-faq__a {
+  padding: 0.75rem 1.25rem 1rem;
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  line-height: 1.65;
+  background: var(--surface);
+}
+
+/* ── Final CTA ─────────────────────────────────────────────────────── */
+
+.lp-final-cta { text-align: center; }
+
+.lp-final-cta .lp-h2 { margin-bottom: 0.75rem; }
+
+.lp-final-cta .lp-body { margin-bottom: 1.5rem; }
+
+/* ── Responsive ────────────────────────────────────────────────────── */
+
+@media (max-width: 640px) {
+  .lp-hero { padding: 3rem 0 2rem; }
+  .lp-section { padding: 3rem 0; }
+  .lp-nav__inner { padding: 0.75rem 1rem; }
+  .lp-inner { padding: 0 1rem; }
+  .lp-h1 { font-size: 1.9rem; }
+}
