@@ -21,7 +21,7 @@ import {
   type ShareEnvelope,
 } from './shareEncryption'
 import { toB64u, fromB64u, type DeviceKeyPair } from './crypto'
-import { deleteShareLogForFriend } from './shareLogStore'
+import { deleteShareLogForFriend, setShareLogEntry } from './shareLogStore'
 import type {
   ShareBody,
   AnnotationBody,
@@ -110,6 +110,8 @@ export interface ShareMemoryInput {
   recipients: Recipient[]
   /** Image bytes to upload, encrypted with the share's content-key. */
   images: Uint8Array[]
+  /** Answer ID stored in plaintext for cross-device share-log hydration. Only set by auto-share. */
+  answerId?: string
 }
 
 export async function shareMemory(input: ShareMemoryInput): Promise<{ shareId: string }> {
@@ -139,6 +141,7 @@ export async function shareMemory(input: ShareMemoryInput): Promise<{ shareId: s
       iv: toBytea(fromB64u(envelope.iv)),
       encrypted_keys: envelope.encryptedKeys,
       version: envelope.v ?? 1,
+      ...(input.answerId !== undefined ? { answer_id: input.answerId } : {}),
     })
   if (shareErr) throw shareErr
 
@@ -227,7 +230,7 @@ export async function shareMemoryToAllFriends(
     createdAt: answer.createdAt,
     ownerName,
   }
-  return shareMemory({ body, recipients, images: [] })
+  return shareMemory({ body, recipients, images: [], answerId: answer.id })
 }
 
 /**
@@ -265,6 +268,54 @@ export async function unshareAllWithFriend(
   // Local share-log: drop entries for this friend so a re-enable triggers
   // a full backfill.
   await deleteShareLogForFriend(friendDeviceId)
+}
+
+// ── Share-log hydration (cross-device dedup) ─────────────────────────────────
+
+/**
+ * Queries all auto-shares created by this device from the server and
+ * populates the local IndexedDB share-log. Called once after bootstrapSession()
+ * so useAutoShare doesn't re-send answers on a fresh install or device switch.
+ *
+ * Uses the MAX(created_at) per (answer_id, recipient_id) pair so that
+ * answers updated after their original share are still re-shared correctly.
+ */
+export async function hydrateShareLog(): Promise<void> {
+  const session = requireSession()
+  const supabase = getSupabaseClient()
+
+  type RecipientRow = { recipient_id: string }
+  type ShareRow = {
+    answer_id: string | null
+    created_at: string
+    share_recipients: RecipientRow[]
+  }
+
+  const { data, error } = await supabase
+    .from('shares')
+    .select('answer_id, created_at, share_recipients(recipient_id)')
+    .eq('owner_id', session.deviceId)
+  if (error) throw error
+
+  const maxDates = new Map<string, { answerId: string; recipientId: string; createdAt: string }>()
+  for (const row of (data ?? []) as ShareRow[]) {
+    if (!row.answer_id) continue
+    const { answer_id: answerId, created_at: createdAt } = row
+    for (const { recipient_id: recipientId } of row.share_recipients ?? []) {
+      if (recipientId === session.deviceId) continue
+      const key = `${answerId}\x00${recipientId}`
+      const existing = maxDates.get(key)
+      if (!existing || createdAt > existing.createdAt) {
+        maxDates.set(key, { answerId, recipientId, createdAt })
+      }
+    }
+  }
+
+  await Promise.all(
+    Array.from(maxDates.values()).map(({ answerId, recipientId, createdAt }) =>
+      setShareLogEntry(answerId, recipientId, createdAt),
+    ),
+  )
 }
 
 // ── Fetch incoming shares ────────────────────────────────────────────────────

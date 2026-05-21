@@ -18,6 +18,7 @@ class QueryBuilder {
   delete() { this._action = 'delete'; this.recorder.deletes.push({ table: this.table }); return this }
   eq(_col: string, _val: unknown) { return this }
   in(_col: string, _vals: unknown[]) { return this }
+  not(_col: string, _op: string, _val: unknown) { return this }
   maybeSingle() { this._single = true; return this.runRead() }
   single() { this._single = true; return this.runRead() }
   then<R>(onFulfilled: (r: Response) => R) { return this.runRead().then(onFulfilled) }
@@ -309,6 +310,71 @@ describe('sharingService', () => {
     expect(encryptShare).toHaveBeenCalled()
     const firstCall = (encryptShare as ReturnType<typeof vi.fn>).mock.calls[0]
     expect(firstCall[0].imageCount).toBe(0)
+  })
+
+  // ── REQ-022: answer_id on auto-shares ─────────────────────────────────────
+
+  it('shareMemoryToAllFriends stores answer_id on the share row', async () => {
+    await svc.bootstrapSession()
+    await svc.shareMemoryToAllFriends(
+      { id: 'answer-42', questionId: 'q1', categoryId: 'c', value: 'v', createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z' },
+      'Q?',
+      [{ deviceId: 'friend-1', publicKey: 'PK' }],
+      'Anna',
+    )
+    const shareInsert = recorder.inserts.find(i => i.table === 'shares')
+    expect((shareInsert!.payload as Record<string, unknown>).answer_id).toBe('answer-42')
+  })
+
+  it('shareMemory without answerId does not include answer_id in the row', async () => {
+    await svc.bootstrapSession()
+    await svc.shareMemory({
+      body: { $type: 'remember-me-share', version: 1, questionId: 'q1', questionText: 'Q?', value: 'v', imageCount: 0, createdAt: '2026-01-01T00:00:00.000Z', ownerName: 'Anna' },
+      recipients: [{ deviceId: 'r', publicKey: 'PK' }],
+      images: [],
+    })
+    const shareInsert = recorder.inserts.find(i => i.table === 'shares')
+    expect((shareInsert!.payload as Record<string, unknown>).answer_id).toBeUndefined()
+  })
+
+  // ── hydrateShareLog ────────────────────────────────────────────────────────
+
+  it('hydrateShareLog populates IndexedDB from server shares', async () => {
+    await svc.bootstrapSession()
+    recorder.selectRows = table => {
+      if (table === 'shares') return [
+        { answer_id: 'a1', created_at: '2026-01-10T00:00:00.000Z', share_recipients: [{ recipient_id: 'friend-1' }, { recipient_id: 'device-self' }] },
+        { answer_id: 'a2', created_at: '2026-01-11T00:00:00.000Z', share_recipients: [{ recipient_id: 'friend-2' }] },
+        { answer_id: null, created_at: '2026-01-01T00:00:00.000Z', share_recipients: [{ recipient_id: 'friend-1' }] },
+      ]
+      return []
+    }
+    await svc.hydrateShareLog()
+
+    const { getShareLogEntry } = await import('./shareLogStore')
+    // a1 → friend-1 should be set; self-ACL skipped
+    expect(await getShareLogEntry('a1', 'friend-1')).toBe('2026-01-10T00:00:00.000Z')
+    // a2 → friend-2 set
+    expect(await getShareLogEntry('a2', 'friend-2')).toBe('2026-01-11T00:00:00.000Z')
+    // null answer_id row should be ignored
+    expect(await getShareLogEntry('', 'friend-1')).toBeNull()
+    // self-ACL skipped
+    expect(await getShareLogEntry('a1', 'device-self')).toBeNull()
+  })
+
+  it('hydrateShareLog takes the latest createdAt per (answer, recipient) pair', async () => {
+    await svc.bootstrapSession()
+    recorder.selectRows = table => {
+      if (table === 'shares') return [
+        { answer_id: 'a1', created_at: '2026-01-05T00:00:00.000Z', share_recipients: [{ recipient_id: 'friend-1' }] },
+        { answer_id: 'a1', created_at: '2026-01-15T00:00:00.000Z', share_recipients: [{ recipient_id: 'friend-1' }] },
+      ]
+      return []
+    }
+    await svc.hydrateShareLog()
+
+    const { getShareLogEntry } = await import('./shareLogStore')
+    expect(await getShareLogEntry('a1', 'friend-1')).toBe('2026-01-15T00:00:00.000Z')
   })
 
   it('unshareAllWithFriend deletes share_recipients rows for shares we own', async () => {
