@@ -28,7 +28,7 @@ export function initPostHog(): void {
     autocapture: false,
     capture_pageview: false,
     capture_pageleave: false,
-    disable_session_recording: false,
+    disable_session_recording: true,
     // IP disabled by default on EU Cloud, make it explicit
     ip: false,
     // Disable batching for e2e/internal so events are sent immediately –

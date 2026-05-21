@@ -42,6 +42,15 @@ export async function spawnRealDevice(
         localStorage.setItem('test_run_id', `gh-${runId}`)
       }
       if (profile) localStorage.setItem('browser_profile', profile)
+
+      // Headless Playwright browsers don't expose Web Share API even with mobile
+      // emulation. Stub it so the share-button visibility tests work correctly.
+      type Nav = Navigator & { share?: (d: unknown) => Promise<void>; canShare?: (d?: unknown) => boolean }
+      const nav = navigator as Nav
+      if (!nav.share) {
+        nav.share = async () => {}
+        nav.canShare = () => true
+      }
     },
     { runId: githubRunId, profile: browserProfile },
   )
