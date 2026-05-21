@@ -22,10 +22,7 @@ function preSeedFreshSession() {
   // Spiegelt die `dismissInstallPrompt`-Vorbereitung aus den E2E-Helpers:
   // Der Install-Banner darf den „Loslegen"-Button nicht überdecken, und ein
   // wirklich frischer Besucher hat keinen `remember-me-state`-Schlüssel.
-  // rm-landing-seen wird gesetzt, damit Onboarding-Tests direkt zum
-  // Onboarding-Flow gelangen und nicht die Landingpage testen.
   localStorage.setItem(INSTALL_KEY, '1')
-  localStorage.setItem('rm-landing-seen', '1')
   localStorage.removeItem(STATE_KEY)
 }
 
