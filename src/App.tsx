@@ -331,9 +331,6 @@ export default function App() {
     if (initialSandraHash) return { name: 'sandra-flow' }
     return pathToView(window.location.pathname)
   })
-  const [landingSeen, setLandingSeen] = useState(() => {
-    try { return !!localStorage.getItem('rm-landing-seen') } catch { return false }
-  })
   const [showReleaseNotes, setShowReleaseNotes] = useState(false)
   // REQ-022 §4.6 one-time migration banner.
   const SHARE_MIGRATION_MARKER = 'rm-share-migration-v213'
@@ -515,18 +512,6 @@ export default function App() {
           history.replaceState({}, '', '/friends')
         }}
       />
-    )
-  }
-
-  // Brand-new visitors (no profile) see the landing page first.
-  if (!landingSeen && !profile) {
-    return (
-      <AppModeProvider appMode={appMode} setAppMode={saveAppMode}>
-        <LandingView onStart={() => {
-          try { localStorage.setItem('rm-landing-seen', '1') } catch { /* noop */ }
-          setLandingSeen(true)
-        }} />
-      </AppModeProvider>
     )
   }
 
