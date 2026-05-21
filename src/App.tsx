@@ -35,6 +35,7 @@ import { OnlineSharingIntroView } from './views/OnlineSharingIntroView'
 import { OnlineSharingHubView } from './views/OnlineSharingHubView'
 import { ContactHandshakeView } from './views/ContactHandshakeView'
 import { SandraFlowView } from './views/SandraFlowView'
+import { LandingView } from './views/LandingView'
 import { PersonalPackReceiveView } from './views/PersonalPackReceiveView'
 import { DebugPostHogView } from './views/DebugPostHogView'
 import { useOnlineSync } from './hooks/useOnlineSync'
@@ -70,6 +71,7 @@ import './App.css'
 
 type View =
   | { name: 'home' }
+  | { name: 'landing' }
   | { name: 'quiz'; categoryId: string }
   | { name: 'archive' }
   | { name: 'friends' }
@@ -106,6 +108,7 @@ function pathToView(pathname: string): View {
     case 'profile': return { name: 'profile' }
     case 'sync':    return { name: 'sync' }
     case 'debug':   return { name: 'debug' }
+    case 'landing': return { name: 'landing' }
     default:        return { name: 'home' }
   }
 }
@@ -329,6 +332,9 @@ export default function App() {
     if (initialSandraHash) return { name: 'sandra-flow' }
     return pathToView(window.location.pathname)
   })
+  const [landingSeen, setLandingSeen] = useState(() => {
+    try { return !!localStorage.getItem('rm-landing-seen') } catch { return false }
+  })
   const [showReleaseNotes, setShowReleaseNotes] = useState(false)
   // REQ-022 §4.6 one-time migration banner.
   const SHARE_MIGRATION_MARKER = 'rm-share-migration-v213'
@@ -513,6 +519,18 @@ export default function App() {
     )
   }
 
+  // Brand-new visitors (no profile) see the landing page first.
+  if (!landingSeen && !profile) {
+    return (
+      <AppModeProvider appMode={appMode} setAppMode={saveAppMode}>
+        <LandingView onStart={() => {
+          try { localStorage.setItem('rm-landing-seen', '1') } catch { /* noop */ }
+          setLandingSeen(true)
+        }} />
+      </AppModeProvider>
+    )
+  }
+
   // First-time open: show onboarding before anything else.
   // Onboarding now also covers the mode-choice step for users who upgrade
   // from a pre-Simple-Mode version (profile present, appMode missing).
@@ -565,8 +583,8 @@ export default function App() {
 
   const friendsBadge = friendAnswers.filter(a => a.value.trim() || (a.imageIds?.length ?? 0) > 0 || (a.videoIds?.length ?? 0) > 0 || !!a.audioId).length
 
-  // Bottom nav shown on all main views (not during focused quiz/friend-answer/sandra-flow)
-  const showNav = view.name !== 'quiz' && view.name !== 'sandra-flow'
+  // Bottom nav shown on all main views (not during focused quiz/friend-answer/sandra-flow/landing)
+  const showNav = view.name !== 'quiz' && view.name !== 'sandra-flow' && view.name !== 'landing'
 
   if (view.name === 'quiz') {
     let category: Category | undefined
@@ -775,6 +793,10 @@ export default function App() {
             goTo({ name: 'friends' })
           }}
         />
+      )}
+
+      {view.name === 'landing' && (
+        <LandingView onStart={() => goTo({ name: 'home' })} />
       )}
 
       {view.name === 'home' && (
