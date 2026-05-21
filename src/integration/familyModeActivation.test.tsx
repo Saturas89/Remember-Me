@@ -86,14 +86,13 @@ function readState(): LoosePartialState {
 }
 
 describe('Familienmodus – Aktivierung (FR-15.1 – FR-15.3)', () => {
-  it('Friends-Bereich zeigt den Online-Sharing-CTA', async () => {
+  it('Friends-Tab öffnet direkt den Online-Sharing-Intro-Screen', async () => {
     preSeedReturningUser()
     render(<App />)
 
     await gotoFriendsTab()
 
-    const cta = await screen.findByTestId('open-online-sharing')
-    expect(cta.textContent).toMatch(/Geteilte Erinnerungen öffnen/)
+    expect(await screen.findByRole('heading', { name: 'Laufend verbunden bleiben' })).toBeTruthy()
   })
 
   it('Consent-Screen erzwingt die Pflicht-Checkbox bevor "Aktivieren" klickbar ist', async () => {
@@ -101,7 +100,6 @@ describe('Familienmodus – Aktivierung (FR-15.1 – FR-15.3)', () => {
     render(<App />)
 
     await gotoFriendsTab()
-    fireEvent.click(await screen.findByTestId('open-online-sharing'))
 
     expect(await screen.findByRole('heading', { name: 'Laufend verbunden bleiben' })).toBeTruthy()
 
@@ -118,7 +116,6 @@ describe('Familienmodus – Aktivierung (FR-15.1 – FR-15.3)', () => {
     render(<App />)
 
     await gotoFriendsTab()
-    fireEvent.click(await screen.findByTestId('open-online-sharing'))
     fireEvent.click(await screen.findByRole('checkbox'))
     fireEvent.click(screen.getByRole('button', { name: 'Aktivieren' }))
 
@@ -134,13 +131,11 @@ describe('Familienmodus – Aktivierung (FR-15.1 – FR-15.3)', () => {
     render(<App />)
 
     await gotoFriendsTab()
-    fireEvent.click(await screen.findByTestId('open-online-sharing'))
     expect(await screen.findByRole('heading', { name: 'Laufend verbunden bleiben' })).toBeTruthy()
 
     fireEvent.click(screen.getByRole('button', { name: 'Zurück' }))
 
-    expect(await screen.findByRole('heading', { name: /Einladen & verbinden/, level: 2 })).toBeTruthy()
-    expect(bootstrapSession).not.toHaveBeenCalled()
+    await waitFor(() => expect(bootstrapSession).not.toHaveBeenCalled())
     expect(readState().onlineSharing).toBeUndefined()
   })
 })
@@ -168,9 +163,8 @@ describe('Familienmodus – lokales Deactivate (FR-15.22 – FR-15.25 lokaler Te
     render(<App />)
 
     await gotoFriendsTab()
-    fireEvent.click(await screen.findByTestId('open-online-sharing'))
 
-    // Hub statt Consent-Screen, weil onlineSharing.enabled bereits true.
+    // Hub direkt, weil online-Kontakt vorhanden → Friends-Tab routet zu online-hub.
     await screen.findByRole('heading', { name: 'Online teilen' })
 
     // Einstellungen-Tab → Deaktivieren → Bestätigung.
