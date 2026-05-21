@@ -29,10 +29,10 @@ const content: LpContent = {
 
   benefitsH2: 'Why families use Storyhold',
   benefits: [
-    'Preserve family memories before they fade',
-    'Capture personal stories in a meaningful format',
-    "Save a parent's perspective, voice, and legacy",
-    'Create something future generations will treasure',
+    { title: 'Preserve memories', desc: 'Capture family stories before they fade — in your parents\' own words.' },
+    { title: 'Meaningful format', desc: 'Guided prompts make recording personal stories simple and natural.' },
+    { title: 'Voice & legacy', desc: "Save a parent's perspective, values, and personality for good." },
+    { title: 'For generations', desc: 'Create something your grandchildren will treasure long after you are gone.' },
   ],
 
   proofH2: 'This is more than a memory project.',

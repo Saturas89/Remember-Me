@@ -29,10 +29,10 @@ const content: LpContent = {
 
   benefitsH2: 'Warum Familien Storyhold nutzen',
   benefits: [
-    'Wertvolle Familienerinnerungen bewahren, bevor sie verblassen',
-    'Persönliche Geschichten in einer bedeutungsvollen Form festhalten',
-    'Perspektiven, Stimme und Vermächtnis der Eltern sichern',
-    'Etwas schaffen, das auch für spätere Generationen wertvoll bleibt',
+    { title: 'Erinnerungen bewahren', desc: 'Familiengeschichten festhalten, bevor sie verblassen – in den eigenen Worten der Eltern.' },
+    { title: 'Bedeutungsvoller Rahmen', desc: 'Geführte Fragen machen das Aufnehmen persönlicher Geschichten einfach und natürlich.' },
+    { title: 'Stimme & Vermächtnis', desc: 'Perspektiven, Werte und Persönlichkeit der Eltern für immer sichern.' },
+    { title: 'Für Generationen', desc: 'Etwas schaffen, das Enkeln und Urenkeln noch lange wichtig sein wird.' },
   ],
 
   proofH2: 'Das ist mehr als nur ein Erinnerungsprojekt.',
