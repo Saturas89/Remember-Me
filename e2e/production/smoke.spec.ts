@@ -45,12 +45,18 @@ test.describe('Production smoke', () => {
     await page.goto('/')
     await page.waitForLoadState('networkidle', { timeout: 30_000 })
 
-    // Filter known-harmless third-party noise
-    const critical = consoleErrors.filter(e =>
-      !e.text.includes('favicon') &&
-      !e.text.includes('analytics') &&
-      !e.text.includes('posthog')
-    )
+    // Filter known-harmless third-party noise (case-insensitive)
+    const critical = consoleErrors.filter(e => {
+      const t = e.text.toLowerCase()
+      return (
+        !t.includes('favicon') &&
+        !t.includes('analytics') &&
+        !t.includes('posthog') &&
+        !t.includes('speedinsights') &&
+        !t.includes('speed insights') &&
+        !t.includes('vercel')
+      )
+    })
     expect(critical, `Console errors: ${JSON.stringify(critical)}`).toHaveLength(0)
   })
 

@@ -48,14 +48,14 @@ test.describe('Private Sync – Chaos Tests (Storyhold Server)', () => {
     await expect(page.getByRole('heading', { name: /Hast du schon ein Konto/ })).toBeVisible()
 
     // ← Zurück → Provider-Wahl
+    await page.evaluate(() => window.scrollTo(0, 0))
     await page.getByRole('button', { name: /← Zurück/ }).click()
     await expect(page.getByRole('heading', { name: /Wo sollen deine Daten/ })).toBeVisible()
 
-    // ← Zurück → Intro
-    await page.getByRole('button', { name: /← Zurück/ }).click()
-    // Explicit timeout: on narrow-viewport devices (e.g. Samsung S23, 360 px)
-    // a page-top scroll may be needed before the button enters the hit area.
+    // ← Zurück → Intro. Scroll to top first so the topbar back-button is
+    // fully in the hit area on narrow-viewport devices (e.g. Samsung S23, 360 px).
     await page.evaluate(() => window.scrollTo(0, 0))
+    await page.getByRole('button', { name: /← Zurück/ }).click()
     await expect(page.getByRole('button', { name: 'Einrichten' })).toBeVisible({ timeout: 10_000 })
 
     // Kein Auth-User angelegt
