@@ -21,19 +21,17 @@ test.describe('Familienmodus – Aktivierung & Consent (FR-15.1 – FR-15.3)', (
     await installSupabaseMock(context, createMockState())
   })
 
-  test('Einstieg über Freunde-Bereich zeigt Familienmodus-CTA', async ({ page }) => {
+  test('Freunde-Tab öffnet direkt den Familienmodus-Intro-Screen', async ({ page }) => {
     await completeOnboarding(page, 'Anna')
     await openFriendsTab(page)
-    const cta = page.getByTestId('open-online-sharing')
-    await expect(cta).toBeVisible()
-    await expect(cta).toHaveText(/Geteilte Erinnerungen öffnen/)
-    await expect(page.getByText(/Sobald du jemanden einlädst/)).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Laufend verbunden bleiben', exact: true })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Aktivieren', exact: true })).toBeVisible()
   })
 
   test('Consent-Screen erklärt Datenschutz und erzwingt die Pflicht-Checkbox', async ({ page }) => {
     await completeOnboarding(page, 'Anna')
     await openFriendsTab(page)
-    await page.getByTestId('open-online-sharing').click()
+    // Freunde-Tab zeigt direkt den Consent-Screen – kein CTA-Klick nötig.
 
     await expect(page.getByRole('heading', { name: 'Laufend verbunden bleiben', exact: true })).toBeVisible()
     await expect(page.getByRole('heading', { name: /Datenschutz auf einen Blick/ })).toBeVisible()
@@ -63,11 +61,12 @@ test.describe('Familienmodus – Aktivierung & Consent (FR-15.1 – FR-15.3)', (
   test('Cancel im Consent-Screen aktiviert nichts', async ({ page }) => {
     await completeOnboarding(page, 'Anna')
     await openFriendsTab(page)
-    await page.getByTestId('open-online-sharing').click()
+    // Freunde-Tab zeigt direkt den Consent-Screen.
     await expect(page.getByRole('heading', { name: 'Laufend verbunden bleiben', exact: true })).toBeVisible()
 
     await page.getByRole('button', { name: 'Zurück', exact: true }).click()
-    await expect(page.getByRole('heading', { name: /Einladen & verbinden/ })).toBeVisible()
+    // Zurück führt zu Home (kein eigener Friends-Screen mehr).
+    await expect(page.getByRole('navigation', { name: 'Hauptnavigation' })).toBeVisible()
 
     const stored = await page.evaluate(() => {
       type Bridge = { get: () => Record<string, unknown> | null }

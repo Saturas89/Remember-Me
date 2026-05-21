@@ -44,7 +44,7 @@ export async function completeOnboarding(page: Page, name: string) {
 export async function openFriendsTab(page: Page) {
   const nav = page.getByRole('navigation', { name: 'Hauptnavigation' })
   await nav.getByRole('button', { name: 'Freunde', exact: true }).click()
-  await expect(page.getByRole('heading', { name: /Einladen & verbinden/ })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Laufend verbunden bleiben', exact: true })).toBeVisible()
 }
 
 /**
@@ -53,18 +53,12 @@ export async function openFriendsTab(page: Page) {
  * localStorage) so subsequent share/annotate operations have a session.
  */
 export async function openFamilyHub(page: Page) {
+  // Friends-Tab leitet direkt zur OnlineSharingIntroView weiter (kein Zwischen-Screen mehr).
   await openFriendsTab(page)
-  await page.getByTestId('open-online-sharing').click()
-  // On mobile WebKit the React state update triggered by the click may not
-  // have completed when click() resolves, so the point-in-time isVisible()
-  // check would return false even though the consent screen is about to
-  // appear. waitFor polls the DOM until the heading is present (or the hub
-  // heading appears instead, in which case we can skip the consent step).
-  const consentHeading = page.getByRole('heading', { name: 'Laufend verbunden bleiben', exact: true })
-  const consentVisible = await consentHeading
-    .waitFor({ state: 'visible', timeout: 20_000 })
-    .then(() => true)
-    .catch(() => false)
+  // openFriendsTab wartet bereits auf die Consent-Überschrift; falls der Hub
+  // bereits aktiv ist (wiederholter Aufruf), können wir direkt weitermachen.
+  const consentVisible = await page.getByRole('heading', { name: 'Laufend verbunden bleiben', exact: true })
+    .isVisible()
   if (consentVisible) {
     await page.getByRole('checkbox').check()
     await page.getByRole('button', { name: 'Aktivieren', exact: true }).click()
@@ -84,8 +78,8 @@ export async function openFamilyHub(page: Page) {
  * race window in which one of the two flips first.
  */
 export async function reopenFamilyHub(page: Page) {
+  // /friends leitet automatisch zum Hub weiter (wenn Online-Kontakte vorhanden).
   await page.goto('/friends')
-  await page.getByTestId('open-online-sharing').click()
   await waitForHubReady(page)
   await expect(page.getByRole('tablist')).toBeVisible({ timeout: 20_000 })
 }

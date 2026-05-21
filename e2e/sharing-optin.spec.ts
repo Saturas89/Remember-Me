@@ -34,7 +34,7 @@ async function completeOnboarding(page: Page, name: string) {
 async function openFriendsTab(page: Page) {
   const nav = page.getByRole('navigation', { name: 'Hauptnavigation' })
   await nav.getByRole('button', { name: 'Freunde', exact: true }).click()
-  await expect(page.getByRole('heading', { name: /Einladen & verbinden/ })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Laufend verbunden bleiben', exact: true })).toBeVisible()
 }
 
 function attachNetworkSpy(page: Page): Request[] {
@@ -60,26 +60,22 @@ test.describe('Online sharing – opt-in contract', () => {
     await expect.poll(() => offending.length).toBe(0)
   })
 
-  test('Sandra-Flow invite link generation works offline (no Supabase required)', async ({ page }) => {
-    await completeOnboarding(page, 'Anna')
-    await openFriendsTab(page)
-    // Sandra-Flow entry CTA leads to the #/ask flow which is fully offline –
-    // the invite link is built client-side from the question pack only.
-    await expect(page.getByTestId('sandra-entry-cta')).toBeVisible()
-    await expect(page.getByTestId('sandra-entry-cta')).toBeEnabled()
-  })
-
-  test('online-sharing CTA is rendered – but does not trigger any network', async ({ page }) => {
-    // The preview build in playwright.config.ts ships with fake VITE_SUPABASE_*
-    // values so the family-mode flow can be exercised end-to-end. The CTA is
-    // therefore visible, but a user who never clicks it still produces zero
-    // Supabase traffic (verified by the network spy). The opposite scenario –
-    // missing config hiding the CTA – is covered by unit tests of FriendsView.
+  test('Freunde-Tab zeigt direkt Intro-Screen ohne Supabase-Traffic', async ({ page }) => {
+    // Freunde-Tab leitet direkt zur OnlineSharingIntroView weiter.
+    // Kein Netzwerkverkehr darf entstehen bevor der Nutzer aktiv "Aktivieren" klickt.
     const offending = attachNetworkSpy(page)
     await completeOnboarding(page, 'Anna')
     await openFriendsTab(page)
-    await expect(page.getByTestId('open-online-sharing')).toBeVisible()
-    await expect(page.getByTestId('open-online-sharing')).toHaveText(/Geteilte Erinnerungen öffnen/)
+    await expect(page.getByRole('button', { name: 'Aktivieren', exact: true })).toBeVisible()
+    await page.waitForTimeout(500)
+    await expect.poll(() => offending.length).toBe(0)
+  })
+
+  test('Intro-Screen erscheint ohne Supabase-Traffic', async ({ page }) => {
+    const offending = attachNetworkSpy(page)
+    await completeOnboarding(page, 'Anna')
+    await openFriendsTab(page)
+    await expect(page.getByRole('heading', { name: 'Laufend verbunden bleiben', exact: true })).toBeVisible()
     await page.waitForTimeout(500)
     await expect.poll(() => offending.length).toBe(0)
   })
