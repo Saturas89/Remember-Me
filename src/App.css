@@ -5502,6 +5502,8 @@ details[open] .faq-item__chevron {
 }
 
 .online-contact-pause-confirm {
+  position: relative;
+  z-index: 2;
   width: 100%;
   background: var(--warn-bg, rgba(220, 38, 38, 0.08));
   border: 1px solid var(--warn, #dc2626);

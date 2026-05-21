@@ -136,6 +136,11 @@ export async function seedAnswer(
   categoryId: string,
   value: string,
 ) {
+  // NOTE: seedAnswer writes localStorage + the __rmState bridge's
+  // _currentState, but it does NOT push into React's useState. Callers
+  // that need the running app to react to the seeded answer (e.g. to
+  // trigger useAutoShare) must seed BEFORE reopenFamilyHub() so the next
+  // page load picks the value out of localStorage.
   await page.evaluate(({ questionId, categoryId, value }) => {
     type Bridge = { get: () => Record<string, unknown> | null; save: (s: unknown) => void }
     const bridge = (window as unknown as { __rmState?: Bridge }).__rmState

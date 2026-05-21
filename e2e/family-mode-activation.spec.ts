@@ -52,7 +52,8 @@ test.describe('Familienmodus – Aktivierung & Consent (FR-15.1 – FR-15.3)', (
 
     await expect(page.getByRole('heading', { name: 'Online teilen', exact: true })).toBeVisible()
     await expect(page.getByRole('heading', { name: 'Jemanden einladen' })).toBeVisible()
-    await expect(page.getByRole('button', { name: /Verbindungslink teilen/ })).toBeEnabled()
+    // REQ-022: the canonical entry for new connections is now the Sandra-flow CTA.
+    await expect(page.getByTestId('onboarding-open-sandra')).toBeEnabled()
 
     const identity = await readDeviceIdentity(page)
     expect(identity.deviceId).toMatch(/[0-9a-f-]{36}/)
