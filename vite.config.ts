@@ -85,8 +85,6 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: 'index.html',
-        de: 'de/index.html',
-        en: 'en/index.html',
         'lp-en-parents': 'en/record-your-parents-stories/index.html',
         'lp-de-eltern': 'de/lebensgeschichten-der-eltern-bewahren/index.html',
       },
