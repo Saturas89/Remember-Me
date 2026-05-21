@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
+import { useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import { useTranslation } from '../locales'
 import type { Translations } from '../locales/types'
 import type {
@@ -36,9 +36,7 @@ interface Props {
   /** Open the Sandra-flow as the canonical entry for new connections
    *  (REQ-022 FR-22.17 / FR-22.23). */
   onOpenSandraFlow: () => void
-  /** Toggle the binary auto-share decision for a single friend. */
-  onSetFriendShareAll: (friendId: string, shareAll: boolean) => void
-}
+  }
 
 type Tab = 'feed' | 'contacts' | 'settings'
 
@@ -60,7 +58,6 @@ export function OnlineSharingHubView({
   onDeactivate,
   onRemoveContact,
   onOpenSandraFlow,
-  onSetFriendShareAll,
 }: Props) {
   const { t } = useTranslation()
   const h = t.onlineSharingHub
@@ -144,11 +141,9 @@ export function OnlineSharingHubView({
           )}
           {tab === 'contacts' && (
             <ContactsTab
-              sync={sync}
               onlineFriends={onlineFriends}
               onRemoveContact={onRemoveContact}
               onOpenSandraFlow={onOpenSandraFlow}
-              onSetFriendShareAll={onSetFriendShareAll}
             />
           )}
           {tab === 'settings' && (
@@ -399,28 +394,22 @@ function SharedMemoryCard({
 
 const SWIPE_THRESHOLD = 80
 
+function contactAvatarColor(name: string): string {
+  const hue = name.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0) % 360
+  return `hsl(${hue}, 55%, 38%)`
+}
+
 function ContactItem({
   friend,
-  sync,
   onRemove,
-  onSetShareAll,
 }: {
   friend: Friend
-  sync: OnlineSyncAPI
   onRemove: (id: string) => void
-  onSetShareAll: (friendId: string, shareAll: boolean) => void
 }) {
-  const { t } = useTranslation()
-  const c = t.onlineSharingHub.contacts
   const [offset, setOffset] = useState(0)
   const [flyOut, setFlyOut] = useState(false)
   const [dragging, setDragging] = useState(false)
   const startXRef = useRef<number | null>(null)
-  const [confirming, setConfirming] = useState(false)
-  const [pausing, setPausing] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  const shareAll = friend.online?.shareAll === true
 
   const handlePointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
     if (flyOut) return
@@ -457,37 +446,10 @@ function ContactItem({
     }
   }
 
-  const onSwitchChange = (checked: boolean) => {
-    if (!checked) {
-      // on → off: ask before pausing because it deletes server-side ACL.
-      setConfirming(true)
-      return
-    }
-    // off → on: re-enable instantly. Backfill kicks in via useAutoShare.
-    onSetShareAll(friend.id, true)
-  }
-
-  const confirmPause = async () => {
-    if (!friend.online) return
-    setError(null)
-    setPausing(true)
-    try {
-      if (sync.service) {
-        await sync.service.unshareAllWithFriend(friend.online.deviceId)
-      }
-      onSetShareAll(friend.id, false)
-      setConfirming(false)
-    } catch (err) {
-      setError((err as Error).message ?? c.shareTogglePauseError)
-    } finally {
-      setPausing(false)
-    }
-  }
-
   return (
     <li className="online-contact-item" data-testid={`contact-item-${friend.id}`}>
       <div className="online-contact-delete-bg" aria-hidden="true">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <polyline points="3 6 5 6 21 6" />
           <path d="M19 6l-1 14H6L5 6" />
           <path d="M10 11v6" />
@@ -504,76 +466,40 @@ function ContactItem({
         onPointerLeave={handlePointerLeave}
         data-testid={`contact-swipe-${friend.id}`}
       >
-        <strong data-testid={`contact-name-${friend.id}`}>{friend.name}</strong>
-
-        <label
-          className="online-contact-share-toggle"
-          data-testid={`shareall-toggle-${friend.id}`}
-          onPointerDown={e => e.stopPropagation()}
-          onPointerMove={e => e.stopPropagation()}
-          onPointerUp={e => e.stopPropagation()}
-        >
-          <input
-            type="checkbox"
-            checked={shareAll}
-            disabled={confirming}
-            onChange={e => onSwitchChange(e.target.checked)}
-          />
-          <span>{c.shareToggleLabel}</span>
-        </label>
-      </div>
-
-      {confirming && (
-        <div
-          className="online-contact-pause-confirm"
-          data-testid={`pause-confirm-${friend.id}`}
-          role="dialog"
-          aria-modal="false"
-        >
-          <p><strong>{c.shareTogglePauseConfirmTitle.replace('{name}', friend.name)}</strong></p>
-          <p className="friends-hint">{c.shareTogglePauseConfirmBody.replace('{name}', friend.name)}</p>
-          {error && <p className="friends-hint friends-hint--warn" role="alert">{error}</p>}
-          <button
-            data-testid={`pause-confirm-yes-${friend.id}`}
-            className="share-cta-btn share-cta-btn--error"
-            onClick={confirmPause}
-            disabled={pausing}
-          >
-            {pausing ? c.shareTogglePausePending : c.shareTogglePauseConfirmYes}
-          </button>
-          <button
-            className="btn btn--ghost btn--sm"
-            onClick={() => { setConfirming(false); setError(null) }}
-            disabled={pausing}
-          >
-            {c.shareTogglePauseConfirmNo}
-          </button>
+        <div className="online-contact-avatar" style={{ background: contactAvatarColor(friend.name) }} aria-hidden="true">
+          {friend.name.charAt(0).toUpperCase()}
         </div>
-      )}
+        <span className="online-contact-name" data-testid={`contact-name-${friend.id}`}>
+          {friend.name}
+        </span>
+        <div className="online-contact-swipe-hint" aria-hidden="true">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="15 18 9 12 15 6" />
+          </svg>
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="3 6 5 6 21 6" />
+            <path d="M19 6l-1 14H6L5 6" />
+            <path d="M10 11v6" />
+            <path d="M14 11v6" />
+            <path d="M9 6V4h6v2" />
+          </svg>
+        </div>
+      </div>
     </li>
   )
 }
 
 function ContactsTab({
-  sync,
   onlineFriends,
   onRemoveContact,
   onOpenSandraFlow,
-  onSetFriendShareAll,
 }: {
-  sync: OnlineSyncAPI
   onlineFriends: Friend[]
   onRemoveContact: (friendId: string) => void
   onOpenSandraFlow: () => void
-  onSetFriendShareAll: (friendId: string, shareAll: boolean) => void
 }) {
   const { t } = useTranslation()
   const c = t.onlineSharingHub.contacts
-
-  const onSetShareAll = useCallback(
-    (friendId: string, shareAll: boolean) => onSetFriendShareAll(friendId, shareAll),
-    [onSetFriendShareAll],
-  )
 
   return (
     <section className="friends-section">
@@ -586,9 +512,7 @@ function ContactsTab({
             <ContactItem
               key={f.id}
               friend={f}
-              sync={sync}
               onRemove={onRemoveContact}
-              onSetShareAll={onSetShareAll}
             />
           ))}
         </ul>

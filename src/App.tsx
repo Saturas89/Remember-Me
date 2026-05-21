@@ -142,7 +142,6 @@ export default function App() {
     saveProfile,
     addFriend,
     removeFriend,
-    setFriendShareAll,
     importFriendAnswers,
     importFriendAnswerZipData,
     addCustomQuestion,
@@ -689,7 +688,6 @@ export default function App() {
           onBack={() => goTo({ name: 'friends' })}
           onRemoveContact={removeFriend}
           onOpenSandraFlow={() => goTo({ name: 'sandra-flow' })}
-          onSetFriendShareAll={setFriendShareAll}
           onDeactivate={async () => {
             const svc = onlineSync.service
             if (svc) {
