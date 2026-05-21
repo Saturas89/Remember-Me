@@ -24,9 +24,6 @@ async function swipeContactLeft(page: import('@playwright/test').Page) {
   await expect(swipeEl).toBeVisible()
   const box = await swipeEl.boundingBox()
   if (!box) throw new Error('swipe element has no bounding box')
-  // Start on the friend-name half (left). The right half now hosts the
-  // REQ-022 share-all toggle, which stops pointer propagation – starting a
-  // mouse drag there never reaches the swipe handler.
   const startX = box.x + Math.min(80, box.width * 0.3)
   const endX = box.x - 20
   const midY = box.y + box.height / 2
@@ -118,7 +115,6 @@ test.describe('Familienmodus – Kontakt per Swipe entfernen (FR-15.30)', () => 
     const box = await swipeEl.boundingBox()
     if (!box) throw new Error('swipe element has no bounding box')
     const midY = box.y + box.height / 2
-    // Start in the left half (avoiding the share-all toggle on the right).
     const startX = box.x + Math.min(80, box.width * 0.3)
     await alice.mouse.move(startX, midY)
     await alice.mouse.down()

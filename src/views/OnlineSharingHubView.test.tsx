@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
-import { render, cleanup, fireEvent, act, waitFor } from '@testing-library/react'
+import { render, cleanup, fireEvent, act } from '@testing-library/react'
 import { OnlineSharingHubView } from './OnlineSharingHubView'
 import type { Friend } from '../types'
 import type { OnlineSyncAPI } from '../hooks/useOnlineSync'
@@ -69,7 +69,6 @@ function renderHub({ syncOverrides = {}, friends = [FRIEND_SHARING] }: RenderArg
   const onDeactivate = vi.fn()
   const onRemoveContact = vi.fn()
   const onOpenSandraFlow = vi.fn()
-  const onSetFriendShareAll = vi.fn()
   const view = render(
     <OnlineSharingHubView
       profileName="Test"
@@ -79,7 +78,6 @@ function renderHub({ syncOverrides = {}, friends = [FRIEND_SHARING] }: RenderArg
       onDeactivate={onDeactivate}
       onRemoveContact={onRemoveContact}
       onOpenSandraFlow={onOpenSandraFlow}
-      onSetFriendShareAll={onSetFriendShareAll}
     />,
   )
   return {
@@ -89,7 +87,6 @@ function renderHub({ syncOverrides = {}, friends = [FRIEND_SHARING] }: RenderArg
     onDeactivate,
     onRemoveContact,
     onOpenSandraFlow,
-    onSetFriendShareAll,
   }
 }
 
@@ -131,82 +128,10 @@ describe('FeedTab – Empty-States', () => {
   })
 })
 
-// ── ContactsTab – Toggle + Pause-Dialog ──────────────────────────────────────
+// ── ContactsTab – Neue Verbindung ──────────────────────────────────────────────
 
-describe('ContactsTab – Auto-Share-Toggle', () => {
-  it('zeigt einen Switch pro Online-Freund mit korrektem Initialzustand', () => {
-    const { container } = renderHub({ friends: [FRIEND_SHARING, FRIEND_PAUSED] })
-    switchToTab(container, 'Kontakte')
-    const t1 = container.querySelector<HTMLInputElement>(
-      '[data-testid="shareall-toggle-friend-1"] input[type="checkbox"]',
-    )!
-    const t2 = container.querySelector<HTMLInputElement>(
-      '[data-testid="shareall-toggle-friend-2"] input[type="checkbox"]',
-    )!
-    expect(t1.checked).toBe(true)
-    expect(t2.checked).toBe(false)
-  })
-
-  it('off → on schaltet sofort durch ohne Dialog', () => {
-    const { container, onSetFriendShareAll, sync } = renderHub({ friends: [FRIEND_PAUSED] })
-    switchToTab(container, 'Kontakte')
-    const toggle = container.querySelector<HTMLInputElement>(
-      '[data-testid="shareall-toggle-friend-2"] input[type="checkbox"]',
-    )!
-    fireEvent.click(toggle)
-    expect(onSetFriendShareAll).toHaveBeenCalledWith('friend-2', true)
-    expect(sync.service!.unshareAllWithFriend).not.toHaveBeenCalled()
-  })
-
-  it('on → off zeigt Pause-Dialog (kein sofortiger Aufruf)', () => {
-    const { container, onSetFriendShareAll, sync } = renderHub({ friends: [FRIEND_SHARING] })
-    switchToTab(container, 'Kontakte')
-    const toggle = container.querySelector<HTMLInputElement>(
-      '[data-testid="shareall-toggle-friend-1"] input[type="checkbox"]',
-    )!
-    fireEvent.click(toggle)
-    const dialog = container.querySelector('[data-testid="pause-confirm-friend-1"]')
-    expect(dialog).not.toBeNull()
-    expect(dialog!.textContent).toContain('Henrietta')
-    expect(onSetFriendShareAll).not.toHaveBeenCalled()
-    expect(sync.service!.unshareAllWithFriend).not.toHaveBeenCalled()
-  })
-
-  it('Pause-Dialog bestätigen ruft unshareAllWithFriend + setShareAll(false)', async () => {
-    const { container, onSetFriendShareAll, sync } = renderHub({ friends: [FRIEND_SHARING] })
-    switchToTab(container, 'Kontakte')
-    const toggle = container.querySelector<HTMLInputElement>(
-      '[data-testid="shareall-toggle-friend-1"] input[type="checkbox"]',
-    )!
-    fireEvent.click(toggle)
-    const confirmYes = container.querySelector<HTMLButtonElement>(
-      '[data-testid="pause-confirm-yes-friend-1"]',
-    )!
-    await act(async () => { fireEvent.click(confirmYes) })
-
-    await waitFor(() =>
-      expect(sync.service!.unshareAllWithFriend).toHaveBeenCalledWith('device-h'),
-    )
-    expect(onSetFriendShareAll).toHaveBeenCalledWith('friend-1', false)
-  })
-
-  it('Pause-Dialog abbrechen lässt den Switch unverändert', () => {
-    const { container, onSetFriendShareAll, sync } = renderHub({ friends: [FRIEND_SHARING] })
-    switchToTab(container, 'Kontakte')
-    const toggle = container.querySelector<HTMLInputElement>(
-      '[data-testid="shareall-toggle-friend-1"] input[type="checkbox"]',
-    )!
-    fireEvent.click(toggle)
-    const cancelBtn = Array.from(
-      container.querySelectorAll<HTMLButtonElement>('[data-testid="pause-confirm-friend-1"] button'),
-    ).find(b => b.textContent?.trim() === 'Abbrechen')!
-    fireEvent.click(cancelBtn)
-    expect(container.querySelector('[data-testid="pause-confirm-friend-1"]')).toBeNull()
-    expect(onSetFriendShareAll).not.toHaveBeenCalled()
-    expect(sync.service!.unshareAllWithFriend).not.toHaveBeenCalled()
-  })
-
-  it('Neue-Person-Verbinden CTA ruft onOpenSandraFlow', () => {
+describe('ContactsTab – Neue-Person-Verbinden CTA', () => {
+  it('ruft onOpenSandraFlow auf', () => {
     const { container, onOpenSandraFlow } = renderHub({ friends: [FRIEND_SHARING] })
     switchToTab(container, 'Kontakte')
     const cta = container.querySelector<HTMLButtonElement>(
