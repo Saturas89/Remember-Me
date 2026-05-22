@@ -589,33 +589,21 @@ test.describe('Sandra-Flow – Two-person integration', () => {
 })
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Test 8 — FriendsView entry card (FR-020.10)
+// Test 8 — Sandra-Flow direkter Einstieg via Hash-URL (FR-020.10)
 //
-// Sandra's first touchpoint: she opens the Friends tab and taps the
-// primary "Fragen formulieren" CTA inside the merged invitation section.
-// The CTA must navigate directly into `#/ask`.
+// Der FriendsView-Intermediate-Screen wurde entfernt. Der Sandra-Flow ist
+// weiterhin über den direkten Hash-Link `#/ask` erreichbar.
 // ─────────────────────────────────────────────────────────────────────────────
 
-test.describe('Sandra-Flow – Friends-tab entry card (FR-020.10)', () => {
+test.describe('Sandra-Flow – Direkter Einstieg via #/ask (FR-020.10)', () => {
   test.beforeEach(async ({ context }) => {
     await seedContext(context, { lang: 'de', profile: 'sandra' })
   })
 
-  test('card is visible in /friends and the CTA navigates to #/ask', async ({ page }) => {
-    await page.goto('/friends')
+  test('#/ask öffnet direkt den Sandra-Flow-Landing-Screen', async ({ page }) => {
+    await page.goto('/#/ask')
 
-    // Sandra-Flow invitation section heading (sandraT.entryCard.title).
-    await expect(
-      page.getByRole('heading', { name: 'Jemanden einladen' }),
-    ).toBeVisible()
-
-    const cta = page.getByTestId('sandra-entry-cta')
-    await expect(cta).toBeVisible()
-    await expect(cta).toHaveText(/Einladung erstellen/i)
-    await cta.click()
-
-    // After clicking, we're on the Sandra-flow landing — assert the hero
-    // text (which is unique to the landing step) is visible.
+    // Sandra-flow landing screen with the hero text.
     await expect(
       page.getByText('Was wolltest du Mama schon immer fragen?'),
     ).toBeVisible()
