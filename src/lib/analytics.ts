@@ -31,9 +31,11 @@ export function initPostHog(): void {
     disable_session_recording: true,
     // IP disabled by default on EU Cloud, make it explicit
     ip: false,
-    // Disable batching for e2e/internal so events are sent immediately –
-    // Playwright closes the browser before the 3 s flush window expires.
-    request_batching: trafficType === 'real-user',
+    // Batching on for all traffic types. With request_batching: false,
+    // individual fetch requests are cancelled when Playwright closes the
+    // context – worse than batching. The 3 s batch fires naturally during
+    // long-running nightly tests; smoke tests use waitForLoadState('networkidle')
+    // which waits for the outgoing batch request before the context closes.
   })
   const githubRunId = localStorage.getItem('github_run_id') ?? undefined
   const testRunId = localStorage.getItem('test_run_id') ?? undefined
