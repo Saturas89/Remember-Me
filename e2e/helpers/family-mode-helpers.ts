@@ -11,6 +11,7 @@ import { createMockState, installSupabaseMock, type MockState } from './supabase
 export async function dismissInstallPrompt(context: BrowserContext) {
   await context.addInitScript(() => {
     localStorage.setItem('rm-install-dismissed', '1')
+    localStorage.setItem('rm-landing-seen', '1')
     // E2E: only seed on first navigation – tests that build state via
     // __rmState.save between gotos must not be reset by a re-run init script.
     if (!localStorage.getItem('remember-me-state')) {
@@ -44,7 +45,7 @@ export async function completeOnboarding(page: Page, name: string) {
 export async function openFriendsTab(page: Page) {
   const nav = page.getByRole('navigation', { name: 'Hauptnavigation' })
   await nav.getByRole('button', { name: 'Freunde', exact: true }).click()
-  await expect(page.getByRole('heading', { name: /Einladen & verbinden/ })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Laufend verbunden bleiben', exact: true })).toBeVisible()
 }
 
 /**
@@ -53,18 +54,12 @@ export async function openFriendsTab(page: Page) {
  * localStorage) so subsequent share/annotate operations have a session.
  */
 export async function openFamilyHub(page: Page) {
+  // Friends-Tab leitet direkt zur OnlineSharingIntroView weiter (kein Zwischen-Screen mehr).
   await openFriendsTab(page)
-  await page.getByTestId('open-online-sharing').click()
-  // On mobile WebKit the React state update triggered by the click may not
-  // have completed when click() resolves, so the point-in-time isVisible()
-  // check would return false even though the consent screen is about to
-  // appear. waitFor polls the DOM until the heading is present (or the hub
-  // heading appears instead, in which case we can skip the consent step).
-  const consentHeading = page.getByRole('heading', { name: 'Laufend verbunden bleiben', exact: true })
-  const consentVisible = await consentHeading
-    .waitFor({ state: 'visible', timeout: 20_000 })
-    .then(() => true)
-    .catch(() => false)
+  // openFriendsTab wartet bereits auf die Consent-Überschrift; falls der Hub
+  // bereits aktiv ist (wiederholter Aufruf), können wir direkt weitermachen.
+  const consentVisible = await page.getByRole('heading', { name: 'Laufend verbunden bleiben', exact: true })
+    .isVisible()
   if (consentVisible) {
     await page.getByRole('checkbox').check()
     await page.getByRole('button', { name: 'Aktivieren', exact: true }).click()
@@ -84,8 +79,8 @@ export async function openFamilyHub(page: Page) {
  * race window in which one of the two flips first.
  */
 export async function reopenFamilyHub(page: Page) {
+  // /friends leitet automatisch zum Hub weiter (wenn Online-Kontakte vorhanden).
   await page.goto('/friends')
-  await page.getByTestId('open-online-sharing').click()
   await waitForHubReady(page)
   await expect(page.getByRole('tablist')).toBeVisible({ timeout: 20_000 })
 }
@@ -190,12 +185,26 @@ export async function injectOnlineFriend(
  * Waits until the auto-share queue has produced at least `minShares` shares
  * in the in-memory Supabase mock. Useful for asserting that
  * useAutoShare picked up a seeded answer.
+ *
+ * Pass `minRecipients` to also wait for the ACL rows – shares and
+ * share_recipients are inserted in two separate HTTP calls, so there is a
+ * narrow window where a share row exists but its ACL rows have not arrived
+ * yet.  Callers that immediately check `state.share_recipients` should pass
+ * the expected recipient count here instead of adding a sleep.
  */
-export async function waitForShares(state: MockState, minShares: number, timeoutMs = 15_000): Promise<void> {
+export async function waitForShares(
+  state: MockState,
+  minShares: number,
+  timeoutMs = 15_000,
+  minRecipients = 0,
+): Promise<void> {
   const start = Date.now()
-  while (state.shares.length < minShares) {
+  while (state.shares.length < minShares || state.share_recipients.length < minRecipients) {
     if (Date.now() - start > timeoutMs) {
-      throw new Error(`Timed out waiting for ${minShares} share(s); got ${state.shares.length}`)
+      throw new Error(
+        `Timed out waiting for ${minShares} share(s) / ${minRecipients} recipient(s); `
+        + `got ${state.shares.length} / ${state.share_recipients.length}`,
+      )
     }
     await new Promise(r => setTimeout(r, 250))
   }

@@ -24,36 +24,17 @@ async function completeOnboarding(page: Page, name: string) {
 async function openFriendsTab(page: Page) {
   const nav = page.getByRole('navigation', { name: 'Hauptnavigation' })
   await nav.getByRole('button', { name: 'Freunde', exact: true }).click()
-  await expect(page.getByRole('heading', { name: /Einladen & verbinden/ })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Laufend verbunden bleiben', exact: true })).toBeVisible()
 }
 
 test.describe('Storyhold – Freunde-Einladung', () => {
-  test('shows invitation CTA and ZIP import button', async ({ page }) => {
+  test('Freunde-Tab zeigt direkt den Online-Sharing-Intro-Screen', async ({ page }) => {
     await completeOnboarding(page, 'Anna')
     await openFriendsTab(page)
 
-    // Primary CTA in the invitation section is the Sandra-Flow entry.
-    await expect(page.getByTestId('sandra-entry-cta')).toBeVisible()
-    await expect(page.getByTestId('sandra-entry-cta')).toBeEnabled()
-
-    // ZIP import is available for receiving offline memory packages.
-    // Use the emoji prefix to distinguish from 'Geteilte Erinnerungen öffnen' (online-sharing CTA).
-    await expect(page.getByRole('button', { name: /🎁 Erinnerungen öffnen/ })).toBeVisible()
-  })
-
-  test('does NOT show the personalisation warning once a profile name is set', async ({ page }) => {
-    await completeOnboarding(page, 'Anna')
-    await openFriendsTab(page)
-    await expect(page.locator('.friends-hint--warn')).toHaveCount(0)
-  })
-
-  test('opens the ZIP import file picker from the friends section', async ({ page }) => {
-    await completeOnboarding(page, 'Anna')
-    await openFriendsTab(page)
-
-    const fileChooserPromise = page.waitForEvent('filechooser')
-    await page.getByRole('button', { name: /🎁 Erinnerungen öffnen/ }).click()
-    const chooser = await fileChooserPromise
-    expect(chooser.isMultiple()).toBe(false)
+    // Intro-Screen zeigt Aktivieren-Button (zunächst deaktiviert bis Checkbox gesetzt).
+    const activate = page.getByRole('button', { name: 'Aktivieren', exact: true })
+    await expect(activate).toBeVisible()
+    await expect(activate).toBeDisabled()
   })
 })

@@ -5517,7 +5517,9 @@ details[open] .faq-item__chevron {
 
 /* REQ-022: per-contact share toggle + inline pause confirmation */
 
-.online-contact-share-toggle {
+.online-contact-shareall {
+  position: relative;
+  z-index: 2;
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
@@ -5527,7 +5529,7 @@ details[open] .faq-item__chevron {
   user-select: none;
 }
 
-.online-contact-share-toggle input[type="checkbox"] {
+.online-contact-shareall input[type="checkbox"] {
   width: 1rem;
   height: 1rem;
   cursor: pointer;

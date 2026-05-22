@@ -9,6 +9,8 @@ const testRunId = githubRunId ? `gh-${githubRunId}` : undefined
 
 const entries: { name: string; value: string }[] = [
   { name: 'traffic_type', value: 'e2e' },
+  { name: 'rm-landing-seen', value: '1' },
+  { name: 'rm-install-dismissed', value: '1' },
   ...(githubRunId ? [{ name: 'github_run_id', value: githubRunId }] : []),
   ...(testRunId ? [{ name: 'test_run_id', value: testRunId }] : []),
 ]

@@ -21,7 +21,6 @@ import type { PersonalQuestionPack } from './types/sandraFlow'
 import { HomeView } from './views/HomeView'
 import { QuizView } from './views/QuizView'
 import { ArchiveView } from './views/ArchiveView'
-import { FriendsView } from './views/FriendsView'
 import { FriendAnswerView } from './views/FriendAnswerView'
 import { ProfileView } from './views/ProfileView'
 import { CustomQuestionsView } from './views/CustomQuestionsView'
@@ -64,7 +63,6 @@ import { useReminder } from './hooks/useReminder'
 import { useStreak } from './hooks/useStreak'
 import { AppModeProvider } from './hooks/useAppMode'
 import { exportAsMarkdown, exportAsEnrichedJSON, downloadFile, toSafeFilename } from './utils/export'
-import { importFile } from './utils/archiveImport'
 import { trackTabChanged, trackFeatureOpened } from './lib/analytics'
 import type { Category, InviteData, AnswerExport, MemorySharePayload, ContactHandshake } from './types'
 import './App.css'
@@ -143,7 +141,6 @@ export default function App() {
     addFriend,
     removeFriend,
     importFriendAnswers,
-    importFriendAnswerZipData,
     addCustomQuestion,
     removeCustomQuestion,
     importCustomQuestions,
@@ -315,17 +312,6 @@ export default function App() {
     }
   }
 
-  async function handleImportFriendZip(file: File) {
-    const result = await importFile(file)
-    if (result.ok && result.friendAnswerPayload) {
-      importFriendAnswerZipData(result.friendAnswerPayload)
-      return
-    }
-    // Log so failures are at least diagnosable in the browser console; the UI
-    // layer can be wired to a toast later without changing this call-site.
-    console.error('[App] friend ZIP import failed:', result.error ?? 'unknown error')
-  }
-
   const [view, setView] = useState<View>(() => {
     if (needsAsyncParse) return { name: 'home' }
     if (initialSandraHash) return { name: 'sandra-flow' }
@@ -419,6 +405,16 @@ export default function App() {
       setView({ name: 'home' })
     }
   }, [isSimple, view.name]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Redirect /friends deep-links to the right sub-view
+  useEffect(() => {
+    if (view.name !== 'friends' || !isLoaded) return
+    if (friends.some(f => f.online)) {
+      setView({ name: 'online-hub' })
+    } else {
+      setView({ name: 'online-intro' })
+    }
+  }, [view.name, isLoaded]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Pull on visibility change (app resumes from background)
   useEffect(() => {
@@ -562,10 +558,16 @@ export default function App() {
   }
 
   function navigate(tab: MainTab) {
+    if (tab === 'friends') {
+      goTo({ name: friends.some(f => f.online) ? 'online-hub' : 'online-intro' })
+      return
+    }
     goTo({ name: tab } as View)
   }
 
   const friendsBadge = friendAnswers.filter(a => a.value.trim() || (a.imageIds?.length ?? 0) > 0 || (a.videoIds?.length ?? 0) > 0 || !!a.audioId).length
+  const FRIENDS_TAB_VIEWS = new Set<View['name']>(['friends', 'online-intro', 'online-hub', 'sandra-flow'])
+  const activeTab = FRIENDS_TAB_VIEWS.has(view.name) ? 'friends' : view.name
 
   // Bottom nav shown on all main views (not during focused quiz/friend-answer/sandra-flow/landing)
   const showNav = view.name !== 'quiz' && view.name !== 'sandra-flow' && view.name !== 'landing'
@@ -637,23 +639,6 @@ export default function App() {
         />
       )}
 
-      {view.name === 'friends' && (
-        <FriendsView
-          friends={friends}
-          friendAnswers={friendAnswers}
-          onRemoveFriend={removeFriend}
-          onImportZip={handleImportFriendZip}
-          onBack={() => goTo({ name: 'home' })}
-          onOpenOnlineSharing={() => goTo({ name: onlineSharing?.enabled ? 'online-hub' : 'online-intro' })}
-          onlineSharingEnabled={Boolean(onlineSharing?.enabled)}
-          onlineSharingConfigured={ONLINE_SHARING_CONFIGURED}
-          onOpenSandraFlow={() => {
-            history.replaceState({}, '', '#/ask')
-            setView({ name: 'sandra-flow' })
-          }}
-        />
-      )}
-
       {view.name === 'online-intro' && (
         <OnlineSharingIntroView
           configured={ONLINE_SHARING_CONFIGURED}
@@ -661,7 +646,7 @@ export default function App() {
             enableOnlineSharing()
             goTo({ name: 'online-hub' })
           }}
-          onBack={() => goTo({ name: 'friends' })}
+          onBack={() => goTo({ name: 'home' })}
         />
       )}
 
@@ -670,9 +655,14 @@ export default function App() {
           profileName={profile?.name ?? ''}
           friends={friends}
           sync={onlineSync}
-          onBack={() => goTo({ name: 'friends' })}
+          onBack={() => goTo({ name: 'home' })}
           onRemoveContact={removeFriend}
           onOpenSandraFlow={() => goTo({ name: 'sandra-flow' })}
+          onPauseShareAll={async (friendId, deviceId) => {
+            await onlineSync.service?.unshareAllWithFriend(deviceId)
+            const f = friends.find(fr => fr.id === friendId)
+            if (f?.online) addFriend(f.name, undefined, { ...f.online, shareAll: false })
+          }}
           onDeactivate={async () => {
             const svc = onlineSync.service
             if (svc) {
@@ -771,9 +761,9 @@ export default function App() {
           onEnableOnlineSharing={() => enableOnlineSharing()}
           onBack={() => {
             if (window.location.hash.startsWith('#/ask')) {
-              history.replaceState({}, '', '/friends')
+              history.replaceState({}, '', '/')
             }
-            goTo({ name: 'friends' })
+            goTo({ name: 'home' })
           }}
         />
       )}
@@ -800,7 +790,7 @@ export default function App() {
 
       {showNav && (
         <BottomNav
-          current={view.name}
+          current={activeTab}
           onNavigate={navigate}
           friendsBadge={friendsBadge}
         />
