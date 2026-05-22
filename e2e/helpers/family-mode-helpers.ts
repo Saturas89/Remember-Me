@@ -54,24 +54,23 @@ export const openFriendsTab = openFamilyTab
 /**
  * Aktiviert den Familienmodus und wartet bis der Hub bereit ist.
  *
- * Neuer Flow (kein Consent-Screen, kein Onboarding-Screen):
- *  1. Familie-Tab → Intro-View mit "Jemanden einladen"-Button
- *  2. Klick auf Invite → enableOnlineSharing() + Sandra-Flow (anchor step)
- *  3. page.goto('/friends') → Hub (da onlineSharing.enabled jetzt true)
- *
- * Wenn der Hub bereits aktiv ist (z. B. wiederholter Aufruf mit Kontakten),
- * leitet /friends direkt dorthin weiter.
+ * Nutzt direktes State-Inject (wie `injectOnlineFriend`) statt des UI-Flows,
+ * um Timing-Races mit dem Full-Page-Navigation-Muster zu vermeiden.
+ * Tests, die explizit den Invite-Button prüfen, nutzen stattdessen openFamilyTab().
  */
 export async function openFamilyHub(page: Page) {
+  // Inject onlineSharing.enabled if not already set.
+  await page.evaluate(() => {
+    type Bridge = { get: () => Record<string, unknown> | null; save: (s: unknown) => void }
+    const bridge = (window as unknown as { __rmState?: Bridge }).__rmState
+    const state: Record<string, unknown> = bridge?.get() ?? {}
+    const os = state.onlineSharing as Record<string, unknown> | undefined
+    if (!os?.enabled) {
+      state.onlineSharing = { enabled: true, activatedAt: new Date().toISOString() }
+      bridge?.save(state)
+    }
+  })
   await page.goto('/friends')
-  // Prüfen ob Intro-Screen sichtbar (erster Aufruf ohne aktiviertes Sharing)
-  const introVisible = await page.getByRole('heading', { name: 'Laufend verbunden bleiben', exact: true })
-    .isVisible().catch(() => false)
-  if (introVisible) {
-    await page.getByRole('button', { name: /Jemanden einladen/ }).click()
-    // Sandra-Flow startet – zurück zu /friends, das jetzt zum Hub leitet
-    await page.goto('/friends')
-  }
   await waitForHubReady(page)
 }
 

@@ -28,11 +28,10 @@ test.describe('Familienmodus – Aktivierung (FR-15.1 – FR-15.3)', () => {
     await expect(page.getByRole('checkbox')).not.toBeVisible()
   })
 
-  test('Invite-Button legt Geräte-Identität an und startet Sandra-Flow', async ({ page }) => {
+  test('Invite-Button aktiviert Online-Sharing und Hub zeigt Geräte-Identität', async ({ page }) => {
     await completeOnboarding(page, 'Anna')
     await openFamilyHub(page)
 
-    // Nach openFamilyHub ist der Hub sichtbar (Sandra-Flow wurde aktiviert).
     await expect(page.getByRole('heading', { name: 'Online teilen', exact: true })).toBeVisible()
 
     const identity = await readDeviceIdentity(page)
