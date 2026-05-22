@@ -106,10 +106,9 @@ test.describe('Mobile-UX (Real-DB) – Touch, Viewport, Tap-Targets', () => {
       await assertTapTarget(tablist.getByRole('tab').nth(i))
     }
 
-    // REQ-022: Sandra-Flow CTA + Auto-Share-Toggle sind die zentralen Tap-Targets.
+    // REQ-022: Sandra-Flow CTA ist der zentrale Tap-Target im Kontakte-Tab.
     await alice.getByRole('tab', { name: /Kontakte/ }).click()
     await assertTapTarget(alice.getByTestId('contacts-new-connection'))
-    await assertTapTarget(alice.locator('[data-testid^="shareall-toggle-"]').first())
 
     await aliceCtx.close()
     await bobCtx.close()

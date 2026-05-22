@@ -658,11 +658,6 @@ export default function App() {
           onBack={() => goTo({ name: 'home' })}
           onRemoveContact={removeFriend}
           onOpenSandraFlow={() => goTo({ name: 'sandra-flow' })}
-          onPauseShareAll={async (friendId, deviceId) => {
-            await onlineSync.service?.unshareAllWithFriend(deviceId)
-            const f = friends.find(fr => fr.id === friendId)
-            if (f?.online) addFriend(f.name, undefined, { ...f.online, shareAll: false })
-          }}
           onDeactivate={async () => {
             const svc = onlineSync.service
             if (svc) {

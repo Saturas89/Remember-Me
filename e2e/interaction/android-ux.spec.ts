@@ -91,12 +91,9 @@ test.describe('Mobile-UX – Touch, Viewport, Tap-Targets', () => {
       await assertTapTarget(tablist.getByRole('tab').nth(i))
     }
 
-    // Sandra-Flow-CTA (FR-22.17) und Auto-Share-Toggle (FR-22.12) — die
-    // beiden zentralen Interaktionen im Kontakte-Tab müssen ≥ 44 px haben.
+    // Sandra-Flow-CTA (FR-22.17) — zentraler Tap-Target im Kontakte-Tab muss ≥ 44 px haben.
     await alice.getByRole('tab', { name: /Kontakte/ }).click()
     await assertTapTarget(alice.getByTestId('contacts-new-connection'))
-    const toggleLabel = alice.locator('[data-testid^="shareall-toggle-"]').first()
-    await assertTapTarget(toggleLabel)
 
     await aliceCtx.close()
     await bobCtx.close()

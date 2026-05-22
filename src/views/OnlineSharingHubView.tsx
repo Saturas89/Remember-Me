@@ -36,8 +36,6 @@ interface Props {
   /** Open the Sandra-flow as the canonical entry for new connections
    *  (REQ-022 FR-22.17 / FR-22.23). */
   onOpenSandraFlow: () => void
-  /** Pause auto-sharing with a specific contact (REQ-022 FR-22.14). */
-  onPauseShareAll?: (friendId: string, deviceId: string) => Promise<void>
 }
 
 type Tab = 'feed' | 'contacts' | 'settings'
@@ -60,7 +58,6 @@ export function OnlineSharingHubView({
   onDeactivate,
   onRemoveContact,
   onOpenSandraFlow,
-  onPauseShareAll,
 }: Props) {
   const { t } = useTranslation()
   const h = t.onlineSharingHub
@@ -139,7 +136,6 @@ export function OnlineSharingHubView({
               onlineFriends={onlineFriends}
               onRemoveContact={onRemoveContact}
               onOpenSandraFlow={onOpenSandraFlow}
-              onPauseShareAll={onPauseShareAll}
             />
           )}
           {tab === 'settings' && (
@@ -351,21 +347,14 @@ function contactAvatarColor(name: string): string {
 function ContactItem({
   friend,
   onRemove,
-  onPauseShareAll,
 }: {
   friend: Friend
   onRemove: (id: string) => void
-  onPauseShareAll?: (friendId: string, deviceId: string) => Promise<void>
 }) {
-  const { t } = useTranslation()
-  const c = t.onlineSharingHub.contacts
   const [offset, setOffset] = useState(0)
   const [flyOut, setFlyOut] = useState(false)
   const [dragging, setDragging] = useState(false)
-  const [showPauseConfirm, setShowPauseConfirm] = useState(false)
-  const [pausing, setPausing] = useState(false)
   const startXRef = useRef<number | null>(null)
-  const shareAll = friend.online?.shareAll !== false
 
   const handlePointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
     if (flyOut) return
@@ -399,21 +388,6 @@ function ContactItem({
   const handlePointerLeave = (e: ReactPointerEvent<HTMLDivElement>) => {
     if (startXRef.current !== null) {
       handlePointerUp(e)
-    }
-  }
-
-  const handleShareAllToggle = () => {
-    if (shareAll) setShowPauseConfirm(true)
-  }
-
-  const handlePauseConfirmYes = async () => {
-    if (!friend.online || !onPauseShareAll) return
-    setPausing(true)
-    try {
-      await onPauseShareAll(friend.id, friend.online.deviceId)
-      setShowPauseConfirm(false)
-    } finally {
-      setPausing(false)
     }
   }
 
@@ -456,45 +430,6 @@ function ContactItem({
           </svg>
         </div>
       </div>
-      {onPauseShareAll && (
-        <label
-          className="online-contact-shareall"
-          data-testid={`shareall-toggle-${friend.id}`}
-        >
-          <input
-            type="checkbox"
-            checked={shareAll}
-            onChange={handleShareAllToggle}
-            disabled={pausing}
-          />
-          {c.shareToggleLabel}
-        </label>
-      )}
-      {showPauseConfirm && (
-        <div className="online-contact-pause-confirm" data-testid={`pause-confirm-${friend.id}`}>
-          <p className="friends-hint">
-            <strong>{c.shareTogglePauseConfirmTitle.replace('{name}', friend.name)}</strong>
-          </p>
-          <p className="friends-hint">{c.shareTogglePauseConfirmBody.replace('{name}', friend.name)}</p>
-          <div className="online-contact-pause-confirm__actions">
-            <button
-              className="btn btn--ghost btn--sm friends-hint--warn"
-              data-testid={`pause-confirm-yes-${friend.id}`}
-              onClick={handlePauseConfirmYes}
-              disabled={pausing}
-            >
-              {pausing ? c.shareTogglePausePending : c.shareTogglePauseConfirmYes}
-            </button>
-            <button
-              className="btn btn--ghost btn--sm"
-              onClick={() => setShowPauseConfirm(false)}
-              disabled={pausing}
-            >
-              {c.shareTogglePauseConfirmNo}
-            </button>
-          </div>
-        </div>
-      )}
     </li>
   )
 }
@@ -503,12 +438,10 @@ function ContactsTab({
   onlineFriends,
   onRemoveContact,
   onOpenSandraFlow,
-  onPauseShareAll,
 }: {
   onlineFriends: Friend[]
   onRemoveContact: (friendId: string) => void
   onOpenSandraFlow: () => void
-  onPauseShareAll?: (friendId: string, deviceId: string) => Promise<void>
 }) {
   const { t } = useTranslation()
   const c = t.onlineSharingHub.contacts
@@ -525,7 +458,6 @@ function ContactsTab({
               key={f.id}
               friend={f}
               onRemove={onRemoveContact}
-              onPauseShareAll={onPauseShareAll}
             />
           ))}
         </ul>
