@@ -359,7 +359,6 @@ export const UI_DE = {
     feedEmpty: {
       hint: 'Sobald deine Kontakte etwas Neues schreiben, erscheint es hier.',
       allPausedHint: 'Du teilst aktuell mit niemandem. Schalte das Teilen in den Kontakten wieder ein.',
-      inviteCta: 'Kontakte öffnen',
     },
     annotation: {
       label: 'Ergänzung hinzufügen',

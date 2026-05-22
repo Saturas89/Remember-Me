@@ -391,8 +391,6 @@ export interface Translations {
       /** Used when every online friend is paused (shareAll === false).
        *  Encourages the user to re-enable in Contacts. */
       allPausedHint: string
-      /** Ghost CTA that navigates to the Contacts tab. */
-      inviteCta: string
     }
 
     annotation: {
