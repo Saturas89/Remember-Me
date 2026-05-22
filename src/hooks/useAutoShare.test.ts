@@ -104,6 +104,23 @@ describe('useAutoShare', () => {
     expect(args[3]).toBe('Sandra')
   })
 
+  it('multicasts one Answer to all shareAll friends in a single call', async () => {
+    const friend1 = makeFriend({ id: 'friend-1', deviceId: 'd-friend-1' })
+    const friend2 = makeFriend({ id: 'friend-2', deviceId: 'd-friend-2' })
+    const sync = makeSync()
+    const opts = makeOpts({ sync, friends: [friend1, friend2] })
+    renderHook(() => useAutoShare(opts))
+    await waitFor(() =>
+      expect(sync.service!.shareMemoryToAllFriends).toHaveBeenCalledTimes(1),
+    )
+    const recipients = (sync.service!.shareMemoryToAllFriends as ReturnType<typeof vi.fn>).mock.calls[0][2]
+    expect(recipients).toHaveLength(2)
+    expect(recipients).toEqual(expect.arrayContaining([
+      { deviceId: 'd-friend-1', publicKey: 'PK1' },
+      { deviceId: 'd-friend-2', publicKey: 'PK1' },
+    ]))
+  })
+
   it('skips answers with empty values', async () => {
     const opts = makeOpts({
       answers: { 'q-empty': makeAnswer({ id: 'q-empty', value: '   ' }) },

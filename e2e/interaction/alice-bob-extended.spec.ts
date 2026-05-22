@@ -40,8 +40,8 @@ test.describe('Erweiterte Mehrgeräte-Szenarien', () => {
     await injectOnlineFriend(bob, 'Alice', aliceId.deviceId, aliceId.publicKey)
     await injectOnlineFriend(carol, 'Alice', aliceId.deviceId, aliceId.publicKey)
 
-    await reopenFamilyHub(alice)
     await seedAnswer(alice, 'childhood-01', 'childhood', 'Meine liebste Kindheitserinnerung.')
+    await reopenFamilyHub(alice)
     await waitForShares(state, 1, 20_000)
 
     const recipients = state.share_recipients
@@ -101,10 +101,10 @@ test.describe('Erweiterte Mehrgeräte-Szenarien', () => {
       { id: 'seq-q3', cat: 'love', text: 'Sequenz-Erinnerung Nummer drei.' },
     ]
 
-    await reopenFamilyHub(alice)
     for (const m of memories) {
       await seedAnswer(alice, m.id, m.cat, m.text)
     }
+    await reopenFamilyHub(alice)
     await waitForShares(state, 3, 30_000)
 
     await reopenFamilyHub(bob)
@@ -134,11 +134,11 @@ test.describe('Erweiterte Mehrgeräte-Szenarien', () => {
     await injectOnlineFriend(alice, 'Bob', bobId.deviceId, bobId.publicKey)
     await injectOnlineFriend(bob, 'Alice', aliceId.deviceId, aliceId.publicKey)
 
-    await reopenFamilyHub(alice)
     await seedAnswer(alice, 'bi-q-alice', 'childhood', 'Alices persönliche Erinnerung.')
+    await reopenFamilyHub(alice)
 
-    await reopenFamilyHub(bob)
     await seedAnswer(bob, 'bi-q-bob', 'family', 'Bobs persönliche Erinnerung.')
+    await reopenFamilyHub(bob)
 
     await waitForShares(state, 2, 30_000)
     const owners = state.shares.map(s => s.owner_id as string)
@@ -179,8 +179,8 @@ test.describe('Erweiterte Mehrgeräte-Szenarien', () => {
     await injectOnlineFriend(alice, 'Bob', bobId.deviceId, bobId.publicKey)
     await injectOnlineFriend(bob, 'Alice', aliceId.deviceId, aliceId.publicKey)
 
-    await reopenFamilyHub(alice)
     await seedAnswer(alice, 'rich-q', 'childhood', richText)
+    await reopenFamilyHub(alice)
     await waitForShares(state, 1, 20_000)
 
     // Klartext darf nicht im Wire-Ciphertext stehen

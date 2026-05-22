@@ -95,7 +95,7 @@ test.describe('Mobile-UX – Touch, Viewport, Tap-Targets', () => {
     // beiden zentralen Interaktionen im Kontakte-Tab müssen ≥ 44 px haben.
     await alice.getByRole('tab', { name: /Kontakte/ }).click()
     await assertTapTarget(alice.getByTestId('contacts-new-connection'))
-    const toggleLabel = alice.locator('[data-testid^="shareall-toggle-friend-"]').first()
+    const toggleLabel = alice.locator('[data-testid^="shareall-toggle-"]').first()
     await assertTapTarget(toggleLabel)
 
     await aliceCtx.close()
@@ -119,8 +119,8 @@ test.describe('Mobile-UX – Touch, Viewport, Tap-Targets', () => {
     await injectOnlineFriend(alice, 'Bob', bobId.deviceId, bobId.publicKey)
     await injectOnlineFriend(bob, 'Alice', aliceId.deviceId, aliceId.publicKey)
 
-    await reopenFamilyHub(alice)
     await seedAnswer(alice, 'mobile-ann-q', 'childhood', 'Erinnerung für mobiles Annotieren.')
+    await reopenFamilyHub(alice)
     await waitForShares(state, 1, 20_000)
 
     await reopenFamilyHub(bob)
@@ -167,10 +167,10 @@ test.describe('Mobile-UX – Touch, Viewport, Tap-Targets', () => {
       text: `Scroll-Erinnerung Nummer ${i + 1} mit genug Text, damit die Karte Höhe bekommt.`,
     }))
 
-    await reopenFamilyHub(alice)
     for (const m of memories) {
       await seedAnswer(alice, m.id, m.cat, m.text)
     }
+    await reopenFamilyHub(alice)
     await waitForShares(state, memories.length, 30_000)
 
     await reopenFamilyHub(bob)
