@@ -721,6 +721,14 @@
   }
 }
 
+@media (max-width: 400px) {
+  /* Very narrow screens (e.g. Samsung S23, 360 px): hide logo text so the
+     CTA button stays within the viewport width. */
+  .landing-nav__logo span {
+    display: none;
+  }
+}
+
 @media (max-width: 540px) {
   .landing-why__grid {
     grid-template-columns: 1fr;

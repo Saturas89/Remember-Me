@@ -138,8 +138,8 @@ test.describe('Mobile-UX (Real-DB) – Touch, Viewport, Tap-Targets', () => {
     await injectOnlineFriend(alice, 'Bob',   bobId.deviceId,   bobId.publicKey)
     await injectOnlineFriend(bob,   'Alice', aliceId.deviceId, aliceId.publicKey)
 
-    await reopenFamilyHub(alice)
     await seedAnswer(alice, 'mobile-ann-q-real', 'childhood', 'Erinnerung für mobiles Annotieren.')
+    await reopenFamilyHub(alice)
     await waitForRealShares(admin, aliceId.deviceId, 1, 30_000)
 
     await reopenFamilyHub(bob)
@@ -203,10 +203,10 @@ test.describe('Mobile-UX (Real-DB) – Touch, Viewport, Tap-Targets', () => {
       text: `Scroll-Erinnerung Nummer ${i + 1} mit genug Text, damit die Karte Höhe bekommt.`,
     }))
 
-    await reopenFamilyHub(alice)
     for (const m of memories) {
       await seedAnswer(alice, m.id, m.cat, m.text)
     }
+    await reopenFamilyHub(alice)
     await waitForRealShares(admin, aliceId.deviceId, memories.length, 60_000)
 
     await reopenFamilyHub(bob)
