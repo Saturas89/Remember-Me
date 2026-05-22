@@ -101,7 +101,7 @@ function LpImage({ src, alt, aspectRatio }: { src: string; alt: string; aspectRa
 
 export function LpView({ content }: { content: LpContent }) {
   const heroImg = content.heroImg ?? '/landing/hero.jpg'
-  const ctaImg  = content.ctaImg  ?? '/landing/cta.jpg'
+  const ctaImg  = content.ctaImg  ?? '/landing/ABCAFE7B-04E2-4983-BD37-4854F197834E.png'
 
   return (
     <div className="landing-view">
