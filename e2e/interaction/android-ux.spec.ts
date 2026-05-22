@@ -95,7 +95,7 @@ test.describe('Mobile-UX – Touch, Viewport, Tap-Targets', () => {
     // beiden zentralen Interaktionen im Kontakte-Tab müssen ≥ 44 px haben.
     await alice.getByRole('tab', { name: /Kontakte/ }).click()
     await assertTapTarget(alice.getByTestId('contacts-new-connection'))
-    const toggleLabel = alice.locator('[data-testid^="shareall-toggle-friend-"]').first()
+    const toggleLabel = alice.locator('[data-testid^="shareall-toggle-"]').first()
     await assertTapTarget(toggleLabel)
 
     await aliceCtx.close()

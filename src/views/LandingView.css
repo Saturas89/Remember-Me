@@ -688,8 +688,8 @@
   .landing-hero__media .landing-img-wrap {
     mask-image: linear-gradient(to bottom, black 55%, transparent 100%);
     -webkit-mask-image: linear-gradient(to bottom, black 55%, transparent 100%);
-    mask-composite: unset;
-    -webkit-mask-composite: unset;
+    mask-composite: add;
+    -webkit-mask-composite: source-over;
   }
 
   .landing-hero__headline {

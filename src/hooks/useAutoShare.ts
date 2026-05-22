@@ -74,13 +74,13 @@ export function useAutoShare(options: UseAutoShareOptions): UseAutoShareReturn {
           const active = o.friends.filter(f => f.online && f.online.shareAll === true)
           if (active.length === 0) break
 
-          const next = await findNextPair(o.answers, active)
+          const next = await findNextAnswerWithPendingFriends(o.answers, active)
           if (!next || cancelledRef.current) break
 
-          const recipient: Recipient = {
-            deviceId: next.friend.online!.deviceId,
-            publicKey: next.friend.online!.publicKey,
-          }
+          const recipients: Recipient[] = next.friends.map(f => ({
+            deviceId: f.online!.deviceId,
+            publicKey: f.online!.publicKey,
+          }))
 
           let succeeded = false
           let lastErr: Error | null = null
@@ -90,7 +90,7 @@ export function useAutoShare(options: UseAutoShareOptions): UseAutoShareReturn {
               await o.sync.service!.shareMemoryToAllFriends(
                 next.answer,
                 o.resolveQuestionText(next.answer),
-                [recipient],
+                recipients,
                 o.ownerName,
               )
               succeeded = true
@@ -103,11 +103,10 @@ export function useAutoShare(options: UseAutoShareOptions): UseAutoShareReturn {
           }
 
           if (succeeded) {
-            await setShareLogEntry(
-              next.answer.id,
-              next.friend.online!.deviceId,
-              new Date().toISOString(),
-            )
+            const ts = new Date().toISOString()
+            for (const f of next.friends) {
+              await setShareLogEntry(next.answer.id, f.online!.deviceId, ts)
+            }
             setLastError(null)
           } else if (lastErr) {
             setLastError(lastErr.message)
@@ -183,18 +182,20 @@ export function useAutoShare(options: UseAutoShareOptions): UseAutoShareReturn {
   return { pending, backfillInProgress, lastError }
 }
 
-async function findNextPair(
+async function findNextAnswerWithPendingFriends(
   answers: Record<string, Answer>,
   activeFriends: Friend[],
-): Promise<{ answer: Answer; friend: Friend } | null> {
+): Promise<{ answer: Answer; friends: Friend[] } | null> {
   for (const ans of Object.values(answers)) {
     if (!ans.value || !ans.value.trim()) continue
+    const pending: Friend[] = []
     for (const friend of activeFriends) {
       const did = friend.online!.deviceId
       const last = await getShareLogEntry(ans.id, did)
       if (last !== null && last >= ans.updatedAt) continue
-      return { answer: ans, friend }
+      pending.push(friend)
     }
+    if (pending.length > 0) return { answer: ans, friends: pending }
   }
   return null
 }
