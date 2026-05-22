@@ -45,7 +45,8 @@ test.describe('Familienmodus – Auto-Share & Pause (REQ-022)', () => {
     await seedAnswer(alice, 'childhood-01', 'childhood', 'Ich bin in Cuxhaven am Meer aufgewachsen.')
     await reopenFamilyHub(alice)
 
-    await waitForShares(state, 1, 20_000)
+    // 2 recipients: Alice (owner, added implicitly) + Bob
+    await waitForShares(state, 1, 20_000, 2)
 
     expect(state.shares).toHaveLength(1)
     expect(state.shares[0].owner_id).toBe(aliceId.deviceId)
@@ -98,7 +99,8 @@ test.describe('Familienmodus – Auto-Share & Pause (REQ-022)', () => {
 
     await seedAnswer(alice, 'childhood-02', 'childhood', 'Sommer in den Alpen.')
     await reopenFamilyHub(alice)
-    await waitForShares(state, 1, 20_000)
+    // 2 recipients: Alice (owner, implicit) + Bob
+    await waitForShares(state, 1, 20_000, 2)
 
     // Initial: 2 ACL rows (Alice + Bob).
     expect(state.share_recipients.filter(r => r.share_id === state.shares[0].id)).toHaveLength(2)

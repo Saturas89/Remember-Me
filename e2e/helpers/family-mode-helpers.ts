@@ -185,12 +185,26 @@ export async function injectOnlineFriend(
  * Waits until the auto-share queue has produced at least `minShares` shares
  * in the in-memory Supabase mock. Useful for asserting that
  * useAutoShare picked up a seeded answer.
+ *
+ * Pass `minRecipients` to also wait for the ACL rows – shares and
+ * share_recipients are inserted in two separate HTTP calls, so there is a
+ * narrow window where a share row exists but its ACL rows have not arrived
+ * yet.  Callers that immediately check `state.share_recipients` should pass
+ * the expected recipient count here instead of adding a sleep.
  */
-export async function waitForShares(state: MockState, minShares: number, timeoutMs = 15_000): Promise<void> {
+export async function waitForShares(
+  state: MockState,
+  minShares: number,
+  timeoutMs = 15_000,
+  minRecipients = 0,
+): Promise<void> {
   const start = Date.now()
-  while (state.shares.length < minShares) {
+  while (state.shares.length < minShares || state.share_recipients.length < minRecipients) {
     if (Date.now() - start > timeoutMs) {
-      throw new Error(`Timed out waiting for ${minShares} share(s); got ${state.shares.length}`)
+      throw new Error(
+        `Timed out waiting for ${minShares} share(s) / ${minRecipients} recipient(s); `
+        + `got ${state.shares.length} / ${state.share_recipients.length}`,
+      )
     }
     await new Promise(r => setTimeout(r, 250))
   }
