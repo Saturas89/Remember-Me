@@ -80,8 +80,8 @@ test.describe('Multi-Empfänger und Drei-Geräte (Real-DB)', () => {
     const { alice, bob, carol } = await setupThreeDevices(browser, ['Alice', 'Bob', 'Carol'])
     createdUsers.push(alice.id.deviceId, bob.id.deviceId, carol.id.deviceId)
 
-    await reopenFamilyHub(alice.page)
     await seedAnswer(alice.page, 'multi-q1', 'childhood', 'Gemeinsame Erinnerung für alle.')
+    await reopenFamilyHub(alice.page)
     await waitForRealShares(admin, alice.id.deviceId, 1, 30_000)
 
     await expect
@@ -116,8 +116,8 @@ test.describe('Multi-Empfänger und Drei-Geräte (Real-DB)', () => {
     const daveRawId = await readDeviceId(dave)
     createdUsers.push(daveRawId)
 
-    await reopenFamilyHub(alice.page)
     await seedAnswer(alice.page, 'iso-q1', 'family', 'Nur für Bob und Carol.')
+    await reopenFamilyHub(alice.page)
     await waitForRealShares(admin, alice.id.deviceId, 1, 30_000)
 
     await bob.page.reload()
@@ -155,10 +155,10 @@ test.describe('Multi-Empfänger und Drei-Geräte (Real-DB)', () => {
       { id: 'seq-q3', cat: 'childhood', text: 'Dritte Erinnerung.' },
     ]
 
-    await reopenFamilyHub(alice.page)
     for (const m of memories) {
       await seedAnswer(alice.page, m.id, m.cat, m.text)
     }
+    await reopenFamilyHub(alice.page)
     await waitForRealShares(admin, alice.id.deviceId, memories.length, 90_000)
 
     await bob.page.reload()
@@ -180,8 +180,8 @@ test.describe('Multi-Empfänger und Drei-Geräte (Real-DB)', () => {
     const { alice, bob, carol } = await setupThreeDevices(browser, ['Alice', 'Bob3', 'Carol3'])
     createdUsers.push(alice.id.deviceId, bob.id.deviceId, carol.id.deviceId)
 
-    await reopenFamilyHub(alice.page)
     await seedAnswer(alice.page, 'fanout-q1', 'childhood', 'Erinnerung zum Kommentieren.')
+    await reopenFamilyHub(alice.page)
     await waitForRealShares(admin, alice.id.deviceId, 1, 30_000)
 
     const { data: shareRows } = await admin
@@ -245,8 +245,8 @@ test.describe('Multi-Empfänger und Drei-Geräte (Real-DB)', () => {
     const { alice, bob, carol } = await setupThreeDevices(browser, ['Alice', 'Bob4', 'Carol4'])
     createdUsers.push(alice.id.deviceId, bob.id.deviceId, carol.id.deviceId)
 
-    await reopenFamilyHub(alice.page)
     await seedAnswer(alice.page, 'struct-q1', 'childhood', 'Strukturtest-Erinnerung.')
+    await reopenFamilyHub(alice.page)
     await waitForRealShares(admin, alice.id.deviceId, 1, 30_000)
 
     const { data: shares } = await admin

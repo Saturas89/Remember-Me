@@ -120,24 +120,32 @@ export async function runSetupWizard(
 
   await expect(page.getByRole('heading', { name: 'Privater Sync', exact: true })).toBeVisible({ timeout: 20_000 })
 
-  // Wait until device1's first sync has written the encrypted state to the DB.
-  // Without this, device2 might enter the recovery-code step before `state_ct`
-  // exists – handleEnterCode skips decryption when the row is absent, so any
-  // key (including a wrong one) would appear to succeed, breaking the
-  // wrong-recovery-code chaos test.
+  return codeText
+}
+
+/**
+ * Polls until device1's first sync has written the encrypted state to the DB.
+ *
+ * Call this after `runSetupWizard` only in tests that need `state_ct` to exist
+ * before device2 enters the recovery-code step (e.g. wrong-recovery-code).
+ * The private-sync debounce is 30 s, so allow ≥ 90 s for debounce + round-trip.
+ */
+export async function waitForFirstSync(
+  admin: ReturnType<typeof supabaseAdmin>,
+  userId: string,
+  timeoutMs = 90_000,
+): Promise<void> {
   await expect.poll(
     async () => {
-      const { data } = await adminClient
+      const { data } = await admin
         .from('private_sync_state')
         .select('user_id')
-        .eq('user_id', preUserId)
+        .eq('user_id', userId)
         .maybeSingle()
       return data?.user_id ?? null
     },
-    { timeout: 30_000, message: 'Device1 first sync did not reach private_sync_state within 30 s' },
+    { timeout: timeoutMs, message: `private_sync_state not written within ${timeoutMs} ms` },
   ).not.toBeNull()
-
-  return codeText
 }
 
 /** Navigates device 2 to the enter-code step after signing in with an existing account. */

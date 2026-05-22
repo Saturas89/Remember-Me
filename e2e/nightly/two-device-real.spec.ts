@@ -62,8 +62,8 @@ test.describe('Real-DB: Vollständiger Alice → Bob Share-Flow', () => {
     await injectOnlineFriend(bob,   'Alice', aliceId.deviceId, aliceId.publicKey)
 
     // ── Alice befüllt eine Antwort – useAutoShare verteilt sie automatisch ─────
-    await reopenFamilyHub(alice)
     await seedAnswer(alice, 'real-q-1', 'childhood', 'Meine Kindheitserinnerung an den See.')
+    await reopenFamilyHub(alice)
     await waitForRealShares(admin, aliceId.deviceId, 1, 30_000)
 
     // ── Bob lädt die Seite neu und erwartet den Share ─────────────────────────
@@ -107,8 +107,8 @@ test.describe('Real-DB: Vollständiger Alice → Bob Share-Flow', () => {
     await injectOnlineFriend(alice, 'Bob', bobId.deviceId, bobId.publicKey)
     await injectOnlineFriend(bob, 'Alice', aliceId.deviceId, aliceId.publicKey)
 
-    await reopenFamilyHub(alice)
     await seedAnswer(alice, 'real-q-2', 'family', 'Geheimnis für Bob.')
+    await reopenFamilyHub(alice)
     await waitForRealShares(admin, aliceId.deviceId, 1, 30_000)
 
     // Bob sieht den Share
@@ -148,8 +148,8 @@ test.describe('Real-DB: Vollständiger Alice → Bob Share-Flow', () => {
     await injectOnlineFriend(bob,   'Alice', aliceId.deviceId, aliceId.publicKey)
 
     // Alice befüllt eine Antwort – Auto-Share leitet sie weiter
-    await reopenFamilyHub(alice)
     await seedAnswer(alice, 'real-q-3', 'childhood', 'Erinnerung für Annotation.')
+    await reopenFamilyHub(alice)
     await waitForRealShares(admin, aliceId.deviceId, 1, 30_000)
 
     // Bob öffnet den Share und schreibt eine Annotation
@@ -196,8 +196,8 @@ test.describe('Real-DB: Vollständiger Alice → Bob Share-Flow', () => {
     await injectOnlineFriend(alice, 'Bob',   bobId.deviceId,   bobId.publicKey)
     await injectOnlineFriend(bob,   'Alice', aliceId.deviceId, aliceId.publicKey)
 
-    await reopenFamilyHub(alice)
     await seedAnswer(alice, 'real-q-4', 'family', 'Wird bald gelöscht.')
+    await reopenFamilyHub(alice)
     await waitForRealShares(admin, aliceId.deviceId, 1, 30_000)
 
     // Verifizieren via Admin-API: Share ist da

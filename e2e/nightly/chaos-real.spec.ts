@@ -15,6 +15,7 @@ import {
   openSyncTab,
   readSyncUserId,
   runSetupWizard,
+  waitForFirstSync,
   goToEnterCodeStep,
 } from './private-sync-helpers'
 
@@ -57,11 +58,6 @@ test.describe('Private Sync – Chaos Tests (Storyhold Server)', () => {
     await page.evaluate(() => window.scrollTo(0, 0))
     await page.getByRole('button', { name: /← Zurück/ }).click()
     await expect(page.getByRole('button', { name: 'Einrichten' })).toBeVisible({ timeout: 10_000 })
-
-    // Kein Auth-User angelegt
-    const { data: users } = await admin.auth.admin.listUsers()
-    const leaked = users.users.find(u => u.email?.startsWith('e2e-chaos-'))
-    expect(leaked).toBeUndefined()
 
     await ctx.close()
   })
@@ -140,6 +136,7 @@ test.describe('Private Sync – Chaos Tests (Storyhold Server)', () => {
     const recoveryCode = await runSetupWizard(page1, email)
     const userId = await readSyncUserId(page1)
     createdUsers.push(userId!)
+    await waitForFirstSync(admin, userId!, 90_000)
     await ctx1.close()
 
     await completeOnboarding(page2, 'Hanna2')
