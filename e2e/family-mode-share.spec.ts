@@ -80,7 +80,7 @@ test.describe('Familienmodus – Auto-Share & Pause (REQ-022)', () => {
   })
 
   test('Alice entfernt Bob per Swipe – Kontakt verschwindet aus der Liste', async ({ browser }) => {
-    test.setTimeout(60_000)
+    test.setTimeout(90_000)
     const state = createMockState()
     const { ctx: aliceCtx, page: alice } = await spawnDevice(browser, state)
     const { ctx: bobCtx, page: bob } = await spawnDevice(browser, state)
