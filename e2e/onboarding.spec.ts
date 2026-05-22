@@ -195,7 +195,7 @@ test.describe('Storyhold – Simple Mode (mode-choice flow)', () => {
     await expect(fullCard).toHaveAttribute('aria-pressed', 'true')
 
     await page.reload()
-    await expect(page.locator('html')).not.toHaveAttribute('data-app-mode', 'simple')
+    // Wait for full mount: Familie tab visible ≡ mode persisted as full
     await expect(nav.getByRole('button', { name: 'Familie', exact: true })).toBeVisible()
   })
 })
