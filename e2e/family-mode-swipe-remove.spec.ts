@@ -48,8 +48,8 @@ test.describe('Familienmodus – Kontakt per Swipe entfernen (FR-15.30)', () => 
 
     await swipeContactLeft(alice)
 
-    // After swipe: row flies out, hub falls back to onboarding (0 contacts)
-    await expect(alice.getByRole('heading', { name: 'Jemanden einladen' })).toBeVisible({ timeout: 1500 })
+    // After swipe: row flies out, contacts tab shows empty-state hint
+    await expect(alice.locator('[data-testid="no-contacts-hint"]')).toBeVisible({ timeout: 1500 })
     await expect(alice.locator('.online-contact-swipe')).toHaveCount(0)
 
     await aliceCtx.close()

@@ -42,28 +42,35 @@ export async function completeOnboarding(page: Page, name: string) {
   await expect(page.getByText(new RegExp(`Hallo,\\s*${escapedName}`))).toBeVisible()
 }
 
-export async function openFriendsTab(page: Page) {
+export async function openFamilyTab(page: Page) {
   const nav = page.getByRole('navigation', { name: 'Hauptnavigation' })
-  await nav.getByRole('button', { name: 'Freunde', exact: true }).click()
+  await nav.getByRole('button', { name: 'Familie', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'Laufend verbunden bleiben', exact: true })).toBeVisible()
 }
 
+/** @deprecated Use openFamilyTab */
+export const openFriendsTab = openFamilyTab
+
 /**
- * Click "Familienmodus" and walk through the consent screen if it shows up.
- * Resolves once the hub is rendered AND `sync.ready` (deviceId persisted in
- * localStorage) so subsequent share/annotate operations have a session.
+ * Aktiviert den Familienmodus und wartet bis der Hub bereit ist.
+ *
+ * Nutzt direktes State-Inject (wie `injectOnlineFriend`) statt des UI-Flows,
+ * um Timing-Races mit dem Full-Page-Navigation-Muster zu vermeiden.
+ * Tests, die explizit den Invite-Button prüfen, nutzen stattdessen openFamilyTab().
  */
 export async function openFamilyHub(page: Page) {
-  // Friends-Tab leitet direkt zur OnlineSharingIntroView weiter (kein Zwischen-Screen mehr).
-  await openFriendsTab(page)
-  // openFriendsTab wartet bereits auf die Consent-Überschrift; falls der Hub
-  // bereits aktiv ist (wiederholter Aufruf), können wir direkt weitermachen.
-  const consentVisible = await page.getByRole('heading', { name: 'Laufend verbunden bleiben', exact: true })
-    .isVisible()
-  if (consentVisible) {
-    await page.getByRole('checkbox').check()
-    await page.getByRole('button', { name: 'Aktivieren', exact: true }).click()
-  }
+  // Inject onlineSharing.enabled if not already set.
+  await page.evaluate(() => {
+    type Bridge = { get: () => Record<string, unknown> | null; save: (s: unknown) => void }
+    const bridge = (window as unknown as { __rmState?: Bridge }).__rmState
+    const state: Record<string, unknown> = bridge?.get() ?? {}
+    const os = state.onlineSharing as Record<string, unknown> | undefined
+    if (!os?.enabled) {
+      state.onlineSharing = { enabled: true, activatedAt: new Date().toISOString() }
+      bridge?.save(state)
+    }
+  })
+  await page.goto('/friends')
   await waitForHubReady(page)
 }
 

@@ -1,22 +1,20 @@
-import { useState } from 'react'
 import { useTranslation } from '../locales'
 
 interface Props {
   /** True when VITE_SUPABASE_URL + VITE_SUPABASE_ANON_KEY are set. */
   configured: boolean
-  onActivate: () => void
+  onInvite: () => void
   onBack: () => void
 }
 
 /**
  * Transparent consent screen shown before any Supabase request is made.
- * The "Aktivieren"-button is the first place in the app that can trigger
+ * The "Jemanden einladen"-button is the first place in the app that can trigger
  * online traffic — explaining clearly what goes where is the whole point.
  */
-export function OnlineSharingIntroView({ configured, onActivate, onBack }: Props) {
+export function OnlineSharingIntroView({ configured, onInvite, onBack }: Props) {
   const { t } = useTranslation()
   const i = t.onlineSharingIntro
-  const [confirmed, setConfirmed] = useState(false)
 
   return (
     <div className="friends-view">
@@ -104,21 +102,12 @@ export function OnlineSharingIntroView({ configured, onActivate, onBack }: Props
       )}
 
       <section className="friends-section">
-        <label className="online-consent">
-          <input
-            type="checkbox"
-            checked={confirmed}
-            onChange={e => setConfirmed(e.target.checked)}
-          />
-          <span>{i.consentLabel}</span>
-        </label>
-
         <button
           className="share-cta-btn"
-          disabled={!confirmed || !configured}
-          onClick={onActivate}
+          disabled={!configured}
+          onClick={onInvite}
         >
-          {i.activateButton}
+          {i.inviteButton}
         </button>
       </section>
     </div>

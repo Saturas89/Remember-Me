@@ -21,20 +21,19 @@ async function completeOnboarding(page: Page, name: string) {
   await expect(page.getByText(new RegExp(`Hallo,\\s*${name}`))).toBeVisible()
 }
 
-async function openFriendsTab(page: Page) {
+async function openFamilyTab(page: Page) {
   const nav = page.getByRole('navigation', { name: 'Hauptnavigation' })
-  await nav.getByRole('button', { name: 'Freunde', exact: true }).click()
+  await nav.getByRole('button', { name: 'Familie', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'Laufend verbunden bleiben', exact: true })).toBeVisible()
 }
 
-test.describe('Storyhold – Freunde-Einladung', () => {
-  test('Freunde-Tab zeigt direkt den Online-Sharing-Intro-Screen', async ({ page }) => {
+test.describe('Storyhold – Familie-Tab', () => {
+  test('Familie-Tab zeigt direkt den Online-Sharing-Intro-Screen ohne Checkbox', async ({ page }) => {
     await completeOnboarding(page, 'Anna')
-    await openFriendsTab(page)
+    await openFamilyTab(page)
 
-    // Intro-Screen zeigt Aktivieren-Button (zunächst deaktiviert bis Checkbox gesetzt).
-    const activate = page.getByRole('button', { name: 'Aktivieren', exact: true })
-    await expect(activate).toBeVisible()
-    await expect(activate).toBeDisabled()
+    // Kein Checkbox mehr – Invite-Button direkt sichtbar.
+    await expect(page.getByRole('button', { name: /Jemanden einladen/ })).toBeVisible()
+    await expect(page.getByRole('checkbox')).not.toBeVisible()
   })
 })

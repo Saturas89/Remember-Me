@@ -31,9 +31,9 @@ async function completeOnboarding(page: Page, name: string) {
   await expect(page.getByText(new RegExp(`Hallo,\\s*${name}`))).toBeVisible()
 }
 
-async function openFriendsTab(page: Page) {
+async function openFamilyTab(page: Page) {
   const nav = page.getByRole('navigation', { name: 'Hauptnavigation' })
-  await nav.getByRole('button', { name: 'Freunde', exact: true }).click()
+  await nav.getByRole('button', { name: 'Familie', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'Laufend verbunden bleiben', exact: true })).toBeVisible()
 }
 
@@ -54,19 +54,19 @@ test.describe('Online sharing – opt-in contract', () => {
   test('no supabase network traffic without opt-in', async ({ page }) => {
     const offending = attachNetworkSpy(page)
     await completeOnboarding(page, 'Anna')
-    await openFriendsTab(page)
+    await openFamilyTab(page)
     // Interact with the page enough that any eager bootstrap would have fired.
     await page.waitForTimeout(500)
     await expect.poll(() => offending.length).toBe(0)
   })
 
-  test('Freunde-Tab zeigt direkt Intro-Screen ohne Supabase-Traffic', async ({ page }) => {
-    // Freunde-Tab leitet direkt zur OnlineSharingIntroView weiter.
-    // Kein Netzwerkverkehr darf entstehen bevor der Nutzer aktiv "Aktivieren" klickt.
+  test('Familie-Tab zeigt direkt Intro-Screen ohne Supabase-Traffic', async ({ page }) => {
+    // Familie-Tab leitet direkt zur OnlineSharingIntroView weiter.
+    // Kein Netzwerkverkehr darf entstehen bevor der Nutzer aktiv "Jemanden einladen" klickt.
     const offending = attachNetworkSpy(page)
     await completeOnboarding(page, 'Anna')
-    await openFriendsTab(page)
-    await expect(page.getByRole('button', { name: 'Aktivieren', exact: true })).toBeVisible()
+    await openFamilyTab(page)
+    await expect(page.getByRole('button', { name: /Jemanden einladen/ })).toBeVisible()
     await page.waitForTimeout(500)
     await expect.poll(() => offending.length).toBe(0)
   })
@@ -74,7 +74,7 @@ test.describe('Online sharing – opt-in contract', () => {
   test('Intro-Screen erscheint ohne Supabase-Traffic', async ({ page }) => {
     const offending = attachNetworkSpy(page)
     await completeOnboarding(page, 'Anna')
-    await openFriendsTab(page)
+    await openFamilyTab(page)
     await expect(page.getByRole('heading', { name: 'Laufend verbunden bleiben', exact: true })).toBeVisible()
     await page.waitForTimeout(500)
     await expect.poll(() => offending.length).toBe(0)
@@ -91,7 +91,7 @@ test.describe('Online sharing – opt-in contract', () => {
       }
     })
     await completeOnboarding(page, 'Anna')
-    await openFriendsTab(page)
+    await openFamilyTab(page)
     // Poke a couple more tabs to surface any lazy import. Tab label comes
     // from the German locale (t.nav.archive === 'Vermächtnis').
     const nav = page.getByRole('navigation', { name: 'Hauptnavigation' })

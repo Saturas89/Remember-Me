@@ -80,7 +80,7 @@ type View =
   | { name: 'impressum'; from: 'profile' | 'home' }
   | { name: 'online-intro' }
   | { name: 'online-hub' }
-  | { name: 'sandra-flow' }
+  | { name: 'sandra-flow'; initialStep?: import('./views/SandraFlowView').SandraStep }
   | { name: 'debug' }
 
 type MainTab = 'home' | 'friends' | 'archive' | 'sync' | 'profile'
@@ -409,7 +409,7 @@ export default function App() {
   // Redirect /friends deep-links to the right sub-view
   useEffect(() => {
     if (view.name !== 'friends' || !isLoaded) return
-    if (friends.some(f => f.online)) {
+    if (friends.some(f => f.online) || onlineSharing?.enabled) {
       setView({ name: 'online-hub' })
     } else {
       setView({ name: 'online-intro' })
@@ -559,7 +559,7 @@ export default function App() {
 
   function navigate(tab: MainTab) {
     if (tab === 'friends') {
-      goTo({ name: friends.some(f => f.online) ? 'online-hub' : 'online-intro' })
+      goTo({ name: (friends.some(f => f.online) || onlineSharing?.enabled) ? 'online-hub' : 'online-intro' })
       return
     }
     goTo({ name: tab } as View)
@@ -642,9 +642,9 @@ export default function App() {
       {view.name === 'online-intro' && (
         <OnlineSharingIntroView
           configured={ONLINE_SHARING_CONFIGURED}
-          onActivate={() => {
+          onInvite={() => {
             enableOnlineSharing()
-            goTo({ name: 'online-hub' })
+            goTo({ name: 'sandra-flow', initialStep: 'anchor' })
           }}
           onBack={() => goTo({ name: 'home' })}
         />
@@ -759,6 +759,7 @@ export default function App() {
           myDeviceId={onlineSync.deviceId}
           myPublicKey={onlineSync.publicKeyB64}
           onEnableOnlineSharing={() => enableOnlineSharing()}
+          initialStep={view.initialStep}
           onBack={() => {
             if (window.location.hash.startsWith('#/ask')) {
               history.replaceState({}, '', '/')
