@@ -5722,16 +5722,6 @@ details[open] .faq-item__chevron {
   opacity: 1;
 }
 
-/* ── Online sharing: feed empty-state actions ───────────────────────────────── */
-
-.online-empty-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  margin-top: 1rem;
-  align-items: flex-start;
-}
-
 /* ── Share tab redesign ─────────────────────────────────────────────────────── */
 
 .share-tab__label {

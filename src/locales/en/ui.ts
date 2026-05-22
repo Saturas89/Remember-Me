@@ -357,7 +357,6 @@ export const UI_EN = {
     feedEmpty: {
       hint: 'New posts from your contacts will show up here.',
       allPausedHint: "You aren't sharing with anyone right now. Re-enable sharing in Contacts.",
-      inviteCta: 'Open contacts',
     },
     annotation: {
       label: 'Add a note',

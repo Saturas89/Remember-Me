@@ -128,7 +128,6 @@ export function OnlineSharingHubView({
               sync={sync}
               onlineFriends={onlineFriends}
               anySharing={anySharing}
-              onGoToContacts={() => setTab('contacts')}
             />
           )}
           {tab === 'contacts' && (
@@ -177,7 +176,6 @@ function FeedTab({
   sync,
   onlineFriends,
   anySharing,
-  onGoToContacts,
 }: {
   memories: SharedMemory[]
   annotations: Annotation[]
@@ -185,7 +183,6 @@ function FeedTab({
   sync: OnlineSyncAPI
   onlineFriends: Friend[]
   anySharing: boolean
-  onGoToContacts: () => void
 }) {
   const { t } = useTranslation()
   const e = t.onlineSharingHub.feedEmpty
@@ -196,11 +193,6 @@ function FeedTab({
         <p className="friends-hint" data-testid="feed-empty-hint">
           {anySharing ? e.hint : e.allPausedHint}
         </p>
-        <div className="online-empty-actions">
-          <button className="btn btn--ghost btn--sm" onClick={onGoToContacts}>
-            {e.inviteCta}
-          </button>
-        </div>
       </section>
     )
   }
