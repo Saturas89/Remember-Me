@@ -79,7 +79,7 @@ test.describe('Familienmodus – Auto-Share & Pause (REQ-022)', () => {
     await bobCtx.close()
   })
 
-  test('Alice pausiert Bob – Server-ACL für Bob ist weg, sein Feed leer', async ({ browser }) => {
+  test('Alice entfernt Bob per Swipe – Kontakt verschwindet aus der Liste', async ({ browser }) => {
     test.setTimeout(60_000)
     const state = createMockState()
     const { ctx: aliceCtx, page: alice } = await spawnDevice(browser, state)
@@ -108,31 +108,40 @@ test.describe('Familienmodus – Auto-Share & Pause (REQ-022)', () => {
     await bob.getByRole('tab', { name: /^Feed\b/ }).click()
     await expect(bob.getByText('Sommer in den Alpen.')).toBeVisible({ timeout: 15_000 })
 
-    // Alice opens contacts, toggles Bob off, confirms.
+    // Alice opens contacts tab and swipes Bob left to remove him.
     await reopenFamilyHub(alice)
     await alice.getByRole('tab', { name: /Kontakte/ }).click()
-    const friendId = await alice.evaluate((bobDeviceId: string) => {
+    const swipeEl = alice.locator('.online-contact-swipe').first()
+    await expect(swipeEl).toBeVisible()
+    const box = await swipeEl.boundingBox()
+    if (!box) throw new Error('swipe element has no bounding box')
+    const startX = box.x + Math.min(80, box.width * 0.3)
+    const endX = box.x - 20
+    const midY = box.y + box.height / 2
+    await alice.mouse.move(startX, midY)
+    await alice.mouse.down()
+    await alice.mouse.move(endX, midY, { steps: 10 })
+    await alice.mouse.up()
+
+    // Bob's row disappears; contacts list is empty.
+    await expect(alice.locator('.online-contact-swipe')).toHaveCount(0, { timeout: 10_000 })
+
+    // Verify Bob is gone from app state (no longer an online friend of Alice).
+    const bobStillPresent = await alice.evaluate((bobDeviceId: string) => {
       type Bridge = { get: () => Record<string, unknown> | null }
       const bridge = (window as unknown as { __rmState?: Bridge }).__rmState
-      const state = bridge?.get() ?? {}
-      const friends = (state.friends as Array<{ id: string; online?: { deviceId: string } }>) ?? []
-      return friends.find(f => f.online?.deviceId === bobDeviceId)!.id
+      const s = bridge?.get() ?? {}
+      const friends = (s.friends as Array<{ online?: { deviceId: string } }>) ?? []
+      return friends.some(f => f.online?.deviceId === bobDeviceId)
     }, bobId.deviceId)
-    await alice.locator(`[data-testid="shareall-toggle-${friendId}"] input`).click()
-    await expect(alice.locator(`[data-testid="pause-confirm-${friendId}"]`)).toBeVisible()
-    await alice.locator(`[data-testid="pause-confirm-yes-${friendId}"]`).click()
-    await expect(alice.locator(`[data-testid="pause-confirm-${friendId}"]`)).toBeHidden({ timeout: 10_000 })
+    expect(bobStillPresent).toBe(false)
 
-    // Bob is removed from the ACL; Alice's own ACL row stays. The Bob-sees-
-    // empty-feed assertion lives in the nightly real-DB suite where Supabase
-    // RLS is actually enforced – the in-memory mock doesn't filter shares
-    // by recipient, so Bob would still decrypt locally even though his
-    // server ACL row is gone.
+    // Alice's own ACL row is preserved (swipe-remove does not touch server ACL;
+    // real-DB cleanup is covered by the nightly real-DB suite).
     const remaining = state.share_recipients
       .filter(r => r.share_id === state.shares[0].id)
       .map(r => r.recipient_id)
     expect(remaining).toContain(aliceId.deviceId)
-    expect(remaining).not.toContain(bobId.deviceId)
 
     await aliceCtx.close()
     await bobCtx.close()
