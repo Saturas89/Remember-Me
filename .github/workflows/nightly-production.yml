@@ -28,9 +28,6 @@ name: Nightly Production Tests
 #     MICROSOFT_TEST_EMAIL      – storyhold.e2e.microsoft@outlook.com
 #     MICROSOFT_TEST_PASSWORD   – Microsoft test account password
 #
-#   PostHog correlation (optional, enables replay links in failure issues):
-#     POSTHOG_PROJECT_ID        – PostHog Project ID (numeric, aus der PostHog-URL)
-#
 # IMPORTANT: Never store credentials as VITE_* Vercel env vars — those values
 # are baked into the public JS bundle and visible to anyone.
 #
@@ -270,7 +267,6 @@ jobs:
           PRODUCTION_NIGHTLY_RESULT: ${{ needs.production-nightly.result }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           GITHUB_RUN_ID: ${{ github.run_id }}
-          POSTHOG_PROJECT_ID: ${{ secrets.POSTHOG_PROJECT_ID }}
         run: node scripts/create-production-issue.mjs
 
 # ── Orphan cleanup ────────────────────────────────────────────────────────────

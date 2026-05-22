@@ -5,8 +5,7 @@
 // Input env vars:
 //   PRODUCTION_RESULT    – GitHub Actions job result ('success'|'failure'|...)
 //   RUN_URL              – full URL to the Actions run
-//   GITHUB_RUN_ID        – numeric run ID (for PostHog correlation link)
-//   POSTHOG_PROJECT_ID   – optional; enables PostHog replay link in the issue
+//   GITHUB_RUN_ID        – numeric run ID
 
 import { execSync }                                  from 'node:child_process'
 import { readdirSync, readFileSync, writeFileSync, existsSync } from 'node:fs'
@@ -17,7 +16,6 @@ const HARD_FAILED              = process.env.PRODUCTION_RESULT === 'failure' ||
                                  process.env.PRODUCTION_NIGHTLY_RESULT === 'failure'
 const RUN_URL                  = process.env.RUN_URL         ?? '(no URL)'
 const GITHUB_RUN_ID            = process.env.GITHUB_RUN_ID   ?? ''
-const POSTHOG_PROJECT          = process.env.POSTHOG_PROJECT_ID ?? ''
 const TEST_RUN_ID              = GITHUB_RUN_ID ? `gh-${GITHUB_RUN_ID}` : ''
 const TODAY                    = new Date().toISOString().slice(0, 10)
 
@@ -118,21 +116,6 @@ lines.push(`| Traffic Type | \`e2e\` |`)
 lines.push(`| Environment | production (https://www.storyhold.app) |`)
 lines.push('')
 
-if (POSTHOG_PROJECT && TEST_RUN_ID) {
-  const filterJson = JSON.stringify({
-    properties: [{ key: 'test_run_id', value: TEST_RUN_ID, operator: 'exact', type: 'person' }],
-  })
-  const replayUrl =
-    `https://eu.posthog.com/project/${POSTHOG_PROJECT}/replay` +
-    `?filters=${encodeURIComponent(filterJson)}`
-  lines.push('### PostHog Session Recordings')
-  lines.push('')
-  lines.push(`[Recordings für diesen Run öffnen](${replayUrl})`)
-  lines.push('')
-  lines.push(`Filter: \`test_run_id = ${TEST_RUN_ID}\` · \`traffic_type = e2e\``)
-  lines.push('')
-}
-
 if (failures.length > 0) {
   lines.push('### ❌ Fehlgeschlagene Tests')
   lines.push('')
@@ -169,10 +152,9 @@ lines.push('')
 
 lines.push('### Nächste Schritte')
 lines.push('')
-lines.push('1. PostHog-Replay öffnen und Session nachvollziehen')
-lines.push('2. Trace-Artefakt herunterladen und analysieren')
-lines.push('3. Einschätzen: echtes Problem in Produktion oder Timing-/Netzwerk-Flake?')
-lines.push('4. Fix committen und dieses Issue schließen')
+lines.push('1. Trace-Artefakt herunterladen und analysieren')
+lines.push('2. Einschätzen: echtes Problem in Produktion oder Timing-/Netzwerk-Flake?')
+lines.push('3. Fix committen und dieses Issue schließen')
 
 const title = hasFailures
   ? `❌ Production Nightly fehlgeschlagen – ${TODAY}`
