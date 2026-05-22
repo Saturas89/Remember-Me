@@ -11,6 +11,7 @@ import { createMockState, installSupabaseMock, type MockState } from './supabase
 export async function dismissInstallPrompt(context: BrowserContext) {
   await context.addInitScript(() => {
     localStorage.setItem('rm-install-dismissed', '1')
+    localStorage.setItem('rm-landing-seen', '1')
     // E2E: only seed on first navigation – tests that build state via
     // __rmState.save between gotos must not be reset by a re-run init script.
     if (!localStorage.getItem('remember-me-state')) {
