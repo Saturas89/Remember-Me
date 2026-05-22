@@ -109,13 +109,6 @@ export function SandraComposerStep({
           >
             {(trigger?.title ?? t.composer.triggerChipLabel).replace('{anrede}', anchor.anrede)}
           </button>
-          <button
-            type="button"
-            className="btn btn--ghost btn--sm"
-            onClick={onChangeTrigger}
-          >
-            {t.composer.backToTriggers}
-          </button>
         </div>
 
         {/* Zone B: seed textarea or freeform textarea */}
