@@ -113,21 +113,7 @@ test.describe('Sandra-Flow – DE Happy Path', () => {
   test('Sandra composes one question and shares via Web-Share-API', async ({ page }) => {
     await page.goto('/#/ask')
 
-    // ── Screen 1: hero text matches DE spec (with anrede fallback "Mama"
-    // because the user hasn't picked one yet on first visit) ───────────────
-    await expect(
-      page.getByText('Was wolltest du Mama schon immer fragen?'),
-    ).toBeVisible()
-    await expect(
-      // Persona-led rewrite (#160): subline now communicates the gift
-      // outcome rather than the "2-Minuten-Fragebogen"-Baukasten framing.
-      page.getByText('Du fragst – Mama antwortet, wann es passt. Ein Geschenk, das bleibt.'),
-    ).toBeVisible()
-
-    // Tap the landing CTA → anchor step
-    await page.getByTestId('sandra-landing-cta').click()
-
-    // ── Screen 2: anchor (relation chip + anrede) ──────────────────────────
+    // ── Screen 1: anchor (relation chip + anrede) ─────────────────────────
     await page.getByTestId('sandra-anchor-chip-mama').click()
     await expect(page.getByTestId('sandra-anchor-anrede')).toHaveValue('Mama')
     await page.getByTestId('sandra-anchor-next').click()
@@ -199,18 +185,7 @@ test.describe('Sandra-Flow – EN Happy Path', () => {
   test('the hero text and labels switch to English', async ({ page }) => {
     await page.goto('/#/ask')
 
-    // ── Screen 1: English hero text (with anrede fallback "Mom" because
-    // the user hasn't picked one yet on first visit) ─────────────────────
-    await expect(
-      page.getByText('What have you always wanted to ask Mom?'),
-    ).toBeVisible()
-    await expect(
-      // Persona-led rewrite (#160) – gift framing, EN counterpart.
-      page.getByText('You ask – Mom answers in their own time. A gift that lasts.'),
-    ).toBeVisible()
-
-    // ── Screen 2 ─────────────────────────────────────────────────────────────
-    await page.getByTestId('sandra-landing-cta').click()
+    // ── Screen 1: anchor ─────────────────────────────────────────────────────
     await page.getByTestId('sandra-anchor-chip-mama').click()
     await page.getByTestId('sandra-anchor-next').click()
 
@@ -243,7 +218,6 @@ test.describe('Sandra-Flow – Receiver Path (Ingrid)', () => {
     const sender = await senderContext.newPage()
 
     await sender.goto('/#/ask')
-    await sender.getByTestId('sandra-landing-cta').click()
     await sender.getByTestId('sandra-anchor-chip-mama').click()
     await sender.getByTestId('sandra-anchor-next').click()
     await sender.locator('[data-testid^="sandra-trigger-"]').first().click()
@@ -304,7 +278,6 @@ test.describe('Sandra-Flow – Receiver Path (Ingrid)', () => {
     await stubWebShare(sCtx)
     const sPage = await sCtx.newPage()
     await sPage.goto('/#/ask')
-    await sPage.getByTestId('sandra-landing-cta').click()
     await sPage.getByTestId('sandra-anchor-chip-mama').click()
     await sPage.getByTestId('sandra-anchor-next').click()
     await sPage.locator('[data-testid^="sandra-trigger-"]').first().click()
@@ -336,7 +309,6 @@ test.describe('Sandra-Flow – Receiver Path (Ingrid)', () => {
     await stubWebShare(sCtx)
     const sPage = await sCtx.newPage()
     await sPage.goto('/#/ask')
-    await sPage.getByTestId('sandra-landing-cta').click()
     await sPage.getByTestId('sandra-anchor-chip-mama').click()
     await sPage.getByTestId('sandra-anchor-next').click()
     await sPage.locator('[data-testid^="sandra-trigger-"]').first().click()
@@ -383,7 +355,6 @@ test.describe('Sandra-Flow – Relationship-send hint', () => {
 
   test('hint is visible on the share screen when ≥1 relationship question exists', async ({ page }) => {
     await page.goto('/#/ask')
-    await page.getByTestId('sandra-landing-cta').click()
     await page.getByTestId('sandra-anchor-chip-mama').click()
     await page.getByTestId('sandra-anchor-next').click()
 
@@ -412,7 +383,6 @@ test.describe('Sandra-Flow – Relationship-send hint', () => {
 
   test('hint is hidden when all questions are biography-only', async ({ page }) => {
     await page.goto('/#/ask')
-    await page.getByTestId('sandra-landing-cta').click()
     await page.getByTestId('sandra-anchor-chip-mama').click()
     await page.getByTestId('sandra-anchor-next').click()
 
@@ -440,7 +410,6 @@ test.describe('Sandra-Flow – Draft persistence', () => {
 
   test('reload preserves draft; new context discards it', async ({ page, browser }) => {
     await page.goto('/#/ask')
-    await page.getByTestId('sandra-landing-cta').click()
     await page.getByTestId('sandra-anchor-chip-papa').click()
     await expect(page.getByTestId('sandra-anchor-anrede')).toHaveValue('Papa')
     await page.getByTestId('sandra-anchor-next').click()
@@ -479,7 +448,6 @@ test.describe('Sandra-Flow – Web-Share-API stub', () => {
 
   test('the stub captures the share-sheet payload (URL + title + text)', async ({ page }) => {
     await page.goto('/#/ask')
-    await page.getByTestId('sandra-landing-cta').click()
     await page.getByTestId('sandra-anchor-chip-mama').click()
     await page.getByTestId('sandra-anchor-next').click()
     await page.locator('[data-testid^="sandra-trigger-"]').first().click()
@@ -519,7 +487,6 @@ test.describe('Sandra-Flow – Two-person integration', () => {
     const sender = await senderContext.newPage()
 
     await sender.goto('/#/ask')
-    await sender.getByTestId('sandra-landing-cta').click()
     await sender.getByTestId('sandra-anchor-chip-mama').click()
     await sender.getByTestId('sandra-anchor-next').click()
     await sender.locator('[data-testid^="sandra-trigger-"]').first().click()
@@ -600,13 +567,11 @@ test.describe('Sandra-Flow – Direkter Einstieg via #/ask (FR-020.10)', () => {
     await seedContext(context, { lang: 'de', profile: 'sandra' })
   })
 
-  test('#/ask öffnet direkt den Sandra-Flow-Landing-Screen', async ({ page }) => {
+  test('#/ask öffnet direkt den Anchor-Step (Personen-Auswahl)', async ({ page }) => {
     await page.goto('/#/ask')
 
-    // Sandra-flow landing screen with the hero text.
-    await expect(
-      page.getByText('Was wolltest du Mama schon immer fragen?'),
-    ).toBeVisible()
+    // Landing-Screen entfernt – Flow startet direkt mit dem Anchor-Step.
+    await expect(page.getByTestId('sandra-anchor-chip-mama')).toBeVisible()
     expect(page.url()).toContain('#/ask')
   })
 })

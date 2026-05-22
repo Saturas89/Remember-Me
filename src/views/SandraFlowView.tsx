@@ -16,7 +16,6 @@ import type {
   SandraAnchor,
   SandraDraft,
 } from '../types/sandraFlow'
-import { SandraLanding } from '../components/sandraFlow/SandraLanding'
 import { SandraAnchorStep } from '../components/sandraFlow/SandraAnchorStep'
 import { SandraTriggerStep } from '../components/sandraFlow/SandraTriggerStep'
 import { SandraComposerStep } from '../components/sandraFlow/SandraComposerStep'
@@ -41,7 +40,6 @@ interface Props {
 }
 
 export type SandraStep =
-  | 'landing'
   | 'anchor'
   | 'trigger'
   | 'composer'
@@ -115,7 +113,7 @@ export function SandraFlowView({
   const [draft, setDraftState] = useState<SandraDraft>(loadDraft)
   const [step, setStep] = useState<SandraStep>(() => {
     if (initialStep) return initialStep
-    return draft.questions.length > 0 ? 'list' : 'landing'
+    return draft.questions.length > 0 ? 'list' : 'anchor'
   })
 
   // Persist draft to sessionStorage on every change. Survives reloads within
@@ -211,24 +209,13 @@ export function SandraFlowView({
   const anredeForUi = draft.anchor.anrede || fallbackAnrede
 
   // ── Render the right step ────────────────────────────────────────
-  if (step === 'landing') {
-    return (
-      <SandraLanding
-        t={t}
-        anrede={anredeForUi}
-        onBack={onBack}
-        onStart={() => setStep('anchor')}
-      />
-    )
-  }
-
   if (step === 'anchor') {
     return (
       <SandraAnchorStep
         t={t}
         anchor={draft.anchor}
         onUpdate={updateAnchor}
-        onBack={() => setStep('landing')}
+        onBack={onBack}
         onNext={() => setStep('trigger')}
       />
     )
@@ -278,7 +265,7 @@ export function SandraFlowView({
         t={t}
         anchor={draft.anchor}
         questions={draft.questions}
-        onBack={() => setStep('landing')}
+        onBack={() => setStep('anchor')}
         onAddAnother={() => setStep('trigger')}
         onEdit={editQuestionText}
         onDelete={deleteQuestion}
