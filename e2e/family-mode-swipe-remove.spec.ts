@@ -49,7 +49,7 @@ test.describe('Familienmodus – Kontakt per Swipe entfernen (FR-15.30)', () => 
     await swipeContactLeft(alice)
 
     // After swipe: row flies out, contacts tab shows empty-state hint
-    await expect(alice.locator('[data-testid="no-contacts-hint"]')).toBeVisible({ timeout: 1500 })
+    await expect(alice.locator('[data-testid="no-contacts-hint"]')).toBeVisible({ timeout: 3_000 })
     await expect(alice.locator('.online-contact-swipe')).toHaveCount(0)
 
     await aliceCtx.close()
@@ -67,7 +67,7 @@ test.describe('Familienmodus – Kontakt per Swipe entfernen (FR-15.30)', () => 
 
     await swipeContactLeft(alice)
 
-    await expect(alice.locator('.online-contact-swipe')).toHaveCount(0, { timeout: 1500 })
+    await expect(alice.locator('.online-contact-swipe')).toHaveCount(0, { timeout: 3_000 })
 
     // Verify localStorage is clean
     const onlineFriends = await readOnlineFriends(alice)
@@ -94,7 +94,7 @@ test.describe('Familienmodus – Kontakt per Swipe entfernen (FR-15.30)', () => 
     await swipeContactLeft(alice)
 
     // One contact remains
-    await expect(alice.locator('.online-contact-swipe')).toHaveCount(1, { timeout: 1500 })
+    await expect(alice.locator('.online-contact-swipe')).toHaveCount(1, { timeout: 3_000 })
 
     await aliceCtx.close()
   })

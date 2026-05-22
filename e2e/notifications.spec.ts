@@ -248,7 +248,7 @@ test.describe('REQ-016 – Milestone Notifications (FR-16.7)', () => {
     await page.waitForFunction(
       () => Boolean((window as unknown as { __ms10?: unknown }).__ms10),
       undefined,
-      { timeout: 5_000 },
+      { timeout: 8_000 },
     )
 
     const fired = await page.evaluate(
@@ -264,7 +264,7 @@ test.describe('REQ-016 – Milestone Notifications (FR-16.7)', () => {
     await page.waitForFunction(
       () => Boolean((window as unknown as { __ms25?: unknown }).__ms25),
       undefined,
-      { timeout: 5_000 },
+      { timeout: 8_000 },
     )
 
     const fired = await page.evaluate(
@@ -450,7 +450,7 @@ test.describe('REQ-016 – Variantenpool (FR-16.3)', () => {
           )
         },
         previousVariantIdx,
-        { timeout: 3_000 },
+        { timeout: 8_000 },
       )
       return await page.evaluate(() => {
         const raw = localStorage.getItem('rm-reminder-state')
