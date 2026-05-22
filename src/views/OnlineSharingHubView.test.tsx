@@ -65,7 +65,6 @@ interface RenderArgs {
 
 function renderHub({ syncOverrides = {}, friends = [FRIEND_SHARING] }: RenderArgs = {}) {
   const sync = makeSync(syncOverrides)
-  const onBack = vi.fn()
   const onDeactivate = vi.fn()
   const onRemoveContact = vi.fn()
   const onOpenSandraFlow = vi.fn()
@@ -74,7 +73,6 @@ function renderHub({ syncOverrides = {}, friends = [FRIEND_SHARING] }: RenderArg
       profileName="Test"
       friends={friends}
       sync={sync}
-      onBack={onBack}
       onDeactivate={onDeactivate}
       onRemoveContact={onRemoveContact}
       onOpenSandraFlow={onOpenSandraFlow}
@@ -83,7 +81,6 @@ function renderHub({ syncOverrides = {}, friends = [FRIEND_SHARING] }: RenderArg
   return {
     ...view,
     sync,
-    onBack,
     onDeactivate,
     onRemoveContact,
     onOpenSandraFlow,

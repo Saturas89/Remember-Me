@@ -30,7 +30,6 @@ interface Props {
   profileName: string
   friends: Friend[]
   sync: OnlineSyncAPI
-  onBack: () => void
   onDeactivate: () => void
   onRemoveContact: (friendId: string) => void
   /** Open the Sandra-flow as the canonical entry for new connections
@@ -54,7 +53,6 @@ export function OnlineSharingHubView({
   profileName,
   friends,
   sync,
-  onBack,
   onDeactivate,
   onRemoveContact,
   onOpenSandraFlow,
@@ -71,7 +69,6 @@ export function OnlineSharingHubView({
   return (
     <div className="friends-view">
       <div className="quiz-topbar">
-        <button className="btn btn--ghost btn--sm" onClick={onBack}>{h.back}</button>
         <h2 className="archive-title">{h.title}</h2>
       </div>
 
