@@ -66,9 +66,9 @@ beforeEach(() => {
 
 afterEach(cleanup)
 
-async function gotoFriendsTab() {
+async function gotoFamilyTab() {
   const nav = await screen.findByRole('navigation', { name: 'Hauptnavigation' })
-  fireEvent.click(within(nav).getByRole('button', { name: 'Freunde' }))
+  fireEvent.click(within(nav).getByRole('button', { name: 'Familie' }))
 }
 
 // `stateStorage` verschlüsselt im Vitest-Lauf (Web Crypto + fake-indexeddb
@@ -86,38 +86,34 @@ function readState(): LoosePartialState {
 }
 
 describe('Familienmodus – Aktivierung (FR-15.1 – FR-15.3)', () => {
-  it('Friends-Tab öffnet direkt den Online-Sharing-Intro-Screen', async () => {
+  it('Familie-Tab öffnet direkt den Online-Sharing-Intro-Screen', async () => {
     preSeedReturningUser()
     render(<App />)
 
-    await gotoFriendsTab()
+    await gotoFamilyTab()
 
     expect(await screen.findByRole('heading', { name: 'Laufend verbunden bleiben' })).toBeTruthy()
   })
 
-  it('Consent-Screen erzwingt die Pflicht-Checkbox bevor "Aktivieren" klickbar ist', async () => {
+  it('Intro-Screen hat keinen Pflicht-Checkbox mehr, Invite-Button sofort klickbar', async () => {
     preSeedReturningUser()
     render(<App />)
 
-    await gotoFriendsTab()
+    await gotoFamilyTab()
 
-    expect(await screen.findByRole('heading', { name: 'Laufend verbunden bleiben' })).toBeTruthy()
-
-    const activate = screen.getByRole('button', { name: 'Aktivieren' }) as HTMLButtonElement
-    expect(activate.disabled).toBe(true)
-
-    fireEvent.click(screen.getByRole('checkbox'))
-    expect(activate.disabled).toBe(false)
+    await screen.findByRole('heading', { name: 'Laufend verbunden bleiben' })
+    expect(screen.queryByRole('checkbox')).toBeNull()
+    const invite = screen.getByRole('button', { name: /Jemanden einladen/ }) as HTMLButtonElement
+    expect(invite.disabled).toBe(false)
   })
 
-  it('Aktivieren persistiert onlineSharing.enabled und ruft bootstrapSession auf', async () => {
+  it('Invite-Button persistiert onlineSharing.enabled und ruft bootstrapSession auf', async () => {
     bootstrapSession.mockResolvedValue({ deviceId: 'dev-A', publicKeyB64: 'pk-A' })
     preSeedReturningUser()
     render(<App />)
 
-    await gotoFriendsTab()
-    fireEvent.click(await screen.findByRole('checkbox'))
-    fireEvent.click(screen.getByRole('button', { name: 'Aktivieren' }))
+    await gotoFamilyTab()
+    fireEvent.click(await screen.findByRole('button', { name: /Jemanden einladen/ }))
 
     await waitFor(() => expect(bootstrapSession).toHaveBeenCalledTimes(1))
 
@@ -126,11 +122,11 @@ describe('Familienmodus – Aktivierung (FR-15.1 – FR-15.3)', () => {
     expect(typeof stored.onlineSharing?.activatedAt).toBe('string')
   })
 
-  it('Cancel im Consent-Screen aktiviert nichts', async () => {
+  it('Zurück im Intro-Screen aktiviert nichts', async () => {
     preSeedReturningUser()
     render(<App />)
 
-    await gotoFriendsTab()
+    await gotoFamilyTab()
     expect(await screen.findByRole('heading', { name: 'Laufend verbunden bleiben' })).toBeTruthy()
 
     fireEvent.click(screen.getByRole('button', { name: 'Zurück' }))
@@ -162,7 +158,7 @@ describe('Familienmodus – lokales Deactivate (FR-15.22 – FR-15.25 lokaler Te
 
     render(<App />)
 
-    await gotoFriendsTab()
+    await gotoFamilyTab()
 
     // Hub direkt, weil online-Kontakt vorhanden → Friends-Tab routet zu online-hub.
     await screen.findByRole('heading', { name: 'Online teilen' })

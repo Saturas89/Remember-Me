@@ -66,7 +66,6 @@ export function OnlineSharingHubView({
   const h = t.onlineSharingHub
   const [tab, setTab] = useState<Tab>('feed')
   const onlineFriends = useMemo(() => friends.filter(f => f.online), [friends])
-  const hasContacts = onlineFriends.length > 0
   const anySharing = useMemo(
     () => onlineFriends.some(f => f.online?.shareAll === true),
     [onlineFriends],
@@ -108,14 +107,7 @@ export function OnlineSharingHubView({
         </section>
       )}
 
-      {sync.ready && !hasContacts && (
-        <OnboardingScreen
-          onDeactivate={onDeactivate}
-          onOpenSandraFlow={onOpenSandraFlow}
-        />
-      )}
-
-      {sync.ready && hasContacts && (
+      {sync.ready && (
         <>
           <nav className="online-tabs" role="tablist">
             <TabButton active={tab === 'feed'} onClick={() => setTab('feed')}>
@@ -177,53 +169,6 @@ function TabButton({
     >
       {children}
     </button>
-  )
-}
-
-// ── Onboarding (0 contacts) ──────────────────────────────────────────────────
-
-function OnboardingScreen({
-  onDeactivate,
-  onOpenSandraFlow,
-}: {
-  onDeactivate: () => void
-  onOpenSandraFlow: () => void
-}) {
-  const { t } = useTranslation()
-  const o = t.onlineSharingHub.onboarding
-  const [showSettings, setShowSettings] = useState(false)
-
-  return (
-    <section className="friends-section online-onboarding">
-      <div className="online-onboarding__icon">🔗</div>
-
-      <h3 className="friends-section-title">{o.heading}</h3>
-
-      <p className="friends-hint">{o.hint}</p>
-
-      <button
-        className="share-cta-btn"
-        onClick={onOpenSandraFlow}
-        data-testid="onboarding-open-sandra"
-      >
-        {o.sandraFlowCta}
-      </button>
-
-      <ul className="online-onboarding__steps">
-        <li>{o.step1}</li>
-        <li>{o.step2}</li>
-        <li>{o.step3}</li>
-      </ul>
-
-      <button
-        className="btn btn--ghost btn--sm online-onboarding__settings-btn"
-        onClick={() => setShowSettings(s => !s)}
-      >
-        {showSettings ? o.settingsClose : o.settingsOpen}
-      </button>
-
-      {showSettings && <SettingsTab onDeactivate={onDeactivate} />}
-    </section>
   )
 }
 

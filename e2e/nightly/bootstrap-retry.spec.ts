@@ -21,7 +21,7 @@ import { test, expect } from '@playwright/test'
 import {
   completeOnboarding,
   openFamilyHub,
-  openFriendsTab,
+  openFamilyTab,
   readDeviceIdentity,
 } from '../helpers/family-mode-helpers'
 import { cleanupUsers, spawnRealDevice, supabaseAdmin, waitForHubReady } from './helpers'
@@ -29,20 +29,14 @@ import { cleanupUsers, spawnRealDevice, supabaseAdmin, waitForHubReady } from '.
 // Matches all Supabase GoTrue (auth) requests regardless of project domain.
 const AUTH = '**/auth/v1/**'
 
-// Inline consent + navigate to hub WITHOUT waiting for bootstrap to succeed.
+// Navigate to hub WITHOUT waiting for bootstrap to succeed.
 // Used when we want to observe the failure / retry state.
 async function enterHubView(page: import('@playwright/test').Page): Promise<void> {
-  await openFriendsTab(page)
-  await page.getByTestId('open-online-sharing').click()
-  const consent = page.getByRole('heading', { name: 'Laufend verbunden bleiben', exact: true })
-  const hasConsent = await consent
-    .waitFor({ state: 'visible', timeout: 15_000 })
-    .then(() => true)
-    .catch(() => false)
-  if (hasConsent) {
-    await page.getByRole('checkbox').check()
-    await page.getByRole('button', { name: 'Aktivieren', exact: true }).click()
-  }
+  await openFamilyTab(page)
+  // Klick auf Invite aktiviert Online-Sharing und startet Sandra-Flow.
+  await page.getByRole('button', { name: /Jemanden einladen/ }).click()
+  // Zurück zu /friends – da sharing jetzt enabled, leitet es zum Hub weiter.
+  await page.goto('/friends')
   // Hub heading appears as soon as the component mounts – independent of whether
   // bootstrapSession() has succeeded or failed.
   await expect(

@@ -305,8 +305,7 @@ export interface Translations {
     deactivateHeading: string
     deactivateBody: string
     notConfiguredWarning: string
-    consentLabel: string
-    activateButton: string
+    inviteButton: string
   }
 
   /** REQ-022 §4.6 — one-time migration banner shown after upgrading to v2.13.0. */

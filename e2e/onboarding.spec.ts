@@ -78,7 +78,7 @@ test.describe('Storyhold – Bottom navigation', () => {
 
   // Scope to the <nav aria-label="Hauptnavigation"> so labels like "Vermächtnis"
   // don't collide with the "Wünsche & Vermächtnis" category card.
-  for (const label of ['Freunde', 'Vermächtnis', 'Sync', 'Profil', 'Lebensweg']) {
+  for (const label of ['Familie', 'Vermächtnis', 'Sync', 'Profil', 'Lebensweg']) {
     test(`bottom nav opens "${label}" tab`, async ({ page }) => {
       const nav = page.getByRole('navigation', { name: 'Hauptnavigation' })
       const tab = nav.getByRole('button', { name: label, exact: true })
@@ -138,7 +138,7 @@ test.describe('Storyhold – Simple Mode (mode-choice flow)', () => {
 
     // All 5 main tabs visible in full mode
     const nav = page.getByRole('navigation', { name: 'Hauptnavigation' })
-    for (const label of ['Lebensweg', 'Freunde', 'Vermächtnis', 'Sync', 'Profil']) {
+    for (const label of ['Lebensweg', 'Familie', 'Vermächtnis', 'Sync', 'Profil']) {
       await expect(nav.getByRole('button', { name: label, exact: true })).toBeVisible()
     }
   })
@@ -160,7 +160,7 @@ test.describe('Storyhold – Simple Mode (mode-choice flow)', () => {
     await expect(nav.getByRole('button', { name: 'Vermächtnis', exact: true })).toBeVisible()
     await expect(nav.getByRole('button', { name: 'Profil', exact: true })).toBeVisible()
     // Friends + Sync hidden
-    await expect(nav.getByRole('button', { name: 'Freunde', exact: true })).toHaveCount(0)
+    await expect(nav.getByRole('button', { name: 'Familie', exact: true })).toHaveCount(0)
     await expect(nav.getByRole('button', { name: 'Sync', exact: true })).toHaveCount(0)
 
     // Custom-questions card hidden
@@ -196,7 +196,7 @@ test.describe('Storyhold – Simple Mode (mode-choice flow)', () => {
 
     await page.reload()
     await expect(page.locator('html')).not.toHaveAttribute('data-app-mode', 'simple')
-    await expect(nav.getByRole('button', { name: 'Freunde', exact: true })).toBeVisible()
+    await expect(nav.getByRole('button', { name: 'Familie', exact: true })).toBeVisible()
   })
 })
 

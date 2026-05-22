@@ -185,12 +185,23 @@ describe('ContactsTab – Swipe-to-Remove', () => {
   })
 })
 
-// ── Onboarding (0 Kontakte) ───────────────────────────────────────────────────
+// ── 0 Kontakte: Tabs direkt sichtbar ─────────────────────────────────────────
 
-describe('OnboardingScreen', () => {
-  it('zeigt Sandra-Flow CTA und ruft onOpenSandraFlow', () => {
+describe('Hub mit 0 Kontakten', () => {
+  it('zeigt direkt die Tabs ohne Onboarding-Screen', () => {
+    const { container } = renderHub({ friends: [] })
+    expect(container.querySelector('[data-testid="onboarding-open-sandra"]')).toBeNull()
+    expect(container.querySelector('[role="tablist"]')).toBeTruthy()
+  })
+
+  it('Kontakte-Tab zeigt Einladungs-CTA und ruft onOpenSandraFlow', () => {
     const { container, onOpenSandraFlow } = renderHub({ friends: [] })
-    const cta = container.querySelector<HTMLButtonElement>('[data-testid="onboarding-open-sandra"]')!
+    const tablist = container.querySelector('[role="tablist"]')!
+    const contactsTab = Array.from(tablist.querySelectorAll('[role="tab"]')).find(
+      t => t.textContent?.includes('Kontakte'),
+    ) as HTMLButtonElement
+    fireEvent.click(contactsTab)
+    const cta = container.querySelector<HTMLButtonElement>('[data-testid="contacts-new-connection"]')!
     expect(cta).toBeTruthy()
     fireEvent.click(cta)
     expect(onOpenSandraFlow).toHaveBeenCalledOnce()

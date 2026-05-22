@@ -86,8 +86,8 @@ test.describe('Private Sync – Chaos Tests (Storyhold Server)', () => {
 
     // Zu einem anderen Tab navigieren
     const nav = page.getByRole('navigation', { name: 'Hauptnavigation' })
-    await nav.getByRole('button', { name: 'Freunde', exact: true }).click()
-    await expect(page.getByRole('heading', { name: /Freunde|Online teilen/, exact: false })).toBeVisible()
+    await nav.getByRole('button', { name: 'Familie', exact: true }).click()
+    await expect(page.getByRole('heading', { name: /Familie|Online teilen|verbunden/, exact: false })).toBeVisible()
 
     // Zurück zu Sync: Wizard-State zurückgesetzt → Einrichten-Button
     await nav.getByRole('button', { name: 'Sync', exact: true }).click()

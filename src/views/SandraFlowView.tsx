@@ -36,6 +36,8 @@ interface Props {
   myPublicKey: string | null
   /** Called at the share step to trigger online-sharing bootstrap if needed. */
   onEnableOnlineSharing: () => void
+  /** Skip the landing screen and start directly at the given step. */
+  initialStep?: SandraStep
 }
 
 export type SandraStep =
@@ -105,14 +107,16 @@ export function SandraFlowView({
   myDeviceId,
   myPublicKey,
   onEnableOnlineSharing,
+  initialStep,
 }: Props) {
   const { locale } = useTranslation()
   const t = useSandraFlowStrings()
 
   const [draft, setDraftState] = useState<SandraDraft>(loadDraft)
-  const [step, setStep] = useState<SandraStep>(() =>
-    draft.questions.length > 0 ? 'list' : 'landing',
-  )
+  const [step, setStep] = useState<SandraStep>(() => {
+    if (initialStep) return initialStep
+    return draft.questions.length > 0 ? 'list' : 'landing'
+  })
 
   // Persist draft to sessionStorage on every change. Survives reloads within
   // the same tab; vanishes when the tab is closed (per spec). Empty drafts

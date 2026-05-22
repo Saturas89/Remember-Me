@@ -1,7 +1,7 @@
 export const UI_EN = {
   nav: {
     home: 'Journey',
-    friends: 'Friends',
+    friends: 'Family',
     archive: 'Legacy',
     sync: 'Sync',
     profile: 'Profile',
@@ -292,8 +292,7 @@ export const UI_EN = {
     deactivateHeading: 'What happens when you deactivate?',
     deactivateBody: 'All shared memories are deleted from the server and the connections to your contacts are removed. Your own answers and photos on this device stay fully preserved.',
     notConfiguredWarning: 'This installation does not yet support direct sharing. Ask the person who runs Storyhold for you whether the feature is available.',
-    consentLabel: 'I understand that only the other person and I can read what we share.',
-    activateButton: 'Activate',
+    inviteButton: '✨ Invite someone',
   },
 
   shareMigration: {

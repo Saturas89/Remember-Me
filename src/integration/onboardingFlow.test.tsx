@@ -144,7 +144,7 @@ describe('Onboarding flow (integration)', () => {
       render(<App />)
 
       const nav = await screen.findByRole('navigation', { name: 'Hauptnavigation' })
-      for (const label of ['Freunde', 'Vermächtnis', 'Sync', 'Profil', 'Lebensweg']) {
+      for (const label of ['Familie', 'Vermächtnis', 'Sync', 'Profil', 'Lebensweg']) {
         const tab = within(nav).getByRole('button', { name: label })
         fireEvent.click(tab)
         expect(tab.getAttribute('aria-current')).toBe('page')

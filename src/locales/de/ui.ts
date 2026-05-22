@@ -1,7 +1,7 @@
 export const UI_DE = {
   nav: {
     home: 'Lebensweg',
-    friends: 'Freunde',
+    friends: 'Familie',
     archive: 'Vermächtnis',
     sync: 'Sync',
     profile: 'Profil',
@@ -293,8 +293,7 @@ export const UI_DE = {
     deactivateHeading: 'Was passiert beim Deaktivieren?',
     deactivateBody: 'Alle geteilten Erinnerungen werden vom Server gelöscht und die Verbindung zu deinen Kontakten getrennt. Deine eigenen Antworten und Fotos auf diesem Gerät bleiben vollständig erhalten.',
     notConfiguredWarning: 'Diese Installation unterstützt das direkte Teilen noch nicht. Frag die Person, die Storyhold für dich betreibt, ob das Feature verfügbar ist.',
-    consentLabel: 'Ich habe verstanden, dass nur die andere Person und ich das Geteilte lesen können.',
-    activateButton: 'Aktivieren',
+    inviteButton: '✨ Jemanden einladen',
   },
 
   shareMigration: {

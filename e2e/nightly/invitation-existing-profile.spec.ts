@@ -73,13 +73,13 @@ test.describe('Einladungslink – bestehende Daten bleiben erhalten', () => {
     await expect(bob.getByRole('heading', { name: 'Kontakt verknüpfen' })).toBeVisible()
     await expect(bob.getByText(/Alice/).first()).toBeVisible()
 
-    // Hub noch nicht aktiv → "Aktivieren"-Button muss sichtbar sein
+    // Online-Sharing noch nicht eingerichtet → "Online-Teilen einrichten"-Button muss sichtbar sein
     await expect(
-      bob.getByRole('button', { name: /Aktivieren/ }),
+      bob.getByRole('button', { name: /Online-Teilen einrichten/ }),
     ).toBeVisible({ timeout: 5_000 })
 
-    // Hub aktivieren (löst onAcceptContact aus sobald deviceId verfügbar)
-    await bob.getByRole('button', { name: /Aktivieren/ }).click()
+    // Online-Sharing aktivieren (löst onAcceptContact aus sobald deviceId verfügbar)
+    await bob.getByRole('button', { name: /Online-Teilen einrichten/ }).click()
 
     // Warten bis Bobs Hub gestartet ist und Alice als Kontakt gespeichert wurde.
     // 65 s: bootstrapSession kann bis zu 4 Versuche benötigen (3 s + 9 s + 27 s
