@@ -320,7 +320,7 @@ export function LandingView({ onStart }: Props) {
       <section className="landing-final-cta">
         <div className="landing-inner landing-final-cta__inner">
           <div className="landing-final-cta__media">
-            <LandingImage src="/landing/cta.jpg" alt={l.finalCta.imgAlt} aspectRatio="4/3" />
+            <LandingImage src="/landing/ABCAFE7B-04E2-4983-BD37-4854F197834E.png" alt={l.finalCta.imgAlt} aspectRatio="4/3" />
           </div>
           <div className="landing-final-cta__content">
             <h2>{l.finalCta.headline}</h2>
