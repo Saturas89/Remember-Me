@@ -14,6 +14,9 @@ import { test, expect, type BrowserContext } from '@playwright/test'
 async function bootstrapApp(ctx: BrowserContext) {
   await ctx.addInitScript(() => {
     localStorage.setItem('rm-install-dismissed', '1')
+    // Force German so tests see German UI regardless of CI-runner locale.
+    // browser.newContext() does not inherit the global locale: 'de-DE' setting.
+    localStorage.setItem('rm-lang', 'de')
     if (!localStorage.getItem('remember-me-state')) {
       localStorage.setItem('remember-me-state', JSON.stringify({
         profile: { name: 'Tina' },
