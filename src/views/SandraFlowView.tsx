@@ -3,13 +3,6 @@ import { useTranslation } from '../locales'
 import { useSandraFlowStrings } from '../i18n/sandraFlow'
 import { findTrigger } from '../data/loadPersonalQuestions'
 import { buildPersonalPack } from '../lib/sandraFlow/packBuilder'
-import { encodeQuestionPack } from '../utils/sharing'
-import {
-  generateQuestionPackUrl,
-  generateQuestionPackUrlSync,
-  generateSandraInviteUrl,
-  generateSandraInviteUrlSync,
-} from '../utils/secureLink'
 import type { ContactHandshake } from '../types'
 import type {
   ComposedQuestion,
@@ -277,7 +270,6 @@ export function SandraFlowView({
 
   // step === 'share'
   const handshakeReady = Boolean(myDeviceId && myPublicKey)
-  const waitingForIdentity = onlineSharingConfigured && onlineSharingEnabled && !handshakeReady
 
   function buildHandshake(): ContactHandshake | null {
     if (!myDeviceId || !myPublicKey) return null
@@ -290,38 +282,32 @@ export function SandraFlowView({
     }
   }
 
+  // onShare is only non-null when the device identity is ready. Until then
+  // SandraShareStep shows a loading/activate-sharing state instead.
+  const onShare = handshakeReady
+    ? async () => {
+        const pack = buildPersonalPack(draft, profileName)
+        const handshake = buildHandshake()!
+        const { createInviteAndGetUrl } = await import('../utils/inviteService')
+        const { storePendingInvite } = await import('../utils/inviteLogStore')
+        const url = await createInviteAndGetUrl(pack, handshake)
+        const code = url.split('/join/').pop() ?? ''
+        if (code) await storePendingInvite(code).catch(() => {})
+        return url
+      }
+    : null
+
   return (
     <SandraShareStep
       t={t}
       anchor={draft.anchor}
       questions={draft.questions}
-      // #163 – default the simple-mode-handoff to true (Sandra-Persona asked
-      // for "Default = ein", so the most senior-friendly path requires no
-      // extra decision from her in the share moment).
       preferSimpleMode={draft.preferSimpleMode ?? true}
       onTogglePreferSimpleMode={next => setDraftState({ ...draft, preferSimpleMode: next })}
       onBack={() => setStep('list')}
-      waitingForIdentity={waitingForIdentity}
-      onShareSync={() => {
-        const pack = buildPersonalPack(draft, profileName)
-        const handshake = buildHandshake()
-        if (handshake) {
-          return {
-            url: generateSandraInviteUrlSync(pack, handshake),
-            encoded: encodeQuestionPack(pack),
-          }
-        }
-        return {
-          url: generateQuestionPackUrlSync(pack),
-          encoded: encodeQuestionPack(pack),
-        }
-      }}
-      onShareUpgrade={async () => {
-        const pack = buildPersonalPack(draft, profileName)
-        const handshake = buildHandshake()
-        if (handshake) return await generateSandraInviteUrl(pack, handshake)
-        return await generateQuestionPackUrl(pack)
-      }}
+      onShare={onShare}
+      onlineSharingEnabled={onlineSharingEnabled}
+      onEnableOnlineSharing={onEnableOnlineSharing}
       onClearDraft={handleResetAndExit}
     />
   )

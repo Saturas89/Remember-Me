@@ -42,6 +42,10 @@ describe('online sharing opt-in guard', () => {
       if (f.endsWith(`utils/supabaseClient.ts`)) continue
       if (f.endsWith(`utils/sharingService.ts`)) continue
       if (f.endsWith(`utils/privateSyncClient.ts`)) continue
+      // inviteService.ts is part of the lazy sharing chunk (only imported via
+      // await import() from App, ContactHandshakeView, etc.) so it may
+      // statically import supabaseClient.
+      if (f.endsWith(`utils/inviteService.ts`)) continue
       const src = readFileSync(f, 'utf8')
       // Static import:  import ... from '.../supabaseClient'
       if (/import[^;]+from\s+['"][^'"]*supabaseClient['"]/m.test(src)) {

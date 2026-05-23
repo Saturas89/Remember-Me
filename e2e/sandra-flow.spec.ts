@@ -1,17 +1,18 @@
 import { test, expect, type BrowserContext, type Page } from '@playwright/test'
+import { createMockState, installSupabaseMock, type MockState } from './helpers/supabase-mock'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Sandra-Flow E2E (#/ask) — v2.5.0 feature.
 //
 // Sandra, the tech-savvy buyer, lands on `#/ask`, formulates 2–10 personal
-// questions, and sends them via a question-pack URL (`?qp-plain=…`) to a
+// questions, and sends them via a short invite link (`/join/CODE`) to a
 // relative (Ingrid, the receiver).
 //
 // Coverage:
 //   1. DE happy path: Sandra composes one relationship question and shares
 //      → Web-Share-API stub is invoked with the share URL
 //   2. EN happy path: same flow with English locale
-//   3. Receiver (new user): opens a `?qp-plain=…` URL in a fresh context,
+//   3. Receiver (new user): opens a `/join/CODE` URL in a fresh context,
 //      sees the simple-mode prompt + one-question-at-a-time view + big mic button
 //   3b. Receiver (existing user, #225): already has a Storyhold profile →
 //      skips name-entry, sees tailored "Hey {name}!" welcome instead
@@ -26,10 +27,13 @@ const STATE_FULL_NO_PROFILE = JSON.stringify({
   customQuestions: [], appMode: 'full',
 })
 
+// Online sharing is pre-activated so `handshakeReady` is true once
+// bootstrapSession() succeeds via the Supabase mock.
 const STATE_FULL_SANDRA = JSON.stringify({
   profile: { name: 'Sandra', createdAt: '2026-01-01T00:00:00.000Z' },
   answers: {}, friends: [], friendAnswers: [],
   customQuestions: [], appMode: 'full',
+  onlineSharing: { enabled: true, activatedAt: '2026-01-01T00:00:00.000Z' },
 })
 
 /** Existing Storyhold user (Ingrid) — used for issue-#225 "already owns" tests. */
@@ -49,7 +53,11 @@ const STATE_FULL_INGRID = JSON.stringify({
  *  onboarding immediately. */
 async function seedContext(
   context: BrowserContext,
-  opts: { lang: 'de' | 'en'; profile?: 'sandra' | 'ingrid' | 'none' } = { lang: 'de', profile: 'sandra' },
+  opts: {
+    lang: 'de' | 'en'
+    profile?: 'sandra' | 'ingrid' | 'none'
+    mockState?: MockState
+  } = { lang: 'de', profile: 'sandra' },
 ) {
   const stateMap = { sandra: STATE_FULL_SANDRA, ingrid: STATE_FULL_INGRID, none: STATE_FULL_NO_PROFILE }
   const stateJson = stateMap[opts.profile ?? 'sandra']
@@ -58,6 +66,9 @@ async function seedContext(
     localStorage.setItem('rm-lang', lang as string)
     localStorage.setItem('remember-me-state', state as string)
   }, [opts.lang, stateJson])
+  if (opts.mockState) {
+    await installSupabaseMock(context, opts.mockState)
+  }
 }
 
 /**
@@ -106,7 +117,8 @@ async function getSharedPayloads(page: Page): Promise<Array<{ title?: string; te
 
 test.describe('Sandra-Flow – DE Happy Path', () => {
   test.beforeEach(async ({ context }) => {
-    await seedContext(context, { lang: 'de', profile: 'sandra' })
+    const mockState = createMockState()
+    await seedContext(context, { lang: 'de', profile: 'sandra', mockState })
     await stubWebShare(context)
   })
 
@@ -155,14 +167,14 @@ test.describe('Sandra-Flow – DE Happy Path', () => {
     const payloads = await getSharedPayloads(page)
     const url = payloads[0].url ?? ''
     expect(url).toMatch(/^https?:\/\//)
-    // Pack-code lives in the query string (?qp-plain=…), not as visible text.
-    expect(url).toContain('qp')
+    // Short-code URL: /join/CODE
+    expect(url).toContain('/join/')
 
-    // ── Pack code is NOT shown as visible text in the DOM ──────────────────
-    const codeFromUrl = url.split('=').pop() ?? ''
-    if (codeFromUrl.length > 20) {
+    // ── Invite code is NOT shown as visible text in the DOM ────────────────
+    const code = url.split('/join/').pop() ?? ''
+    if (code.length > 0) {
       const bodyText = await page.locator('body').innerText()
-      expect(bodyText).not.toContain(codeFromUrl)
+      expect(bodyText).not.toContain(code)
     }
 
     // ── No QR-code element ────────────────────────────────────────────────
@@ -178,7 +190,8 @@ test.describe('Sandra-Flow – DE Happy Path', () => {
 
 test.describe('Sandra-Flow – EN Happy Path', () => {
   test.beforeEach(async ({ context }) => {
-    await seedContext(context, { lang: 'en', profile: 'sandra' })
+    const mockState = createMockState()
+    await seedContext(context, { lang: 'en', profile: 'sandra', mockState })
     await stubWebShare(context)
   })
 
@@ -210,10 +223,11 @@ test.describe('Sandra-Flow – EN Happy Path', () => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 test.describe('Sandra-Flow – Receiver Path (Ingrid)', () => {
-  test('shared `?qp-plain=…` URL activates simple-mode silently + one-question view', async ({ browser }) => {
+  test('shared `/join/CODE` URL activates simple-mode silently + one-question view', async ({ browser }) => {
     // ── Step 1: Sandra builds the URL (drive the real flow) ────────────────
+    const mockState = createMockState()
     const senderContext = await browser.newContext()
-    await seedContext(senderContext, { lang: 'de', profile: 'sandra' })
+    await seedContext(senderContext, { lang: 'de', profile: 'sandra', mockState })
     await stubWebShare(senderContext)
     const sender = await senderContext.newPage()
 
@@ -230,12 +244,12 @@ test.describe('Sandra-Flow – Receiver Path (Ingrid)', () => {
     await expect.poll(async () => (await getSharedPayloads(sender)).length).toBeGreaterThanOrEqual(1)
     const payloads = await getSharedPayloads(sender)
     const shareUrl = payloads[0].url ?? ''
-    expect(shareUrl).toMatch(/qp/)
+    expect(shareUrl).toMatch(/\/join\//)
     await senderContext.close()
 
     // ── Step 2: Open the URL in a fresh context (Ingrid, no profile) ───────
     const ingridContext = await browser.newContext()
-    await seedContext(ingridContext, { lang: 'de', profile: 'none' })
+    await seedContext(ingridContext, { lang: 'de', profile: 'none', mockState })
     const ingrid = await ingridContext.newPage()
     await ingrid.goto(shareUrl)
 
@@ -273,8 +287,9 @@ test.describe('Sandra-Flow – Receiver Path (Ingrid)', () => {
 
   test('receiver lands directly on welcome without auto-suggest (issue #260)', async ({ browser }) => {
     // Pre-build a URL via the sender flow (compact version).
+    const mockState = createMockState()
     const sCtx = await browser.newContext()
-    await seedContext(sCtx, { lang: 'de', profile: 'sandra' })
+    await seedContext(sCtx, { lang: 'de', profile: 'sandra', mockState })
     await stubWebShare(sCtx)
     const sPage = await sCtx.newPage()
     await sPage.goto('/#/ask')
@@ -291,7 +306,7 @@ test.describe('Sandra-Flow – Receiver Path (Ingrid)', () => {
     await sCtx.close()
 
     const iCtx = await browser.newContext()
-    await seedContext(iCtx, { lang: 'de', profile: 'none' })
+    await seedContext(iCtx, { lang: 'de', profile: 'none', mockState })
     const i = await iCtx.newPage()
     await i.goto(shareUrl)
     // Auto-suggest is gone – receiver lands directly on the welcome/name-entry screen.
@@ -304,8 +319,9 @@ test.describe('Sandra-Flow – Receiver Path (Ingrid)', () => {
 
   test('existing Storyhold user skips name-entry and sees tailored welcome', async ({ browser }) => {
     // Build a share URL via the sender flow.
+    const mockState = createMockState()
     const sCtx = await browser.newContext()
-    await seedContext(sCtx, { lang: 'de', profile: 'sandra' })
+    await seedContext(sCtx, { lang: 'de', profile: 'sandra', mockState })
     await stubWebShare(sCtx)
     const sPage = await sCtx.newPage()
     await sPage.goto('/#/ask')
@@ -323,7 +339,7 @@ test.describe('Sandra-Flow – Receiver Path (Ingrid)', () => {
 
     // Open the URL as an existing Storyhold user (Ingrid already has a profile).
     const ingridCtx = await browser.newContext()
-    await seedContext(ingridCtx, { lang: 'de', profile: 'ingrid' })
+    await seedContext(ingridCtx, { lang: 'de', profile: 'ingrid', mockState })
     const ingrid = await ingridCtx.newPage()
     await ingrid.goto(shareUrl)
 
@@ -349,7 +365,8 @@ test.describe('Sandra-Flow – Receiver Path (Ingrid)', () => {
 
 test.describe('Sandra-Flow – Relationship-send hint', () => {
   test.beforeEach(async ({ context }) => {
-    await seedContext(context, { lang: 'de', profile: 'sandra' })
+    const mockState = createMockState()
+    await seedContext(context, { lang: 'de', profile: 'sandra', mockState })
     await stubWebShare(context)
   })
 
@@ -405,7 +422,7 @@ test.describe('Sandra-Flow – Relationship-send hint', () => {
 test.describe('Sandra-Flow – Draft persistence', () => {
   test.beforeEach(async ({ context }) => {
     await seedContext(context, { lang: 'de', profile: 'sandra' })
-    await stubWebShare(context)
+    await stubWebShare(context)  // no mock needed – doesn't reach share step
   })
 
   test('reload preserves draft; new context discards it', async ({ page, browser }) => {
@@ -442,7 +459,8 @@ test.describe('Sandra-Flow – Draft persistence', () => {
 
 test.describe('Sandra-Flow – Web-Share-API stub', () => {
   test.beforeEach(async ({ context }) => {
-    await seedContext(context, { lang: 'de', profile: 'sandra' })
+    const mockState = createMockState()
+    await seedContext(context, { lang: 'de', profile: 'sandra', mockState })
     await stubWebShare(context)
   })
 
@@ -481,8 +499,9 @@ test.describe('Sandra-Flow – Web-Share-API stub', () => {
 test.describe('Sandra-Flow – Two-person integration', () => {
   test('Ingrid answers every question and submits → archive landing', async ({ browser }) => {
     // ── Sandra builds the share URL via the real flow ──────────────────────
+    const mockState = createMockState()
     const senderContext = await browser.newContext()
-    await seedContext(senderContext, { lang: 'de', profile: 'sandra' })
+    await seedContext(senderContext, { lang: 'de', profile: 'sandra', mockState })
     await stubWebShare(senderContext)
     const sender = await senderContext.newPage()
 
@@ -500,12 +519,12 @@ test.describe('Sandra-Flow – Two-person integration', () => {
 
     await expect.poll(async () => (await getSharedPayloads(sender)).length).toBeGreaterThanOrEqual(1)
     const shareUrl = (await getSharedPayloads(sender))[0].url ?? ''
-    expect(shareUrl).toMatch(/qp/)
+    expect(shareUrl).toMatch(/\/join\//)
     await senderContext.close()
 
     // ── Ingrid opens the URL in a fresh context ────────────────────────────
     const ingridContext = await browser.newContext()
-    await seedContext(ingridContext, { lang: 'de', profile: 'none' })
+    await seedContext(ingridContext, { lang: 'de', profile: 'none', mockState })
     const ingrid = await ingridContext.newPage()
     await ingrid.goto(shareUrl)
 
@@ -538,8 +557,8 @@ test.describe('Sandra-Flow – Two-person integration', () => {
     expect(safety).toBeGreaterThan(0)
 
     // ── Receiver view unmounts on submit, URL cleaned ──────────────────────
-    // URL no longer carries the pack code (history.replaceState to '/').
-    await expect.poll(async () => ingrid.url()).not.toMatch(/qp/)
+    // URL no longer carries the invite code (history.replaceState to '/').
+    await expect.poll(async () => ingrid.url()).not.toMatch(/\/join\//)
 
     // Receiver view is gone (no more sandra-receive-* test-ids in the DOM).
     // This is the minimal "submit transitioned away" guarantee that doesn't

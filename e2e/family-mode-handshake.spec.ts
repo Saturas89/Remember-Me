@@ -1,141 +1,137 @@
 import { test, expect } from '@playwright/test'
 import {
   completeOnboarding,
-  contactPath,
   createMockState,
   dismissInstallPrompt,
   installSupabaseMock,
+  invitePath,
   openFamilyHub,
-  readDeviceIdentity,
   readOnlineFriends,
+  seedInvite,
   spawnDevice,
 } from './helpers/family-mode-helpers'
 
-// REQ-015 §4.2 Kontakt-Handshake (FR-15.5 – FR-15.9).
+// REQ-015 §4.2 Kontakt-Handshake – neue Invite-Code-Architektur.
 //
-// Two devices exchange `?contact=…` URLs and end up with each other in
-// `friends[].online`. Also covers the case where the recipient has not yet
-// opted in to online sharing — the screen offers the activation step first.
+// Links sind jetzt `/join/CODE` statt `?contact=…`. Der Code löst einen
+// Supabase-Lookup auf, der Pack + Kontakt zurückgibt. Nach dem Quiz wird
+// die Kontaktaufnahme automatisch bidirektional: Ingrids Kontakt wird in
+// die `invites.response`-Spalte geschrieben; Sandras App pollt und fügt
+// Ingrid automatisch hinzu.
 
-test.describe('Familienmodus – Kontakt-Handshake (FR-15.5 – FR-15.9)', () => {
-  test('Empfänger sieht den Verbindungs-Screen mit Absendername', async ({ context, page }) => {
+const ALICE = {
+  senderName: 'Alice',
+  senderDeviceId: '00000000-0000-4000-8000-000000000001',
+  senderPublicKey: 'ALICE_FAKE_PUBLIC_KEY',
+}
+
+test.describe('Familienmodus – Invite-Code Handshake', () => {
+  test('Empfänger öffnet /join/-Link → PersonalPackReceiveView mit Absendername erscheint', async ({
+    context,
+    page,
+  }) => {
+    const state = createMockState()
     await dismissInstallPrompt(context)
-    await installSupabaseMock(context, createMockState())
+    await installSupabaseMock(context, state)
 
-    await page.goto(
-      contactPath('Oma Erna', '00000000-0000-4000-8000-000000000001', 'PUBLIC_KEY_PLACEHOLDER'),
-    )
+    const code = seedInvite(state, ALICE)
+    await page.goto(invitePath(code))
 
-    await expect(page.getByRole('heading', { name: 'Kontakt verknüpfen' })).toBeVisible()
-    await expect(page.getByText(/Oma Erna/)).toBeVisible()
-    await expect(page.getByRole('button', { name: /Online-Teilen einrichten/ })).toBeVisible()
+    // PersonalPackReceiveView shows the sender's name in its header.
+    await expect(page.getByText(/Alice/i)).toBeVisible({ timeout: 15_000 })
+    // URL is cleaned to / after the invite is resolved.
+    await expect.poll(() => page.url()).not.toContain('/join/')
   })
 
-  test('Bidirektionale Verknüpfung zwischen zwei Geräten', async ({ browser }) => {
+  test('Unbekannter Code → App landet auf Home ohne Crash', async ({ context, page }) => {
     const state = createMockState()
-    const { ctx: aliceCtx, page: alice } = await spawnDevice(browser, state)
-    const { ctx: bobCtx, page: bob } = await spawnDevice(browser, state)
+    await dismissInstallPrompt(context)
+    await installSupabaseMock(context, state)
 
-    await completeOnboarding(alice, 'Alice')
-    await openFamilyHub(alice)
-    const aliceId = await readDeviceIdentity(alice)
+    // No invite seeded → resolveInviteCode will return 406 (no rows).
+    await page.goto(invitePath('UNKNOW'))
 
-    await completeOnboarding(bob, 'Bob')
-    await openFamilyHub(bob)
-    const bobId = await readDeviceIdentity(bob)
-
-    // Bob opens Alice's contact link → handshake auto-accepts on his side.
-    await bob.goto(contactPath('Alice', aliceId.deviceId, aliceId.publicKey))
-    await expect(bob.getByRole('heading', { name: 'Kontakt verknüpfen' })).toBeVisible()
-    // The handshake screen mentions Alice's name twice (heading-line + the
-    // post-accept "wurde in deiner Kontaktliste gespeichert" hint), so we
-    // anchor on the first occurrence.
-    await expect(bob.getByText(/Alice/).first()).toBeVisible()
-    await expect(bob.getByRole('button', { name: /Meinen Link zurück senden/ })).toBeVisible()
-
-    // REQ-022 §4.2: the share-all opt-in is visible AND checked by default.
-    const shareAllCheckbox = bob.locator('[data-testid="contact-handshake-shareall"] input[type="checkbox"]')
-    await expect(shareAllCheckbox).toBeVisible()
-    await expect(shareAllCheckbox).toBeChecked()
-
-    const bobsAlice = await readOnlineFriends(bob)
-    expect(bobsAlice).toHaveLength(1)
-    expect(bobsAlice[0]).toMatchObject({ name: 'Alice' })
-    expect(bobsAlice[0].online?.deviceId).toBe(aliceId.deviceId)
-    expect(bobsAlice[0].online?.shareAll).toBe(true)
-
-    // Alice opens Bob's link → mirror-accept.
-    await alice.goto(contactPath('Bob', bobId.deviceId, bobId.publicKey))
-    await expect(alice.getByRole('heading', { name: 'Kontakt verknüpfen' })).toBeVisible()
-    const alicesBob = await readOnlineFriends(alice)
-    expect(alicesBob).toHaveLength(1)
-    expect(alicesBob[0]).toMatchObject({ name: 'Bob' })
-    expect(alicesBob[0].online?.deviceId).toBe(bobId.deviceId)
-    expect(alicesBob[0].online?.shareAll).toBe(true)
-
-    await aliceCtx.close()
-    await bobCtx.close()
+    // App must not crash; URL is cleared.
+    await expect.poll(() => page.url()).not.toContain('/join/')
+    // Home view renders (no error overlay).
+    await expect(page.locator('body')).not.toContainText('invite-not-found')
   })
 
-  test('Checkbox abhaken speichert friend.online.shareAll = false', async ({ browser }) => {
+  test('Empfänger ohne Opt-in öffnet /join/-Link → PersonalPackReceiveView erscheint (Handshake wartet)', async ({
+    context,
+    page,
+  }) => {
     const state = createMockState()
-    const { ctx: aliceCtx, page: alice } = await spawnDevice(browser, state)
-    const { ctx: bobCtx, page: bob } = await spawnDevice(browser, state)
+    await dismissInstallPrompt(context)
+    await installSupabaseMock(context, state)
+    // Pre-seed a profile but WITHOUT online sharing.
+    await context.addInitScript(() => {
+      localStorage.setItem('remember-me-state', JSON.stringify({
+        profile: { name: 'Bob', createdAt: '2024-01-01T00:00:00.000Z' },
+        answers: {}, friends: [], friendAnswers: [],
+        customQuestions: [], appMode: 'full',
+      }))
+    })
 
-    await completeOnboarding(alice, 'Alice')
-    await openFamilyHub(alice)
-    const aliceId = await readDeviceIdentity(alice)
+    const code = seedInvite(state, ALICE)
+    await page.goto(invitePath(code))
+
+    // Pack still appears — opt-in is not required to view the quiz.
+    await expect(page.getByText(/Alice/i)).toBeVisible({ timeout: 15_000 })
+  })
+
+  test('Bidirektionale Verknüpfung: Bob beantwortet Pack → Alice in Bobs Freundesliste', async ({
+    browser,
+  }) => {
+    const state = createMockState()
+    const { ctx: bobCtx, page: bob } = await spawnDevice(browser, state)
 
     await completeOnboarding(bob, 'Bob')
     await openFamilyHub(bob)
 
-    await bob.goto(contactPath('Alice', aliceId.deviceId, aliceId.publicKey))
-    const shareAllCheckbox = bob.locator('[data-testid="contact-handshake-shareall"] input[type="checkbox"]')
-    await expect(shareAllCheckbox).toBeChecked()
-    await shareAllCheckbox.uncheck()
+    const code = seedInvite(state, ALICE)
+    await bob.goto(invitePath(code))
 
-    // ContactHandshakeView re-fires onAcceptContact on toggle so the friend
-    // upsert path picks up the new shareAll value.
+    // PersonalPackReceiveView: enter name and start the quiz.
+    // The welcome screen shows "{senderName} hat dir {n} Fragen geschickt".
+    await expect(bob.getByText(/Alice/i)).toBeVisible({ timeout: 15_000 })
+    const nameInput = bob.getByTestId('sandra-receive-name')
+    if (await nameInput.isVisible().catch(() => false)) {
+      // New user: fill name and start.
+      await nameInput.fill('Bob')
+      await bob.getByTestId('sandra-receive-start').click()
+    } else {
+      // Existing user fast-path.
+      const existingStart = bob.getByTestId('sandra-receive-existing-start')
+      if (await existingStart.isVisible().catch(() => false)) {
+        await existingStart.click()
+      }
+    }
+
+    // Answer the one question (or skip via "Später beantworten").
+    const answerBox = bob.getByTestId('sandra-receive-answer')
+    await expect(answerBox).toBeVisible({ timeout: 10_000 })
+    await answerBox.fill('Eine schöne Antwort.')
+    await bob.getByTestId('sandra-receive-continue').click()
+
+    // After the pack completes, ContactHandshakeView appears. Since online sharing
+    // is already active (openFamilyHub activated it), the handshake auto-accepts.
+    // Alice should appear in Bob's friends list.
     await bob.waitForFunction(() => {
       type Bridge = { get: () => Record<string, unknown> | null }
       const bridge = (window as unknown as { __rmState?: Bridge }).__rmState
       const s = bridge?.get() ?? {}
-      const friends = (s.friends as Array<{ online?: { shareAll?: boolean } }>) ?? []
-      return friends.length > 0 && friends[0].online?.shareAll === false
-    }, undefined, { timeout: 10_000 })
+      const friends = (s.friends as Array<{ online?: { deviceId: string } }>) ?? []
+      return friends.some(f => f.online?.deviceId === '00000000-0000-4000-8000-000000000001')
+    }, undefined, { timeout: 20_000 })
 
-    const bobsAlice = await readOnlineFriends(bob)
-    expect(bobsAlice[0].online?.shareAll).toBe(false)
+    const bobsFriends = await readOnlineFriends(bob)
+    expect(bobsFriends.map(f => f.name)).toContain('Alice')
 
-    await aliceCtx.close()
-    await bobCtx.close()
-  })
+    // Supabase mock should have received Bob's contact in invites.response.
+    const invite = state.invites.find(r => r.code === code)
+    expect(invite?.response).not.toBeNull()
 
-  test('Handshake-Link ohne Opt-in bietet zuerst die Aktivierung an', async ({ browser }) => {
-    const state = createMockState()
-    const { ctx: aliceCtx, page: alice } = await spawnDevice(browser, state)
-    const { ctx: bobCtx, page: bob } = await spawnDevice(browser, state)
-
-    await completeOnboarding(alice, 'Alice')
-    await openFamilyHub(alice)
-    const aliceId = await readDeviceIdentity(alice)
-
-    // Bob has onboarded but never opted in to online sharing.
-    await completeOnboarding(bob, 'Bob')
-    await bob.goto(contactPath('Alice', aliceId.deviceId, aliceId.publicKey))
-
-    const enableBtn = bob.getByRole('button', { name: /Online-Teilen einrichten/ })
-    await expect(enableBtn).toBeVisible()
-    await expect(bob.getByRole('button', { name: /Meinen Link zurück senden/ })).toHaveCount(0)
-
-    // Clicking it kicks off the bootstrap and the screen swaps to the
-    // "send my link back" CTA – proving FR-15.9 wiring works.
-    await enableBtn.click()
-    await expect(
-      bob.getByRole('button', { name: /Meinen Link zurück senden/ }),
-    ).toBeVisible({ timeout: 15_000 })
-
-    await aliceCtx.close()
     await bobCtx.close()
   })
 })

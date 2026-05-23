@@ -10,6 +10,30 @@ Versionierung folgt [Semantic Versioning](https://semver.org/lang/de/).
 > Der Check `npm run check:changelog` (Teil von `npm test`) bricht sonst ab.
 > Details: `CLAUDE.md` → „Changelog-Pflicht".
 
+## [2.14.0] – 2026-05-23
+
+### Hinzugefügt
+
+- **Kurze Einladungslinks im Familienmodus (REQ-015-B)** – Sandra schickt Mama
+  jetzt `storyhold.app/join/A3KX7P` (35 Zeichen) statt einer 400–2 000 Zeichen
+  langen URL. Der Code wird in einer Supabase-Tabelle `invites` hinterlegt
+  (30-Tage-TTL, RLS gesichert). Kein Fallback auf lange URLs – ist Supabase
+  nicht erreichbar, erscheint eine klare Fehlermeldung.
+- **Automatisch bidirektionale Verknüpfung** – Ingrid schickt keinen Link
+  zurück. Beim Annehmen wird ihr öffentlicher Schlüssel automatisch in die
+  `invites.response`-Spalte geschrieben; Sandras App pollt alle 5 Minuten und
+  fügt Ingrid vollautomatisch als Freundin hinzu
+  (`usePendingInviteResponses`-Hook).
+- **Einheitlicher Einladungsflow** – Der separate `?contact=`-Handshake-Link
+  entfällt; nur noch der Sandra-Flow erzeugt Einladungen.
+
+### Geändert
+
+- `ContactHandshakeView` hat keinen „Meinen Link zurück senden"-Button mehr.
+- Datenschutz-Hinweis im Sandra-Share-Schritt und im FAQ präzisiert:
+  Fragen + Schlüssel liegen 30 Tage verschlüsselt auf Storyhold-Servern;
+  Antworten verlassen die Geräte nie.
+
 ## [2.13.0] – 2026-05-20
 
 ### Geändert

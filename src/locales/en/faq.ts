@@ -95,7 +95,7 @@ export const FAQ_EN = [
       },
       {
         q: 'What is Family Mode?',
-        a: 'Family Mode creates a permanent, mutual connection between two people. You each exchange a connection link once – after that you can send each other selected memories at any time, which only the two of you can read. Everything is end-to-end encrypted and stays on your devices.',
+        a: 'Family Mode creates a permanent, mutual connection between two people. Sandra sends Mom a short invite link (e.g. storyhold.app/join/A3KX7P). To make the link work, the questions, name, and public key are stored encrypted on Storyhold servers for 30 days, then automatically deleted. Storyhold cannot access this data. Your memories and answers always stay only on your devices.',
       },
       {
         q: 'What is the difference between One-time invitation and Family Mode?',
