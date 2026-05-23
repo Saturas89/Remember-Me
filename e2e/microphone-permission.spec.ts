@@ -1,12 +1,12 @@
 // E2E tests for the microphone permission-denied error messages in AudioRecorder.
 //
-// Strategy: patch Navigator.prototype.mediaDevices via addInitScript so the
-// browser throws NotAllowedError without needing real microphone hardware or
-// actual OS permission prompts. The prototype approach works in all browsers
-// (Firefox and WebKit define mediaDevices as a non-configurable getter on the
-// prototype; patching the instance directly fails silently in those engines).
-// The user-agent string is overridden per test to trigger the platform-specific
-// message branch (iOS / Android / Desktop).
+// Strategy: patch navigator.mediaDevices.getUserMedia directly on the existing
+// MediaDevices instance. This avoids browser-specific quirks around
+// Object.defineProperty on navigator (Chrome caches an own property that
+// shadows prototype overrides) and on Navigator.prototype (Firefox/WebKit make
+// it non-configurable). Mutating the method on the already-resolved instance
+// works in all engines. The user-agent string is overridden per test to trigger
+// the platform-specific message branch (iOS / Android / Desktop).
 
 import { test, expect, type BrowserContext } from '@playwright/test'
 
@@ -35,19 +35,15 @@ async function bootstrapApp(ctx: BrowserContext) {
 
 /** Patches getUserMedia to always throw NotAllowedError so the recorder
  *  error path is taken without relying on real OS permissions.
- *  Uses Navigator.prototype so the override works in Firefox and WebKit. */
+ *  Mutates the method on the existing MediaDevices instance — works in all
+ *  browsers without fighting property descriptor configurability. */
 async function denyMicrophone(ctx: BrowserContext) {
   await ctx.addInitScript(() => {
-    Object.defineProperty(Navigator.prototype, 'mediaDevices', {
-      get: () => ({
-        getUserMedia: async () => {
-          const err = new DOMException('Permission denied', 'NotAllowedError')
-          throw err
-        },
-        enumerateDevices: async () => [],
-      }),
-      configurable: true,
-    })
+    if (navigator.mediaDevices) {
+      navigator.mediaDevices.getUserMedia = async () => {
+        throw new DOMException('Permission denied', 'NotAllowedError')
+      }
+    }
   })
 }
 
@@ -133,20 +129,16 @@ test.describe('Mikrofon-Permission – plattformspezifische Fehlermeldungen', ()
     const ctx = await browser.newContext()
     await bootstrapApp(ctx)
 
-    // Stub getUserMedia to succeed with an empty stream (no hardware needed).
-    // Uses Navigator.prototype so the override works in Firefox and WebKit.
+    // Stub getUserMedia to succeed with a real audio stream so the recorder
+    // transitions to the recording state without actual microphone hardware.
     await ctx.addInitScript(() => {
-      Object.defineProperty(Navigator.prototype, 'mediaDevices', {
-        get: () => ({
-          getUserMedia: async () => {
-            const audioCtx = new AudioContext()
-            const dest = audioCtx.createMediaStreamDestination()
-            return dest.stream
-          },
-          enumerateDevices: async () => [],
-        }),
-        configurable: true,
-      })
+      if (navigator.mediaDevices) {
+        navigator.mediaDevices.getUserMedia = async () => {
+          const audioCtx = new AudioContext()
+          const dest = audioCtx.createMediaStreamDestination()
+          return dest.stream
+        }
+      }
     })
 
     const page = await ctx.newPage()
