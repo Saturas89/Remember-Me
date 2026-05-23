@@ -27,6 +27,7 @@ interface Props {
   onOpenFaq: () => void
   onOpenImpressum: () => void
   onShowReleaseNotes: () => void
+  onDeleteAllData: () => Promise<void>
   onOpenDebug?: () => void
 }
 
@@ -74,7 +75,7 @@ export function ProfileView({
   exportData, safeName,
   onSave, onBack,
   onExportMarkdown, onExportJson, onImportBackup,
-  onOpenFaq, onOpenImpressum, onShowReleaseNotes, onOpenDebug,
+  onOpenFaq, onOpenImpressum, onShowReleaseNotes, onDeleteAllData, onOpenDebug,
 }: Props) {
   const { t, locale, setLocale } = useTranslation()
   const { theme, setTheme } = useTheme()
@@ -88,6 +89,7 @@ export function ProfileView({
   const [importProgress, setImportProgress] = useState<{ step: string; pct: number } | null>(null)
   const [showFeedback, setShowFeedback] = useState(false)
   const [feedbackAck, setFeedbackAck] = useState<boolean>(() => feedbackRecentlySubmitted())
+  const [isDeleting, setIsDeleting] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const debugTapCount = useRef(0)
   const debugTapTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -119,6 +121,12 @@ export function ProfileView({
   const daysSince = profile?.createdAt
     ? Math.floor((Date.now() - new Date(profile.createdAt).getTime()) / 86_400_000)
     : 0
+
+  async function handleDeleteAll() {
+    if (!window.confirm(t.profile.deleteAllConfirmPrompt)) return
+    setIsDeleting(true)
+    await onDeleteAllData()
+  }
 
   function handleSave() {
     if (!name.trim()) return
@@ -469,6 +477,24 @@ export function ProfileView({
           </details>
         </section>
       )}
+
+      <section className="profile-card">
+        <button
+          type="button"
+          className="profile-import-card profile-import-card--danger"
+          onClick={handleDeleteAll}
+          disabled={isDeleting}
+          data-testid="profile-delete-all"
+        >
+          <span className="profile-import-card__icon">🗑️</span>
+          <span className="profile-import-card__body">
+            <span className="profile-import-card__title profile-import-card__title--danger">
+              {t.profile.deleteAllTitle}
+            </span>
+            <span className="profile-import-card__desc">{t.profile.deleteAllDesc}</span>
+          </span>
+        </button>
+      </section>
 
       {showFeedback && (
         <FeedbackModal

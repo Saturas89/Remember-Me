@@ -4864,6 +4864,12 @@ details[open] .faq-item__chevron {
 .profile-import-card__title { font-size: 0.92rem; font-weight: 700; color: var(--text); display: block; }
 .profile-import-card__desc  { font-size: 0.78rem; color: var(--text-muted); display: block; margin-top: 0.1rem; }
 .profile-import-card__arrow { margin-left: auto; font-size: 1rem; color: var(--text-muted); flex-shrink: 0; }
+.profile-import-card--danger:hover {
+  border-color: var(--warn);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--warn) 15%, transparent);
+}
+.profile-import-card--danger:disabled { opacity: 0.6; pointer-events: none; }
+.profile-import-card__title--danger { color: var(--warn); }
 
 /* ── Profile – upcoming features section ─────────────── */
 .profile-card--features { padding: 0; overflow: hidden; }

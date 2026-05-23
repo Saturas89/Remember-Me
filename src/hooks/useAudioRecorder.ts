@@ -90,7 +90,7 @@ export function useAudioRecorder(): UseAudioRecorder {
     try {
       stream = await navigator.mediaDevices.getUserMedia({ audio: true })
     } catch {
-      setError('Mikrofon-Zugriff verweigert. Bitte erlaube den Zugriff in den Browser-Einstellungen.')
+      setError('permission-denied')
       setRecState('idle')
       return
     }

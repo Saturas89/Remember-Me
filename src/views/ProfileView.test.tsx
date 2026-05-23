@@ -45,6 +45,7 @@ const defaultProps = {
   onOpenFaq: vi.fn(),
   onOpenImpressum: vi.fn(),
   onShowReleaseNotes: vi.fn(),
+  onDeleteAllData: vi.fn(async () => {}),
 }
 
 function getFill(container: HTMLElement) {

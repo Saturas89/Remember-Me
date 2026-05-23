@@ -27,6 +27,14 @@ export const FAQ_DE = [
         q: 'Warum steht Storyhold unter der AGPL-Lizenz?',
         a: 'Wir wollen ein Versprechen einlösen, nicht nur Marketing: Storyhold bleibt offen. Du kannst den Quellcode auf GitHub einsehen und dich selbst davon überzeugen, dass deine Lebensgeschichte privat bleibt – und du kannst Storyhold sogar selbst hosten, wenn du das möchtest. Die AGPL-3.0-Lizenz stellt zusätzlich sicher, dass auch zukünftige Versionen offen bleiben, auch wenn jemand anders Storyhold weiterbetreibt.',
       },
+      {
+        q: 'Verwendet die App Analyse-Software?',
+        a: 'Ja – Storyhold nutzt PostHog (EU-Server, Frankfurt) zur anonymen Nutzungsanalyse: welche Funktionen wie häufig genutzt werden, Gerätekategorie, App-Version. Es werden keine Inhalte deiner Erinnerungen erfasst, keine Cookies gesetzt und keine IP-Adressen dauerhaft gespeichert. Ein Opt-out ist aktuell nicht eingebaut. Wer das komplett unterbinden möchte, kann in den Browser-Einstellungen Tracking-Schutz aktivieren.',
+      },
+      {
+        q: 'Wie lösche ich alle meine Daten?',
+        a: 'Gehe zu Profil → ganz nach unten scrollen → „Alle Daten löschen". Dort werden alle lokalen Daten (Antworten, Fotos, Aufnahmen, Einstellungen) unwiderruflich entfernt. Falls Cloud-Sync aktiv ist, werden die Cloud-Daten dabei ebenfalls gelöscht. Die App startet danach neu wie beim ersten Öffnen.',
+      },
     ],
   },
   {
