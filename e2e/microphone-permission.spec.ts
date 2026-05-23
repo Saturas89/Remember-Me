@@ -52,7 +52,9 @@ async function triggerRecording(page: import('@playwright/test').Page) {
   await page.getByRole('heading', { name: 'Kindheit & Jugend' }).click()
   await expect(page.locator('textarea.input-textarea').first()).toBeVisible()
 
-  const recordBtn = page.getByRole('button', { name: /Aufnehmen|aufnehmen|Record/i })
+  // The audio toolbar button triggers getUserMedia directly on click.
+  // aria-label = m.audioStartAria = 'Sprachaufnahme starten'
+  const recordBtn = page.getByRole('button', { name: /Sprachaufnahme starten|starten/i })
   await expect(recordBtn).toBeVisible()
   await recordBtn.click()
 }
