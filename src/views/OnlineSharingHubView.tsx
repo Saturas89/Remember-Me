@@ -365,7 +365,7 @@ function ContactItem({
     const dx = e.clientX - startXRef.current
     startXRef.current = null
     setDragging(false)
-    if (dx <= -SWIPE_THRESHOLD) {
+    if (dx < -SWIPE_THRESHOLD) {
       setFlyOut(true)
       setOffset(-600)
       setTimeout(() => onRemove(friend.id), 260)
