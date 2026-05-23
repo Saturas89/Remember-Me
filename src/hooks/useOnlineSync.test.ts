@@ -66,11 +66,15 @@ describe('useOnlineSync', () => {
       useOnlineSync({ enabled: true } as OnlineSharingState, onRegistered),
     )
 
-    await waitFor(() => expect(result.current.ready).toBe(true))
+    // Wait for the full settled state: ready + memories/annotations populated
+    // (fetchIncomingShares is called after setReady, so they may land separately).
+    await waitFor(() => {
+      expect(result.current.ready).toBe(true)
+      expect(result.current.memories).toEqual([memory])
+      expect(result.current.annotations).toEqual([annotation])
+    })
     expect(result.current.deviceId).toBe('dev-1')
     expect(result.current.publicKeyB64).toBe('pk-1')
-    expect(result.current.memories).toEqual([memory])
-    expect(result.current.annotations).toEqual([annotation])
     expect(onRegistered).toHaveBeenCalledWith('dev-1', 'pk-1')
   })
 
@@ -93,7 +97,11 @@ describe('useOnlineSync', () => {
     const { result } = renderHook(() =>
       useOnlineSync({ enabled: true } as OnlineSharingState),
     )
-    await waitFor(() => expect(result.current.ready).toBe(true))
+    // Ensure bootstrap (including fetchIncomingShares call 1) is fully settled.
+    await waitFor(() => {
+      expect(result.current.ready).toBe(true)
+      expect(result.current.memories).toEqual([])
+    })
 
     fetchIncomingShares.mockResolvedValueOnce({ memories: [memory], annotations: [] })
     await act(async () => { await result.current.refresh() })
@@ -106,7 +114,11 @@ describe('useOnlineSync', () => {
     const { result } = renderHook(() =>
       useOnlineSync({ enabled: true } as OnlineSharingState),
     )
-    await waitFor(() => expect(result.current.ready).toBe(true))
+    // Ensure bootstrap (including fetchIncomingShares call 1) is fully settled.
+    await waitFor(() => {
+      expect(result.current.ready).toBe(true)
+      expect(result.current.memories).toEqual([])
+    })
 
     fetchIncomingShares.mockRejectedValueOnce(new Error('offline'))
     await act(async () => { await result.current.refresh() })

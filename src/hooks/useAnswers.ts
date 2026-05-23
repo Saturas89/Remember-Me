@@ -41,10 +41,16 @@ export function useAnswers() {
   const [state, setState] = useState<AppState>({ profile: null, answers: {}, friends: [], friendAnswers: [], customQuestions: [] })
 
   useEffect(() => {
-    loadStateAsync().then((loaded) => {
-      setState(loaded)
-      setIsLoaded(true)
-    })
+    loadStateAsync()
+      .then((loaded) => {
+        setState(loaded)
+        setIsLoaded(true)
+      })
+      .catch(() => {
+        // IndexedDB unavailable (e.g. Safari private mode, WebKit IDB timeout).
+        // Fall back to defaults so the app renders instead of staying blank.
+        setIsLoaded(true)
+      })
   }, [])
 
   // ── Own answers ──────────────────────────────────────────
