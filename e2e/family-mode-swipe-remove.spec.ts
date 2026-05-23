@@ -24,10 +24,9 @@ async function swipeContactLeft(page: import('@playwright/test').Page) {
   await expect(swipeEl).toBeVisible()
   const box = await swipeEl.boundingBox()
   if (!box) throw new Error('swipe element has no bounding box')
-  // Start near the right edge so the drag distance (startX – box.x) is well
-  // above SWIPE_THRESHOLD (80 px) even if webkit fires pointerleave at the
-  // element boundary instead of honouring pointer capture.
-  const startX = box.x + box.width * 0.8
+  // 100px from the left edge ensures dx > SWIPE_THRESHOLD (80px) even if
+  // webkit fires pointerleave at the boundary before honouring pointer capture.
+  const startX = box.x + 100
   const endX = box.x - 20
   const midY = box.y + box.height / 2
   await page.mouse.move(startX, midY)
