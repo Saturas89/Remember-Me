@@ -29,6 +29,14 @@ export function AudioRecorder({ existingAudioId, existingValue, onSave, onRemove
   const m = t.media
   const rec          = useAudioRecorder()
   const savingRef    = useRef(false)
+
+  const micErrorMessage = (() => {
+    if (rec.error !== 'permission-denied') return rec.error
+    const ua = navigator.userAgent
+    if (/iPhone|iPad|iPod/.test(ua)) return m.micPermissionDeniedIos
+    if (/Android/.test(ua)) return m.micPermissionDeniedAndroid
+    return m.micPermissionDenied
+  })()
   // Default to "save audio alongside transcript" – the senior persona reported
   // anxiety that an opt-in checkbox would silently lose the original recording
   // (#170). Hidden entirely in Simple Mode so no decision is required.
@@ -149,7 +157,7 @@ export function AudioRecorder({ existingAudioId, existingValue, onSave, onRemove
   // ── Idle / requesting ─────────────────────────────────────
   return (
     <div className="audio-recorder audio-recorder--idle">
-      {rec.error && <p className="audio-rec-error">{rec.error}</p>}
+      {micErrorMessage && <p className="audio-rec-error">{micErrorMessage}</p>}
 
       {existingAudioId ? (
         <>

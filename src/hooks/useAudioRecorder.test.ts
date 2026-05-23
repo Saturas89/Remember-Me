@@ -121,7 +121,7 @@ describe('useAudioRecorder', () => {
 
     await act(async () => { await result.current.start() })
     expect(result.current.state).toBe('idle')
-    expect(result.current.error).toMatch(/Mikrofon-Zugriff verweigert/)
+    expect(result.current.error).toBe('permission-denied')
   })
 
   it('cancel() releases resources and returns to idle', async () => {

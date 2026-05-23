@@ -625,6 +625,12 @@ export interface Translations {
     waitingMicrophoneRetry: string
     /** Escalation message shown after ~30 s. */
     waitingMicrophoneTimeout: string
+    /** Shown when the user denies microphone permission — generic fallback. */
+    micPermissionDenied: string
+    /** iOS-specific guidance (Settings → Safari → Microphone). */
+    micPermissionDeniedIos: string
+    /** Android-specific guidance (lock icon → Permissions). */
+    micPermissionDeniedAndroid: string
     stopRecording: string
     cancelRecording: string
     cancelRecordingAria: string
