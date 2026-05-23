@@ -1,9 +1,12 @@
 // E2E tests for the microphone permission-denied error messages in AudioRecorder.
 //
-// Strategy: patch navigator.mediaDevices.getUserMedia via addInitScript so the
+// Strategy: patch Navigator.prototype.mediaDevices via addInitScript so the
 // browser throws NotAllowedError without needing real microphone hardware or
-// actual OS permission prompts. The user-agent string is overridden per test
-// to trigger the platform-specific message branch (iOS / Android / Desktop).
+// actual OS permission prompts. The prototype approach works in all browsers
+// (Firefox and WebKit define mediaDevices as a non-configurable getter on the
+// prototype; patching the instance directly fails silently in those engines).
+// The user-agent string is overridden per test to trigger the platform-specific
+// message branch (iOS / Android / Desktop).
 
 import { test, expect, type BrowserContext } from '@playwright/test'
 
@@ -31,17 +34,18 @@ async function bootstrapApp(ctx: BrowserContext) {
 }
 
 /** Patches getUserMedia to always throw NotAllowedError so the recorder
- *  error path is taken without relying on real OS permissions. */
+ *  error path is taken without relying on real OS permissions.
+ *  Uses Navigator.prototype so the override works in Firefox and WebKit. */
 async function denyMicrophone(ctx: BrowserContext) {
   await ctx.addInitScript(() => {
-    Object.defineProperty(navigator, 'mediaDevices', {
-      value: {
+    Object.defineProperty(Navigator.prototype, 'mediaDevices', {
+      get: () => ({
         getUserMedia: async () => {
           const err = new DOMException('Permission denied', 'NotAllowedError')
           throw err
         },
         enumerateDevices: async () => [],
-      },
+      }),
       configurable: true,
     })
   })
@@ -129,17 +133,18 @@ test.describe('Mikrofon-Permission – plattformspezifische Fehlermeldungen', ()
     const ctx = await browser.newContext()
     await bootstrapApp(ctx)
 
-    // Stub getUserMedia to succeed with an empty stream (no hardware needed)
+    // Stub getUserMedia to succeed with an empty stream (no hardware needed).
+    // Uses Navigator.prototype so the override works in Firefox and WebKit.
     await ctx.addInitScript(() => {
-      Object.defineProperty(navigator, 'mediaDevices', {
-        value: {
+      Object.defineProperty(Navigator.prototype, 'mediaDevices', {
+        get: () => ({
           getUserMedia: async () => {
-            const ctx2 = new AudioContext()
-            const dest = ctx2.createMediaStreamDestination()
+            const audioCtx = new AudioContext()
+            const dest = audioCtx.createMediaStreamDestination()
             return dest.stream
           },
           enumerateDevices: async () => [],
-        },
+        }),
         configurable: true,
       })
     })
