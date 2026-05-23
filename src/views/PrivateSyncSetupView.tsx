@@ -31,6 +31,18 @@ type AuthMode = 'signin' | 'signup'
 // waiting screen as a fresh signUp so the next step is obvious.
 const EMAIL_NOT_CONFIRMED_CODE = 'email_not_confirmed'
 
+const KNOWN_WEBMAIL_DOMAINS = new Set([
+  'gmail.com', 'googlemail.com',
+  'outlook.com', 'hotmail.com', 'hotmail.de', 'live.com', 'live.de', 'msn.com',
+  'yahoo.com', 'yahoo.de',
+  'icloud.com', 'me.com', 'mac.com',
+  'web.de',
+  'gmx.de', 'gmx.net', 'gmx.com', 'gmx.at', 'gmx.ch',
+  't-online.de', 'freenet.de', 'posteo.de', 'mailbox.org',
+  'proton.me', 'protonmail.com', 'protonmail.ch',
+  'tutanota.com', 'tutanota.de', 'tuta.io',
+])
+
 interface Props {
   onComplete: (provider: SyncProviderType, userId: string) => void
 }
@@ -224,6 +236,47 @@ export function PrivateSyncSetupView({ onComplete }: Props) {
     } finally {
       setLoading(false)
     }
+  }
+
+  function openMailInbox() {
+    const domain = email.split('@')[1]?.toLowerCase() ?? ''
+    const webmailUrls: Record<string, string> = {
+      'gmail.com': 'https://mail.google.com',
+      'googlemail.com': 'https://mail.google.com',
+      'outlook.com': 'https://outlook.live.com/mail/0/inbox',
+      'hotmail.com': 'https://outlook.live.com/mail/0/inbox',
+      'hotmail.de': 'https://outlook.live.com/mail/0/inbox',
+      'live.com': 'https://outlook.live.com/mail/0/inbox',
+      'live.de': 'https://outlook.live.com/mail/0/inbox',
+      'msn.com': 'https://outlook.live.com/mail/0/inbox',
+      'yahoo.com': 'https://mail.yahoo.com',
+      'yahoo.de': 'https://mail.yahoo.com',
+      'icloud.com': 'https://www.icloud.com/mail',
+      'me.com': 'https://www.icloud.com/mail',
+      'mac.com': 'https://www.icloud.com/mail',
+      'web.de': 'https://web.de/email',
+      'gmx.de': 'https://www.gmx.de',
+      'gmx.net': 'https://www.gmx.net',
+      'gmx.com': 'https://www.gmx.com',
+      'gmx.at': 'https://www.gmx.at',
+      'gmx.ch': 'https://www.gmx.ch',
+      't-online.de': 'https://webmail.t-online.de',
+      'freenet.de': 'https://webmail.freenet.de',
+      'posteo.de': 'https://posteo.de/webmail',
+      'mailbox.org': 'https://login.mailbox.org',
+      'proton.me': 'https://mail.proton.me',
+      'protonmail.com': 'https://mail.proton.me',
+      'protonmail.ch': 'https://mail.proton.me',
+      'tutanota.com': 'https://mail.tutanota.com',
+      'tutanota.de': 'https://mail.tutanota.com',
+      'tuta.io': 'https://mail.tutanota.com',
+    }
+    const url = webmailUrls[domain]
+    if (url) {
+      window.open(url, '_blank', 'noopener,noreferrer')
+    }
+    // Unknown domain: native mail app has no reliable inbox URL – do nothing,
+    // the button is hidden for unknown providers (see JSX below).
   }
 
   async function handleResendConfirmation() {
@@ -617,19 +670,21 @@ export function PrivateSyncSetupView({ onComplete }: Props) {
           </p>
           <p className="friends-hint">{s.pendingEmailHint}</p>
 
-          <div className="friends-share">
-            {/* Primary path is to open the mail app on the same device (#174):
-                avoids the iPad-Laptop-Switch that drove every Senior-Persona
-                to call their daughter for help. mailto:'' opens the OS mail
-                app on iOS / Android / macOS reliably. */}
-            <a
-              className="share-cta-btn"
-              href="mailto:"
-              data-testid="pending-email-open-mail"
-            >
-              {s.pendingEmailOpenMailButton}
-            </a>
-          </div>
+          {/* Show the webmail shortcut only for known providers – mailto: always
+              opens a compose window, never the inbox, so we hide the button for
+              unknown domains rather than confuse the user. */}
+          {KNOWN_WEBMAIL_DOMAINS.has(email.split('@')[1]?.toLowerCase() ?? '') && (
+            <div className="friends-share">
+              <button
+                className="share-cta-btn"
+                type="button"
+                onClick={openMailInbox}
+                data-testid="pending-email-open-mail"
+              >
+                {s.pendingEmailOpenMailButton}
+              </button>
+            </div>
+          )}
 
           <div className="friends-share">
             <button

@@ -149,6 +149,7 @@ jobs:
 #   • e2e/nightly/chaos-real.spec.ts                   – Abbruch-Pfade, falsche Credentials
 #   • e2e/nightly/gdrive-device-switch.spec.ts         – Google Drive Gerätewechsel
 #   • e2e/nightly/invitation-existing-profile.spec.ts  – Einladungslink Datenschutz
+#   • e2e/nightly/pending-email-open-mail.spec.ts      – Open-Mail-Button: bekannte/unbekannte Domains, Resend
   production-nightly:
     name: Production Nightly – ${{ matrix.entry.name }}
     runs-on: ubuntu-latest

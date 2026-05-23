@@ -448,4 +448,133 @@ test.describe('Private Sync – Storyhold Server (Real-DB)', () => {
     await ctx1.close()
     await ctx2.close()
   })
+
+  // ── New-Device Data Round-trip ─────────────────────────────────────────────
+
+  test('new-device-data-roundtrip: Antworten von Gerät 1 sind nach Sync auf Gerät 2 im Archiv sichtbar', async ({ browser }) => {
+    test.setTimeout(240_000)
+    const { ctx: ctx1, page: page1 } = await spawnRealDevice(browser)
+    const { ctx: ctx2, page: page2 } = await spawnRealDevice(browser)
+
+    // Gerät 1: Setup, Antwort speichern, Sync abwarten
+    await completeOnboarding(page1, 'Elli')
+    const email = testEmail('roundtrip')
+    const recoveryCode = await runSetupWizard(page1, email)
+    const userId = await readSyncUserId(page1)
+    expect(userId).toBeTruthy()
+    createdUsers.push(userId!)
+
+    const testValue = 'Meine Kindheitserinnerung – Roundtrip-Test.'
+    await page1.evaluate((val: string) => {
+      const bridge = (window as unknown as { __rmState?: { get: () => Record<string, unknown> | null; save: (s: unknown) => void } }).__rmState
+      const state = bridge?.get() ?? {}
+      ;(state.answers as Record<string, unknown>)['roundtrip-q1'] = {
+        id: 'roundtrip-q1', questionId: 'q_childhood_1', categoryId: 'childhood',
+        value: val, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+      }
+      bridge?.save(state)
+    }, testValue)
+
+    // Warte bis Gerät 1 den verschlüsselten Blob hochgeladen hat
+    await expect
+      .poll(
+        async () => {
+          const { data } = await admin.from('private_sync_state').select('user_id').eq('user_id', userId!)
+          return (data?.length ?? 0) > 0
+        },
+        { timeout: 90_000, intervals: [3_000] },
+      )
+      .toBe(true)
+
+    // Gerät 2: Anmelden mit bestehendem Konto + Recovery Code
+    await completeOnboarding(page2, 'Elli2')
+    await openSyncTab(page2)
+    await page2.getByRole('button', { name: 'Einrichten' }).click()
+    await page2.getByRole('button', { name: /Storyhold Server/ }).click()
+    await page2.getByRole('button', { name: 'Weiter' }).click()
+    await page2.getByRole('button', { name: /Ja, ich melde mich an/ }).click()
+    await page2.getByLabel('E-Mail').fill(email)
+    await page2.getByLabel('Passwort').fill(TEST_PASSWORD)
+    await page2.getByRole('button', { name: /Anmelden/ }).click()
+    await expect(page2.getByRole('heading', { name: /Sicherheitsschlüssel/ })).toBeVisible({ timeout: 20_000 })
+    await page2.getByLabel(/Sicherheitsschlüssel|Recovery/).fill(recoveryCode)
+    await page2.getByRole('button', { name: /Weiter|Entschlüsseln/ }).click()
+    await expect(page2.getByRole('heading', { name: 'Privater Sync', exact: true })).toBeVisible({ timeout: 30_000 })
+
+    // Zum Archiv navigieren und prüfen, dass die Antwort von Gerät 1 sichtbar ist
+    const nav = page2.getByRole('navigation', { name: 'Hauptnavigation' })
+    await nav.getByRole('button', { name: 'Vermächtnis', exact: true }).click()
+    await expect(page2.getByText(testValue)).toBeVisible({ timeout: 30_000 })
+
+    await ctx1.close()
+    await ctx2.close()
+  })
+
+  // ── Re-Login ───────────────────────────────────────────────────────────────
+
+  test('relogin: Anmelden auf bestehendem Konto zeigt Sync-Hub und erhält Daten', async ({ browser }) => {
+    test.setTimeout(180_000)
+    const { ctx: ctx1, page: page1 } = await spawnRealDevice(browser)
+    const { ctx: ctx2, page: page2 } = await spawnRealDevice(browser)
+
+    // Gerät 1: Konto anlegen + Eintrag speichern
+    await completeOnboarding(page1, 'Fiona')
+    const email = testEmail('relogin')
+    const recoveryCode = await runSetupWizard(page1, email)
+    const userId = await readSyncUserId(page1)
+    expect(userId).toBeTruthy()
+    createdUsers.push(userId!)
+
+    const loginTestValue = 'Relogin-Erinnerung.'
+    await page1.evaluate((val: string) => {
+      const bridge = (window as unknown as { __rmState?: { get: () => Record<string, unknown> | null; save: (s: unknown) => void } }).__rmState
+      const state = bridge?.get() ?? {}
+      ;(state.answers as Record<string, unknown>)['relogin-q1'] = {
+        id: 'relogin-q1', questionId: 'q_family_1', categoryId: 'family',
+        value: val, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+      }
+      bridge?.save(state)
+    }, loginTestValue)
+
+    await expect
+      .poll(
+        async () => {
+          const { data } = await admin.from('private_sync_state').select('user_id').eq('user_id', userId!)
+          return (data?.length ?? 0) > 0
+        },
+        { timeout: 90_000, intervals: [3_000] },
+      )
+      .toBe(true)
+
+    // Gerät 2 simuliert dasselbe Gerät nach App-Neustart / Cache-Leerung:
+    // frische Context, bekannte E-Mail + Passwort + Recovery-Code
+    await completeOnboarding(page2, 'Fiona')
+    await openSyncTab(page2)
+    await page2.getByRole('button', { name: 'Einrichten' }).click()
+    await page2.getByRole('button', { name: /Storyhold Server/ }).click()
+    await page2.getByRole('button', { name: 'Weiter' }).click()
+    await page2.getByRole('button', { name: /Ja, ich melde mich an/ }).click()
+
+    await expect(page2.getByRole('heading', { name: /Anmelden/, exact: false })).toBeVisible()
+    await page2.getByLabel('E-Mail').fill(email)
+    await page2.getByLabel('Passwort').fill(TEST_PASSWORD)
+    await page2.getByRole('button', { name: /Anmelden/ }).click()
+
+    // Recovery-Code eingeben
+    await expect(page2.getByRole('heading', { name: /Sicherheitsschlüssel/ })).toBeVisible({ timeout: 20_000 })
+    await page2.getByLabel(/Sicherheitsschlüssel|Recovery/).fill(recoveryCode)
+    await page2.getByRole('button', { name: /Weiter|Entschlüsseln/ }).click()
+
+    // Sync-Hub muss sichtbar sein und Provider korrekt anzeigen
+    await expect(page2.getByRole('heading', { name: 'Privater Sync', exact: true })).toBeVisible({ timeout: 30_000 })
+    await expect(page2.getByText(/Storyhold Server/i)).toBeVisible()
+
+    // Archiv prüfen: Eintrag muss nach Re-Login entschlüsselt verfügbar sein
+    const nav2 = page2.getByRole('navigation', { name: 'Hauptnavigation' })
+    await nav2.getByRole('button', { name: 'Vermächtnis', exact: true }).click()
+    await expect(page2.getByText(loginTestValue)).toBeVisible({ timeout: 30_000 })
+
+    await ctx1.close()
+    await ctx2.close()
+  })
 })
