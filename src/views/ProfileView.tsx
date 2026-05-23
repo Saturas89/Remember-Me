@@ -258,6 +258,72 @@ export function ProfileView({
         </div>
       </section>
 
+      {/* ── Meine Daten ────────────────────────────────── */}
+
+      {/* Social Media Import temporarily disabled (issue #265) */}
+
+      <section className="profile-card">
+        <h2 className="profile-card__heading">{t.profile.historyHeading}</h2>
+        <BackupStatusRow last={lastBackup} />
+        <ArchiveExportCard
+          data={exportData}
+          safeName={safeName}
+          onBackupRecorded={() => setLastBackup(new Date())}
+        />
+        {!isSimple && (
+          <>
+            <p className="backup-desc">{t.profile.formatsDesc}</p>
+            <div className="backup-export-row">
+              <button className="btn btn--ghost backup-btn" onClick={onExportMarkdown}>
+                <span className="backup-btn__icon">📄</span>
+                <span className="backup-btn__label">Markdown</span>
+                <span className="backup-btn__hint">{t.profile.markdownHint}</span>
+              </button>
+              <button className="btn btn--ghost backup-btn" onClick={onExportJson}>
+                <span className="backup-btn__icon">📊</span>
+                <span className="backup-btn__label">JSON</span>
+                <span className="backup-btn__hint">{t.profile.jsonHint}</span>
+              </button>
+            </div>
+            <div className="backup-restore">
+              <p className="backup-restore__label">{t.profile.restoreLabel}</p>
+              <p className="backup-restore__hint">{t.profile.restoreHint}</p>
+              <button
+                type="button"
+                className="btn btn--outline backup-restore-btn"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={!!importProgress}
+              >
+                {t.profile.restoreButton}
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".zip,.json"
+                style={{ display: 'none' }}
+                onChange={handleImportFile}
+              />
+              {importProgress && (
+                <div className="import-progress">
+                  <p className="import-progress__step">{importProgress.step}</p>
+                  <div className="import-progress__bar">
+                    <div
+                      className="import-progress__fill"
+                      style={{ width: `${importProgress.pct}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+              {importStatus && (
+                <p className={`import-msg import-msg--${importStatus.ok ? 'success' : 'error'}`}>
+                  {importStatus.message}
+                </p>
+              )}
+            </div>
+          </>
+        )}
+      </section>
+
       {/* ── Darstellung ────────────────────────────────── */}
 
       <section className="profile-card">
@@ -340,72 +406,6 @@ export function ProfileView({
           </div>
         </section>
       )}
-
-      {/* ── Meine Daten ────────────────────────────────── */}
-
-      {/* Social Media Import temporarily disabled (issue #265) */}
-
-      <section className="profile-card">
-        <h2 className="profile-card__heading">{t.profile.historyHeading}</h2>
-        <BackupStatusRow last={lastBackup} />
-        <ArchiveExportCard
-          data={exportData}
-          safeName={safeName}
-          onBackupRecorded={() => setLastBackup(new Date())}
-        />
-        {!isSimple && (
-          <>
-            <p className="backup-desc">{t.profile.formatsDesc}</p>
-            <div className="backup-export-row">
-              <button className="btn btn--ghost backup-btn" onClick={onExportMarkdown}>
-                <span className="backup-btn__icon">📄</span>
-                <span className="backup-btn__label">Markdown</span>
-                <span className="backup-btn__hint">{t.profile.markdownHint}</span>
-              </button>
-              <button className="btn btn--ghost backup-btn" onClick={onExportJson}>
-                <span className="backup-btn__icon">📊</span>
-                <span className="backup-btn__label">JSON</span>
-                <span className="backup-btn__hint">{t.profile.jsonHint}</span>
-              </button>
-            </div>
-            <div className="backup-restore">
-              <p className="backup-restore__label">{t.profile.restoreLabel}</p>
-              <p className="backup-restore__hint">{t.profile.restoreHint}</p>
-              <button
-                type="button"
-                className="btn btn--outline backup-restore-btn"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={!!importProgress}
-              >
-                {t.profile.restoreButton}
-              </button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".zip,.json"
-                style={{ display: 'none' }}
-                onChange={handleImportFile}
-              />
-              {importProgress && (
-                <div className="import-progress">
-                  <p className="import-progress__step">{importProgress.step}</p>
-                  <div className="import-progress__bar">
-                    <div
-                      className="import-progress__fill"
-                      style={{ width: `${importProgress.pct}%` }}
-                    />
-                  </div>
-                </div>
-              )}
-              {importStatus && (
-                <p className={`import-msg import-msg--${importStatus.ok ? 'success' : 'error'}`}>
-                  {importStatus.message}
-                </p>
-              )}
-            </div>
-          </>
-        )}
-      </section>
 
       {/* ── Hilfe & Mehr ───────────────────────────────── */}
 
