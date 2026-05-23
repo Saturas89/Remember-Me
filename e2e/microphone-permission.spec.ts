@@ -149,7 +149,7 @@ test.describe('Mikrofon-Permission – plattformspezifische Fehlermeldungen', ()
 
     // No error element should appear — recording state starts
     await expect(page.locator('.audio-rec-error')).not.toBeVisible()
-    await expect(page.locator('.audio-recorder--recording')).toBeVisible({ timeout: 5_000 })
+    await expect(page.locator('.media-toolbar__btn--recording')).toBeVisible({ timeout: 5_000 })
 
     await ctx.close()
   })
