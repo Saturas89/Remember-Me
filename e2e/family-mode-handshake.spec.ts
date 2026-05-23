@@ -38,7 +38,7 @@ test.describe('Familienmodus – Invite-Code Handshake', () => {
     await page.goto(invitePath(code))
 
     // PersonalPackReceiveView shows the sender's name in its header.
-    await expect(page.getByText(/Alice/i)).toBeVisible({ timeout: 15_000 })
+    await expect(page.getByRole('heading', { name: /Alice/i })).toBeVisible({ timeout: 15_000 })
     // URL is cleaned to / after the invite is resolved.
     await expect.poll(() => page.url()).not.toContain('/join/')
   })
@@ -77,7 +77,7 @@ test.describe('Familienmodus – Invite-Code Handshake', () => {
     await page.goto(invitePath(code))
 
     // Pack still appears — opt-in is not required to view the quiz.
-    await expect(page.getByText(/Alice/i)).toBeVisible({ timeout: 15_000 })
+    await expect(page.getByRole('heading', { name: /Alice/i })).toBeVisible({ timeout: 15_000 })
   })
 
   test('Bidirektionale Verknüpfung: Bob beantwortet Pack → Alice in Bobs Freundesliste', async ({
@@ -94,7 +94,7 @@ test.describe('Familienmodus – Invite-Code Handshake', () => {
 
     // PersonalPackReceiveView: enter name and start the quiz.
     // The welcome screen shows "{senderName} hat dir {n} Fragen geschickt".
-    await expect(bob.getByText(/Alice/i)).toBeVisible({ timeout: 15_000 })
+    await expect(bob.getByRole('heading', { name: /Alice/i })).toBeVisible({ timeout: 15_000 })
     const nameInput = bob.getByTestId('sandra-receive-name')
     if (await nameInput.isVisible().catch(() => false)) {
       // New user: fill name and start.

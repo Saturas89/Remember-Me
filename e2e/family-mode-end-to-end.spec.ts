@@ -90,10 +90,13 @@ test.describe('Familienmodus – Komplette Einladungs- und Teilen-Kette', () => 
     await waitForShares(state, 1, 20_000)
 
     // Wire-Encryption: der Klartext darf nicht unverschlüsselt im Share landen.
-    expect(state.shares).toHaveLength(1)
-    expect(typeof state.shares[0].ciphertext).toBe('string')
-    expect((state.shares[0].ciphertext as string).startsWith('\\x')).toBe(true)
-    expect(JSON.stringify(state.shares[0].ciphertext)).not.toContain('Cuxhaven')
+    // Only Alice's share of childhood-01 is checked; Bob may have auto-shared
+    // his own q-seed-1 answer back to Alice (REQ-022 fires for both devices).
+    const aliceShares = state.shares.filter(s => s.owner_id === aliceId.deviceId)
+    expect(aliceShares).toHaveLength(1)
+    expect(typeof aliceShares[0].ciphertext).toBe('string')
+    expect((aliceShares[0].ciphertext as string).startsWith('\\x')).toBe(true)
+    expect(JSON.stringify(aliceShares[0].ciphertext)).not.toContain('Cuxhaven')
 
     // 5) Bob entdeckt die Erinnerung im Feed und sieht den entschlüsselten Klartext.
     await reopenFamilyHub(bob)

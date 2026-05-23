@@ -201,6 +201,33 @@ export function SandraFlowView({
   const fallbackAnrede = locale === 'en' ? 'Mom' : 'Mama'
   const anredeForUi = draft.anchor.anrede || fallbackAnrede
 
+  // onShare must be computed here (before any early returns) to comply with
+  // React's Rules of Hooks — useMemo must be called unconditionally.
+  // It is only non-null when the device identity is ready; until then
+  // SandraShareStep shows a loading/activate-sharing state instead.
+  // useMemo prevents a new function reference on every render, which would
+  // retrigger the URL pre-generation effect in SandraShareStep.
+  const handshakeReady = Boolean(myDeviceId && myPublicKey)
+  const onShare = useMemo(() => {
+    if (!handshakeReady) return null
+    return async () => {
+      const pack = buildPersonalPack(draft, profileName)
+      const handshake: ContactHandshake = {
+        $type: 'remember-me-contact',
+        version: 1,
+        deviceId: myDeviceId!,
+        publicKey: myPublicKey!,
+        displayName: profileName,
+      }
+      const { createInviteAndGetUrl } = await import('../utils/inviteService')
+      const { storePendingInvite } = await import('../utils/inviteLogStore')
+      const url = await createInviteAndGetUrl(pack, handshake)
+      const code = url.split('/join/').pop() ?? ''
+      if (code) await storePendingInvite(code).catch(() => {})
+      return url
+    }
+  }, [handshakeReady, draft, profileName, myDeviceId, myPublicKey])
+
   // ── Render the right step ────────────────────────────────────────
   if (step === 'anchor') {
     return (
@@ -267,39 +294,6 @@ export function SandraFlowView({
       />
     )
   }
-
-  // step === 'share'
-  const handshakeReady = Boolean(myDeviceId && myPublicKey)
-
-  function buildHandshake(): ContactHandshake | null {
-    if (!myDeviceId || !myPublicKey) return null
-    return {
-      $type: 'remember-me-contact',
-      version: 1,
-      deviceId: myDeviceId,
-      publicKey: myPublicKey,
-      displayName: profileName,
-    }
-  }
-
-  // onShare is only non-null when the device identity is ready. Until then
-  // SandraShareStep shows a loading/activate-sharing state instead.
-  // useMemo prevents a new function reference on every render, which would
-  // retrigger the URL pre-generation effect in SandraShareStep.
-  const onShare = useMemo(() => {
-    if (!handshakeReady) return null
-    return async () => {
-      const pack = buildPersonalPack(draft, profileName)
-      const handshake = buildHandshake()!
-      const { createInviteAndGetUrl } = await import('../utils/inviteService')
-      const { storePendingInvite } = await import('../utils/inviteLogStore')
-      const url = await createInviteAndGetUrl(pack, handshake)
-      const code = url.split('/join/').pop() ?? ''
-      if (code) await storePendingInvite(code).catch(() => {})
-      return url
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [handshakeReady, draft, profileName])
 
   return (
     <SandraShareStep
