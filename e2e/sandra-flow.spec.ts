@@ -160,6 +160,7 @@ test.describe('Sandra-Flow – DE Happy Path', () => {
     // ── Screen 6: share CTA → Web-Share-API stub captures the call ─────────
     const shareCta = page.getByTestId('sandra-share-cta')
     await expect(shareCta).toBeVisible()
+    await expect(shareCta).toBeEnabled({ timeout: 15_000 })
     await shareCta.click()
 
     // Web-Share-API was invoked. Assert the captured payload has a URL.
@@ -240,6 +241,7 @@ test.describe('Sandra-Flow – Receiver Path (Ingrid)', () => {
     await sender.locator('[data-testid^="sandra-suggestion-use-"]').first().click()
     await sender.getByTestId('sandra-list-send').click()
     // Sandra leaves the "Großschrift-Modus voreinstellen" checkbox checked (default).
+    await expect(sender.getByTestId('sandra-share-cta')).toBeEnabled({ timeout: 15_000 })
     await sender.getByTestId('sandra-share-cta').click()
     await expect.poll(async () => (await getSharedPayloads(sender)).length).toBeGreaterThanOrEqual(1)
     const payloads = await getSharedPayloads(sender)
@@ -300,6 +302,7 @@ test.describe('Sandra-Flow – Receiver Path (Ingrid)', () => {
     await sPage.locator('[data-testid^="sandra-suggestion-"]').first().click()
     await sPage.locator('[data-testid^="sandra-suggestion-use-"]').first().click()
     await sPage.getByTestId('sandra-list-send').click()
+    await expect(sPage.getByTestId('sandra-share-cta')).toBeEnabled({ timeout: 15_000 })
     await sPage.getByTestId('sandra-share-cta').click()
     await expect.poll(async () => (await getSharedPayloads(sPage)).length).toBeGreaterThanOrEqual(1)
     const shareUrl = (await getSharedPayloads(sPage))[0].url ?? ''
@@ -332,6 +335,7 @@ test.describe('Sandra-Flow – Receiver Path (Ingrid)', () => {
     await sPage.locator('[data-testid^="sandra-suggestion-"]').first().click()
     await sPage.locator('[data-testid^="sandra-suggestion-use-"]').first().click()
     await sPage.getByTestId('sandra-list-send').click()
+    await expect(sPage.getByTestId('sandra-share-cta')).toBeEnabled({ timeout: 15_000 })
     await sPage.getByTestId('sandra-share-cta').click()
     await expect.poll(async () => (await getSharedPayloads(sPage)).length).toBeGreaterThanOrEqual(1)
     const shareUrl = (await getSharedPayloads(sPage))[0].url ?? ''
@@ -473,6 +477,7 @@ test.describe('Sandra-Flow – Web-Share-API stub', () => {
     await page.locator('[data-testid^="sandra-suggestion-"]').first().click()
     await page.locator('[data-testid^="sandra-suggestion-use-"]').first().click()
     await page.getByTestId('sandra-list-send').click()
+    await expect(page.getByTestId('sandra-share-cta')).toBeEnabled({ timeout: 15_000 })
     await page.getByTestId('sandra-share-cta').click()
 
     await expect.poll(async () => (await getSharedPayloads(page)).length).toBeGreaterThanOrEqual(1)
@@ -515,6 +520,7 @@ test.describe('Sandra-Flow – Two-person integration', () => {
     await sender.getByTestId('sandra-list-send').click()
     // preferSimpleMode checkbox is checked by default → simple mode activates
     // silently on Ingrid's side without a prompt (no click needed).
+    await expect(sender.getByTestId('sandra-share-cta')).toBeEnabled({ timeout: 15_000 })
     await sender.getByTestId('sandra-share-cta').click()
 
     await expect.poll(async () => (await getSharedPayloads(sender)).length).toBeGreaterThanOrEqual(1)

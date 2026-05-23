@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useMemo } from 'react'
 import { useTranslation } from '../locales'
 import { useSandraFlowStrings } from '../i18n/sandraFlow'
 import { findTrigger } from '../data/loadPersonalQuestions'
@@ -284,18 +284,22 @@ export function SandraFlowView({
 
   // onShare is only non-null when the device identity is ready. Until then
   // SandraShareStep shows a loading/activate-sharing state instead.
-  const onShare = handshakeReady
-    ? async () => {
-        const pack = buildPersonalPack(draft, profileName)
-        const handshake = buildHandshake()!
-        const { createInviteAndGetUrl } = await import('../utils/inviteService')
-        const { storePendingInvite } = await import('../utils/inviteLogStore')
-        const url = await createInviteAndGetUrl(pack, handshake)
-        const code = url.split('/join/').pop() ?? ''
-        if (code) await storePendingInvite(code).catch(() => {})
-        return url
-      }
-    : null
+  // useMemo prevents a new function reference on every render, which would
+  // retrigger the URL pre-generation effect in SandraShareStep.
+  const onShare = useMemo(() => {
+    if (!handshakeReady) return null
+    return async () => {
+      const pack = buildPersonalPack(draft, profileName)
+      const handshake = buildHandshake()!
+      const { createInviteAndGetUrl } = await import('../utils/inviteService')
+      const { storePendingInvite } = await import('../utils/inviteLogStore')
+      const url = await createInviteAndGetUrl(pack, handshake)
+      const code = url.split('/join/').pop() ?? ''
+      if (code) await storePendingInvite(code).catch(() => {})
+      return url
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [handshakeReady, draft, profileName])
 
   return (
     <SandraShareStep
