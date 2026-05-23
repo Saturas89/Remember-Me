@@ -532,7 +532,7 @@ export const UI_DE = {
     waitingMicrophoneTimeout: 'Es scheint ein Problem zu geben. Bitte prüfe in den Einstellungen, ob das Mikrofon für diese Seite erlaubt ist.',
     micPermissionDenied: 'Mikrofon-Zugriff verweigert. Klicke auf das Schloss-Symbol in der Adressleiste und erlaube den Mikrofon-Zugriff.',
     micPermissionDeniedIos: 'Mikrofon-Zugriff verweigert. Öffne Einstellungen → Safari → Websites → Mikrofon und wähle „Erlauben".',
-    micPermissionDeniedAndroid: 'Mikrofon-Zugriff verweigert. Tippe auf das Schloss-Symbol in der Adressleiste → Berechtigungen → Mikrofon → Erlauben.',
+    micPermissionDeniedAndroid: 'Mikrofon-Zugriff verweigert (Android). Tippe auf das Schloss-Symbol in der Adressleiste → Berechtigungen → Mikrofon → Erlauben.',
     stopRecording: '⏹ Stopp',
     cancelRecording: '✕ Abbrechen',
     cancelRecordingAria: 'Abbrechen',

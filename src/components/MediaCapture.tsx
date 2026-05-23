@@ -47,9 +47,18 @@ export function MediaCapture({
   const { t } = useTranslation()
   const { isSimple } = useAppMode()
   const m = t.media
+
   const photoTrigger = useRef<HTMLInputElement>(null)
   const videoTrigger = useRef<HTMLInputElement>(null)
   const rec = useAudioRecorder()
+
+  const micErrorMessage = (() => {
+    if (rec.error !== 'permission-denied') return rec.error
+    const ua = navigator.userAgent
+    if (/iPhone|iPad|iPod/.test(ua)) return m.micPermissionDeniedIos
+    if (/Android/.test(ua)) return m.micPermissionDeniedAndroid
+    return m.micPermissionDenied
+  })()
   const savingRef = useRef(false)
   // Default the audio-save toggle to true — the Ingrid persona reported losing
   // confidence ("habe Angst, dass Heinrichs Stimme nicht ankommt") when the
@@ -134,8 +143,8 @@ export function MediaCapture({
 
       {/* ── Audio panel ─────────────────────────────────────── */}
 
-      {rec.error && (
-        <p className="audio-rec-error">{rec.error}</p>
+      {micErrorMessage && (
+        <p className="audio-rec-error">{micErrorMessage}</p>
       )}
 
       {rec.state === 'requesting' && (

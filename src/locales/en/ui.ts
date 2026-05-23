@@ -526,7 +526,7 @@ export const UI_EN = {
     waitingMicrophoneTimeout: "It looks like there's a problem. Please check in your settings whether the microphone is allowed for this page.",
     micPermissionDenied: 'Microphone access denied. Click the lock icon in the address bar and allow microphone access.',
     micPermissionDeniedIos: 'Microphone access denied. Open Settings → Safari → Websites → Microphone and choose Allow.',
-    micPermissionDeniedAndroid: 'Microphone access denied. Tap the lock icon in the address bar → Permissions → Microphone → Allow.',
+    micPermissionDeniedAndroid: 'Microphone access denied (Android). Tap the lock icon in the address bar → Permissions → Microphone → Allow.',
     stopRecording: '⏹ Stop',
     cancelRecording: '✕ Cancel',
     cancelRecordingAria: 'Cancel',
