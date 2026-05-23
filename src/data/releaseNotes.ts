@@ -12,7 +12,7 @@ export const RELEASE_NOTES: ReleaseNote[] = [
       '✨ Teilen ist jetzt einfacher: ein Schalter pro Kontakt – entweder ihr seid verbunden oder nicht.',
       '📤 Neue Antworten gehen automatisch raus – kein manueller Klick mehr nötig.',
       '⏸️ Mit einem Tipp pausieren – deine bisherigen Erinnerungen verschwinden bei der Person.',
-      '🤝 Neue Verbindungen entstehen jetzt über den Sandra-Flow („Jemanden einladen").',
+      '🤝 Neue Verbindungen entstehen jetzt über „Jemanden einladen".',
     ],
   },
   {
@@ -36,8 +36,8 @@ export const RELEASE_NOTES: ReleaseNote[] = [
     version: '2.10.0',
     date: '2026-05-15',
     highlights: [
-      '📊 Wir tracken jetzt, wie Features genutzt werden – anonym, ohne Cookies, auf EU-Servern.',
-      '🔒 Kein Fingerprinting, kein Autocapture – nur was wirklich zählt.',
+      '📊 Wir schauen uns anonym an, welche Funktionen beliebt sind – ohne Cookies, auf EU-Servern.',
+      '🔒 Kein Nutzungsprofil, keine automatische Aufzeichnung – nur was wirklich zählt.',
     ],
   },
   {
