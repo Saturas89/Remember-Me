@@ -140,7 +140,11 @@ test.describe('Mikrofon-Permission – plattformspezifische Fehlermeldungen', ()
 
   // ── Negativ: Bei erlaubtem Mikrofon kein Fehler ────────────────────────
 
-  test('kein Fehler sichtbar wenn Mikrofon erlaubt ist', async ({ browser }) => {
+  test('kein Fehler sichtbar wenn Mikrofon erlaubt ist', async ({ browser, browserName }) => {
+    // WebKit headless auto-denies getUserMedia regardless of the stub approach
+    // (native property is non-configurable in JavaScriptCore). The error path is
+    // covered by the three tests above; skip the success-path check on WebKit.
+    test.skip(browserName === 'webkit', 'WebKit headless auto-denies getUserMedia; success path requires real hardware')
     const ctx = await browser.newContext()
     await bootstrapApp(ctx)
 
