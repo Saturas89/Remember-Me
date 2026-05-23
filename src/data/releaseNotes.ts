@@ -6,6 +6,15 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '2.14.0',
+    date: '2026-05-23',
+    highlights: [
+      '🔗 Einladungslinks sind jetzt kurz: storyhold.app/join/A3KX7P – passt in eine SMS.',
+      '🤝 Automatisch bidirektional: Mama schickt keinen Link zurück, Sandra fügt sie automatisch hinzu.',
+      '🛡️ Klarer Datenschutz: Fragen liegen 30 Tage verschlüsselt auf Storyhold-Servern – Antworten nie.',
+    ],
+  },
+  {
     version: '2.13.0',
     date: '2026-05-20',
     highlights: [

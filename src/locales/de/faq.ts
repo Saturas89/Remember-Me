@@ -95,7 +95,7 @@ export const FAQ_DE = [
       },
       {
         q: 'Was ist der Familienmodus?',
-        a: 'Der Familienmodus schafft eine dauerhafte, gegenseitige Verbindung zwischen zwei Personen. Ihr tauscht einmalig einen Verbindungslink aus – danach könnt ihr euch jederzeit ausgewählte Erinnerungen zuschicken, die nur ihr beide lesen könnt. Alles ist Ende-zu-Ende-verschlüsselt und bleibt auf euren Geräten.',
+        a: 'Der Familienmodus schafft eine dauerhafte, gegenseitige Verbindung zwischen zwei Personen. Sandra schickt Mama einen kurzen Einladungslink (z. B. storyhold.app/join/A3KX7P). Damit der Link funktioniert, werden die Fragen sowie Name und öffentlicher Schlüssel 30 Tage verschlüsselt auf Storyhold-Servern gespeichert – danach automatisch gelöscht. Storyhold hat keinen Zugriff auf diese Daten. Eure Erinnerungen und Antworten bleiben immer nur auf euren Geräten.',
       },
       {
         q: 'Was ist der Unterschied zwischen Einmaliger Einladung und Familienmodus?',

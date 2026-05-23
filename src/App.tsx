@@ -6,16 +6,12 @@ import {
   isSecureInviteHash,
   isAnswerHash,
   isMemoryShareHash,
-  isContactHash,
-  isQuestionPackHash,
-  isSandraInviteHash,
   parseSecureInviteFromHash,
   parseAnswerFromHash,
   parseMemoryShareFromHash,
-  parseContactFromHash,
-  parseQuestionPackFromHash,
   isPersonalQuestionPack,
 } from './utils/secureLink'
+import { usePendingInviteResponses } from './hooks/usePendingInviteResponses'
 import type { QuestionPack } from './types'
 import type { PersonalQuestionPack } from './types/sandraFlow'
 import { HomeView } from './views/HomeView'
@@ -86,18 +82,14 @@ type View =
 
 type MainTab = 'home' | 'friends' | 'archive' | 'sync' | 'profile'
 
-// Detect URL type synchronously to show a loading state before async parse.
-// A Sandra invite carries BOTH qp (pack) and contact (handshake) — it must be
-// detected before the standalone-contact check so the pack is parsed first.
-const isSandraInvite = isSandraInviteHash()
+// /join/CODE: short invite code – payload fetched async from Supabase.
+const joinMatch = window.location.pathname.match(/^\/join\/([A-Z0-9]{6})$/i)
+const isJoinPath = Boolean(joinMatch)
+
 const needsAsyncParse =
-  isSecureInviteHash() || isAnswerHash() || isMemoryShareHash() || isQuestionPackHash()
-// Standalone #contact/ is parsed synchronously. For Sandra invites the
-// contact is stored separately so the quiz runs before the handshake screen.
-const initialContactHandshake = !isSandraInvite && isContactHash() ? parseContactFromHash() : null
-// Embedded contact from a Sandra invite — also parsed synchronously.
-const initialEmbeddedContact: ContactHandshake | null = isSandraInvite ? parseContactFromHash() : null
-const initialSandraHash = !needsAsyncParse && !initialContactHandshake && !isSandraInvite && window.location.hash.startsWith('#/ask')
+  isJoinPath || isSecureInviteHash() || isAnswerHash() || isMemoryShareHash()
+
+const initialSandraHash = !needsAsyncParse && window.location.hash.startsWith('#/ask')
 
 // ── Pathname ↔ View mapping (for Vercel Analytics page tracking) ──────────
 function pathToView(pathname: string): View {
@@ -108,6 +100,7 @@ function pathToView(pathname: string): View {
     case 'sync':    return { name: 'sync' }
     case 'debug':   return { name: 'debug' }
     case 'landing': return { name: 'landing' }
+    case 'join':    return { name: 'home' }
     default:        return { name: 'home' }
   }
 }
@@ -177,17 +170,15 @@ export default function App() {
     },
   )
 
-  // Pending contact handshake (from URL hash). Parsed synchronously at module
-  // load, then held here until the user explicitly accepts in the UI.
-  const [pendingContact, setPendingContact] = useState<ContactHandshake | null>(
-    initialContactHandshake,
-  )
+  // ContactHandshakeView is shown after the quiz when the invite had a contact.
+  const [pendingContact, setPendingContact] = useState<ContactHandshake | null>(null)
 
-  // Contact handshake embedded inside a Sandra invite (combined ?qp+?contact
-  // link). Stored separately so the quiz runs before the handshake screen.
-  const [embeddedContact, setEmbeddedContact] = useState<ContactHandshake | null>(
-    initialEmbeddedContact,
-  )
+  // Contact embedded in the resolved /join/ invite – shown after the quiz.
+  const [embeddedContact, setEmbeddedContact] = useState<ContactHandshake | null>(null)
+
+  // Short code from the /join/ URL – threaded to ContactHandshakeView so
+  // Ingrid's contact is auto-submitted to Supabase after acceptance.
+  const [activeInviteCode, setActiveInviteCode] = useState<string | null>(null)
 
   // Online-sync is a no-op unless the user has opted in. The hook internally
   // dynamic-imports the Supabase client module only when enabled === true.
@@ -226,10 +217,31 @@ export default function App() {
     resolveQuestionText: resolveAnswerQuestionText,
   })
 
-  // Resolve secure invite / answer-import / memory-share / pack URL asynchronously on first mount
+  // Poll pending invite codes for Ingrid's response so Sandra auto-adds her.
+  usePendingInviteResponses(
+    Boolean(onlineSharing?.enabled),
+    (name, _inviteCode, online) => addFriend(name, undefined, online),
+  )
+
+  // Resolve secure invite / answer-import / memory-share / join-code URL asynchronously on first mount
   useEffect(() => {
     if (!needsAsyncParse) return
-    if (isSecureInviteHash()) {
+    if (isJoinPath && joinMatch) {
+      const code = joinMatch[1].toUpperCase()
+      import('./utils/inviteService')
+        .then(m => m.resolveInviteCode(code))
+        .then(({ pack, contact }) => {
+          setIncomingPack(pack)
+          setEmbeddedContact(contact)
+          setActiveInviteCode(code)
+          history.replaceState({}, '', '/')
+        })
+        .catch(() => {
+          // Unknown / expired code – clear the path and stay on home.
+          history.replaceState({}, '', '/')
+        })
+        .finally(() => setUrlParsing(false))
+    } else if (isSecureInviteHash()) {
       parseSecureInviteFromHash()
         .then(invite => { setAsyncInvite(invite) })
         .finally(() => setUrlParsing(false))
@@ -240,10 +252,6 @@ export default function App() {
     } else if (isMemoryShareHash()) {
       parseMemoryShareFromHash()
         .then(payload => { if (payload) setSharedMemory(payload) })
-        .finally(() => setUrlParsing(false))
-    } else if (isQuestionPackHash()) {
-      parseQuestionPackFromHash()
-        .then(pack => { if (pack) setIncomingPack(pack) })
         .finally(() => setUrlParsing(false))
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
@@ -465,9 +473,9 @@ export default function App() {
             importPersonalPackAnswers(incomingPack.questions, answers)
             setIncomingPack(null)
             if (embedded) {
-              // Sandra invite: after the quiz, hand off to ContactHandshakeView
-              // so the bidirectional connection is established (the receiver
-              // sends their own link back to the sender).
+              // Sandra invite: after the quiz, hand off to ContactHandshakeView.
+              // The invite code is kept in state so Ingrid's contact is
+              // auto-submitted to Supabase after acceptance.
               setEmbeddedContact(null)
               setPendingContact(embedded)
               history.replaceState({}, '', '/friends')
@@ -506,8 +514,10 @@ export default function App() {
         }}
         onDismiss={() => {
           setPendingContact(null)
+          setActiveInviteCode(null)
           history.replaceState({}, '', '/friends')
         }}
+        inviteCode={activeInviteCode ?? undefined}
       />
     )
   }

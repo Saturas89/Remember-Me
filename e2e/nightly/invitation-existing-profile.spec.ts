@@ -4,13 +4,13 @@
 // Two scenarios:
 //
 //   1. Benutzer ohne aktiven Hub  – Bob has answers + profile but has NOT yet
-//      opened the family hub.  He receives Alice's invite link, activates
+//      opened the family hub. He receives Alice's invite link, activates
 //      online sharing from the "Kontakt verknüpfen" screen and the contact is
 //      accepted automatically.  All pre-existing data must survive.
 //
 //   2. Benutzer mit aktivem Hub   – Bob already has the hub running and one
-//      injected friend (Charlie).  Bob visits Alice's invite link, the
-//      contact is auto-accepted (no extra confirmation needed).
+//      injected friend (Charlie).  Bob visits Alice's invite link, completes
+//      the pack quiz, and the contact is auto-accepted.
 //      Charlie must still be there; Bob's answers must be intact.
 //
 // Both tests run against the real Supabase backend.
@@ -19,14 +19,13 @@
 import { test, expect } from '@playwright/test'
 import {
   completeOnboarding,
-  contactPath,
   injectOnlineFriend,
   openFamilyHub,
   readDeviceIdentity,
   readOnlineFriends,
   seedAnswer,
 } from '../helpers/family-mode-helpers'
-import { cleanupUsers, spawnRealDevice, supabaseAdmin } from './helpers'
+import { cleanupUsers, createTestInviteUrl, spawnRealDevice, supabaseAdmin } from './helpers'
 
 test.describe('Einladungslink – bestehende Daten bleiben erhalten', () => {
   const createdUsers: string[] = []
@@ -41,25 +40,29 @@ test.describe('Einladungslink – bestehende Daten bleiben erhalten', () => {
   test('invitation-without-hub: Erinnerungen und Einstellungen bleiben nach Einladungsannahme erhalten', async ({
     browser,
   }) => {
-    test.setTimeout(120_000)
+    test.setTimeout(180_000)
 
     const { ctx: aliceCtx, page: alice } = await spawnRealDevice(browser)
     const { ctx: bobCtx,   page: bob   } = await spawnRealDevice(browser)
 
-    // ── Alice: Hub einrichten und Contact-Link bereitstellen ─────────────────
+    // ── Alice: Hub einrichten und Invite-Link erstellen ──────────────────────
     await completeOnboarding(alice, 'Alice')
     await openFamilyHub(alice)
     const aliceId = await readDeviceIdentity(alice)
     createdUsers.push(aliceId.deviceId)
 
+    const inviteUrl = await createTestInviteUrl(admin, {
+      displayName: 'Alice',
+      deviceId: aliceId.deviceId,
+      publicKey: aliceId.publicKey,
+    })
+
     // ── Bob: Profil aufbauen ohne den Hub zu aktivieren ──────────────────────
     await completeOnboarding(bob, 'Bob')
 
-    // Zwei Erinnerungen anlegen (Kindheit und Schule)
     await seedAnswer(bob, 'invite-q-childhood', 'childhood', 'Ich bin in Hamburg aufgewachsen.')
     await seedAnswer(bob, 'invite-q-school',    'school',    'Meine Lieblingsschulfach war Musik.')
 
-    // AppMode auf 'simplified' setzen (vereinfachter Bedienmodus)
     await bob.evaluate(() => {
       type Bridge = { get: () => Record<string, unknown> | null; save: (s: unknown) => void }
       const bridge = (window as unknown as { __rmState?: Bridge }).__rmState
@@ -69,37 +72,47 @@ test.describe('Einladungslink – bestehende Daten bleiben erhalten', () => {
     })
 
     // ── Bob öffnet Alices Einladungslink ─────────────────────────────────────
-    await bob.goto(contactPath('Alice', aliceId.deviceId, aliceId.publicKey))
-    await expect(bob.getByRole('heading', { name: 'Kontakt verknüpfen' })).toBeVisible()
-    await expect(bob.getByText(/Alice/).first()).toBeVisible()
+    await bob.goto(inviteUrl)
 
-    // Online-Sharing noch nicht eingerichtet → "Online-Teilen einrichten"-Button muss sichtbar sein
+    // PersonalPackReceiveView: Alice's name appears in the header.
+    await expect(bob.getByText(/Alice/i)).toBeVisible({ timeout: 15_000 })
+
+    // Bob completes the pack (enter name + answer the one question).
+    const nameInput = bob.getByTestId('sandra-receive-name')
+    if (await nameInput.isVisible({ timeout: 5_000 }).catch(() => false)) {
+      await nameInput.fill('Bob')
+      await bob.getByTestId('sandra-receive-start').click()
+    }
+    const answerBox = bob.getByTestId('sandra-receive-answer')
+    if (await answerBox.isVisible({ timeout: 10_000 }).catch(() => false)) {
+      await answerBox.fill('Eine schöne Antwort.')
+      await bob.getByTestId('sandra-receive-continue').click()
+    }
+
+    // ContactHandshakeView: Online-Sharing still not active → "einrichten" button.
     await expect(
       bob.getByRole('button', { name: /Online-Teilen einrichten/ }),
-    ).toBeVisible({ timeout: 5_000 })
+    ).toBeVisible({ timeout: 30_000 })
 
-    // Online-Sharing aktivieren (löst onAcceptContact aus sobald deviceId verfügbar)
     await bob.getByRole('button', { name: /Online-Teilen einrichten/ }).click()
 
-    // Warten bis Bobs Hub gestartet ist und Alice als Kontakt gespeichert wurde.
-    // 65 s: bootstrapSession kann bis zu 4 Versuche benötigen (3 s + 9 s + 27 s
-    // Wartezeit zwischen Retries, eingeführt in #273), was bei schlechter
-    // Netzwerkverbindung den ursprünglichen 35-s-Grenzwert überschreitet.
-    await expect(
-      bob.getByRole('button', { name: /Meinen Link zurück senden/ }),
-    ).toBeVisible({ timeout: 65_000 })
+    // Wait for bootstrap + auto-accept (Alice added as friend).
+    await bob.waitForFunction(() => {
+      type Bridge = { get: () => Record<string, unknown> | null }
+      const bridge = (window as unknown as { __rmState?: Bridge }).__rmState
+      const s = bridge?.get() ?? {}
+      const friends = (s.friends as Array<{ name: string }>) ?? []
+      return friends.some(f => f.name === 'Alice')
+    }, undefined, { timeout: 65_000 })
 
-    // Bob-DeviceId für Cleanup sichern
     const bobId = await readDeviceIdentity(bob)
     createdUsers.push(bobId.deviceId)
 
     // ── Datenintegrität prüfen ───────────────────────────────────────────────
 
-    // Alice ist jetzt in Bobs Freundesliste
     const bobsFriends = await readOnlineFriends(bob)
     expect(bobsFriends.map(f => f.name)).toContain('Alice')
 
-    // Beide Erinnerungen sind noch da
     const answers = await bob.evaluate(() => {
       const b = (window as unknown as {
         __rmState?: { get: () => Record<string, unknown> | null }
@@ -109,7 +122,6 @@ test.describe('Einladungslink – bestehende Daten bleiben erhalten', () => {
     expect(answers['invite-q-childhood']?.value).toBe('Ich bin in Hamburg aufgewachsen.')
     expect(answers['invite-q-school']?.value).toBe('Meine Lieblingsschulfach war Musik.')
 
-    // Profilname unverändert
     const profileName = await bob.evaluate(() => {
       const b = (window as unknown as {
         __rmState?: { get: () => Record<string, unknown> | null }
@@ -119,7 +131,6 @@ test.describe('Einladungslink – bestehende Daten bleiben erhalten', () => {
     })
     expect(profileName).toBe('Bob')
 
-    // AppMode unverändert (simplified)
     const appMode = await bob.evaluate(() => {
       const b = (window as unknown as {
         __rmState?: { get: () => Record<string, unknown> | null }
@@ -137,7 +148,7 @@ test.describe('Einladungslink – bestehende Daten bleiben erhalten', () => {
   test('invitation-with-existing-hub: Vorhandene Freunde und Erinnerungen bleiben nach neuer Einladung erhalten', async ({
     browser,
   }) => {
-    test.setTimeout(120_000)
+    test.setTimeout(180_000)
 
     const { ctx: aliceCtx, page: alice } = await spawnRealDevice(browser)
     const { ctx: bobCtx,   page: bob   } = await spawnRealDevice(browser)
@@ -148,42 +159,65 @@ test.describe('Einladungslink – bestehende Daten bleiben erhalten', () => {
     const aliceId = await readDeviceIdentity(alice)
     createdUsers.push(aliceId.deviceId)
 
+    const inviteUrl = await createTestInviteUrl(admin, {
+      displayName: 'Alice',
+      deviceId: aliceId.deviceId,
+      publicKey: aliceId.publicKey,
+    })
+
     // ── Bob: Hub aktivieren + vorhandene Daten aufbauen ──────────────────────
     await completeOnboarding(bob, 'Bob')
     await openFamilyHub(bob)
     const bobId = await readDeviceIdentity(bob)
     createdUsers.push(bobId.deviceId)
 
-    // Vorhandenen Freund (Charlie) injizieren
     await injectOnlineFriend(bob, 'Charlie', '00000000-0000-4000-8000-000000000099', 'charlie-pub-key')
 
-    // Drei Erinnerungen anlegen
     await seedAnswer(bob, 'hub-q-1', 'childhood', 'Urlaub am Bodensee.')
     await seedAnswer(bob, 'hub-q-2', 'school',    'Abitur mit Auszeichnung.')
     await seedAnswer(bob, 'hub-q-3', 'career',    'Erster Job in München.')
 
     // ── Bob öffnet Alices Einladungslink ─────────────────────────────────────
-    await bob.goto(contactPath('Alice', aliceId.deviceId, aliceId.publicKey))
-    await expect(bob.getByRole('heading', { name: 'Kontakt verknüpfen' })).toBeVisible()
-    await expect(bob.getByText(/Alice/).first()).toBeVisible()
+    await bob.goto(inviteUrl)
 
-    // Hub bereits aktiv → Auto-Accept: "Meinen Link zurück senden" erscheint direkt
-    await expect(
-      bob.getByRole('button', { name: /Meinen Link zurück senden/ }),
-    ).toBeVisible({ timeout: 15_000 })
+    // PersonalPackReceiveView: Alice's name appears.
+    await expect(bob.getByText(/Alice/i)).toBeVisible({ timeout: 15_000 })
+
+    // Bob already has a profile → existing-user fast-path.
+    const existingStart = bob.getByTestId('sandra-receive-existing-start')
+    if (await existingStart.isVisible({ timeout: 5_000 }).catch(() => false)) {
+      await existingStart.click()
+    } else {
+      const nameInput = bob.getByTestId('sandra-receive-name')
+      if (await nameInput.isVisible({ timeout: 3_000 }).catch(() => false)) {
+        await nameInput.fill('Bob')
+        await bob.getByTestId('sandra-receive-start').click()
+      }
+    }
+
+    const answerBox = bob.getByTestId('sandra-receive-answer')
+    if (await answerBox.isVisible({ timeout: 10_000 }).catch(() => false)) {
+      await answerBox.fill('Eine schöne Antwort.')
+      await bob.getByTestId('sandra-receive-continue').click()
+    }
+
+    // Hub already active → Alice is auto-accepted immediately.
+    await bob.waitForFunction(() => {
+      type Bridge = { get: () => Record<string, unknown> | null }
+      const bridge = (window as unknown as { __rmState?: Bridge }).__rmState
+      const s = bridge?.get() ?? {}
+      const friends = (s.friends as Array<{ name: string }>) ?? []
+      return friends.some(f => f.name === 'Alice')
+    }, undefined, { timeout: 30_000 })
 
     // ── Datenintegrität prüfen ───────────────────────────────────────────────
 
     const bobsFriends = await readOnlineFriends(bob)
     const friendNames = bobsFriends.map(f => f.name)
 
-    // Alice wurde hinzugefügt
     expect(friendNames).toContain('Alice')
-
-    // Charlie ist noch vorhanden
     expect(friendNames).toContain('Charlie')
 
-    // Alle drei Erinnerungen unverändert
     const answers = await bob.evaluate(() => {
       const b = (window as unknown as {
         __rmState?: { get: () => Record<string, unknown> | null }
@@ -194,7 +228,6 @@ test.describe('Einladungslink – bestehende Daten bleiben erhalten', () => {
     expect(answers['hub-q-2']?.value).toBe('Abitur mit Auszeichnung.')
     expect(answers['hub-q-3']?.value).toBe('Erster Job in München.')
 
-    // Profilname unverändert
     const profileName = await bob.evaluate(() => {
       const b = (window as unknown as {
         __rmState?: { get: () => Record<string, unknown> | null }

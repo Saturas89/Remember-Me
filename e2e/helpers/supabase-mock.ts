@@ -36,6 +36,7 @@ export interface MockState {
   share_recipients: Row[]
   annotations: Row[]
   share_media: Row[]
+  invites: Row[]
   storage: Map<string, Uint8Array>
   /** Every request that hit the mock, useful for assertions. */
   log: { method: string; url: string }[]
@@ -52,6 +53,7 @@ export function createMockState(baseHost = 'supabase.e2e.local'): MockState {
     share_recipients: [],
     annotations: [],
     share_media: [],
+    invites: [],
     storage: new Map(),
     log: [],
   }
@@ -324,6 +326,7 @@ function tableRows(state: MockState, table: string): Row[] | null {
     case 'share_recipients': return state.share_recipients
     case 'annotations': return state.annotations
     case 'share_media': return state.share_media
+    case 'invites': return state.invites
     default: return null
   }
 }
@@ -335,6 +338,7 @@ function pkColumn(table: string): string | null {
     case 'annotations': return 'id'
     case 'share_media': return 'id'
     case 'share_recipients': return null // composite
+    case 'invites': return 'code'
     default: return null
   }
 }
@@ -348,6 +352,14 @@ function enrichInsert(table: string, row: Row): Row {
     if (!out.updated_at) out.updated_at = now
   } else if (table === 'devices' || table === 'share_media') {
     if (!out.created_at) out.created_at = now
+  } else if (table === 'invites') {
+    if (!out.created_at) out.created_at = now
+    if (!out.expires_at) {
+      const exp = new Date()
+      exp.setDate(exp.getDate() + 30)
+      out.expires_at = exp.toISOString()
+    }
+    if (!('response' in out)) out.response = null
   }
   return out
 }

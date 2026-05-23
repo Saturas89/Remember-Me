@@ -1,23 +1,25 @@
 import { test, expect } from '@playwright/test'
 import {
   completeOnboarding,
-  contactPath,
   createMockState,
+  injectOnlineFriend,
+  invitePath,
   openFamilyHub,
   readDeviceIdentity,
   readOnlineFriends,
   reopenFamilyHub,
   seedAnswer,
+  seedInvite,
   spawnDevice,
-  waitForShares,
 } from './helpers/family-mode-helpers'
 
 // REQ-015 – komplette Einladungs- und Teilen-Kette in einem einzigen Lauf.
 //
-// Verkettet Aktivierung → Handshake → Erinnerung teilen → Ergänzen,
-// ohne den `injectOnlineFriend`-Shortcut, den die isolierten Specs zur
-// Stabilisierung benutzen. Dadurch wird die echte UI-Pipeline End-to-End
-// gegen den Supabase-Mock getrieben, statt nur die Teilstücke einzeln.
+// Verkettet Aktivierung → Handshake (neuer /join/-Flow) → Erinnerung teilen
+// → Ergänzen, ohne den `injectOnlineFriend`-Shortcut für den primären
+// Invite-Flow (Bobs Seite). Sandras Auto-Add via usePendingInviteResponses
+// wird mit injectOnlineFriend simuliert, da das 5-Minuten-Polling in E2E
+// nicht praktikabel wartet – der Hook selbst wird separat unit-getestet.
 
 test.describe('Familienmodus – Komplette Einladungs- und Teilen-Kette', () => {
   test('Alice lädt Bob ein, Bob nimmt an, Alice teilt, Bob ergänzt zurück', async ({ browser }) => {
@@ -36,46 +38,83 @@ test.describe('Familienmodus – Komplette Einladungs- und Teilen-Kette', () => 
     await openFamilyHub(bob)
     const bobId = await readDeviceIdentity(bob)
 
-    // 2) Bob öffnet Alices Einladungslink → Auto-Accept auf Bobs Seite.
-    await bob.goto(contactPath('Alice', aliceId.deviceId, aliceId.publicKey))
-    await expect(bob.getByRole('heading', { name: 'Kontakt verknüpfen' })).toBeVisible()
-    await expect(bob.getByText(/Alice/).first()).toBeVisible()
-    await expect(bob.getByRole('button', { name: /Meinen Link zurück senden/ })).toBeVisible()
+    // 2) Alice erstellt einen Einladungslink (direkt in Mock geseedet).
+    //    Bob öffnet den /join/-Link → PersonalPackReceiveView → ContactHandshakeView.
+    const inviteCode = seedInvite(state, {
+      senderName: 'Alice',
+      senderDeviceId: aliceId.deviceId,
+      senderPublicKey: aliceId.publicKey,
+    })
+    await bob.goto(invitePath(inviteCode))
 
-    const bobsAlice = await readOnlineFriends(bob)
-    expect(bobsAlice).toHaveLength(1)
-    expect(bobsAlice[0]).toMatchObject({ name: 'Alice' })
-    expect(bobsAlice[0].online?.deviceId).toBe(aliceId.deviceId)
+    // PersonalPackReceiveView: enter name and answer the pack question.
+    await expect(bob.getByRole('heading', { name: /Alice/i })).toBeVisible({ timeout: 15_000 })
+    const nameInput = bob.getByTestId('sandra-receive-name')
+    if (await nameInput.isVisible({ timeout: 5_000 }).catch(() => false)) {
+      await nameInput.fill('Bob')
+      await bob.getByTestId('sandra-receive-start').click()
+    } else {
+      const existingStart = bob.getByTestId('sandra-receive-existing-start')
+      if (await existingStart.isVisible({ timeout: 3_000 }).catch(() => false)) {
+        await existingStart.click()
+      }
+    }
+    const answerBox = bob.getByTestId('sandra-receive-answer')
+    if (await answerBox.isVisible({ timeout: 10_000 }).catch(() => false)) {
+      await answerBox.fill('Schöne Erinnerung!')
+      await bob.getByTestId('sandra-receive-continue').click()
+    }
 
-    // 3) Alice öffnet Bobs Rück-Link → Mirror-Accept.
-    await alice.goto(contactPath('Bob', bobId.deviceId, bobId.publicKey))
-    await expect(alice.getByRole('heading', { name: 'Kontakt verknüpfen' })).toBeVisible()
-    const alicesBob = await readOnlineFriends(alice)
-    expect(alicesBob).toHaveLength(1)
-    expect(alicesBob[0]).toMatchObject({ name: 'Bob' })
-    expect(alicesBob[0].online?.deviceId).toBe(bobId.deviceId)
+    // ContactHandshakeView auto-accepts Alice (online sharing is active).
+    await bob.waitForFunction(() => {
+      type Bridge = { get: () => Record<string, unknown> | null }
+      const bridge = (window as unknown as { __rmState?: Bridge }).__rmState
+      const s = bridge?.get() ?? {}
+      const friends = (s.friends as Array<{ online?: { deviceId: string } }>) ?? []
+      return friends.some(f => f.online?.deviceId)
+    }, undefined, { timeout: 20_000 })
+
+    const bobsFriends = await readOnlineFriends(bob)
+    expect(bobsFriends.map(f => f.name)).toContain('Alice')
+    expect(bobsFriends[0].online?.deviceId).toBe(aliceId.deviceId)
+
+    // 3) Bob's contact is written to invites.response.
+    //    Alice's usePendingInviteResponses hook normally polls every 5 min –
+    //    inject directly for test speed (the hook is unit-tested separately).
+    await injectOnlineFriend(alice, 'Bob', bobId.deviceId, bobId.publicKey)
 
     // 4) Alice geht zurück in den Hub — die Erinnerung wird per Auto-Share
     //    automatisch an Bob verschickt (REQ-022). Kein Picker mehr.
     await reopenFamilyHub(alice)
-    await waitForShares(state, 1, 20_000)
+
+    // Wait specifically for Alice's share of childhood-01. Bob's useAutoShare
+    // may fire a share of his q-seed-1 answer first; a count-based wait would
+    // be satisfied by Bob's share before Alice's arrives.
+    const aliceShareDeadline = Date.now() + 20_000
+    while (!state.shares.some(s => s.owner_id === aliceId.deviceId)) {
+      if (Date.now() > aliceShareDeadline) throw new Error('Timed out waiting for Alice\'s share')
+      await new Promise(r => setTimeout(r, 250))
+    }
 
     // Wire-Encryption: der Klartext darf nicht unverschlüsselt im Share landen.
-    expect(state.shares).toHaveLength(1)
-    expect(typeof state.shares[0].ciphertext).toBe('string')
-    expect((state.shares[0].ciphertext as string).startsWith('\\x')).toBe(true)
-    expect(JSON.stringify(state.shares[0].ciphertext)).not.toContain('Cuxhaven')
+    const aliceShares = state.shares.filter(s => s.owner_id === aliceId.deviceId)
+    expect(aliceShares).toHaveLength(1)
+    expect(typeof aliceShares[0].ciphertext).toBe('string')
+    expect((aliceShares[0].ciphertext as string).startsWith('\\x')).toBe(true)
+    expect(JSON.stringify(aliceShares[0].ciphertext)).not.toContain('Cuxhaven')
 
     // 5) Bob entdeckt die Erinnerung im Feed und sieht den entschlüsselten Klartext.
+    // Use the specific card by content (Bob may also see his own q-seed-1 card in the feed).
     await reopenFamilyHub(bob)
     await bob.getByRole('tab', { name: /^Feed\b/ }).click()
-    await expect(bob.getByText('Ich bin in Cuxhaven am Meer aufgewachsen.')).toBeVisible({ timeout: 15_000 })
-    await expect(bob.locator('.shared-memory-card')).toContainText('Alice')
+    const aliceMemoryCard = bob.locator('.shared-memory-card').filter({ hasText: 'Cuxhaven' })
+    await expect(aliceMemoryCard).toBeVisible({ timeout: 15_000 })
+    await expect(aliceMemoryCard).toContainText('Alice')
 
     // 6) Bob ergänzt eine eigene Erinnerung dazu.
-    await bob.getByLabel('Ergänzung hinzufügen').fill('Ich erinnere mich noch an euer Reetdach!')
-    await bob.getByRole('button', { name: 'Ergänzung senden' }).click()
-    await expect(bob.getByRole('button', { name: /Gesendet/ })).toBeVisible({ timeout: 10_000 })
+    await aliceMemoryCard.getByLabel('Ergänzung hinzufügen').fill('Ich erinnere mich noch an euer Reetdach!')
+    await aliceMemoryCard.getByRole('button', { name: 'Ergänzung senden' }).click()
+    await expect(aliceMemoryCard.getByRole('button', { name: /Gesendet/ })).toBeVisible({ timeout: 10_000 })
 
     expect(state.annotations).toHaveLength(1)
     expect(state.annotations[0].author_id).toBe(bobId.deviceId)
@@ -83,7 +122,8 @@ test.describe('Familienmodus – Komplette Einladungs- und Teilen-Kette', () => 
     // 7) Alice sieht Bobs Ergänzung zurück.
     await reopenFamilyHub(alice)
     await expect(alice.getByText('Ich erinnere mich noch an euer Reetdach!')).toBeVisible({ timeout: 15_000 })
-    await expect(alice.locator('.shared-memory-annotations')).toContainText('Bob')
+    const childhoodCard = alice.locator('.shared-memory-card').filter({ hasText: 'Cuxhaven' })
+    await expect(childhoodCard.locator('.shared-memory-annotations')).toContainText('Bob')
 
     await aliceCtx.close()
     await bobCtx.close()

@@ -2,6 +2,7 @@
   "buildCommand": "npm install && npm run build",
   "outputDirectory": "dist",
   "rewrites": [
+    { "source": "/join/:code", "destination": "/index.html" },
     { "source": "/en/record-your-parents-stories", "destination": "/en/record-your-parents-stories/index.html" },
     { "source": "/de/lebensgeschichten-der-eltern-bewahren", "destination": "/de/lebensgeschichten-der-eltern-bewahren/index.html" },
     { "source": "/((?!_vercel|api|assets|features|categories|.*\\.).*)", "destination": "/index.html" }

@@ -1,6 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { generateContactUrl, shareOrCopy } from '../utils/secureLink'
-import { generateShareCard } from '../utils/shareCard'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from '../locales'
 import type { ContactHandshake } from '../types'
 
@@ -14,26 +12,27 @@ const HANDSHAKE_TIMEOUT_MS = 30_000
 interface Props {
   handshake: ContactHandshake
   profileName: string
-  /** Current device's online identity – shown so the user can complete the
-   *  handshake by sending their own link back. Null until the online-sync
-   *  session is ready. */
+  /** Current device's online identity. Null until the online-sync session
+   *  is ready. */
   myDeviceId: string | null
   myPublicKey: string | null
   enabled: boolean
   onEnable: () => void
   /** Called once when the handshake auto-accepts AND again whenever the
-   *  user flips the share-all checkbox after acceptance. The parent uses
-   *  the deviceId inside `h` to upsert the friend and propagate `shareAll`. */
+   *  user flips the share-all checkbox after acceptance. */
   onAcceptContact: (h: ContactHandshake, shareAll: boolean) => void
   onDismiss: () => void
+  /** When set (Sandra-invite flow), Ingrid's contact is automatically written
+   *  back to Supabase after acceptance so Sandra auto-adds her. */
+  inviteCode?: string
 }
 
 /**
- * Shown when the app opens with a #contact/… URL. Lets the user
- *   1. understand who wants to connect,
- *   2. enable online sharing if they haven't already,
- *   3. confirm adding the contact,
- *   4. share their own handshake link back so the connection is bidirectional.
+ * Shown after Ingrid finishes the Sandra quiz. Establishes the bidirectional
+ * Family Mode connection:
+ *   1. Adds Sandra as a local friend (via onAcceptContact).
+ *   2. Writes Ingrid's own contact to the invite row in Supabase so Sandra
+ *      can auto-add her via usePendingInviteResponses polling.
  */
 export function ContactHandshakeView({
   handshake,
@@ -44,17 +43,16 @@ export function ContactHandshakeView({
   onEnable,
   onAcceptContact,
   onDismiss,
+  inviteCode,
 }: Props) {
   const { t } = useTranslation()
   const c = t.contactHandshake
   const [accepted, setAccepted] = useState(false)
-  const [copied, setCopied] = useState(false)
   // REQ-022 §4.2: binary opt-in. Default checked so Ingrid never needs to
-  // think about it. Late toggles re-call onAcceptContact below, which the
-  // parent upserts into friend.online.shareAll.
+  // think about it. Late toggles re-call onAcceptContact, which the parent
+  // upserts into friend.online.shareAll.
   const [shareAllOptIn, setShareAllOptIn] = useState(true)
   const lastAcceptedShareAllRef = useRef<boolean | null>(null)
-  const shareCardRef = useRef<File | null>(null)
 
   // Persona-led waiting feedback (#165) — track how long the
   // "enabled && !myDeviceId" connecting state has lingered.
@@ -70,32 +68,7 @@ export function ContactHandshakeView({
     return () => clearInterval(interval)
   }, [isWaiting])
 
-  const myLink = useMemo(() => {
-    if (!myDeviceId || !myPublicKey) return ''
-    const mine: ContactHandshake = {
-      $type: 'remember-me-contact',
-      version: 1,
-      deviceId: myDeviceId,
-      publicKey: myPublicKey,
-      displayName: profileName,
-    }
-    return generateContactUrl(mine)
-  }, [myDeviceId, myPublicKey, profileName])
-
-  useEffect(() => {
-    if (!myLink || !profileName) return
-    fetch('/pwa-192x192.png')
-      .then(r => r.blob())
-      .then(b => generateShareCard(b, {
-        title: c.shareCardTitleWithName.replace('{name}', profileName),
-        subtitle: c.shareCardSubtitle,
-      }))
-      .then(f => { shareCardRef.current = f })
-      .catch(() => {})
-  }, [myLink, profileName, c.shareCardTitleWithName, c.shareCardSubtitle])
-
-  // Auto-accept once online sharing is ready (the user already consented by
-  // clicking "Aktivieren" in the intro). Idempotent and re-fires on
+  // Auto-accept once online sharing is ready. Idempotent and re-fires on
   // shareAllOptIn changes after acceptance (REQ-022 FR-22.5).
   useEffect(() => {
     if (!enabled) return
@@ -105,28 +78,21 @@ export function ContactHandshakeView({
     if (!accepted) setAccepted(true)
   }, [enabled, accepted, handshake, onAcceptContact, shareAllOptIn])
 
-  const shareBack = async () => {
-    if (!myLink) return
-    const card = shareCardRef.current
-    if (card && typeof navigator.share === 'function' && navigator.canShare?.({ files: [card] })) {
-      const text = `${c.shareBackText.replace('{name}', profileName)}\n\n${myLink}`
-      try {
-        await navigator.share({ files: [card], title: c.shareSheetTitle, text })
-        return
-      } catch (e) {
-        if ((e as Error).name === 'AbortError') return
-      }
+  // After acceptance, silently write Ingrid's contact back to the invite row
+  // so Sandra auto-adds her via usePendingInviteResponses.
+  useEffect(() => {
+    if (!accepted || !inviteCode || !myDeviceId || !myPublicKey) return
+    const responder: ContactHandshake = {
+      $type: 'remember-me-contact',
+      version: 1,
+      deviceId: myDeviceId,
+      publicKey: myPublicKey,
+      displayName: profileName,
     }
-    const sent = await shareOrCopy({
-      title: c.shareSheetTitle,
-      text: c.shareBackText.replace('{name}', profileName),
-      url: myLink,
-    })
-    if (!sent) {
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    }
-  }
+    import('../utils/inviteService')
+      .then(m => m.submitInviteResponse(inviteCode, responder))
+      .catch(() => { /* silent – Sandra pollt beim nächsten Mal erneut */ })
+  }, [accepted, inviteCode, myDeviceId, myPublicKey, profileName])
 
   return (
     <div className="friends-view">
@@ -194,9 +160,6 @@ export function ContactHandshakeView({
               </span>
             </label>
 
-            <button className="share-cta-btn" onClick={shareBack}>
-              {copied ? c.shareBackCopied : c.shareBackButton}
-            </button>
             <button
               className="btn btn--ghost btn--sm"
               style={{ marginTop: '0.75rem' }}

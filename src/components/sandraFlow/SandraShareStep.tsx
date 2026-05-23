@@ -1,44 +1,30 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import type { SandraFlowStrings } from '../../i18n/de/sandraFlow'
 import type { ComposedQuestion, SandraAnchor } from '../../types/sandraFlow'
 
-// Pronoun used in the DE recipientPreviewHeading. EN already phrases the
-// sentence with "they" so the {pronoun} placeholder is absent there and the
-// replace below is a no-op.
 function pronounForRelation(relation: string): string {
   return relation === 'papa' || relation === 'opa' ? 'er' : 'sie'
-}
-
-interface SyncShareData {
-  url: string
-  encoded: string
 }
 
 interface Props {
   t: SandraFlowStrings
   anchor: SandraAnchor
   questions: ComposedQuestion[]
-  /** Current value of the simple-mode-handoff opt-in (#163). */
   preferSimpleMode: boolean
-  /** Persist a change so buildPersonalPack picks it up. */
   onTogglePreferSimpleMode: (next: boolean) => void
   /**
-   * Synchronous URL builder. Called inside the click gesture so
-   * `navigator.share()` can be invoked without any prior `await`.
+   * Async function that creates the invite in Supabase and returns the short
+   * URL. Called on mount; result is cached so the share button can fire
+   * navigator.share() synchronously when clicked.
+   * Pass null when online sharing is not ready yet (identity still bootstrapping).
    */
-  onShareSync: () => SyncShareData
-  /**
-   * Optional async upgrade. If compression succeeds, the shorter URL
-   * is used for the clipboard fallback / second share attempt.
-   */
-  onShareUpgrade: () => Promise<string>
+  onShare: (() => Promise<string>) | null
+  /** True when online sharing is configured but the user hasn't enabled it. */
+  onlineSharingEnabled: boolean
+  /** Called when the user taps "Activate online sharing" from this step. */
+  onEnableOnlineSharing: () => void
   onBack: () => void
   onClearDraft: () => void
-  /** True while online sharing is enabled but the device identity isn't ready
-   *  yet (Supabase bootstrap in progress). The share CTA is not disabled –
-   *  the sync URL falls back to pack-only in this window – but a small hint
-   *  reassures the sender that the connection is being prepared. */
-  waitingForIdentity?: boolean
 }
 
 export function SandraShareStep({
@@ -47,22 +33,34 @@ export function SandraShareStep({
   questions,
   preferSimpleMode,
   onTogglePreferSimpleMode,
-  onShareSync,
-  onShareUpgrade,
+  onShare,
+  onlineSharingEnabled,
+  onEnableOnlineSharing,
   onBack,
   onClearDraft,
-  waitingForIdentity,
 }: Props) {
-  const [isSharing, setIsSharing] = useState(false)
+  const [shareUrl, setShareUrl] = useState<string | null>(null)
+  const [urlLoading, setUrlLoading] = useState(false)
+  const [urlError, setUrlError] = useState(false)
   const [status, setStatus] = useState<'idle' | 'copied' | 'error' | 'sent'>('idle')
-  const shareUrlRef = useRef<string | null>(null)
+  const [isSharing, setIsSharing] = useState(false)
 
-  // Eagerly start the async upgrade so it's ready by the time the user clicks.
+  // Pre-generate the invite URL as soon as onShare becomes available.
   useEffect(() => {
-    onShareUpgrade()
-      .then(url => { shareUrlRef.current = url })
-      .catch(() => { /* keep the sync url as fallback */ })
-  }, [onShareUpgrade])
+    if (!onShare) {
+      setShareUrl(null)
+      setUrlLoading(false)
+      setUrlError(false)
+      return
+    }
+    setUrlLoading(true)
+    setUrlError(false)
+    setShareUrl(null)
+    onShare()
+      .then(url => setShareUrl(url))
+      .catch(() => setUrlError(true))
+      .finally(() => setUrlLoading(false))
+  }, [onShare])
 
   useEffect(() => {
     if (status === 'idle') return
@@ -73,33 +71,37 @@ export function SandraShareStep({
   const hasRelationship = questions.some(q => q.group === 'relationship')
 
   function handleShare() {
-    if (isSharing) return
+    if (isSharing || !shareUrl) return
     setIsSharing(true)
-
-    const { url: syncUrl } = onShareSync()
-    // Prefer the upgraded (compressed) URL if available, else sync URL.
-    const url = shareUrlRef.current || syncUrl
     const title = t.share.shareTitle.replace('{anrede}', anchor.anrede)
-    const text = t.share.shareMessage.replace('{url}', url)
+    const text = t.share.shareMessage.replace('{url}', shareUrl)
 
     if (typeof navigator.share === 'function') {
       navigator
-        .share({ title, text, url })
+        .share({ title, text, url: shareUrl })
         .then(() => {
           setIsSharing(false)
           setStatus('sent')
-          // Clear the draft after a successful send so opening #/ask again
-          // starts fresh. We keep it on AbortError (user cancelled).
           setTimeout(() => onClearDraft(), 200)
         })
         .catch(err => {
           setIsSharing(false)
           if ((err as Error).name === 'AbortError') return
-          fallbackCopy(url)
+          fallbackCopy(shareUrl)
         })
     } else {
-      fallbackCopy(url)
+      fallbackCopy(shareUrl)
     }
+  }
+
+  function handleRetry() {
+    if (!onShare) return
+    setUrlError(false)
+    setUrlLoading(true)
+    onShare()
+      .then(url => setShareUrl(url))
+      .catch(() => setUrlError(true))
+      .finally(() => setUrlLoading(false))
   }
 
   function fallbackCopy(url: string) {
@@ -160,9 +162,6 @@ export function SandraShareStep({
           </ul>
         </div>
 
-        {/* #163 — explicit opt-in to land Mama in Vereinfachter Bedienmodus
-            (REQ-019) without an extra choice screen. Default-on; Sandra can
-            opt out for tech-savvier recipients. */}
         <label
           className="sandra-share__simple-toggle"
           data-testid="sandra-share-prefer-simple"
@@ -182,21 +181,37 @@ export function SandraShareStep({
           </span>
         </label>
 
-        {waitingForIdentity && (
-          <p className="friends-hint">{t.share.connectingHint}</p>
-        )}
-
         <div className="friends-share">
-          <button
-            type="button"
-            className={`share-cta-btn${status === 'copied' || status === 'sent' ? ' share-cta-btn--success' : status === 'error' ? ' share-cta-btn--error' : ''}`}
-            onClick={handleShare}
-            disabled={isSharing}
-            data-testid="sandra-share-cta"
-          >
-            {isSharing && <span className="share-cta-btn__spinner" aria-hidden="true" />}
-            {buttonLabel}
-          </button>
+          {!onlineSharingEnabled && (
+            <>
+              <p className="friends-hint">{t.share.connectingHint}</p>
+              <button className="share-cta-btn" onClick={onEnableOnlineSharing}>
+                {t.share.activateOnlineSharingCta}
+              </button>
+            </>
+          )}
+
+          {onlineSharingEnabled && urlError && (
+            <>
+              <p className="friends-hint friends-hint--warn">{t.share.inviteError}</p>
+              <button type="button" className="share-cta-btn" onClick={handleRetry}>
+                {t.share.retryInvite}
+              </button>
+            </>
+          )}
+
+          {onlineSharingEnabled && !urlError && (
+            <button
+              type="button"
+              className={`share-cta-btn${status === 'copied' || status === 'sent' ? ' share-cta-btn--success' : status === 'error' ? ' share-cta-btn--error' : ''}`}
+              onClick={handleShare}
+              disabled={isSharing || urlLoading || !shareUrl}
+              data-testid="sandra-share-cta"
+            >
+              {(isSharing || urlLoading) && <span className="share-cta-btn__spinner" aria-hidden="true" />}
+              {urlLoading ? t.share.generatingInvite : buttonLabel}
+            </button>
+          )}
         </div>
 
         <p className="friends-hint">

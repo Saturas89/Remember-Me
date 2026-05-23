@@ -1,7 +1,6 @@
 import { test, expect } from '@playwright/test'
 import {
   completeOnboarding,
-  contactPath,
   createMockState,
   injectOnlineFriend,
   openFamilyHub,
@@ -30,11 +29,10 @@ test.describe('Familienmodus – Deaktivierung (FR-15.22 – FR-15.25)', () => {
     await openFamilyHub(bob)
     const bobId = await readDeviceIdentity(bob)
 
-    // Drive the linkage via the same shortcut used by the share spec to
-    // keep this test independent of the (still-fragile) share-send roundtrip.
+    // Inject the linked state directly – the handshake UI is covered by the
+    // family-mode-handshake spec; here we focus on the deactivation cascade.
     await injectOnlineFriend(alice, 'Bob', bobId.deviceId, bobId.publicKey)
-    await alice.goto(contactPath('Bob', bobId.deviceId, bobId.publicKey))
-    await expect(alice.getByRole('heading', { name: 'Kontakt verknüpfen' })).toBeVisible()
+    await injectOnlineFriend(bob, 'Alice', aliceId.deviceId, aliceId.publicKey)
 
     expect(state.devices.find(d => d.id === aliceId.deviceId)).toBeTruthy()
 

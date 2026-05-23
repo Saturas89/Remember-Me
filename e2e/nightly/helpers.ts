@@ -92,6 +92,49 @@ export async function waitForRealShares(
   }, { timeout: timeoutMs }).toBeGreaterThanOrEqual(minShares)
 }
 
+// ── Invite helpers ────────────────────────────────────────────────────────
+
+const INVITE_ALPHABET = 'ACDEFGHJKMNPQRTVWXYZ234679'
+
+function generateInviteCode(): string {
+  let code = ''
+  for (let i = 0; i < 6; i++) {
+    code += INVITE_ALPHABET[Math.floor(Math.random() * INVITE_ALPHABET.length)]
+  }
+  return code
+}
+
+/**
+ * Inserts a minimal Sandra-style invite row via the admin client so the test
+ * can open `/join/CODE` without driving the full Sandra Flow UI.
+ */
+export async function createTestInviteUrl(
+  admin: SupabaseClient,
+  sender: { displayName: string; deviceId: string; publicKey: string },
+  baseUrl = 'http://localhost:4173',
+): Promise<string> {
+  const code = generateInviteCode()
+  const contact = { $type: 'remember-me-contact', version: 1, ...sender }
+  const pack = {
+    personalPack: true,
+    senderName: sender.displayName,
+    recipientLabel: 'freund',
+    anrede: 'Freund',
+    questions: [
+      {
+        id: 'test-q-1',
+        text: 'Was war dein schönster Moment?',
+        type: 'text',
+        createdAt: new Date().toISOString(),
+      },
+    ],
+  }
+  await admin.from('invites').insert({ code, payload: { pack, contact } })
+  return `${baseUrl}/join/${code}`
+}
+
+// ── Hub bootstrap helper ──────────────────────────────────────────────────
+
 // Waits until the family-hub is bootstrapped: polls the positive signal
 // (deviceId + publicKey present in app state) instead of a localStorage key
 // that the app never writes. Matches the approach used in family-mode-helpers.ts.

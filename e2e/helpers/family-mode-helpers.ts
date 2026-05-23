@@ -217,20 +217,70 @@ export async function waitForShares(
   }
 }
 
-export function contactPath(displayName: string, deviceId: string, publicKey: string): string {
-  const handshake = JSON.stringify({
-    $type: 'remember-me-contact',
+const INVITE_ALPHABET = 'ACDEFGHJKMNPQRTVWXYZ234679'
+
+function generateInviteCode(): string {
+  let code = ''
+  for (let i = 0; i < 6; i++) {
+    code += INVITE_ALPHABET[Math.floor(Math.random() * INVITE_ALPHABET.length)]
+  }
+  return code
+}
+
+/**
+ * Pre-seeds an invite row directly in the in-memory MockState so tests can
+ * open `/join/<code>` without driving the full Sandra flow.
+ *
+ * Returns the code so the caller can construct the URL via `invitePath(code)`.
+ */
+export function seedInvite(
+  state: MockState,
+  options: {
+    code?: string
+    senderName: string
+    senderDeviceId: string
+    senderPublicKey: string
+    questions?: Array<{ id: string; text: string; type: 'text'; createdAt: string }>
+  },
+): string {
+  const code = options.code ?? generateInviteCode()
+  const now = new Date()
+  const exp = new Date(now)
+  exp.setDate(exp.getDate() + 30)
+  const contact = {
+    $type: 'remember-me-contact' as const,
     version: 1,
-    deviceId,
-    publicKey,
-    displayName,
+    deviceId: options.senderDeviceId,
+    publicKey: options.senderPublicKey,
+    displayName: options.senderName,
+  }
+  const pack = {
+    personalPack: true as const,
+    senderName: options.senderName,
+    recipientLabel: 'mama',
+    anrede: 'Mama',
+    questions: options.questions ?? [
+      {
+        id: 'q-seed-1',
+        text: 'Was war dein schönster Moment?',
+        type: 'text' as const,
+        createdAt: now.toISOString(),
+      },
+    ],
+  }
+  state.invites.push({
+    code,
+    payload: { pack, contact },
+    response: null,
+    created_at: now.toISOString(),
+    expires_at: exp.toISOString(),
   })
-  const b64 = Buffer.from(handshake, 'utf-8')
-    .toString('base64')
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=+$/, '')
-  return `/?contact=${b64}`
+  return code
+}
+
+/** URL path for a `/join/` invite link. */
+export function invitePath(code: string): string {
+  return `/join/${code}`
 }
 
 // Re-export so individual specs can `import { createMockState, ... }` from a

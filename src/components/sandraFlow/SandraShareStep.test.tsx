@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
-import { render, cleanup } from '@testing-library/react'
+import { render, cleanup, waitFor } from '@testing-library/react'
 import { SandraShareStep } from './SandraShareStep'
 import { SANDRA_FLOW_DE } from '../../i18n/de/sandraFlow'
 import { SANDRA_FLOW_EN } from '../../i18n/en/sandraFlow'
@@ -8,14 +8,11 @@ import type { ComposedQuestion, SandraAnchor } from '../../types/sandraFlow'
 // ─────────────────────────────────────────────────────────────────────────────
 // SandraShareStep – Screen 6 of Sandra-Flow.
 //
-// Implementation Agent contract (SandraShareStep.tsx):
-//   props: { t, anchor, questions, onShareSync, onShareUpgrade, onBack, onClearDraft }
-//   Share CTA: data-testid="sandra-share-cta"
+// Share CTA: data-testid="sandra-share-cta"
 //
 // SPEC contract (§4 Screen 6):
 //   - Header: „{anrede} antwortet – und ihr bleibt dauerhaft verbunden"
 //   - No QR-code element
-//   - No visible pack-code string
 //   - Relationship-send hint appears IFF ≥1 question has group='relationship'
 //   - Privacy hint always rendered
 //   - Single primary action „An {anrede} senden" / „Send to {anrede}"
@@ -38,8 +35,7 @@ function makeQ(
 }
 
 const ANCHOR: SandraAnchor = { relation: 'mama', anrede: 'Mama' }
-const FAKE_URL = 'https://example.com/#/p/abc123-encoded-pack-code-do-not-leak'
-const FAKE_ENCODED = 'abc123-encoded-pack-code-do-not-leak'
+const FAKE_URL = 'https://example.com/join/TSTCOD'
 
 function makeProps(
   overrides: Partial<React.ComponentProps<typeof SandraShareStep>> = {},
@@ -50,8 +46,9 @@ function makeProps(
     questions: [makeQ('q1')],
     preferSimpleMode: true,
     onTogglePreferSimpleMode: vi.fn(),
-    onShareSync: vi.fn(() => ({ url: FAKE_URL, encoded: FAKE_ENCODED })),
-    onShareUpgrade: vi.fn(async () => FAKE_URL),
+    onShare: vi.fn(async () => FAKE_URL),
+    onlineSharingEnabled: true,
+    onEnableOnlineSharing: vi.fn(),
     onBack: vi.fn(),
     onClearDraft: vi.fn(),
     ...overrides,
@@ -99,12 +96,11 @@ describe('SandraShareStep – no QR / no visible pack-code', () => {
     expect(container.querySelector('[class*="qrcode"]')).toBeNull()
   })
 
-  it('renders NO visible pack-code string in the DOM', () => {
+  it('renders NO visible invite URL string in the DOM while loading', () => {
     const { container } = render(<SandraShareStep {...makeProps()} />)
-    // The encoded payload may legitimately live inside a hidden URL embedded
-    // in event handlers, but it must NEVER appear as visible text on the page.
+    // The invite URL must not be exposed as visible text.
     const visibleText = container.textContent ?? ''
-    expect(visibleText).not.toContain(FAKE_ENCODED)
+    expect(visibleText).not.toContain('TSTCOD')
   })
 
   it('does NOT expose any element flagged as a pack-code copy target', () => {
@@ -204,19 +200,23 @@ describe('SandraShareStep – primary share action', () => {
     expect(container.querySelectorAll('[data-testid="sandra-share-cta"]').length).toBe(1)
   })
 
-  it('the share CTA contains the anrede (DE: "An Mama senden")', () => {
+  it('the share CTA contains the anrede (DE: "An Mama senden")', async () => {
     const { container } = render(<SandraShareStep {...makeProps()} />)
-    const cta = container.querySelector<HTMLButtonElement>('[data-testid="sandra-share-cta"]')!
-    expect(cta.textContent ?? '').toContain('Mama')
+    await waitFor(() => {
+      const cta = container.querySelector<HTMLButtonElement>('[data-testid="sandra-share-cta"]')!
+      expect(cta.textContent ?? '').toContain('Mama')
+    })
   })
 
-  it('the share CTA reflects the EN bundle when given English strings', () => {
+  it('the share CTA reflects the EN bundle when given English strings', async () => {
     const { container } = render(
       <SandraShareStep
         {...makeProps({ t: SANDRA_FLOW_EN, anchor: { relation: 'mama', anrede: 'Mom' } })}
       />,
     )
-    const cta = container.querySelector<HTMLButtonElement>('[data-testid="sandra-share-cta"]')!
-    expect(cta.textContent ?? '').toContain('Mom')
+    await waitFor(() => {
+      const cta = container.querySelector<HTMLButtonElement>('[data-testid="sandra-share-cta"]')!
+      expect(cta.textContent ?? '').toContain('Mom')
+    })
   })
 })
