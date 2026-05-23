@@ -92,6 +92,11 @@ export function useOnlineSync(
             const session = await svc.bootstrapSession()
             if (cancelled) return
 
+            // Populate local share-log from server so auto-share skips
+            // already-sent answers after a device switch. Best-effort.
+            try { await svc.hydrateShareLog?.() } catch { /* non-critical */ }
+            if (cancelled) return
+
             setDeviceId(session.deviceId)
             setPublicKeyB64(session.publicKeyB64)
             onRegisteredRef.current?.(session.deviceId, session.publicKeyB64)
