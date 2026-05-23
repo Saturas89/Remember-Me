@@ -192,6 +192,8 @@ export function ProfileView({
         </button>
       </div>
 
+      {/* ── Über mich ──────────────────────────────────── */}
+
       <div className="profile-identity">
         <TreeProgressLogo pct={overallPct} size={80} />
         <h1 className="profile-identity__name">{profile?.name}</h1>
@@ -199,29 +201,6 @@ export function ProfileView({
           <p className="profile-identity__meta">{t.profile.memberSince.replace('{date}', memberSince)}</p>
         )}
       </div>
-
-      <section className="profile-card">
-        <h2 className="profile-card__heading">{t.profile.progressHeading}</h2>
-        <div className="profile-stats">
-          <div className="profile-stat">
-            <span className="profile-stat__value">{totalAnswered}</span>
-            <span className="profile-stat__label">{t.profile.answersLabel}</span>
-          </div>
-          <div className="profile-stat">
-            <span className="profile-stat__value">{overallPct}%</span>
-            <span className="profile-stat__label">{t.profile.completedLabel}</span>
-          </div>
-          <div className="profile-stat">
-            <span className="profile-stat__value">{friendCount}</span>
-            <span className="profile-stat__label">{t.profile.friendsLabel}</span>
-          </div>
-          <div className="profile-stat">
-            <span className="profile-stat__value">{daysSince}</span>
-            <span className="profile-stat__label">{t.profile.daysLabel}</span>
-          </div>
-        </div>
-        <BackupStatusRow last={lastBackup} />
-      </section>
 
       <section className="profile-card">
         <h2 className="profile-card__heading">{t.profile.profileHeading}</h2>
@@ -258,13 +237,28 @@ export function ProfileView({
       </section>
 
       <section className="profile-card">
-        <h2 className="profile-card__heading">{t.profile.historyHeading}</h2>
-        <ArchiveExportCard
-          data={exportData}
-          safeName={safeName}
-          onBackupRecorded={() => setLastBackup(new Date())}
-        />
+        <h2 className="profile-card__heading">{t.profile.progressHeading}</h2>
+        <div className="profile-stats">
+          <div className="profile-stat">
+            <span className="profile-stat__value">{totalAnswered}</span>
+            <span className="profile-stat__label">{t.profile.answersLabel}</span>
+          </div>
+          <div className="profile-stat">
+            <span className="profile-stat__value">{overallPct}%</span>
+            <span className="profile-stat__label">{t.profile.completedLabel}</span>
+          </div>
+          <div className="profile-stat">
+            <span className="profile-stat__value">{friendCount}</span>
+            <span className="profile-stat__label">{t.profile.friendsLabel}</span>
+          </div>
+          <div className="profile-stat">
+            <span className="profile-stat__value">{daysSince}</span>
+            <span className="profile-stat__label">{t.profile.daysLabel}</span>
+          </div>
+        </div>
       </section>
+
+      {/* ── Darstellung ────────────────────────────────── */}
 
       <section className="profile-card">
         <h2 className="profile-card__heading">{t.profile.modeHeading}</h2>
@@ -347,62 +341,73 @@ export function ProfileView({
         </section>
       )}
 
+      {/* ── Meine Daten ────────────────────────────────── */}
+
       {/* Social Media Import temporarily disabled (issue #265) */}
 
-      {!isSimple && (
       <section className="profile-card">
-        <h2 className="profile-card__heading">{t.profile.formatsHeading}</h2>
-        <p className="backup-desc">{t.profile.formatsDesc}</p>
-        <div className="backup-export-row">
-          <button className="btn btn--ghost backup-btn" onClick={onExportMarkdown}>
-            <span className="backup-btn__icon">📄</span>
-            <span className="backup-btn__label">Markdown</span>
-            <span className="backup-btn__hint">{t.profile.markdownHint}</span>
-          </button>
-          <button className="btn btn--ghost backup-btn" onClick={onExportJson}>
-            <span className="backup-btn__icon">📊</span>
-            <span className="backup-btn__label">JSON</span>
-            <span className="backup-btn__hint">{t.profile.jsonHint}</span>
-          </button>
-        </div>
-
-        <div className="backup-restore">
-          <p className="backup-restore__label">{t.profile.restoreLabel}</p>
-          <p className="backup-restore__hint">{t.profile.restoreHint}</p>
-          <button
-            type="button"
-            className="btn btn--outline backup-restore-btn"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={!!importProgress}
-          >
-            {t.profile.restoreButton}
-          </button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".zip,.json"
-            style={{ display: 'none' }}
-            onChange={handleImportFile}
-          />
-          {importProgress && (
-            <div className="import-progress">
-              <p className="import-progress__step">{importProgress.step}</p>
-              <div className="import-progress__bar">
-                <div
-                  className="import-progress__fill"
-                  style={{ width: `${importProgress.pct}%` }}
-                />
-              </div>
+        <h2 className="profile-card__heading">{t.profile.historyHeading}</h2>
+        <BackupStatusRow last={lastBackup} />
+        <ArchiveExportCard
+          data={exportData}
+          safeName={safeName}
+          onBackupRecorded={() => setLastBackup(new Date())}
+        />
+        {!isSimple && (
+          <>
+            <p className="backup-desc">{t.profile.formatsDesc}</p>
+            <div className="backup-export-row">
+              <button className="btn btn--ghost backup-btn" onClick={onExportMarkdown}>
+                <span className="backup-btn__icon">📄</span>
+                <span className="backup-btn__label">Markdown</span>
+                <span className="backup-btn__hint">{t.profile.markdownHint}</span>
+              </button>
+              <button className="btn btn--ghost backup-btn" onClick={onExportJson}>
+                <span className="backup-btn__icon">📊</span>
+                <span className="backup-btn__label">JSON</span>
+                <span className="backup-btn__hint">{t.profile.jsonHint}</span>
+              </button>
             </div>
-          )}
-          {importStatus && (
-            <p className={`import-msg import-msg--${importStatus.ok ? 'success' : 'error'}`}>
-              {importStatus.message}
-            </p>
-          )}
-        </div>
+            <div className="backup-restore">
+              <p className="backup-restore__label">{t.profile.restoreLabel}</p>
+              <p className="backup-restore__hint">{t.profile.restoreHint}</p>
+              <button
+                type="button"
+                className="btn btn--outline backup-restore-btn"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={!!importProgress}
+              >
+                {t.profile.restoreButton}
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".zip,.json"
+                style={{ display: 'none' }}
+                onChange={handleImportFile}
+              />
+              {importProgress && (
+                <div className="import-progress">
+                  <p className="import-progress__step">{importProgress.step}</p>
+                  <div className="import-progress__bar">
+                    <div
+                      className="import-progress__fill"
+                      style={{ width: `${importProgress.pct}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+              {importStatus && (
+                <p className={`import-msg import-msg--${importStatus.ok ? 'success' : 'error'}`}>
+                  {importStatus.message}
+                </p>
+              )}
+            </div>
+          </>
+        )}
       </section>
-      )}
+
+      {/* ── Hilfe & Mehr ───────────────────────────────── */}
 
       <section className="profile-card">
         <button type="button" className="profile-import-card" onClick={onOpenFaq}>
@@ -410,23 +415,6 @@ export function ProfileView({
           <span className="profile-import-card__body">
             <span className="profile-import-card__title">{t.profile.faqTitle}</span>
             <span className="profile-import-card__desc">{t.profile.faqDesc}</span>
-          </span>
-          <span className="profile-import-card__arrow">›</span>
-        </button>
-        <button
-          type="button"
-          className="profile-import-card"
-          onClick={() => setShowFeedback(true)}
-          data-testid="profile-feedback-entry"
-        >
-          <span className="profile-import-card__icon">💬</span>
-          <span className="profile-import-card__body">
-            <span className="profile-import-card__title">
-              {feedbackAck ? t.feedback.profileTitleAck : t.feedback.profileTitle}
-            </span>
-            <span className="profile-import-card__desc">
-              {feedbackAck ? t.feedback.profileDescAck : t.feedback.profileDesc}
-            </span>
           </span>
           <span className="profile-import-card__arrow">›</span>
         </button>
@@ -446,6 +434,23 @@ export function ProfileView({
             <span className="profile-import-card__arrow">›</span>
           </button>
         )}
+        <button
+          type="button"
+          className="profile-import-card"
+          onClick={() => setShowFeedback(true)}
+          data-testid="profile-feedback-entry"
+        >
+          <span className="profile-import-card__icon">💬</span>
+          <span className="profile-import-card__body">
+            <span className="profile-import-card__title">
+              {feedbackAck ? t.feedback.profileTitleAck : t.feedback.profileTitle}
+            </span>
+            <span className="profile-import-card__desc">
+              {feedbackAck ? t.feedback.profileDescAck : t.feedback.profileDesc}
+            </span>
+          </span>
+          <span className="profile-import-card__arrow">›</span>
+        </button>
         <button type="button" className="profile-import-card" onClick={onOpenImpressum}>
           <span className="profile-import-card__icon">📄</span>
           <span className="profile-import-card__body">
@@ -477,6 +482,8 @@ export function ProfileView({
           </details>
         </section>
       )}
+
+      {/* ── Destructive ────────────────────────────────── */}
 
       <section className="profile-card">
         <button
