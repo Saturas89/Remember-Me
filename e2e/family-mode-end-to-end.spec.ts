@@ -11,7 +11,6 @@ import {
   seedAnswer,
   seedInvite,
   spawnDevice,
-  waitForShares,
 } from './helpers/family-mode-helpers'
 
 // REQ-015 – komplette Einladungs- und Teilen-Kette in einem einzigen Lauf.
@@ -49,7 +48,7 @@ test.describe('Familienmodus – Komplette Einladungs- und Teilen-Kette', () => 
     await bob.goto(invitePath(inviteCode))
 
     // PersonalPackReceiveView: enter name and answer the pack question.
-    await expect(bob.getByText(/Alice/i)).toBeVisible({ timeout: 15_000 })
+    await expect(bob.getByRole('heading', { name: /Alice/i })).toBeVisible({ timeout: 15_000 })
     const nameInput = bob.getByTestId('sandra-receive-name')
     if (await nameInput.isVisible({ timeout: 5_000 }).catch(() => false)) {
       await nameInput.fill('Bob')
@@ -87,11 +86,17 @@ test.describe('Familienmodus – Komplette Einladungs- und Teilen-Kette', () => 
     // 4) Alice geht zurück in den Hub — die Erinnerung wird per Auto-Share
     //    automatisch an Bob verschickt (REQ-022). Kein Picker mehr.
     await reopenFamilyHub(alice)
-    await waitForShares(state, 1, 20_000)
+
+    // Wait specifically for Alice's share of childhood-01. Bob's useAutoShare
+    // may fire a share of his q-seed-1 answer first; a count-based wait would
+    // be satisfied by Bob's share before Alice's arrives.
+    const aliceShareDeadline = Date.now() + 20_000
+    while (!state.shares.some(s => s.owner_id === aliceId.deviceId)) {
+      if (Date.now() > aliceShareDeadline) throw new Error('Timed out waiting for Alice\'s share')
+      await new Promise(r => setTimeout(r, 250))
+    }
 
     // Wire-Encryption: der Klartext darf nicht unverschlüsselt im Share landen.
-    // Only Alice's share of childhood-01 is checked; Bob may have auto-shared
-    // his own q-seed-1 answer back to Alice (REQ-022 fires for both devices).
     const aliceShares = state.shares.filter(s => s.owner_id === aliceId.deviceId)
     expect(aliceShares).toHaveLength(1)
     expect(typeof aliceShares[0].ciphertext).toBe('string')
@@ -99,15 +104,17 @@ test.describe('Familienmodus – Komplette Einladungs- und Teilen-Kette', () => 
     expect(JSON.stringify(aliceShares[0].ciphertext)).not.toContain('Cuxhaven')
 
     // 5) Bob entdeckt die Erinnerung im Feed und sieht den entschlüsselten Klartext.
+    // Use the specific card by content (Bob may also see his own q-seed-1 card in the feed).
     await reopenFamilyHub(bob)
     await bob.getByRole('tab', { name: /^Feed\b/ }).click()
-    await expect(bob.getByText('Ich bin in Cuxhaven am Meer aufgewachsen.')).toBeVisible({ timeout: 15_000 })
-    await expect(bob.locator('.shared-memory-card')).toContainText('Alice')
+    const aliceMemoryCard = bob.locator('.shared-memory-card').filter({ hasText: 'Cuxhaven' })
+    await expect(aliceMemoryCard).toBeVisible({ timeout: 15_000 })
+    await expect(aliceMemoryCard).toContainText('Alice')
 
     // 6) Bob ergänzt eine eigene Erinnerung dazu.
-    await bob.getByLabel('Ergänzung hinzufügen').fill('Ich erinnere mich noch an euer Reetdach!')
-    await bob.getByRole('button', { name: 'Ergänzung senden' }).click()
-    await expect(bob.getByRole('button', { name: /Gesendet/ })).toBeVisible({ timeout: 10_000 })
+    await aliceMemoryCard.getByLabel('Ergänzung hinzufügen').fill('Ich erinnere mich noch an euer Reetdach!')
+    await aliceMemoryCard.getByRole('button', { name: 'Ergänzung senden' }).click()
+    await expect(aliceMemoryCard.getByRole('button', { name: /Gesendet/ })).toBeVisible({ timeout: 10_000 })
 
     expect(state.annotations).toHaveLength(1)
     expect(state.annotations[0].author_id).toBe(bobId.deviceId)
@@ -115,7 +122,8 @@ test.describe('Familienmodus – Komplette Einladungs- und Teilen-Kette', () => 
     // 7) Alice sieht Bobs Ergänzung zurück.
     await reopenFamilyHub(alice)
     await expect(alice.getByText('Ich erinnere mich noch an euer Reetdach!')).toBeVisible({ timeout: 15_000 })
-    await expect(alice.locator('.shared-memory-annotations')).toContainText('Bob')
+    const childhoodCard = alice.locator('.shared-memory-card').filter({ hasText: 'Cuxhaven' })
+    await expect(childhoodCard.locator('.shared-memory-annotations')).toContainText('Bob')
 
     await aliceCtx.close()
     await bobCtx.close()
