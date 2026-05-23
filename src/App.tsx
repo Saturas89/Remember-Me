@@ -635,7 +635,6 @@ export default function App() {
           onSetAudio={setAnswerAudio}
           onDeleteAnswer={deleteAnswer}
           onDeleteEntry={id => { removeCustomQuestion(id); deleteAnswer(id) }}
-          onBack={() => goTo({ name: 'home' })}
         />
       )}
 
@@ -646,7 +645,6 @@ export default function App() {
             enableOnlineSharing()
             goTo({ name: 'sandra-flow', initialStep: 'anchor' })
           }}
-          onBack={() => goTo({ name: 'home' })}
         />
       )}
 
@@ -655,7 +653,6 @@ export default function App() {
           profileName={profile?.name ?? ''}
           friends={friends}
           sync={onlineSync}
-          onBack={() => goTo({ name: 'home' })}
           onRemoveContact={removeFriend}
           onOpenSandraFlow={() => goTo({ name: 'sandra-flow' })}
           onDeactivate={async () => {

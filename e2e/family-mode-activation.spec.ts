@@ -39,13 +39,10 @@ test.describe('Familienmodus – Aktivierung (FR-15.1 – FR-15.3)', () => {
     expect(identity.publicKey.length).toBeGreaterThan(20)
   })
 
-  test('Zurück im Intro-Screen aktiviert nichts', async ({ page }) => {
+  test('Intro-Screen ohne Einladen aktiviert nichts', async ({ page }) => {
     await completeOnboarding(page, 'Anna')
     await openFamilyTab(page)
     await expect(page.getByRole('heading', { name: 'Laufend verbunden bleiben', exact: true })).toBeVisible()
-
-    await page.getByRole('button', { name: 'Zurück', exact: true }).click()
-    await expect(page.getByRole('navigation', { name: 'Hauptnavigation' })).toBeVisible()
 
     const stored = await page.evaluate(() => {
       type Bridge = { get: () => Record<string, unknown> | null }

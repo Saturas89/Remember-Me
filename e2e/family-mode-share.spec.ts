@@ -117,7 +117,9 @@ test.describe('Familienmodus – Auto-Share & Pause (REQ-022)', () => {
     await expect(swipeEl).toBeVisible()
     const box = await swipeEl.boundingBox()
     if (!box) throw new Error('swipe element has no bounding box')
-    const startX = box.x + Math.min(80, box.width * 0.3)
+    // 100px ensures dx > SWIPE_THRESHOLD (80px) when webkit fires pointerleave
+    // at the element boundary before pointer capture is honoured.
+    const startX = box.x + 100
     const endX = box.x - 20
     const midY = box.y + box.height / 2
     await alice.mouse.move(startX, midY)

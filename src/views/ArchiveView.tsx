@@ -23,7 +23,6 @@ interface Props {
   onSetAudio: (questionId: string, categoryId: string, audioId: string | undefined, audioTranscribedAt: string | undefined, audioTranscript?: string) => void
   onDeleteAnswer: (questionId: string) => void
   onDeleteEntry: (questionId: string) => void
-  onBack: () => void
 }
 
 export function ArchiveView({
@@ -38,7 +37,6 @@ export function ArchiveView({
   onSetAudio,
   onDeleteAnswer,
   onDeleteEntry,
-  onBack,
 }: Props) {
   const { t, locale } = useTranslation()
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -295,9 +293,6 @@ export function ArchiveView({
     <div className="archive-view">
       <h1 className="sr-only">{t.archiveView.pageTitle}</h1>
       <div className="archive-topbar">
-        <button className="btn btn--ghost btn--sm no-print" onClick={onBack}>
-          {t.global.back}
-        </button>
         <h2 className="archive-title">{t.archiveView.title}</h2>
       </div>
 

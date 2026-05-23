@@ -122,14 +122,12 @@ describe('Familienmodus – Aktivierung (FR-15.1 – FR-15.3)', () => {
     expect(typeof stored.onlineSharing?.activatedAt).toBe('string')
   })
 
-  it('Zurück im Intro-Screen aktiviert nichts', async () => {
+  it('Intro-Screen ohne Einladen aktiviert nichts', async () => {
     preSeedReturningUser()
     render(<App />)
 
     await gotoFamilyTab()
     expect(await screen.findByRole('heading', { name: 'Laufend verbunden bleiben' })).toBeTruthy()
-
-    fireEvent.click(screen.getByRole('button', { name: 'Zurück' }))
 
     await waitFor(() => expect(bootstrapSession).not.toHaveBeenCalled())
     expect(readState().onlineSharing).toBeUndefined()

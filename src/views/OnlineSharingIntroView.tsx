@@ -4,7 +4,6 @@ interface Props {
   /** True when VITE_SUPABASE_URL + VITE_SUPABASE_ANON_KEY are set. */
   configured: boolean
   onInvite: () => void
-  onBack: () => void
 }
 
 /**
@@ -12,14 +11,13 @@ interface Props {
  * The "Jemanden einladen"-button is the first place in the app that can trigger
  * online traffic — explaining clearly what goes where is the whole point.
  */
-export function OnlineSharingIntroView({ configured, onInvite, onBack }: Props) {
+export function OnlineSharingIntroView({ configured, onInvite }: Props) {
   const { t } = useTranslation()
   const i = t.onlineSharingIntro
 
   return (
     <div className="friends-view">
       <div className="quiz-topbar">
-        <button className="btn btn--ghost btn--sm" onClick={onBack}>{i.back}</button>
         <h2 className="archive-title">{i.title}</h2>
       </div>
 

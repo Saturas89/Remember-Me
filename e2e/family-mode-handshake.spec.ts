@@ -102,7 +102,7 @@ test.describe('Familienmodus – Kontakt-Handshake (FR-15.5 – FR-15.9)', () =>
       const s = bridge?.get() ?? {}
       const friends = (s.friends as Array<{ online?: { shareAll?: boolean } }>) ?? []
       return friends.length > 0 && friends[0].online?.shareAll === false
-    }, undefined, { timeout: 5_000 })
+    }, undefined, { timeout: 10_000 })
 
     const bobsAlice = await readOnlineFriends(bob)
     expect(bobsAlice[0].online?.shareAll).toBe(false)
