@@ -128,8 +128,6 @@ export interface Translations {
     restoreButton: string
     faqTitle: string
     faqDesc: string
-    privacyTitle: string
-    privacyDesc: string
     impressumTitle: string
     impressumDesc: string
     deleteAllTitle: string
@@ -533,42 +531,6 @@ export interface Translations {
     liabilityLinks: string
     copyrightHeading: string
     copyrightContent: string
-  }
-
-  privacy: {
-    title: string
-    intro: string
-    contactEmail: string
-    controllerHeading: string
-    localStorageHeading: string
-    localStorageBody: string
-    localStorageItem1: string
-    localStorageItem2: string
-    localStorageItem3: string
-    localStorageLegal: string
-    cloudSyncHeading: string
-    cloudSyncBody: string
-    cloudSyncLegal: string
-    analyticsHeading: string
-    analyticsBody: string
-    analyticsOptOut: string
-    thirdPartyHeading: string
-    thirdPartyBody: string
-    thirdPartySupabase: string
-    thirdPartyPosthog: string
-    thirdPartyDrive: string
-    rightsHeading: string
-    rightsBody: string
-    rightsAccess: string
-    rightsRectification: string
-    rightsDeletion: string
-    rightsPortability: string
-    rightsObjection: string
-    rightsContact: string
-    authorityHeading: string
-    authorityBody: string
-    authorityName: string
-    lastUpdated: string
   }
 
   feature: {

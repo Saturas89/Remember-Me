@@ -26,7 +26,6 @@ import { ProfileView } from './views/ProfileView'
 import { CustomQuestionsView } from './views/CustomQuestionsView'
 import { FaqView } from './views/FaqView'
 import { ImpressumView } from './views/ImpressumView'
-import { PrivacyView } from './views/PrivacyView'
 import { OnboardingView } from './views/OnboardingView'
 import { SharedMemoryView } from './views/SharedMemoryView'
 import { PrivateSyncSetupView } from './views/PrivateSyncSetupView'
@@ -80,7 +79,6 @@ type View =
   | { name: 'custom-questions' }
   | { name: 'faq'; from: 'profile' | 'home' }
   | { name: 'impressum'; from: 'profile' | 'home' }
-  | { name: 'privacy'; from: 'profile' | 'home' }
   | { name: 'online-intro' }
   | { name: 'online-hub' }
   | { name: 'sandra-flow'; initialStep?: import('./views/SandraFlowView').SandraStep }
@@ -687,7 +685,6 @@ export default function App() {
           onImportBackup={restoreBackup}
           onOpenFaq={() => { window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior }); setView({ name: 'faq', from: 'profile' }) }}
           onOpenImpressum={() => { window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior }); setView({ name: 'impressum', from: 'profile' }) }}
-          onOpenPrivacy={() => { window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior }); setView({ name: 'privacy', from: 'profile' }) }}
           onShowReleaseNotes={() => setShowReleaseNotes(true)}
           onDeleteAllData={async () => {
             if (privateSync.isEnabled) await privateSync.deactivate(true)
@@ -753,10 +750,6 @@ export default function App() {
 
       {view.name === 'impressum' && (
         <ImpressumView onBack={() => goTo({ name: view.from } as View)} />
-      )}
-
-      {view.name === 'privacy' && (
-        <PrivacyView onBack={() => goTo({ name: view.from } as View)} />
       )}
 
       {view.name === 'sandra-flow' && (

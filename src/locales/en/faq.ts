@@ -27,6 +27,14 @@ export const FAQ_EN = [
         q: 'Why is Storyhold released under the AGPL license?',
         a: 'We want to back up a promise, not just marketing: Storyhold stays open. You can inspect the source code on GitHub and verify for yourself that your life story stays private – and you can even self-host Storyhold if you want to. On top of that, the AGPL-3.0 license makes sure future versions stay open too, even if somebody else takes over running Storyhold.',
       },
+      {
+        q: 'Does the app use analytics software?',
+        a: 'Yes – Storyhold uses PostHog (EU servers, Frankfurt) for anonymous usage analysis: which features are used and how often, device category, app version. No content from your memories is collected, no cookies are set, and IP addresses are not stored permanently. There is currently no built-in opt-out. Anyone who wants to block this entirely can enable tracking protection in their browser settings.',
+      },
+      {
+        q: 'How do I delete all my data?',
+        a: 'Go to Profile → scroll to the very bottom → "Delete all data". This permanently removes all local data (answers, photos, recordings, settings). If cloud sync is active, the cloud data is deleted too. The app then restarts as if opened for the first time.',
+      },
     ],
   },
   {
