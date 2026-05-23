@@ -44,7 +44,9 @@ const defaultProps = {
   onOpenImport: vi.fn(),
   onOpenFaq: vi.fn(),
   onOpenImpressum: vi.fn(),
+  onOpenPrivacy: vi.fn(),
   onShowReleaseNotes: vi.fn(),
+  onDeleteAllData: vi.fn(async () => {}),
 }
 
 function getFill(container: HTMLElement) {

@@ -132,6 +132,10 @@ export interface Translations {
     privacyDesc: string
     impressumTitle: string
     impressumDesc: string
+    deleteAllTitle: string
+    deleteAllDesc: string
+    deleteAllButton: string
+    deleteAllConfirmPrompt: string
     confirmZip: string
     confirmJson: string
     preparing: string

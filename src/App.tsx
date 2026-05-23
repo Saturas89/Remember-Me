@@ -64,6 +64,7 @@ import { useReminder } from './hooks/useReminder'
 import { useStreak } from './hooks/useStreak'
 import { AppModeProvider } from './hooks/useAppMode'
 import { exportAsMarkdown, exportAsEnrichedJSON, downloadFile, toSafeFilename } from './utils/export'
+import { clearAllData } from './utils/clearAllData'
 import { trackTabChanged, trackFeatureOpened } from './lib/analytics'
 import type { Category, InviteData, AnswerExport, MemorySharePayload, ContactHandshake } from './types'
 import './App.css'
@@ -688,6 +689,11 @@ export default function App() {
           onOpenImpressum={() => { window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior }); setView({ name: 'impressum', from: 'profile' }) }}
           onOpenPrivacy={() => { window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior }); setView({ name: 'privacy', from: 'profile' }) }}
           onShowReleaseNotes={() => setShowReleaseNotes(true)}
+          onDeleteAllData={async () => {
+            if (privateSync.isEnabled) await privateSync.deactivate(true)
+            await clearAllData()
+            window.location.reload()
+          }}
           onOpenDebug={() => setView({ name: 'debug' })}
         />
       )}
