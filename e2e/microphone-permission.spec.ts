@@ -51,7 +51,7 @@ async function denyMicrophone(ctx: BrowserContext) {
  *  record button, triggering the getUserMedia call. */
 async function triggerRecording(page: import('@playwright/test').Page) {
   await page.goto('/')
-  await expect(page.getByRole('heading', { name: /Hallo/ })).toBeVisible()
+  await expect(page.locator('.home-greeting')).toBeVisible()
   await page.getByRole('heading', { name: 'Kindheit & Jugend' }).click()
   await expect(page.locator('textarea.input-textarea').first()).toBeVisible()
 
