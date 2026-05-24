@@ -208,8 +208,7 @@ test.describe('Real-DB: Vollständiger Alice → Bob Share-Flow', () => {
     expect(sharesBefore?.length ?? 0).toBeGreaterThan(0)
 
     // Alice löscht ihr Gerät (= Familienmodus deaktivieren)
-    await alice.getByRole('tab', { name: 'Einstellungen', exact: true }).click()
-    await alice.getByTestId('deactivate-sharing').click()
+    await alice.getByTestId('deactivate-sharing-trigger').click()
     await alice.getByTestId('confirm-deactivate').click()
 
     // Admin-API: Share muss kaskadiert weg sein

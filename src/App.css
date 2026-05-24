@@ -5561,6 +5561,17 @@ details[open] .faq-item__chevron {
   line-height: 1.5;
 }
 
+.online-deactivate-trigger {
+  margin-left: auto;
+  flex-shrink: 0;
+  font-size: 0.8rem;
+  opacity: 0.6;
+}
+
+.online-deactivate-trigger:hover {
+  opacity: 1;
+}
+
 .online-confirm {
   background: var(--warn-bg, rgba(220, 38, 38, 0.08));
   border: 1px solid var(--warn, #dc2626);
@@ -5569,6 +5580,17 @@ details[open] .faq-item__chevron {
   display: flex;
   flex-direction: column;
   gap: 0.6rem;
+}
+
+.online-confirm--topbar {
+  margin-bottom: 1rem;
+}
+
+.online-confirm-actions {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  align-items: center;
 }
 
 .online-confirm p {

@@ -161,9 +161,8 @@ describe('Familienmodus – lokales Deactivate (FR-15.22 – FR-15.25 lokaler Te
     // Hub direkt, weil online-Kontakt vorhanden → Friends-Tab routet zu online-hub.
     await screen.findByRole('heading', { name: 'Online teilen' })
 
-    // Einstellungen-Tab → Deaktivieren → Bestätigung.
-    fireEvent.click(screen.getByRole('tab', { name: 'Einstellungen' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Deaktivieren' }))
+    // Deaktivieren-Button (oben rechts) → Bestätigung.
+    fireEvent.click(screen.getByTestId('deactivate-sharing-trigger'))
     fireEvent.click(screen.getByRole('button', { name: /Ja, alles löschen/ }))
 
     await waitFor(() => expect(deactivateOnlineSharing).toHaveBeenCalledTimes(1))

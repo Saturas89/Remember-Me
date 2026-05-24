@@ -37,17 +37,14 @@ interface Props {
   onOpenSandraFlow: () => void
 }
 
-type Tab = 'feed' | 'contacts' | 'settings'
+type Tab = 'feed' | 'contacts'
 
 /**
  * The post-opt-in control surface for online sharing.
  *
  * Flow (REQ-022):
  *  • 0 contacts → OnboardingScreen with a single Sandra-flow CTA
- *  • ≥1 contacts → Three-tab hub: Feed · Kontakte · Einstellungen
- *
- * The legacy "Teilen" tab (manual memory picker) is gone – per-friend
- * auto-share runs from useAutoShare in App.tsx instead.
+ *  • ≥1 contacts → Two-tab hub: Feed · Kontakte (deactivate lives in topbar)
  */
 export function OnlineSharingHubView({
   profileName,
@@ -60,6 +57,7 @@ export function OnlineSharingHubView({
   const { t } = useTranslation()
   const h = t.onlineSharingHub
   const [tab, setTab] = useState<Tab>('feed')
+  const [confirming, setConfirming] = useState(false)
   const onlineFriends = useMemo(() => friends.filter(f => f.online), [friends])
   const anySharing = useMemo(
     () => onlineFriends.some(f => f.online?.shareAll === true),
@@ -70,7 +68,36 @@ export function OnlineSharingHubView({
     <div className="friends-view">
       <div className="quiz-topbar">
         <h2 className="archive-title">{h.title}</h2>
+        <button
+          className="btn btn--ghost btn--sm online-deactivate-trigger"
+          onClick={() => setConfirming(c => !c)}
+          data-testid="deactivate-sharing-trigger"
+          aria-expanded={confirming}
+        >
+          {h.settings.deactivateButton}
+        </button>
       </div>
+
+      {confirming && (
+        <div className="online-confirm online-confirm--topbar">
+          <p><strong>{h.settings.confirmStrong}</strong>{h.settings.confirmRest}</p>
+          <div className="online-confirm-actions">
+            <button
+              data-testid="confirm-deactivate"
+              className="share-cta-btn share-cta-btn--error"
+              onClick={onDeactivate}
+            >
+              {h.settings.confirmYes}
+            </button>
+            <button
+              className="btn btn--ghost btn--sm"
+              onClick={() => setConfirming(false)}
+            >
+              {h.settings.confirmNo}
+            </button>
+          </div>
+        </div>
+      )}
 
       {sync.error && (
         <section className="friends-section">
@@ -83,9 +110,6 @@ export function OnlineSharingHubView({
           >
             {h.syncErrorRetry}
           </button>
-          {/* The raw error.message is kept as a collapsed <details> so
-              technically inclined users (or bug reporters) can still grab it
-              without scaring the Senior persona on first sight. */}
           <details className="sync-error-details">
             <summary className="friends-hint">{h.syncErrorDetailsToggle}</summary>
             <p className="friends-hint sync-error-details__raw">
@@ -112,9 +136,6 @@ export function OnlineSharingHubView({
             <TabButton active={tab === 'contacts'} onClick={() => setTab('contacts')}>
               {h.tabs.contacts}
             </TabButton>
-            <TabButton active={tab === 'settings'} onClick={() => setTab('settings')}>
-              {h.tabs.settings}
-            </TabButton>
           </nav>
 
           {tab === 'feed' && (
@@ -133,9 +154,6 @@ export function OnlineSharingHubView({
               onRemoveContact={onRemoveContact}
               onOpenSandraFlow={onOpenSandraFlow}
             />
-          )}
-          {tab === 'settings' && (
-            <SettingsTab onDeactivate={onDeactivate} />
           )}
         </>
       )}
@@ -464,43 +482,3 @@ function ContactsTab({
   )
 }
 
-// ── Settings / Deactivate ───────────────────────────────────────────────────
-
-function SettingsTab({ onDeactivate }: { onDeactivate: () => void }) {
-  const { t } = useTranslation()
-  const s = t.onlineSharingHub.settings
-  const [confirming, setConfirming] = useState(false)
-
-  return (
-    <section className="friends-section">
-      <h3 className="friends-section-title">{s.heading}</h3>
-      <p className="friends-hint">{s.hint}</p>
-      {!confirming ? (
-        <button
-          data-testid="deactivate-sharing"
-          className="btn btn--ghost btn--sm"
-          onClick={() => setConfirming(true)}
-        >
-          {s.deactivateButton}
-        </button>
-      ) : (
-        <div className="online-confirm">
-          <p><strong>{s.confirmStrong}</strong>{s.confirmRest}</p>
-          <button
-            data-testid="confirm-deactivate"
-            className="share-cta-btn share-cta-btn--error"
-            onClick={onDeactivate}
-          >
-            {s.confirmYes}
-          </button>
-          <button
-            className="btn btn--ghost btn--sm"
-            onClick={() => setConfirming(false)}
-          >
-            {s.confirmNo}
-          </button>
-        </div>
-      )}
-    </section>
-  )
-}
