@@ -124,7 +124,7 @@ export const SANDRA_FLOW_EN: SandraFlowStrings = {
     relationshipHint:
       'Some of these are very personal. You might want to call {anrede} before sending.',
     backToList: 'Back to the list',
-    shareMessage: "I wrote down a few questions I've been wanting to ask you for a long time 💌 Answer whenever you feel like it:\n\n{url}",
+    shareMessage: "I wrote down a few questions I've been wanting to ask you for a long time 💌 Answer whenever you feel like it:",
     shareTitle: '{anrede}, I have questions for you',
     recipientPreviewHeading: '{anrede} will see this when they open the link:',
     recipientPreviewLines: [

@@ -74,7 +74,7 @@ export function SandraShareStep({
     if (isSharing || !shareUrl) return
     setIsSharing(true)
     const title = t.share.shareTitle.replace('{anrede}', anchor.anrede)
-    const text = t.share.shareMessage.replace('{url}', shareUrl)
+    const text = t.share.shareMessage
 
     if (typeof navigator.share === 'function') {
       navigator

@@ -129,7 +129,7 @@ export const SANDRA_FLOW_DE = {
     relationshipHint:
       'Ein paar Fragen sind sehr persönlich. Vielleicht magst du {anrede} kurz anrufen, bevor du den Link schickst.',
     backToList: 'Zurück zur Liste',
-    shareMessage: 'Ich habe dir ein paar Fragen aufgeschrieben, die ich dir schon lange stellen wollte 💌 Beantworte sie, wann es dir passt:\n\n{url}',
+    shareMessage: 'Ich habe dir ein paar Fragen aufgeschrieben, die ich dir schon lange stellen wollte 💌 Beantworte sie, wann es dir passt:',
     shareTitle: '{anrede}, ich habe Fragen für dich',
     /** What the recipient sees when they open the link – shown to the sender
      *  before they hit send, so they don't share blind. The `{pronoun}` is
