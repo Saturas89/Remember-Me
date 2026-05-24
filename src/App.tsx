@@ -550,6 +550,7 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior })
     const paths: Partial<Record<View['name'], string>> = {
       home: '/', friends: '/friends', archive: '/archive', profile: '/profile', sync: '/sync',
+      'online-hub': '/friends', 'online-intro': '/friends',
     }
     let path = paths[v.name]
     // Quiz lands on its own pseudo-route so deep-link & welcome-back-continue
