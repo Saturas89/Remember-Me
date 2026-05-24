@@ -313,7 +313,6 @@ export const UI_DE = {
     shareCardSubtitle: 'Teile Erinnerungen sicher & privat – ohne Account.',
     shareCardTitleWithName: '{name} lädt ein',
     shareInviteText: '{name} möchte Storyhold-Erinnerungen mit dir teilen. Öffne diesen Link, um dich zu verknüpfen:',
-    shareBackText: '{name} möchte sich mit dir verknüpfen. Öffne diesen Link:',
     shareSheetTitle: 'Storyhold – Online-Kontakt',
     introTextSuffix: ' möchte Erinnerungen mit dir teilen.',
     introTextDefaultName: 'Jemand',
@@ -324,13 +323,11 @@ export const UI_DE = {
     connectingHint: 'Das dauert meist unter 10 Sekunden.',
     connectingRetry: '↺ Erneut versuchen',
     connectingTimeout: 'Die Verbindung dauert länger als gewöhnlich. Bitte prüfe deine Internet-Verbindung und versuche es erneut.',
-    savedHint: '{name} ist jetzt bei dir gespeichert. Schicke auch deinen Link zurück, damit ihr euch gegenseitig Erinnerungen schicken könnt:',
+    savedHint: '{name} ist jetzt mit dir verknüpft.',
     savedHintDefaultName: 'Der Kontakt',
-    shareBackButton: 'Meinen Link zurück senden',
-    shareBackCopied: 'Link kopiert ✓',
     doneButton: 'Fertig',
     shareAllOptInLabel: 'Meine Erinnerungen automatisch mit {name} teilen',
-    shareAllOptInHint: 'Neue Antworten gehen direkt an {name}. Du kannst das jederzeit in den Kontakten umstellen.',
+    shareAllOptInHint: 'Alle Antworten – auch bestehende – gehen direkt an {name}. Du kannst das jederzeit in den Kontakten umstellen.',
   },
 
   onlineSharingHub: {
