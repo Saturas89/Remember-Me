@@ -62,7 +62,7 @@ test.describe('Mobile-UX (Real-DB) – Touch, Viewport, Tap-Targets', () => {
     const viewport = alice.viewportSize()!
     const tabs = tablist.getByRole('tab')
     const count = await tabs.count()
-    expect(count, 'Hub sollte drei Tabs haben (Feed / Kontakte / Einstellungen)').toBe(3)
+    expect(count, 'Hub sollte zwei Tabs haben (Feed / Kontakte)').toBe(2)
 
     for (let i = 0; i < count; i++) {
       const box = await tabs.nth(i).boundingBox()
@@ -251,7 +251,7 @@ test.describe('Mobile-UX (Real-DB) – Touch, Viewport, Tap-Targets', () => {
     // would cause cleanupUsers() to call deleteUser('') and throw on UUID validation.
     createdUsers.push(aliceId.deviceId)
 
-    await expect(alice.getByRole('heading', { name: 'Online teilen', exact: true })).toBeVisible()
+    await expect(alice.getByRole('heading', { name: 'Familienmodus', exact: true })).toBeVisible()
 
     await aliceCtx.close()
   })

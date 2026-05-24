@@ -24,7 +24,7 @@ async function completeOnboarding(page: Page, name: string) {
 async function openFamilyTab(page: Page) {
   const nav = page.getByRole('navigation', { name: 'Hauptnavigation' })
   await nav.getByRole('button', { name: 'Familie', exact: true }).click()
-  await expect(page.getByRole('heading', { name: 'Laufend verbunden bleiben', exact: true })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Familienmodus', exact: true })).toBeVisible()
 }
 
 test.describe('Storyhold – Familie-Tab', () => {

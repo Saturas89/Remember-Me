@@ -40,7 +40,7 @@ async function enterHubView(page: import('@playwright/test').Page): Promise<void
   // Hub heading appears as soon as the component mounts – independent of whether
   // bootstrapSession() has succeeded or failed.
   await expect(
-    page.getByRole('heading', { name: 'Online teilen', exact: true }),
+    page.getByRole('heading', { name: 'Familienmodus', exact: true }),
   ).toBeVisible({ timeout: 20_000 })
 }
 

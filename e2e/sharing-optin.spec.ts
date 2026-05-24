@@ -34,7 +34,7 @@ async function completeOnboarding(page: Page, name: string) {
 async function openFamilyTab(page: Page) {
   const nav = page.getByRole('navigation', { name: 'Hauptnavigation' })
   await nav.getByRole('button', { name: 'Familie', exact: true }).click()
-  await expect(page.getByRole('heading', { name: 'Laufend verbunden bleiben', exact: true })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Familienmodus', exact: true })).toBeVisible()
 }
 
 function attachNetworkSpy(page: Page): Request[] {
@@ -75,7 +75,7 @@ test.describe('Online sharing – opt-in contract', () => {
     const offending = attachNetworkSpy(page)
     await completeOnboarding(page, 'Anna')
     await openFamilyTab(page)
-    await expect(page.getByRole('heading', { name: 'Laufend verbunden bleiben', exact: true })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Familienmodus', exact: true })).toBeVisible()
     await page.waitForTimeout(500)
     await expect.poll(() => offending.length).toBe(0)
   })

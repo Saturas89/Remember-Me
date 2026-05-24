@@ -23,7 +23,7 @@ test.describe('Familienmodus – Aktivierung (FR-15.1 – FR-15.3)', () => {
   test('Familie-Tab öffnet direkt den Familienmodus-Intro-Screen ohne Checkbox', async ({ page }) => {
     await completeOnboarding(page, 'Anna')
     await openFamilyTab(page)
-    await expect(page.getByRole('heading', { name: 'Laufend verbunden bleiben', exact: true })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Familienmodus', exact: true })).toBeVisible()
     await expect(page.getByRole('button', { name: /Jemanden einladen/ })).toBeVisible()
     await expect(page.getByRole('checkbox')).not.toBeVisible()
   })
@@ -32,7 +32,7 @@ test.describe('Familienmodus – Aktivierung (FR-15.1 – FR-15.3)', () => {
     await completeOnboarding(page, 'Anna')
     await openFamilyHub(page)
 
-    await expect(page.getByRole('heading', { name: 'Online teilen', exact: true })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Familienmodus', exact: true })).toBeVisible()
 
     const identity = await readDeviceIdentity(page)
     expect(identity.deviceId).toMatch(/[0-9a-f-]{36}/)
@@ -42,7 +42,7 @@ test.describe('Familienmodus – Aktivierung (FR-15.1 – FR-15.3)', () => {
   test('Intro-Screen ohne Einladen aktiviert nichts', async ({ page }) => {
     await completeOnboarding(page, 'Anna')
     await openFamilyTab(page)
-    await expect(page.getByRole('heading', { name: 'Laufend verbunden bleiben', exact: true })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Familienmodus', exact: true })).toBeVisible()
 
     const stored = await page.evaluate(() => {
       type Bridge = { get: () => Record<string, unknown> | null }

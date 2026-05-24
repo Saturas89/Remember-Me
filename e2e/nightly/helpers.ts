@@ -151,6 +151,6 @@ export async function waitForHubReady(page: Page): Promise<void> {
     { timeout: 45_000 },
   )
   await expect(
-    page.getByRole('heading', { name: 'Online teilen', exact: true }),
+    page.getByRole('heading', { name: 'Familienmodus', exact: true }),
   ).toBeVisible({ timeout: 10_000 })
 }
