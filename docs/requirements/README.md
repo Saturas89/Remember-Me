@@ -23,6 +23,7 @@ Alle funktionalen und nicht-funktionalen Anforderungen des Projekts.
 | [REQ-013](./REQ-013-archive-import.md) | Erinnerungs-Archiv-Import (ZIP + JSON) | Import | Medium | ✔️ COMPLETED |
 | [REQ-014](./REQ-014-release-notes.md) | Release Notes / „Was ist neu?" | UX | Low | ✔️ COMPLETED |
 | [REQ-015](./REQ-015-familienmodus.md) | Familienmodus (E2EE Online-Teilen) | Sharing | Medium | ✔️ COMPLETED |
+| [REQ-015-B](./REQ-015B-invite-links.md) | Kurze Einladungslinks & automatisch bidirektionaler Handshake | Sharing | High | ✔️ COMPLETED |
 | [REQ-016](./REQ-016-pwa-notifications.md) | Engagement-Benachrichtigungen | Engagement | Medium | 🟡 PLANNED |
 | [REQ-017](./REQ-017-privater-sync.md) | Privater Sync (geräteübergreifend, 3 Provider) | Sync | High | ✔️ COMPLETED |
 | [REQ-018](./REQ-018-sync-key-loss-reset.md) | Sync-Login: „Schlüssel verloren?"-Reset | Sync | Medium | ✔️ COMPLETED |
