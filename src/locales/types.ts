@@ -330,8 +330,6 @@ export interface Translations {
     shareCardTitleWithName: string
     /** "{name} möchte Storyhold-Erinnerungen mit dir teilen…" – uses {name}. */
     shareInviteText: string
-    /** "{name} möchte sich mit dir verknüpfen. Öffne diesen Link:" – uses {name}. */
-    shareBackText: string
     shareSheetTitle: string
     /** "möchte sich mit dir für Online-Erinnerungen verknüpfen." */
     introTextSuffix: string
@@ -343,11 +341,9 @@ export interface Translations {
     connectingHint: string
     connectingRetry: string
     connectingTimeout: string
-    /** "{name} wurde in deiner Kontaktliste gespeichert …" – uses {name}. */
+    /** "{name} ist jetzt verknüpft." – uses {name}. */
     savedHint: string
     savedHintDefaultName: string
-    shareBackButton: string
-    shareBackCopied: string
     doneButton: string
     /** REQ-022 §4.2: opt-in checkbox below the connection status. Uses {name}. */
     shareAllOptInLabel: string

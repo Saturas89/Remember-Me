@@ -312,7 +312,6 @@ export const UI_EN = {
     shareCardSubtitle: 'Share memories safely & privately – no account.',
     shareCardTitleWithName: '{name} invites you',
     shareInviteText: '{name} wants to share Storyhold memories with you. Open this link to connect:',
-    shareBackText: '{name} wants to connect with you. Open this link:',
     shareSheetTitle: 'Storyhold – Online contact',
     introTextSuffix: ' wants to connect with you for online memories.',
     introTextDefaultName: 'Someone',
@@ -322,13 +321,11 @@ export const UI_EN = {
     connectingHint: 'This usually takes less than 10 seconds.',
     connectingRetry: '↺ Try again',
     connectingTimeout: 'The connection is taking longer than usual. Please check your network and try again.',
-    savedHint: '{name} has been saved to your contact list (encrypted public key + device ID). So you can send each other memories, send your link back too:',
+    savedHint: '{name} is now connected with you.',
     savedHintDefaultName: 'The contact',
-    shareBackButton: 'Send my link back',
-    shareBackCopied: 'Link copied ✓',
     doneButton: 'Done',
     shareAllOptInLabel: 'Auto-share my memories with {name}',
-    shareAllOptInHint: 'New answers go straight to {name}. You can change this anytime in Contacts.',
+    shareAllOptInHint: 'All answers – including existing ones – go straight to {name}. You can change this anytime in Contacts.',
   },
 
   onlineSharingHub: {

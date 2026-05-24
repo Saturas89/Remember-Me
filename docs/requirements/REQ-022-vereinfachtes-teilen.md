@@ -52,7 +52,7 @@ Die mentale Last verschiebt sich von **Memory-zentrisch** („Welche Erinnerung 
 
 ### 4.2 Opt-in beim Handshake
 
-- **FR-22.3** `ContactHandshakeView` zeigt unterhalb des Verbindungs-Status eine Checkbox **„Meine Erinnerungen automatisch mit {name} teilen"** mit Hint-Text **„Neue Antworten gehen direkt an {name}. Du kannst das jederzeit in den Kontakten umstellen."** Default: **angehakt** (`true`).
+- **FR-22.3** `ContactHandshakeView` zeigt unterhalb des Verbindungs-Status eine Checkbox **„Meine Erinnerungen automatisch mit {name} teilen"** mit Hint-Text **„Alle Antworten – auch bestehende – gehen direkt an {name}. Du kannst das jederzeit in den Kontakten umstellen."** Default: **angehakt** (`true`).
 - **FR-22.4** Der Checkbox-Wert wird über die erweiterte Signatur `onAcceptContact(handshake, shareAll)` durchgereicht und in `friend.online.shareAll` gespeichert.
 - **FR-22.5** Auto-Accept (REQ-015 §4.2 + Bidirektionaler Handshake): falls die Annahme bereits beim ersten Render läuft (Online-Sharing schon aktiv), wird der aktuelle Checkbox-State zum Zeitpunkt des `onAcceptContact`-Calls verwendet. Eine spätere Änderung muss via `setFriendShareAll(friendId, shareAll)` nachgezogen werden.
 - **FR-22.6** `PersonalPackReceiveView` (Sandra-Quiz-Empfang aus REQ-020) zeigt **keine eigene Checkbox**, um Doppelfragen zu vermeiden. Die Entscheidung fällt erst in `ContactHandshakeView` direkt nach dem Quiz.
@@ -60,8 +60,8 @@ Die mentale Last verschiebt sich von **Memory-zentrisch** („Welche Erinnerung 
 ### 4.3 Auto-Share-Mechanik
 
 - **FR-22.7** Bei `friend.online.shareAll === true` wird jede gespeicherte Antwort mit nicht-leerem `value` automatisch via `shareMemoryToAllFriends()` verschlüsselt verschickt — kein manueller Klick.
-- **FR-22.8** Auto-Share läuft auch beim App-Start (`sync.ready=true`) als **Backfill** aller bisherigen Answers an alle aktiven Friends mit `shareAll=true`.
-- **FR-22.9** Beim Toggle `false → true` für einen einzelnen Friend wird ein Backfill an genau diesen Friend ausgelöst.
+- **FR-22.8** Auto-Share läuft auch beim App-Start (`sync.ready=true`) als **Backfill** aller bisherigen Answers an alle aktiven Friends mit `shareAll=true`. Das schließt Antworten ein, die **vor** dem Verbinden erstellt wurden – es gibt keinen `linkedAt`-Filter. Idempotenz via Share-Log (FR-22.10) verhindert Mehrfach-Shares.
+- **FR-22.9** Beim Toggle `false → true` für einen einzelnen Friend wird ein Backfill aller bestehenden Answers an genau diesen Friend ausgelöst.
 - **FR-22.10** **Idempotenz**: Ein IndexedDB-Store `rm-share-log` (Store-Name `share-log`, Key `${answerId}-${friendDeviceId}` → `lastSharedAt: string`) verhindert Mehrfach-Shares. Eine Memory wird nur dann (erneut) geteilt, wenn `lastSharedAt < answer.updatedAt` oder noch kein Log-Eintrag existiert.
 - **FR-22.11** Die Queue läuft mit maximal 1 concurrent. Bei Fehler (Netzwerk, Quota) wird mit exponential backoff (2 s / 4 s / 8 s / 16 s) retry'd; nach 4 erfolglosen Versuchen pro Memory wartet die Queue auf den nächsten Mount.
 
