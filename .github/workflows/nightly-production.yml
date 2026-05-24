@@ -151,6 +151,7 @@ jobs:
 #   • e2e/nightly/invitation-existing-profile.spec.ts  – Einladungslink Datenschutz
 #   • e2e/nightly/pending-email-open-mail.spec.ts      – Open-Mail-Button: bekannte/unbekannte Domains, Resend
 #   • e2e/nightly/contact-removal-real.spec.ts         – Feed-Filter + share_recipients-Cleanup nach Kontakt-Entfernung
+#   • e2e/nightly/sharing-edge-cases-real.spec.ts      – Backfill bestehender Antworten, shareAll=false, Toggle, Asymmetrie
   production-nightly:
     name: Production Nightly – ${{ matrix.entry.name }}
     runs-on: ubuntu-latest
