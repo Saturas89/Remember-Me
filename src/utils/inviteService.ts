@@ -36,7 +36,7 @@ export async function createInviteAndGetUrl(pack: QuestionPack, contact: Contact
   const payload: InvitePayload = { pack, contact }
   const { error } = await supabase.from('invites').insert({ code, payload })
   if (error) throw new Error('invite-create-failed')
-  return `${window.location.origin}/join/${code}`
+  return `https://storyhold.app/join/${code}`
 }
 
 /**
