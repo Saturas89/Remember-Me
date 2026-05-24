@@ -202,7 +202,22 @@ function FeedTab({
   const { t } = useTranslation()
   const e = t.onlineSharingHub.feedEmpty
 
-  if (memories.length === 0) {
+  // Only show memories from the current user or from contacts still in the list.
+  // This ensures removed contacts' memories disappear immediately without waiting
+  // for a full Supabase refresh.
+  const knownDeviceIds = useMemo(
+    () => new Set([
+      ...(sync.deviceId ? [sync.deviceId] : []),
+      ...onlineFriends.map(f => f.online!.deviceId),
+    ]),
+    [sync.deviceId, onlineFriends],
+  )
+  const visibleMemories = useMemo(
+    () => memories.filter(m => knownDeviceIds.has(m.ownerDeviceId)),
+    [memories, knownDeviceIds],
+  )
+
+  if (visibleMemories.length === 0) {
     return (
       <section className="friends-section">
         <p className="friends-hint" data-testid="feed-empty-hint">
@@ -214,7 +229,7 @@ function FeedTab({
 
   return (
     <section className="friends-section">
-      {memories.map(m => {
+      {visibleMemories.map(m => {
         const mine = annotations.filter(a => a.shareId === m.shareId)
         return (
           <SharedMemoryCard

@@ -182,6 +182,77 @@ describe('ContactsTab – Swipe-to-Remove', () => {
   })
 })
 
+// ── FeedTab – Filter nach bekannten Kontakten ─────────────────────────────────
+
+describe('FeedTab – Filter nach bekannten Kontakten', () => {
+  const memoryFromFriend = {
+    shareId: 'share-h',
+    ownerDeviceId: 'device-h',
+    ownerName: 'Henrietta',
+    questionText: 'Lieblingsgericht?',
+    value: 'Pasta',
+    imageIds: [],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  }
+  const memoryFromRemoved = {
+    shareId: 'share-gone',
+    ownerDeviceId: 'device-gone',
+    ownerName: 'Ex-Kontakt',
+    questionText: 'Noch ein Satz',
+    value: 'Antwort',
+    imageIds: [],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  }
+  const memoryFromSelf = {
+    shareId: 'share-self',
+    ownerDeviceId: 'device-self',
+    ownerName: 'Ich',
+    questionText: 'Eigene Frage',
+    value: 'Eigene Antwort',
+    imageIds: [],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  }
+
+  it('zeigt Memories von bekannten Kontakten und von sich selbst', () => {
+    const { container } = renderHub({
+      syncOverrides: {
+        memories: [memoryFromFriend, memoryFromSelf],
+        deviceId: 'device-self',
+      },
+      friends: [FRIEND_SHARING],
+    })
+    expect(container.textContent).toContain('Pasta')
+    expect(container.textContent).toContain('Eigene Antwort')
+  })
+
+  it('blendet Memories von entfernten Kontakten sofort aus', () => {
+    const { container } = renderHub({
+      syncOverrides: {
+        memories: [memoryFromFriend, memoryFromRemoved],
+        deviceId: 'device-self',
+      },
+      friends: [FRIEND_SHARING],
+    })
+    expect(container.textContent).toContain('Pasta')
+    expect(container.textContent).not.toContain('Ex-Kontakt')
+    expect(container.textContent).not.toContain('Antwort')
+  })
+
+  it('zeigt Feed-Empty-State wenn alle Memories von entfernten Kontakten stammen', () => {
+    const { container } = renderHub({
+      syncOverrides: {
+        memories: [memoryFromRemoved],
+        deviceId: 'device-self',
+      },
+      friends: [FRIEND_SHARING],
+    })
+    expect(container.querySelector('[data-testid="feed-empty-hint"]')).toBeTruthy()
+  })
+})
+
 // ── 0 Kontakte: Tabs direkt sichtbar ─────────────────────────────────────────
 
 describe('Hub mit 0 Kontakten', () => {
