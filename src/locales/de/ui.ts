@@ -391,7 +391,7 @@ export const UI_DE = {
       hint: 'Löscht alle deine geteilten Erinnerungen vom Server und trennt die Verbindung zu deinen Kontakten. Deine eigenen Antworten und Fotos auf diesem Gerät bleiben vollständig erhalten.',
       deactivateButton: 'Deaktivieren',
       confirmStrong: 'Wirklich deaktivieren?',
-      confirmRest: ' Das kann nicht rückgängig gemacht werden — kontaktierte Personen können deine bisher geteilten Erinnerungen nicht mehr sehen.',
+      confirmRest: ' Deine geteilten Erinnerungen werden vom Server gelöscht und die Verbindungen getrennt. Du kannst das Teilen jederzeit neu einrichten.',
       confirmYes: 'Ja, alles löschen',
       confirmNo: 'Abbrechen',
     },

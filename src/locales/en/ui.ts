@@ -389,7 +389,7 @@ export const UI_EN = {
       hint: 'Deletes all your shared memories from the server and removes the connection to your contacts. Your own answers and photos on this device stay fully preserved.',
       deactivateButton: 'Deactivate',
       confirmStrong: 'Really deactivate?',
-      confirmRest: ' This cannot be undone — contacts can no longer see the memories you shared so far.',
+      confirmRest: ' Your shared memories will be deleted from the server and all connections removed. You can set up sharing again at any time.',
       confirmYes: 'Yes, delete everything',
       confirmNo: 'Cancel',
     },
