@@ -36,10 +36,9 @@ test.describe('Familienmodus – Deaktivierung (FR-15.22 – FR-15.25)', () => {
 
     expect(state.devices.find(d => d.id === aliceId.deviceId)).toBeTruthy()
 
-    // Open the hub and deactivate via the Einstellungen tab.
+    // Open the hub and deactivate via the topbar button.
     await reopenFamilyHub(alice)
-    await alice.getByRole('tab', { name: 'Einstellungen', exact: true }).click()
-    await alice.getByRole('button', { name: 'Deaktivieren', exact: true }).click()
+    await alice.getByTestId('deactivate-sharing-trigger').click()
     await alice.getByRole('button', { name: /Ja, alles löschen/ }).click()
 
     // FR-15.22 – 24: server cascades + local online state cleared.

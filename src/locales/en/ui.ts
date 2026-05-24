@@ -244,7 +244,7 @@ export const UI_EN = {
 
   friends: {
     pageTitle: 'Invite friends',
-    topbarTitle: 'Invite & connect',
+    topbarTitle: 'Family Mode',
     intro: 'Invite someone with personal questions. You\'ll stay connected going forward.',
     connectedHeading: 'Connected memories',
     connectedCta: 'Open shared memories',
@@ -262,7 +262,7 @@ export const UI_EN = {
 
   onlineSharingIntro: {
     back: 'Back',
-    title: 'Stay in touch',
+    title: 'Family Mode',
     heroAlt: 'Stay in touch',
     plainTextAssurance: 'Only you and the other person can read what you share. Not even us.',
     whatHeading: 'What is this?',
@@ -333,7 +333,7 @@ export const UI_EN = {
 
   onlineSharingHub: {
     back: 'Back',
-    title: 'Online sharing',
+    title: 'Family Mode',
     syncErrorPrefix: 'Sync error: ',
     syncErrorGeneric: 'Sync is having a hiccup right now. Your memories are safely stored on this device. Please try again later.',
     syncErrorOffline: 'No connection. Sync will resume automatically as soon as you\'re back online.',
@@ -389,7 +389,7 @@ export const UI_EN = {
       hint: 'Deletes all your shared memories from the server and removes the connection to your contacts. Your own answers and photos on this device stay fully preserved.',
       deactivateButton: 'Deactivate',
       confirmStrong: 'Really deactivate?',
-      confirmRest: ' This cannot be undone — contacts can no longer see the memories you shared so far.',
+      confirmRest: ' Your shared memories will be deleted from the server and all connections removed. You can set up sharing again at any time.',
       confirmYes: 'Yes, delete everything',
       confirmNo: 'Cancel',
     },

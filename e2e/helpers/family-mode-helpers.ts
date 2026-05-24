@@ -45,7 +45,7 @@ export async function completeOnboarding(page: Page, name: string) {
 export async function openFamilyTab(page: Page) {
   const nav = page.getByRole('navigation', { name: 'Hauptnavigation' })
   await nav.getByRole('button', { name: 'Familie', exact: true }).click()
-  await expect(page.getByRole('heading', { name: 'Laufend verbunden bleiben', exact: true })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Familienmodus', exact: true })).toBeVisible()
 }
 
 /** @deprecated Use openFamilyTab */
@@ -76,12 +76,12 @@ export async function openFamilyHub(page: Page) {
 
 /**
  * For tests that already activated online sharing AND already linked at
- * least one contact (so the four-tab nav is what we expect to see).
+ * least one contact (so the two-tab nav is what we expect to see).
  * Re-enters the hub from `/friends` after a full reload (e.g. after the
  * recipient has to refresh to pick up new shares).
  *
  * Crucially this waits for both `sync.ready` (no "Verbinde mit Server …"
- * placeholder) AND the four-tab `tablist` itself, since the tab nav only
+ * placeholder) AND the `tablist` itself, since the tab nav only
  * renders once `hasContacts` *and* `sync.ready` are both true – there is a
  * race window in which one of the two flips first.
  */
@@ -93,7 +93,7 @@ export async function reopenFamilyHub(page: Page) {
 }
 
 async function waitForHubReady(page: Page) {
-  await expect(page.getByRole('heading', { name: 'Online teilen', exact: true })).toBeVisible({ timeout: 35_000 })
+  await expect(page.getByRole('heading', { name: 'Familienmodus', exact: true })).toBeVisible({ timeout: 35_000 })
   // Wait for a positive signal: deviceId set in state means bootstrapSession()
   // succeeded. "Verbinde mit Server …" disappears on both success AND error, so
   // its absence is not a reliable sentinel — it leads to 35 s readDeviceIdentity

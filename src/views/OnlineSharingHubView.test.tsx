@@ -97,14 +97,14 @@ function switchToTab(container: HTMLElement, label: string) {
 // ── Tab-Konfiguration ────────────────────────────────────────────────────────
 
 describe('OnlineSharingHubView – Tabs', () => {
-  it('zeigt nur Feed / Kontakte / Einstellungen (kein "Teilen" mehr)', () => {
+  it('zeigt nur Feed / Kontakte (kein "Teilen" und kein "Einstellungen" mehr)', () => {
     const { container } = renderHub()
     const labels = Array.from(
       container.querySelectorAll<HTMLButtonElement>('[role="tab"]'),
     ).map(t => t.textContent?.trim())
     expect(labels.some(l => l?.startsWith('Feed'))).toBe(true)
     expect(labels.some(l => l?.startsWith('Kontakte'))).toBe(true)
-    expect(labels.some(l => l?.startsWith('Einstellungen'))).toBe(true)
+    expect(labels.some(l => l?.startsWith('Einstellungen'))).toBe(false)
     expect(labels.some(l => l === 'Teilen')).toBe(false)
   })
 })

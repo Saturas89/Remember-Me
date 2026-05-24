@@ -244,7 +244,7 @@ export const UI_DE = {
 
   friends: {
     pageTitle: 'Freunde einladen',
-    topbarTitle: 'Einladen & verbinden',
+    topbarTitle: 'Familienmodus',
     intro: 'Lade jemanden mit persönlichen Fragen ein. Ihr bleibt danach dauerhaft verbunden.',
     connectedHeading: 'Verbundene Erinnerungen',
     connectedCta: 'Geteilte Erinnerungen öffnen',
@@ -263,7 +263,7 @@ export const UI_DE = {
 
   onlineSharingIntro: {
     back: 'Zurück',
-    title: 'Laufend verbunden bleiben',
+    title: 'Familienmodus',
     heroAlt: 'Laufend verbunden bleiben',
     plainTextAssurance: 'Was du teilst, können nur du und die andere Person lesen. Nicht einmal wir.',
     whatHeading: 'Was ist das?',
@@ -335,7 +335,7 @@ export const UI_DE = {
 
   onlineSharingHub: {
     back: 'Zurück',
-    title: 'Online teilen',
+    title: 'Familienmodus',
     syncErrorPrefix: 'Sync-Fehler: ',
     syncErrorGeneric: 'Die Synchronisierung hat momentan ein Problem. Deine Erinnerungen sind sicher auf dem Gerät gespeichert. Bitte später erneut versuchen.',
     syncErrorOffline: 'Keine Verbindung. Sobald du wieder online bist, läuft die Synchronisierung von selbst weiter.',
@@ -391,7 +391,7 @@ export const UI_DE = {
       hint: 'Löscht alle deine geteilten Erinnerungen vom Server und trennt die Verbindung zu deinen Kontakten. Deine eigenen Antworten und Fotos auf diesem Gerät bleiben vollständig erhalten.',
       deactivateButton: 'Deaktivieren',
       confirmStrong: 'Wirklich deaktivieren?',
-      confirmRest: ' Das kann nicht rückgängig gemacht werden — kontaktierte Personen können deine bisher geteilten Erinnerungen nicht mehr sehen.',
+      confirmRest: ' Deine geteilten Erinnerungen werden vom Server gelöscht und die Verbindungen getrennt. Du kannst das Teilen jederzeit neu einrichten.',
       confirmYes: 'Ja, alles löschen',
       confirmNo: 'Abbrechen',
     },
