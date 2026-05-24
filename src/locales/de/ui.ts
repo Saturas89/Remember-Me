@@ -244,7 +244,7 @@ export const UI_DE = {
 
   friends: {
     pageTitle: 'Freunde einladen',
-    topbarTitle: 'Einladen & verbinden',
+    topbarTitle: 'Familienmodus',
     intro: 'Lade jemanden mit persönlichen Fragen ein. Ihr bleibt danach dauerhaft verbunden.',
     connectedHeading: 'Verbundene Erinnerungen',
     connectedCta: 'Geteilte Erinnerungen öffnen',
@@ -263,7 +263,7 @@ export const UI_DE = {
 
   onlineSharingIntro: {
     back: 'Zurück',
-    title: 'Laufend verbunden bleiben',
+    title: 'Familienmodus',
     heroAlt: 'Laufend verbunden bleiben',
     plainTextAssurance: 'Was du teilst, können nur du und die andere Person lesen. Nicht einmal wir.',
     whatHeading: 'Was ist das?',
@@ -335,7 +335,7 @@ export const UI_DE = {
 
   onlineSharingHub: {
     back: 'Zurück',
-    title: 'Online teilen',
+    title: 'Familienmodus',
     syncErrorPrefix: 'Sync-Fehler: ',
     syncErrorGeneric: 'Die Synchronisierung hat momentan ein Problem. Deine Erinnerungen sind sicher auf dem Gerät gespeichert. Bitte später erneut versuchen.',
     syncErrorOffline: 'Keine Verbindung. Sobald du wieder online bist, läuft die Synchronisierung von selbst weiter.',

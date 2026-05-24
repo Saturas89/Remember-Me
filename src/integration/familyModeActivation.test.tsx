@@ -92,7 +92,7 @@ describe('Familienmodus – Aktivierung (FR-15.1 – FR-15.3)', () => {
 
     await gotoFamilyTab()
 
-    expect(await screen.findByRole('heading', { name: 'Laufend verbunden bleiben' })).toBeTruthy()
+    expect(await screen.findByRole('heading', { name: 'Familienmodus' })).toBeTruthy()
   })
 
   it('Intro-Screen hat keinen Pflicht-Checkbox mehr, Invite-Button sofort klickbar', async () => {
@@ -101,7 +101,7 @@ describe('Familienmodus – Aktivierung (FR-15.1 – FR-15.3)', () => {
 
     await gotoFamilyTab()
 
-    await screen.findByRole('heading', { name: 'Laufend verbunden bleiben' })
+    await screen.findByRole('heading', { name: 'Familienmodus' })
     expect(screen.queryByRole('checkbox')).toBeNull()
     const invite = screen.getByRole('button', { name: /Jemanden einladen/ }) as HTMLButtonElement
     expect(invite.disabled).toBe(false)
@@ -127,7 +127,7 @@ describe('Familienmodus – Aktivierung (FR-15.1 – FR-15.3)', () => {
     render(<App />)
 
     await gotoFamilyTab()
-    expect(await screen.findByRole('heading', { name: 'Laufend verbunden bleiben' })).toBeTruthy()
+    expect(await screen.findByRole('heading', { name: 'Familienmodus' })).toBeTruthy()
 
     await waitFor(() => expect(bootstrapSession).not.toHaveBeenCalled())
     expect(readState().onlineSharing).toBeUndefined()
@@ -159,7 +159,7 @@ describe('Familienmodus – lokales Deactivate (FR-15.22 – FR-15.25 lokaler Te
     await gotoFamilyTab()
 
     // Hub direkt, weil online-Kontakt vorhanden → Friends-Tab routet zu online-hub.
-    await screen.findByRole('heading', { name: 'Online teilen' })
+    await screen.findByRole('heading', { name: 'Familienmodus' })
 
     // Deaktivieren-Button (oben rechts) → Bestätigung.
     fireEvent.click(screen.getByTestId('deactivate-sharing-trigger'))
