@@ -15,7 +15,7 @@
 > bestehen.
 
 > ℹ️ **Update v2.14.0:** Der Kontakt-Handshake (FR-15.5–15.7) wurde grundlegend
-> überarbeitet — siehe **[REQ-015-B](./REQ-015B-invite-links.md)**.
+> überarbeitet — siehe **[REQ-023](./REQ-023-invite-links.md)**.
 > Lange Inline-URLs (`?contact=…`, `?qp=…`) wurden durch kurze Supabase-basierte
 > Einladungscodes ersetzt (`/join/CODE`). Der Handshake ist jetzt **automatisch
 > bidirektional**: Ingrid schreibt ihren Schlüssel beim Accept in die Supabase-Zeile;
@@ -102,13 +102,13 @@ Bilder werden separat mit dem gleichen ContentKey des zugehörigen Shares versch
 
 ### 4.2 Kontaktverwaltung (bidirektionaler Handshake)
 
-> ⚠️ **Ab v2.14.0 ersetzt durch [REQ-015-B](./REQ-015B-invite-links.md).**
+> ⚠️ **Ab v2.14.0 ersetzt durch [REQ-023](./REQ-023-invite-links.md).**
 > FR-15.5–15.7 beschreiben den alten `#contact/…`-URL-basierten Flow.
 > Der neue Flow verwendet `/join/CODE`-Links (Supabase-backed, 6 Zeichen).
 
-- [x] ~~**FR-15.5:** Benutzer generiert einen `#contact/...`-URL, der `deviceId`, öffentlichen Schlüssel und Anzeigename enthält (AES-GCM-verschlüsselt + deflate-raw)~~ → ersetzt durch `createInviteAndGetUrl()` (REQ-015-B FR-15B.1)
-- [x] ~~**FR-15.6:** Empfänger öffnet den URL; `ContactHandshakeView` zeigt Absender und „Verbinden"-Button~~ → Empfänger öffnet `/join/CODE`; Payload wird aus Supabase geladen (REQ-015-B FR-15B.6)
-- [x] ~~**FR-15.7:** Nach Verbindung wird dem Empfänger der eigene Kontakt-URL angezeigt, um ihn zurückzusenden (Gegenseitigkeit)~~ → entfällt; Gegenseitigkeit erfolgt automatisch über `invites.response` (REQ-015-B FR-15B.8–10)
+- [x] ~~**FR-15.5:** Benutzer generiert einen `#contact/...`-URL, der `deviceId`, öffentlichen Schlüssel und Anzeigename enthält (AES-GCM-verschlüsselt + deflate-raw)~~ → ersetzt durch `createInviteAndGetUrl()` (REQ-023 FR-15B.1)
+- [x] ~~**FR-15.6:** Empfänger öffnet den URL; `ContactHandshakeView` zeigt Absender und „Verbinden"-Button~~ → Empfänger öffnet `/join/CODE`; Payload wird aus Supabase geladen (REQ-023 FR-15B.6)
+- [x] ~~**FR-15.7:** Nach Verbindung wird dem Empfänger der eigene Kontakt-URL angezeigt, um ihn zurückzusenden (Gegenseitigkeit)~~ → entfällt; Gegenseitigkeit erfolgt automatisch über `invites.response` (REQ-023 FR-15B.8–10)
 - [x] **FR-15.8:** Kontakt wird lokal als `Friend` mit `.online`-Block gespeichert (`deviceId`, `publicKey`, `linkedAt`)
 - [x] **FR-15.9:** Kontakt-Handshake funktioniert auch für Benutzer, die den Familienmodus noch nicht aktiviert haben (Aktivierung wird im Handshake-Screen angeboten)
 
@@ -404,4 +404,4 @@ interface ContactHandshake {
 | 1.1.0 | 2026-04-29 | Claude | FR-15.29–15.32 hinzugefügt: Kontakt per Swipe-left entfernen |
 | 1.2.0 | 2026-05-01 | Claude | FR-15.29/15.30/15.32 überarbeitet: Full-Swipe-to-Delete ohne Zwischenschritt (Schwelle 80 px, Fly-out-Animation) |
 | 2.0.0 | 2026-05-20 | Claude | FR-15.10 vereinfacht (siehe REQ-022): „Teilen"-Tab entfernt, binäres Friend-Level-Sharing eingeführt. FR-15.33 als feingranulare Pause-Option ergänzt. |
-| 2.1.0 | 2026-05-24 | Claude | FR-15.5–15.7 als ersetzt markiert: neuer `/join/CODE`-Flow dokumentiert in REQ-015-B. Verweis auf REQ-015B hinzugefügt. |
+| 2.1.0 | 2026-05-24 | Claude | FR-15.5–15.7 als ersetzt markiert: neuer `/join/CODE`-Flow dokumentiert in REQ-023. Verweis auf REQ-015B hinzugefügt. |

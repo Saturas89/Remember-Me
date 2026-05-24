@@ -1,14 +1,14 @@
-# REQ-015-B – Kurze Einladungslinks & automatisch bidirektionaler Handshake
+# REQ-023 – Kurze Einladungslinks & automatisch bidirektionaler Handshake
 
 **Status:** ✔️ COMPLETED  
-**ID:** REQ-015-B  
+**ID:** REQ-023  
 **Version:** 1.0.0  
 **Letzte Aktualisierung:** 2026-05-24  
 **Modul:** Sharing / Sync  
 **Priorität:** High  
 **Implementiert seit:** v2.14.0  
 **PR:** #332  
-**Hängt an:** [REQ-015 – Familienmodus](./REQ-015-familienmodus.md), [REQ-020 – Sandra-Flow](./REQ-020-sandra-flow.md)
+**Hängt an:** [REQ-015 – Familienmodus](./REQ-015-familienmodus.md), [REQ-020 – Sandra-Flow](./REQ-020-sandra-flow.md)  
 
 ---
 
