@@ -20,7 +20,6 @@ interface Props {
   exportData: ExportData
   safeName: string
   onSave: (profile: Profile) => void
-  onBack: () => void
   onExportMarkdown: () => void
   onExportJson: () => void
   onImportBackup: (json: string) => { ok: boolean; error?: string }
@@ -73,7 +72,7 @@ function BackupStatusRow({ last }: { last: Date | null }) {
 export function ProfileView({
   profile, answers, friendCount,
   exportData, safeName,
-  onSave, onBack,
+  onSave,
   onExportMarkdown, onExportJson, onImportBackup,
   onOpenFaq, onOpenImpressum, onShowReleaseNotes, onDeleteAllData, onOpenDebug,
 }: Props) {
@@ -185,12 +184,6 @@ export function ProfileView({
   return (
     <div className="profile-view">
       <h1 className="sr-only">{t.profile.pageTitle}</h1>
-
-      <div className="profile-topbar">
-        <button className="btn btn--ghost btn--sm" onClick={onBack}>
-          {t.global.back}
-        </button>
-      </div>
 
       {/* ── Über mich ──────────────────────────────────── */}
 

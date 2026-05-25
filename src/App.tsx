@@ -696,7 +696,6 @@ export default function App() {
           exportData={exportData}
           safeName={safeName}
           onSave={saveProfile}
-          onBack={() => goTo({ name: 'home' })}
           onExportMarkdown={handleExportMarkdown}
           onExportJson={handleExportJson}
           onImportBackup={restoreBackup}
