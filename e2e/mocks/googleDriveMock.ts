@@ -53,13 +53,19 @@ async function handle(route: Route, state: DriveMockState) {
   const url = new URL(req.url())
   state.log.push({ method: req.method(), url: req.url() })
 
-  // List files (filter is ignored – we always return the only file we know).
+  // List files — respect the name= filter extracted from the q= parameter so
+  // that findSyncFile('remember-me-sync.json') and findOrCreateMediaFolder()
+  // don't cross-contaminate each other when both file types are pre-seeded.
   if (req.method() === 'GET' && url.pathname.endsWith('/drive/v3/files')) {
-    const files = Array.from(state.files.entries()).map(([id, f]) => ({
-      id,
-      name: f.name,
-      modifiedTime: new Date().toISOString(),
-    }))
+    const q = url.searchParams.get('q') ?? ''
+    const nameFilter = q.match(/name='([^']+)'/)?.[1] ?? null
+    const files = Array.from(state.files.entries())
+      .filter(([, f]) => nameFilter === null || f.name === nameFilter)
+      .map(([id, f]) => ({
+        id,
+        name: f.name,
+        modifiedTime: new Date().toISOString(),
+      }))
     return route.fulfill({
       status: 200,
       contentType: 'application/json',
