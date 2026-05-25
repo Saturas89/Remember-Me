@@ -198,6 +198,11 @@ test.describe('Kontakt entfernen – Feed & DB-Cleanup (Real-DB)', () => {
     await reopenFamilyHub(bob)
     await waitForRealShares(admin, bobId.deviceId, 1, 30_000)
 
+    // The hub fetched its initial share list before the auto-share upload
+    // completed.  Re-open the hub so fetchIncomingShares() runs again now
+    // that the share is confirmed in the DB.
+    await reopenFamilyHub(bob)
+
     // Bobs eigene Memory im Feed prüfen
     await bob.getByRole('tab', { name: /^Feed/ }).click()
     await expect(bob.getByTestId('feed-item').first()).toBeVisible({ timeout: 30_000 })

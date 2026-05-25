@@ -181,10 +181,15 @@ test('Resend-Button ist für alle Domains vorhanden und löst Request aus', asyn
 
   await interceptSignupAsUnconfirmed(page, email)
 
-  // Intercept the resend call (OTP resend) and capture that it fires
+  // Intercept the resend call (OTP resend) and capture that it fires.
+  // A small artificial delay is required: without it the route resolves
+  // synchronously before React can commit the setResending(true) render,
+  // causing React to batch setResending(true) + setResending(false) into a
+  // single no-op and the button never appears disabled.
   let resendCalled = false
   await page.route('**/auth/v1/otp', async (route) => {
     resendCalled = true
+    await new Promise(resolve => setTimeout(resolve, 300))
     await route.fulfill({ status: 200, contentType: 'application/json', body: '{}' })
   })
 
@@ -199,8 +204,8 @@ test('Resend-Button ist für alle Domains vorhanden und löst Request aus', asyn
   await expect(resendBtn).toBeVisible()
   await resendBtn.click()
 
-  // Button must enter loading state
-  await expect(resendBtn).toBeDisabled()
+  // Button must enter loading state (disabled while the request is in flight).
+  await expect(resendBtn).toBeDisabled({ timeout: 3_000 })
 
   // Wait for the request to complete
   await expect.poll(() => resendCalled, { timeout: 10_000 }).toBe(true)

@@ -39,7 +39,7 @@ test.describe('Einladungslink – bestehende Daten bleiben erhalten', () => {
 
   test('invitation-without-hub: Erinnerungen und Einstellungen bleiben nach Einladungsannahme erhalten', async ({
     browser,
-  }) => {
+  }, testInfo) => {
     test.setTimeout(180_000)
 
     const { ctx: aliceCtx, page: alice } = await spawnRealDevice(browser)
@@ -51,11 +51,14 @@ test.describe('Einladungslink – bestehende Daten bleiben erhalten', () => {
     const aliceId = await readDeviceIdentity(alice)
     createdUsers.push(aliceId.deviceId)
 
+    // Pass the project's baseURL (e.g. https://www.storyhold.app in production,
+    // http://localhost:4174 locally) so the invite link points at the right server.
+    const appBaseUrl = testInfo.project.use.baseURL ?? 'http://localhost:4174'
     const inviteUrl = await createTestInviteUrl(admin, {
       displayName: 'Alice',
       deviceId: aliceId.deviceId,
       publicKey: aliceId.publicKey,
-    })
+    }, appBaseUrl)
 
     // ── Bob: Profil aufbauen ohne den Hub zu aktivieren ──────────────────────
     await completeOnboarding(bob, 'Bob')
@@ -147,7 +150,7 @@ test.describe('Einladungslink – bestehende Daten bleiben erhalten', () => {
 
   test('invitation-with-existing-hub: Vorhandene Freunde und Erinnerungen bleiben nach neuer Einladung erhalten', async ({
     browser,
-  }) => {
+  }, testInfo) => {
     test.setTimeout(180_000)
 
     const { ctx: aliceCtx, page: alice } = await spawnRealDevice(browser)
@@ -159,11 +162,12 @@ test.describe('Einladungslink – bestehende Daten bleiben erhalten', () => {
     const aliceId = await readDeviceIdentity(alice)
     createdUsers.push(aliceId.deviceId)
 
+    const appBaseUrl = testInfo.project.use.baseURL ?? 'http://localhost:4174'
     const inviteUrl = await createTestInviteUrl(admin, {
       displayName: 'Alice',
       deviceId: aliceId.deviceId,
       publicKey: aliceId.publicKey,
-    })
+    }, appBaseUrl)
 
     // ── Bob: Hub aktivieren + vorhandene Daten aufbauen ──────────────────────
     await completeOnboarding(bob, 'Bob')

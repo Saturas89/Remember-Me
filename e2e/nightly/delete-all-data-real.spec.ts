@@ -78,6 +78,11 @@ test.describe('Alle Daten löschen – Produktion', () => {
     await expect(page.locator('textarea.input-textarea').first()).toBeVisible()
     await page.locator('textarea.input-textarea').first().fill('Eine schöne Kindheit')
 
+    // The quiz view hides the BottomNav; navigate back to home so
+    // openProfileAndScrollToDelete can find the 'Profil' nav button.
+    await page.goto('/')
+    await expect(page.getByText(/Hallo,\s*Testerin/)).toBeVisible()
+
     await openProfileAndScrollToDelete(page)
     await confirmDeleteAll(page)
 
@@ -111,11 +116,16 @@ test.describe('Alle Daten löschen – Produktion', () => {
     // Profile tab should still be visible – no reload.
     await expect(page.getByRole('heading', { name: 'Fortschritt' })).toBeVisible()
 
-    // State is intact.
+    // State is intact.  In the production build the stored value is
+    // AES-GCM encrypted ("enc1:…") so JSON.parse() would throw; read
+    // the plaintext value via the in-memory __rmState bridge instead.
     const state = await page.evaluate(() => localStorage.getItem('remember-me-state'))
     expect(state).not.toBeNull()
-    const parsed = JSON.parse(state!)
-    expect(parsed.profile?.name).toBe('Behalter')
+    const profileName = await page.evaluate(() => {
+      const b = (window as unknown as { __rmState?: { get: () => Record<string, unknown> | null } }).__rmState
+      return (b?.get()?.profile as { name?: string } | null)?.name ?? null
+    })
+    expect(profileName).toBe('Behalter')
 
     await ctx.close()
   })
@@ -137,8 +147,9 @@ test.describe('Alle Daten löschen – Produktion', () => {
     createdUsers.push(userId!)
 
     // Navigate back to home first, then to profile.
+    // Note: the nav button is labelled 'Lebensweg', not 'Home'.
     const nav = page.getByRole('navigation', { name: 'Hauptnavigation' })
-    await nav.getByRole('button', { name: 'Home', exact: true }).click()
+    await nav.getByRole('button', { name: 'Lebensweg', exact: true }).click()
     await expect(page.getByText(/Hallo,\s*Syncer/)).toBeVisible()
 
     await openProfileAndScrollToDelete(page)
