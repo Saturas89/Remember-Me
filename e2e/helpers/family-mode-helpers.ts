@@ -93,18 +93,26 @@ export async function reopenFamilyHub(page: Page) {
 }
 
 async function waitForHubReady(page: Page) {
-  await expect(page.getByRole('heading', { name: 'Familienmodus', exact: true })).toBeVisible({ timeout: 35_000 })
-  // Wait for a positive signal: deviceId set in state means bootstrapSession()
-  // succeeded. "Verbinde mit Server …" disappears on both success AND error, so
-  // its absence is not a reliable sentinel — it leads to 35 s readDeviceIdentity
-  // timeouts whenever bootstrapSession() throws.
-  await page.waitForFunction(() => {
-    try {
-      const p = (window as unknown as { __rmState?: { get: () => Record<string, unknown> | null } }).__rmState?.get()
-      const os = p?.onlineSharing as Record<string, unknown> | undefined
-      return Boolean(os?.deviceId && os?.publicKey)
-    } catch { return false }
-  }, undefined, { timeout: 45_000 })
+  // Wait for the positive signal FIRST: deviceId + publicKey present means
+  // bootstrapSession() completed (Supabase auth round-trip done).
+  // "Verbinde mit Server …" disappears on both success AND error, so its
+  // absence is not a reliable sentinel.  Checking heading first (old order)
+  // failed in production-nightly runs when IDB initialisation was slow and
+  // the app hadn't rendered yet — the heading check timed out before the
+  // app had a chance to mount.
+  await page.waitForFunction(
+    () => {
+      try {
+        const p = (window as unknown as { __rmState?: { get: () => Record<string, unknown> | null } }).__rmState?.get()
+        const os = p?.onlineSharing as Record<string, unknown> | undefined
+        return Boolean(os?.deviceId && os?.publicKey)
+      } catch { return false }
+    },
+    undefined,
+    { timeout: 45_000 },
+  )
+  // By the time deviceId is set the hub view is rendered; 10 s is ample.
+  await expect(page.getByRole('heading', { name: 'Familienmodus', exact: true })).toBeVisible({ timeout: 10_000 })
 }
 
 export async function readDeviceIdentity(page: Page): Promise<{ deviceId: string; publicKey: string }> {

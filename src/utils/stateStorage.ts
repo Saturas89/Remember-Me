@@ -35,10 +35,20 @@ function hasCryptoSupport(): boolean {
 
 function openKeyDb(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
+    // Guard against IndexedDB hanging indefinitely in headless / CI environments
+    // (e.g. production-nightly Playwright runs where the IDB upgrade transaction
+    // never fires).  3 s is conservative — a healthy IDB opens in < 50 ms.
+    // On timeout tryGetKey() catches the rejection and sets _keyUnavailable,
+    // so the app falls back to plaintext and renders normally instead of
+    // staying blank forever.
+    const timer = setTimeout(
+      () => reject(new Error('IDB open timed out after 3 s')),
+      3_000,
+    )
     const req = indexedDB.open(KEY_DB, 1)
     req.onupgradeneeded = () => req.result.createObjectStore(KEY_STORE)
-    req.onsuccess = () => resolve(req.result)
-    req.onerror = () => reject(req.error)
+    req.onsuccess = () => { clearTimeout(timer); resolve(req.result) }
+    req.onerror = () => { clearTimeout(timer); reject(req.error) }
   })
 }
 
