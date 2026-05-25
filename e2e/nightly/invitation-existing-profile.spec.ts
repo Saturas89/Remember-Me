@@ -80,11 +80,18 @@ test.describe('Einladungslink – bestehende Daten bleiben erhalten', () => {
     // PersonalPackReceiveView: Alice's name appears in the header.
     await expect(bob.getByText(/Alice/i)).toBeVisible({ timeout: 15_000 })
 
-    // Bob completes the pack (enter name + answer the one question).
-    const nameInput = bob.getByTestId('sandra-receive-name')
-    if (await nameInput.isVisible({ timeout: 5_000 }).catch(() => false)) {
-      await nameInput.fill('Bob')
-      await bob.getByTestId('sandra-receive-start').click()
+    // Bob completes the pack. He already has a profile, so the existing-user
+    // fast-path (sandra-receive-existing-start) is shown instead of the
+    // name-entry screen (sandra-receive-name).
+    const existingStart = bob.getByTestId('sandra-receive-existing-start')
+    if (await existingStart.isVisible({ timeout: 5_000 }).catch(() => false)) {
+      await existingStart.click()
+    } else {
+      const nameInput = bob.getByTestId('sandra-receive-name')
+      if (await nameInput.isVisible({ timeout: 3_000 }).catch(() => false)) {
+        await nameInput.fill('Bob')
+        await bob.getByTestId('sandra-receive-start').click()
+      }
     }
     const answerBox = bob.getByTestId('sandra-receive-answer')
     if (await answerBox.isVisible({ timeout: 10_000 }).catch(() => false)) {
