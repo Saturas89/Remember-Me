@@ -87,8 +87,19 @@ test.describe('Privater Sync – Media-Verschlüsselung Google Drive (H1)', () =
     await page.evaluate(async ({ plainHex, syncId }) => {
       const open = (name: string, store: string) =>
         new Promise<IDBDatabase>((resolve, reject) => {
-          const req = indexedDB.open(name, 1)
-          req.onupgradeneeded = () => req.result.createObjectStore(store)
+          // rm-sync-vault-db was bumped: v1=vault, v2(H7)=+kdf, v3(H5)=+version.
+          // Opening at a lower version than the existing DB throws immediately with
+          // "requested version < existing version", so match the app's current version.
+          const version = name === 'rm-sync-vault-db' ? 3 : 1
+          const req = indexedDB.open(name, version)
+          req.onupgradeneeded = () => {
+            const db = req.result
+            if (!db.objectStoreNames.contains(store)) db.createObjectStore(store)
+            if (name === 'rm-sync-vault-db') {
+              if (!db.objectStoreNames.contains('rm-sync-kdf')) db.createObjectStore('rm-sync-kdf')
+              if (!db.objectStoreNames.contains('rm-sync-version')) db.createObjectStore('rm-sync-version')
+            }
+          }
           req.onsuccess = () => resolve(req.result)
           req.onerror = () => reject(req.error)
         })
