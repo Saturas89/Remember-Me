@@ -2953,12 +2953,6 @@
 }
 
 /* ── Profile view – identity header ─────────────────────── */
-.profile-topbar {
-  display: flex;
-  align-items: center;
-  padding: 0.75rem 0 0;
-}
-
 .profile-identity {
   display: flex;
   flex-direction: column;

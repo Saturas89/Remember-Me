@@ -37,7 +37,6 @@ const defaultProps = {
   },
   safeName: 'anna',
   onSave: vi.fn(),
-  onBack: vi.fn(),
   onExportMarkdown: vi.fn(),
   onExportJson: vi.fn(),
   onImportBackup: vi.fn(() => ({ ok: true })),
