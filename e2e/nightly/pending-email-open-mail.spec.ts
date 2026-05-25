@@ -181,13 +181,14 @@ test('Resend-Button ist für alle Domains vorhanden und löst Request aus', asyn
 
   await interceptSignupAsUnconfirmed(page, email)
 
-  // Intercept the resend call (OTP resend) and capture that it fires.
+  // Intercept the resend call and capture that it fires.
+  // supabase.auth.resend({ type: 'signup' }) calls /auth/v1/resend (not /otp).
   // A small artificial delay is required: without it the route resolves
   // synchronously before React can commit the setResending(true) render,
   // causing React to batch setResending(true) + setResending(false) into a
   // single no-op and the button never appears disabled.
   let resendCalled = false
-  await page.route('**/auth/v1/otp', async (route) => {
+  await page.route('**/auth/v1/resend', async (route) => {
     resendCalled = true
     await new Promise(resolve => setTimeout(resolve, 300))
     await route.fulfill({ status: 200, contentType: 'application/json', body: '{}' })
@@ -205,7 +206,14 @@ test('Resend-Button ist für alle Domains vorhanden und löst Request aus', asyn
   await resendBtn.click()
 
   // Button must enter loading state (disabled while the request is in flight).
-  await expect(resendBtn).toBeDisabled({ timeout: 3_000 })
+  // While resending=true the button's accessible name changes to the spinner
+  // label ("Wird gesendet…"/"Sending…"), so we widen the locator to match
+  // either label and assert disabled on whichever is found.
+  await expect(
+    page.getByRole('button', {
+      name: /Bestätigungs-Mail erneut senden|Resend confirmation email|Wird gesendet|Sending/i,
+    }),
+  ).toBeDisabled({ timeout: 3_000 })
 
   // Wait for the request to complete
   await expect.poll(() => resendCalled, { timeout: 10_000 }).toBe(true)

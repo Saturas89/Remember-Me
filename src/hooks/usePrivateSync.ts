@@ -112,8 +112,14 @@ export function usePrivateSync(
     if (isMountedRef.current) setStatus('syncing')
 
     try {
-      await provider.push(appState, mediaStore)
+      // Pull first so a freshly-logged-in device gets the existing remote
+      // snapshot before pushing. Without this, a new device's empty local
+      // state overwrites all data from other devices (push-first would
+      // upsert an empty envelope with the same envelopeVersion, erasing it).
       const result = await provider.pull(appState, mediaStore)
+      // Push the merged state (or local state when no remote row exists yet).
+      const stateToPush = result ? result.merged : appState
+      await provider.push(stateToPush, mediaStore)
       if (result) onStateMerged(result.merged)
 
       retryCountRef.current = 0
