@@ -3,20 +3,6 @@ import { renderHook, act } from '@testing-library/react'
 import { useStreak } from './useStreak'
 import type { StreakState, UseStreakArgs } from './useStreak'
 
-// Mock milestone notifications
-const mockShowNotification = vi.fn()
-const mockServiceWorkerReady = Promise.resolve({
-  showNotification: mockShowNotification,
-})
-Object.defineProperty(navigator, 'serviceWorker', {
-  value: { ready: mockServiceWorkerReady },
-  writable: true,
-})
-Object.defineProperty(window, 'Notification', {
-  value: { permission: 'granted' },
-  writable: true,
-})
-
 const mockSaveStreak = vi.fn()
 
 function args(over: Partial<UseStreakArgs> = {}): UseStreakArgs {
@@ -36,8 +22,6 @@ describe('useStreak', () => {
 
   beforeEach(() => {
     mockSaveStreak.mockReset()
-    mockShowNotification.mockReset()
-    localStorage.removeItem('rm-last-milestone')
     vi.useFakeTimers()
     // System time at noon local to avoid timezone date-shift surprises
     vi.setSystemTime(new Date(`${todayISO}T12:00:00`))
@@ -78,7 +62,7 @@ describe('useStreak', () => {
     const { result } = renderHook(() => useStreak(args({ streak: stored })))
 
     act(() => {
-      result.current.recordAnswer(todayISO, 11)
+      result.current.recordAnswer(todayISO)
     })
 
     expect(mockSaveStreak).toHaveBeenCalledWith(
@@ -96,7 +80,7 @@ describe('useStreak', () => {
     const { result } = renderHook(() => useStreak(args({ streak: stored })))
 
     act(() => {
-      result.current.recordAnswer(todayISO, 21)
+      result.current.recordAnswer(todayISO)
     })
 
     expect(mockSaveStreak).toHaveBeenCalledWith(
@@ -110,7 +94,7 @@ describe('useStreak', () => {
     const { result } = renderHook(() => useStreak(args({ streak: stored })))
 
     act(() => {
-      result.current.recordAnswer(todayISO, 16)
+      result.current.recordAnswer(todayISO)
     })
 
     expect(mockSaveStreak).toHaveBeenCalledWith(
@@ -141,7 +125,7 @@ describe('useStreak', () => {
     const { result } = renderHook(() => useStreak(args()))
 
     act(() => {
-      result.current.recordAnswer(undefined, 1)
+      result.current.recordAnswer()
     })
 
     expect(mockSaveStreak).toHaveBeenCalledWith(
@@ -153,7 +137,7 @@ describe('useStreak', () => {
     const { result } = renderHook(() => useStreak(args()))
 
     act(() => {
-      result.current.recordAnswer(todayISO, 5)
+      result.current.recordAnswer(todayISO)
     })
 
     expect(mockSaveStreak).toHaveBeenCalled()
@@ -161,95 +145,5 @@ describe('useStreak', () => {
     const last = calls[calls.length - 1]?.[0] as StreakState
     expect(last.current).toBe(1)
     expect(last.lastAnswerDate).toBe(todayISO)
-  })
-
-  describe('milestone notifications', () => {
-    // The trigger path goes:
-    //   recordAnswer (sync)
-    //     → triggerMilestoneNotification (async)
-    //       → await navigator.serviceWorker.ready   (microtask 1)
-    //       → await registration.showNotification(…) (microtask 2)
-    // So the test has to flush at least two microtasks before asserting.
-    async function flushMilestone() {
-      await Promise.resolve()
-      await Promise.resolve()
-    }
-
-    it('triggers notification at 10th answer', async () => {
-      const { result } = renderHook(() => useStreak(args()))
-
-      await act(async () => {
-        result.current.recordAnswer(todayISO, 10)
-        await flushMilestone()
-      })
-
-      expect(mockShowNotification).toHaveBeenCalled()
-    })
-
-    it('triggers notification at 25th answer', async () => {
-      const { result } = renderHook(() => useStreak(args()))
-
-      await act(async () => {
-        result.current.recordAnswer(todayISO, 25)
-        await flushMilestone()
-      })
-
-      expect(mockShowNotification).toHaveBeenCalled()
-    })
-
-    it('triggers notification at 50th answer', async () => {
-      const { result } = renderHook(() => useStreak(args()))
-
-      await act(async () => {
-        result.current.recordAnswer(todayISO, 50)
-        await flushMilestone()
-      })
-
-      expect(mockShowNotification).toHaveBeenCalled()
-    })
-
-    it('triggers notification at 100th answer', async () => {
-      const { result } = renderHook(() => useStreak(args()))
-
-      await act(async () => {
-        result.current.recordAnswer(todayISO, 100)
-        await flushMilestone()
-      })
-
-      expect(mockShowNotification).toHaveBeenCalled()
-    })
-
-    it('does not trigger notification for non-milestone answers', async () => {
-      const { result } = renderHook(() => useStreak(args()))
-
-      await act(async () => {
-        result.current.recordAnswer(todayISO, 15)
-        await flushMilestone()
-      })
-
-      expect(mockShowNotification).not.toHaveBeenCalled()
-    })
-
-    it('does not trigger duplicate milestone notifications', async () => {
-      const stored: StreakState = { current: 1, longest: 1, lastAnswerDate: yesterdayISO }
-      const { result } = renderHook(() => useStreak(args({ streak: stored })))
-
-      // First time hitting milestone 10
-      await act(async () => {
-        result.current.recordAnswer(todayISO, 10)
-        await flushMilestone()
-      })
-
-      expect(mockShowNotification).toHaveBeenCalledTimes(1)
-      mockShowNotification.mockReset()
-
-      // Answer again with still 10 total - should not trigger again
-      await act(async () => {
-        result.current.recordAnswer(todayISO, 10)
-        await flushMilestone()
-      })
-
-      expect(mockShowNotification).not.toHaveBeenCalled()
-    })
   })
 })

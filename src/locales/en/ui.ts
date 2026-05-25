@@ -228,10 +228,6 @@ export const UI_EN = {
     desc: 'We\'ll remind you after 2 days to continue writing your legacy.',
     allow: 'Allow',
     dismiss: 'Dismiss notification',
-    milestone: {
-      bodyAnswered: 'Congrats — {count} memories captured!',
-      bodyCategoryDone: 'Category "{category}" fully completed!',
-    },
   },
 
   friends: {

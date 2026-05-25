@@ -228,10 +228,6 @@ export const UI_DE = {
     desc: 'Wir erinnern dich nach 2 Tagen daran, dein Vermächtnis weiterzuschreiben.',
     allow: 'Erlauben',
     dismiss: 'Benachrichtigung schließen',
-    milestone: {
-      bodyAnswered: 'Glückwunsch — {count} Antworten festgehalten!',
-      bodyCategoryDone: 'Kategorie „{category}" komplett ausgefüllt!',
-    },
   },
 
   friends: {

@@ -241,10 +241,6 @@ export interface Translations {
     desc: string
     allow: string
     dismiss: string
-    milestone: {
-      bodyAnswered: string
-      bodyCategoryDone: string
-    }
   }
 
   friends: {
