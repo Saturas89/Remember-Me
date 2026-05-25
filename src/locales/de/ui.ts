@@ -228,14 +228,6 @@ export const UI_DE = {
     desc: 'Wir erinnern dich nach 2 Tagen daran, dein Vermächtnis weiterzuschreiben.',
     allow: 'Erlauben',
     dismiss: 'Benachrichtigung schließen',
-    welcomeBack: {
-      title: 'Willkommen zurück!',
-      bodyMemoriesOne: 'Deine Geschichte möchte weitererzählt werden.',
-      bodyMemoriesMany: 'Deine Geschichte möchte weitererzählt werden.',
-      bodyNoMemories: 'Schön, dass du wieder da bist.',
-      continueCta: 'Weitererzählen',
-      dismiss: 'Schließen',
-    },
     milestone: {
       bodyAnswered: 'Glückwunsch — {count} Antworten festgehalten!',
       bodyCategoryDone: 'Kategorie „{category}" komplett ausgefüllt!',

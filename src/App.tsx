@@ -52,7 +52,6 @@ import { UpdateBanner } from './components/UpdateBanner'
 import { ReleaseNotesModal } from './components/ReleaseNotesModal'
 import { ShareMigrationBanner } from './components/ShareMigrationBanner'
 import { ReminderBanner } from './components/ReminderBanner'
-import { WelcomeBackBanner } from './components/WelcomeBackBanner'
 import { BottomNav } from './components/BottomNav'
 import { useServiceWorker } from './hooks/useServiceWorker'
 import { useReminder } from './hooks/useReminder'
@@ -286,42 +285,8 @@ export default function App() {
     reschedule()
   }
 
-  // Find next unanswered question across all categories
-  function findNextQuestion() {
-    const categories = CATEGORIES
-    for (const category of categories) {
-      for (const question of category.questions) {
-        if (!getAnswer(question.id)) {
-          return { categoryId: category.id, questionId: question.id }
-        }
-      }
-    }
-    // Check custom questions
-    for (const question of customQuestions) {
-      if (!getAnswer(question.id)) {
-        return { categoryId: 'custom', questionId: question.id }
-      }
-    }
-    return null
-  }
 
-  // Handle welcome back continue button
-  function handleWelcomeBackContinue() {
-    setShowWelcomeBack(false)
-    const next = findNextQuestion()
-    if (next) {
-      if (next.categoryId === 'custom') {
-        goTo({ name: 'custom-questions' })
-      } else {
-        goTo({ name: 'quiz', categoryId: next.categoryId })
-      }
-    } else {
-      // All questions answered, go to archive
-      goTo({ name: 'archive' })
-    }
-  }
-
-  const [view, setView] = useState<View>(() => {
+const [view, setView] = useState<View>(() => {
     if (needsAsyncParse) return { name: 'home' }
     if (initialSandraHash) return { name: 'sandra-flow' }
     return pathToView(window.location.pathname)
@@ -353,40 +318,12 @@ export default function App() {
   const { state: installState, visible: installVisible, triggerInstall, dismiss: dismissInstall } = useInstallPrompt()
   const { needRefresh, applyUpdate, dismiss: dismissUpdate } = useServiceWorker()
   const { showPrompt: showReminderPrompt, requestPermission: enableReminder, dismissPrompt: dismissReminder, reschedule } = useReminder()
-  const { streak, recordAnswer, checkStreakReset } = useStreak({
+  const { recordAnswer } = useStreak({
     isLoaded,
     answers,
     streak: storedStreak,
     saveStreak,
   })
-
-  // Welcome back banner state
-  const WELCOME_BACK_SESSION_KEY = 'rm-welcome-back-shown-this-session'
-  const [showWelcomeBack, setShowWelcomeBack] = useState(false)
-  // Track per-tab whether the welcome-back banner was already shown so the
-  // reminder/permission banner doesn't pop up immediately after dismissal
-  // (Ingrid persona, #156).
-  const [welcomeBackShownThisSession, setWelcomeBackShownThisSession] = useState(() => {
-    try { return sessionStorage.getItem(WELCOME_BACK_SESSION_KEY) === '1' } catch { return false }
-  })
-
-  // Check for welcome back scenario on load
-  useEffect(() => {
-    if (!isLoaded || !streak.lastAnswerDate) return
-
-    const today = new Date().toISOString().split('T')[0]
-    const lastAnswer = new Date(streak.lastAnswerDate + 'T00:00:00')
-    const todayDate = new Date(today + 'T00:00:00')
-    const daysDiff = Math.floor((todayDate.getTime() - lastAnswer.getTime()) / (24 * 60 * 60 * 1000))
-
-    if (daysDiff >= 3) {
-      setShowWelcomeBack(true)
-      setWelcomeBackShownThisSession(true)
-      try { sessionStorage.setItem(WELCOME_BACK_SESSION_KEY, '1') } catch { /* private mode */ }
-      // Also check for streak reset
-      checkStreakReset()
-    }
-  }, [isLoaded, streak.lastAnswerDate, checkStreakReset])
 
   // Sync view with browser back/forward navigation
   useEffect(() => {
@@ -825,25 +762,11 @@ export default function App() {
           onDismiss={dismissShareMigration}
         />
       )}
-      {!installVisible && !needRefresh && !showShareMigration && !showWelcomeBack && !welcomeBackShownThisSession && showReminderPrompt && (
+      {!installVisible && !needRefresh && !showShareMigration && showReminderPrompt && (
         <ReminderBanner
           visible={showReminderPrompt}
           onEnable={enableReminder}
           onDismiss={dismissReminder}
-        />
-      )}
-      {showWelcomeBack && (
-        <WelcomeBackBanner
-          visible={showWelcomeBack}
-          memoriesCount={Object.values(answers).filter(a =>
-            a.value.trim() !== '' ||
-            (a.imageIds?.length ?? 0) > 0 ||
-            (a.videoIds?.length ?? 0) > 0 ||
-            !!a.audioId ||
-            !!a.audioTranscript,
-          ).length}
-          onContinue={handleWelcomeBackContinue}
-          onDismiss={() => setShowWelcomeBack(false)}
         />
       )}
       {showReleaseNotes && <ReleaseNotesModal onClose={() => setShowReleaseNotes(false)} />}

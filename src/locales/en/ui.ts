@@ -228,14 +228,6 @@ export const UI_EN = {
     desc: 'We\'ll remind you after 2 days to continue writing your legacy.',
     allow: 'Allow',
     dismiss: 'Dismiss notification',
-    welcomeBack: {
-      title: 'Welcome back!',
-      bodyMemoriesOne: 'Your story is waiting to be continued.',
-      bodyMemoriesMany: 'Your story is waiting to be continued.',
-      bodyNoMemories: 'Glad you\'re back.',
-      continueCta: 'Continue my story',
-      dismiss: 'Dismiss',
-    },
     milestone: {
       bodyAnswered: 'Congrats — {count} memories captured!',
       bodyCategoryDone: 'Category "{category}" fully completed!',

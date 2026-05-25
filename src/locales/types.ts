@@ -241,14 +241,6 @@ export interface Translations {
     desc: string
     allow: string
     dismiss: string
-    welcomeBack: {
-      title: string
-      bodyMemoriesOne: string
-      bodyMemoriesMany: string
-      bodyNoMemories: string
-      continueCta: string
-      dismiss: string
-    }
     milestone: {
       bodyAnswered: string
       bodyCategoryDone: string
