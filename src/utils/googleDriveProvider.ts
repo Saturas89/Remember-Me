@@ -557,7 +557,15 @@ export class GoogleDriveProvider implements SyncProvider {
 
     const res = await driveGet(`/drive/v3/files/${fileId}?alt=media`, token)
     if (!res.ok) return null
-    const raw = await res.json() as unknown
+    let raw: unknown
+    try {
+      raw = await res.json()
+    } catch {
+      // Remote file is not valid JSON (empty body, corrupted file, or the
+      // Drive mock returns a non-JSON blob for a misidentified file ID).
+      // Treat as no remote state so push() writes a fresh encrypted envelope.
+      return null
+    }
     const envelope = parseEncryptedSyncEnvelope(raw)
     const decrypted = await decryptSyncEnvelope<Record<string, MediaManifestEntry>>(envelope, vaultKey)
     const remote = decrypted.state

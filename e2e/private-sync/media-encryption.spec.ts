@@ -87,8 +87,19 @@ test.describe('Privater Sync – Media-Verschlüsselung Google Drive (H1)', () =
     await page.evaluate(async ({ plainHex, syncId }) => {
       const open = (name: string, store: string) =>
         new Promise<IDBDatabase>((resolve, reject) => {
-          const req = indexedDB.open(name, 1)
-          req.onupgradeneeded = () => req.result.createObjectStore(store)
+          // rm-sync-vault-db was bumped: v1=vault, v2(H7)=+kdf, v3(H5)=+version.
+          // Opening at a lower version than the existing DB throws immediately with
+          // "requested version < existing version", so match the app's current version.
+          const version = name === 'rm-sync-vault-db' ? 3 : 1
+          const req = indexedDB.open(name, version)
+          req.onupgradeneeded = () => {
+            const db = req.result
+            if (!db.objectStoreNames.contains(store)) db.createObjectStore(store)
+            if (name === 'rm-sync-vault-db') {
+              if (!db.objectStoreNames.contains('rm-sync-kdf')) db.createObjectStore('rm-sync-kdf')
+              if (!db.objectStoreNames.contains('rm-sync-version')) db.createObjectStore('rm-sync-version')
+            }
+          }
           req.onsuccess = () => resolve(req.result)
           req.onerror = () => reject(req.error)
         })
@@ -188,7 +199,15 @@ test.describe('Privater Sync – Media-Verschlüsselung Google Drive (H1)', () =
       const importKeyProbe = await (async () => {
         try {
           const db = await new Promise<IDBDatabase>((res, rej) => {
-            const r = indexedDB.open('rm-sync-vault-db', 1)
+            // Must match the app's current schema version (v3) to avoid
+            // VersionError when the DB was already opened/created at v3.
+            const r = indexedDB.open('rm-sync-vault-db', 3)
+            r.onupgradeneeded = () => {
+              const d = r.result
+              if (!d.objectStoreNames.contains('rm-sync-vault')) d.createObjectStore('rm-sync-vault')
+              if (!d.objectStoreNames.contains('rm-sync-kdf')) d.createObjectStore('rm-sync-kdf')
+              if (!d.objectStoreNames.contains('rm-sync-version')) d.createObjectStore('rm-sync-version')
+            }
             r.onsuccess = () => res(r.result)
             r.onerror = () => rej(r.error)
           })
@@ -216,7 +235,17 @@ test.describe('Privater Sync – Media-Verschlüsselung Google Drive (H1)', () =
         }
       })()
       const idbProbe = (db: string, store: string, key: string) => new Promise(resolve => {
-        const r = indexedDB.open(db, 1)
+        // rm-sync-vault-db lives at v3; all other probe DBs are v1.
+        const version = db === 'rm-sync-vault-db' ? 3 : 1
+        const r = indexedDB.open(db, version)
+        r.onupgradeneeded = () => {
+          const d = r.result
+          if (!d.objectStoreNames.contains(store)) d.createObjectStore(store)
+          if (db === 'rm-sync-vault-db') {
+            if (!d.objectStoreNames.contains('rm-sync-kdf')) d.createObjectStore('rm-sync-kdf')
+            if (!d.objectStoreNames.contains('rm-sync-version')) d.createObjectStore('rm-sync-version')
+          }
+        }
         r.onsuccess = () => {
           const tx = r.result.transaction(store, 'readonly')
           const g = tx.objectStore(store).get(key)

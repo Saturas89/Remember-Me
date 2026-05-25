@@ -166,9 +166,22 @@ test.describe('Alle Daten löschen – Produktion', () => {
     // App reloaded → onboarding visible.
     await expect(page.getByLabel('Wie heißt du?')).toBeVisible({ timeout: 20_000 })
 
-    // All localStorage is cleared.
-    const stateAfter = await page.evaluate(() => localStorage.getItem('remember-me-state'))
-    expect(stateAfter).toBeNull()
+    // User data is cleared.
+    // Note: spawnRealDevice's addInitScript re-seeds a blank skeleton on every
+    // page load (including this reload), so localStorage is never strictly null
+    // in E2E.  Verify via the in-memory __rmState bridge instead – same pattern
+    // as the local-only test above.
+    const profileAfter = await page.evaluate(() => {
+      const b = (window as unknown as { __rmState?: { get: () => Record<string, unknown> | null } }).__rmState
+      return (b?.get()?.profile as { name?: string } | null)?.name ?? null
+    })
+    expect(profileAfter).toBeNull()
+
+    const answersAfter = await page.evaluate(() => {
+      const b = (window as unknown as { __rmState?: { get: () => Record<string, unknown> | null } }).__rmState
+      return Object.keys((b?.get()?.answers as Record<string, unknown>) ?? {}).length
+    })
+    expect(answersAfter).toBe(0)
 
     // private_sync_state row must be gone from Supabase.
     // The row may not have been written yet if the 30 s debounce hadn't fired.
