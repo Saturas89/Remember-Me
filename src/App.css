@@ -3539,12 +3539,6 @@
   transition: color 0.15s, background-color 0.15s;
 }
 
-/* WelcomeBackBanner dismiss — same 44×44 tap-target as ReminderBanner. */
-.welcome-back-banner__dismiss {
-  min-width: 44px;
-  min-height: 44px;
-}
-
 .update-banner__close:hover {
   color: var(--text-primary);
   background: color-mix(in srgb, var(--text-primary) 10%, transparent);

@@ -490,8 +490,7 @@ const [view, setView] = useState<View>(() => {
       'online-hub': '/friends', 'online-intro': '/friends',
     }
     let path = paths[v.name]
-    // Quiz lands on its own pseudo-route so deep-link & welcome-back-continue
-    // can leave the home URL.
+    // Quiz lands on its own pseudo-route so deep-links can leave the home URL.
     if (v.name === 'quiz') path = `/quiz/${v.categoryId}`
     if (v.name === 'custom-questions') path = '/custom-questions'
     if (path !== undefined) history.pushState({}, '', path)
