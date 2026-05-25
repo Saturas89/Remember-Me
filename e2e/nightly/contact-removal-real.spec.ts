@@ -154,9 +154,14 @@ test.describe('Kontakt entfernen – Feed & DB-Cleanup (Real-DB)', () => {
     // Bob entfernt Alice per Swipe → unshareAllWithFriend() läuft im Hintergrund
     await openContactsTab(bob)
     await swipeContactLeft(bob)
-    await expect(bob.locator('[data-testid="no-contacts-hint"]')).toBeVisible({ timeout: 5_000 })
+    await expect(bob.locator('[data-testid="no-contacts-hint"]')).toBeVisible({ timeout: 8_000 })
 
-    // DB-Poll: Alice darf nicht mehr als Empfängerin in Bobs Share stehen
+    // Give the background unshareAllWithFriend() network request time to land
+    // before the DB poll starts – important on slower CI runners (Samsung S23).
+    await bob.waitForTimeout(1_500)
+
+    // DB-Poll: Alice darf nicht mehr als Empfängerin in Bobs Share stehen.
+    // Timeout raised to 40 s to handle CI network latency on real Supabase.
     await expect.poll(
       async () => {
         const { data } = await admin
@@ -166,7 +171,7 @@ test.describe('Kontakt entfernen – Feed & DB-Cleanup (Real-DB)', () => {
           .eq('recipient_id', aliceId.deviceId)
         return data?.length ?? -1
       },
-      { timeout: 20_000, intervals: [2_000] },
+      { timeout: 40_000, intervals: [2_000] },
     ).toBe(0)
 
     await aliceCtx.close()

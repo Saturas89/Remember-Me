@@ -468,8 +468,10 @@ test.describe('Private Sync – Storyhold Server (Real-DB)', () => {
     await page1.evaluate((val: string) => {
       const bridge = (window as unknown as { __rmState?: { get: () => Record<string, unknown> | null; save: (s: unknown) => void } }).__rmState
       const state = bridge?.get() ?? {}
-      ;(state.answers as Record<string, unknown>)['roundtrip-q1'] = {
-        id: 'roundtrip-q1', questionId: 'q_childhood_1', categoryId: 'childhood',
+      // Use a real question ID from the childhood category so the ArchiveView
+      // can find and render the answer (it looks up answers by category question id).
+      ;(state.answers as Record<string, unknown>)['childhood-02'] = {
+        id: 'childhood-02', questionId: 'childhood-02', categoryId: 'childhood',
         value: val, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
       }
       bridge?.save(state)
@@ -541,8 +543,10 @@ test.describe('Private Sync – Storyhold Server (Real-DB)', () => {
     await page1.evaluate((val: string) => {
       const bridge = (window as unknown as { __rmState?: { get: () => Record<string, unknown> | null; save: (s: unknown) => void } }).__rmState
       const state = bridge?.get() ?? {}
-      ;(state.answers as Record<string, unknown>)['relogin-q1'] = {
-        id: 'relogin-q1', questionId: 'q_family_1', categoryId: 'family',
+      // Use a real question ID from the family category so the ArchiveView
+      // can find and render the answer (it looks up answers by category question id).
+      ;(state.answers as Record<string, unknown>)['family-01'] = {
+        id: 'family-01', questionId: 'family-01', categoryId: 'family',
         value: val, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
       }
       bridge?.save(state)
