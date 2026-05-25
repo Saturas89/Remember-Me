@@ -501,10 +501,22 @@ test.describe('Private Sync – Storyhold Server (Real-DB)', () => {
     await page2.getByRole('button', { name: /Weiter|Entschlüsseln/ }).click()
     await expect(page2.getByRole('heading', { name: 'Privater Sync', exact: true })).toBeVisible({ timeout: 30_000 })
 
+    // After onComplete(), privateSync.syncNow() runs in the background.
+    // Wait until the merged app-state contains device 1's answer before
+    // navigating to the archive (the archive re-renders reactively, but we
+    // want to land on the right view only after the data is there).
+    await expect.poll(async () => {
+      return page2.evaluate((val) => {
+        const s = (window as unknown as { __rmState?: { get: () => Record<string, unknown> | null } }).__rmState?.get()
+        const answers = s?.answers as Record<string, { value: string }> | undefined
+        return Object.values(answers ?? {}).some(a => a.value === val)
+      }, testValue)
+    }, { timeout: 90_000, intervals: [3_000] }).toBe(true)
+
     // Zum Archiv navigieren und prüfen, dass die Antwort von Gerät 1 sichtbar ist
     const nav = page2.getByRole('navigation', { name: 'Hauptnavigation' })
     await nav.getByRole('button', { name: 'Vermächtnis', exact: true }).click()
-    await expect(page2.getByText(testValue)).toBeVisible({ timeout: 30_000 })
+    await expect(page2.getByText(testValue)).toBeVisible({ timeout: 10_000 })
 
     await ctx1.close()
     await ctx2.close()
@@ -569,10 +581,21 @@ test.describe('Private Sync – Storyhold Server (Real-DB)', () => {
     await expect(page2.getByRole('heading', { name: 'Privater Sync', exact: true })).toBeVisible({ timeout: 30_000 })
     await expect(page2.getByText(/Storyhold Server/i)).toBeVisible()
 
+    // After onComplete(), privateSync.syncNow() runs asynchronously.
+    // Poll the in-memory bridge until device 1's answer has been merged into
+    // the app state before navigating to the archive view.
+    await expect.poll(async () => {
+      return page2.evaluate((val) => {
+        const s = (window as unknown as { __rmState?: { get: () => Record<string, unknown> | null } }).__rmState?.get()
+        const answers = s?.answers as Record<string, { value: string }> | undefined
+        return Object.values(answers ?? {}).some(a => a.value === val)
+      }, loginTestValue)
+    }, { timeout: 90_000, intervals: [3_000] }).toBe(true)
+
     // Archiv prüfen: Eintrag muss nach Re-Login entschlüsselt verfügbar sein
     const nav2 = page2.getByRole('navigation', { name: 'Hauptnavigation' })
     await nav2.getByRole('button', { name: 'Vermächtnis', exact: true }).click()
-    await expect(page2.getByText(loginTestValue)).toBeVisible({ timeout: 30_000 })
+    await expect(page2.getByText(loginTestValue)).toBeVisible({ timeout: 10_000 })
 
     await ctx1.close()
     await ctx2.close()

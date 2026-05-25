@@ -230,10 +230,13 @@ test.describe('Real-DB: Auto-Share Edge Cases (REQ-022)', () => {
     await expect(bob.getByTestId('feed-item').first()).toBeVisible({ timeout: 30_000 })
     expect(await bob.getByTestId('feed-item').first().textContent()).toContain('Alices Erinnerung')
 
-    // Alice sieht nichts im Feed
+    // Alice sieht Bobs Erinnerung NICHT (Bob hat shareAll=false).
+    // Alice kann ihre eigenen geteilten Erinnerungen sehen (da knownDeviceIds
+    // auch sync.deviceId enthält) – daher prüfen wir gezielt, dass Bobs
+    // Memory nicht erscheint, statt einen Feed-Count von 0 zu erwarten.
     await reopenFamilyHub(alice)
     await alice.waitForTimeout(3_000)
-    expect(await alice.getByTestId('feed-item').count()).toBe(0)
+    await expect(alice.getByText('Bobs private Erinnerung.')).not.toBeVisible()
 
     await aliceCtx.close()
     await bobCtx.close()
