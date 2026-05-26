@@ -354,8 +354,9 @@ export default function App() {
   const { needRefresh, applyUpdate, dismiss: dismissUpdate } = useServiceWorker()
   const { showPrompt: showReminderPrompt, requestPermission: enableReminder, dismissPrompt: dismissReminder, reschedule } = useReminder()
 
-  // Only show reminder banner after the user has answered at least 3 questions –
-  // at that point they've experienced real value and are more likely to allow notifications.
+  // Only show the install/add-to-homescreen banner after the user has answered
+  // at least 3 questions – at that point they've experienced real value and are
+  // more likely to actually install the app.
   const answeredCount = Object.values(answers).filter(a =>
     a.value.trim() !== '' ||
     (a.imageIds?.length ?? 0) > 0 ||
@@ -547,7 +548,7 @@ export default function App() {
           onComplete={saveProfile}
           onImportBackup={restoreBackup}
         />
-        {installVisible && <InstallBanner state={installState} onInstall={triggerInstall} onDismiss={dismissInstall} />}
+        {installVisible && answeredCount >= 3 && <InstallBanner state={installState} onInstall={triggerInstall} onDismiss={dismissInstall} />}
         {needRefresh && <UpdateBanner onUpdate={applyUpdate} onDismiss={dismissUpdate} onViewNotes={() => setShowReleaseNotes(true)} />}
       </AppModeProvider>
     )
@@ -635,7 +636,7 @@ export default function App() {
               : goTo({ name: 'home' })
           }
         />
-        {installVisible && <InstallBanner state={installState} onInstall={triggerInstall} onDismiss={dismissInstall} />}
+        {installVisible && answeredCount >= 3 && <InstallBanner state={installState} onInstall={triggerInstall} onDismiss={dismissInstall} />}
         {needRefresh && <UpdateBanner onUpdate={applyUpdate} onDismiss={dismissUpdate} onViewNotes={() => setShowReleaseNotes(true)} />}
       </AppModeProvider>
     )
@@ -836,7 +837,7 @@ export default function App() {
           onDismiss={dismissShareMigration}
         />
       )}
-      {!installVisible && !needRefresh && !showShareMigration && !showWelcomeBack && !welcomeBackShownThisSession && showReminderPrompt && answeredCount >= 3 && (
+      {!installVisible && !needRefresh && !showShareMigration && !showWelcomeBack && !welcomeBackShownThisSession && showReminderPrompt && (
         <ReminderBanner
           visible={showReminderPrompt}
           onEnable={enableReminder}

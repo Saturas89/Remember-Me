@@ -287,25 +287,6 @@ test.describe('REQ-016 – Milestone Notifications (FR-16.7)', () => {
   })
 })
 
-// Helper: seed 3 answered questions so the answeredCount >= 3 gate is met.
-// profile is kept null so completeOnboarding() can still run the name step.
-function seedThreeAnswers(page: Page) {
-  return page.addInitScript(() => {
-    localStorage.setItem('remember-me-state', JSON.stringify({
-      profile: null,
-      answers: {
-        'seed-1': { id: 'seed-1', questionId: 'seed-1', categoryId: 'seed', value: 'answer 1', createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z' },
-        'seed-2': { id: 'seed-2', questionId: 'seed-2', categoryId: 'seed', value: 'answer 2', createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z' },
-        'seed-3': { id: 'seed-3', questionId: 'seed-3', categoryId: 'seed', value: 'answer 3', createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z' },
-      },
-      friends: [],
-      friendAnswers: [],
-      customQuestions: [],
-      appMode: 'full',
-    }))
-  })
-}
-
 test.describe('REQ-016 – ReminderBanner Permission Flow (FR-16.10)', () => {
   test('shows permission prompt for default permission', async ({ page }) => {
     await page.addInitScript(() => {
@@ -324,8 +305,6 @@ test.describe('REQ-016 – ReminderBanner Permission Flow (FR-16.10)', () => {
         },
       )
     })
-    // Banner requires answeredCount >= 3 – seed three answers before onboarding
-    await seedThreeAnswers(page)
 
     await completeOnboarding(page)
     await openProfileTab(page)
@@ -352,8 +331,6 @@ test.describe('REQ-016 – ReminderBanner Permission Flow (FR-16.10)', () => {
         },
       )
     })
-    // Banner requires answeredCount >= 3 – seed three answers before onboarding
-    await seedThreeAnswers(page)
 
     await completeOnboarding(page)
     await openProfileTab(page)
