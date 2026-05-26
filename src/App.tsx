@@ -372,6 +372,18 @@ export default function App() {
     saveStreak,
   })
 
+  // Only show the notification opt-in banner when the user returns after ≥1 day
+  // of absence. Showing it on the very first session (or while actively using
+  // the app today) creates no perceived value and increases reflexive dismissals.
+  // Empty lastAnswerDate means a brand-new user → gate is false → banner never shows.
+  const daysSinceLastAnswer = streak.lastAnswerDate
+    ? Math.floor(
+        (Date.now() - new Date(streak.lastAnswerDate).getTime()) /
+          (24 * 60 * 60 * 1000),
+      )
+    : null
+  const reminderBannerGate = daysSinceLastAnswer !== null && daysSinceLastAnswer >= 1
+
   // Welcome back banner state
   const WELCOME_BACK_SESSION_KEY = 'rm-welcome-back-shown-this-session'
   const [showWelcomeBack, setShowWelcomeBack] = useState(false)
@@ -837,7 +849,7 @@ export default function App() {
           onDismiss={dismissShareMigration}
         />
       )}
-      {!installVisible && !needRefresh && !showShareMigration && !showWelcomeBack && !welcomeBackShownThisSession && showReminderPrompt && (
+      {!installVisible && !needRefresh && !showShareMigration && !showWelcomeBack && !welcomeBackShownThisSession && showReminderPrompt && reminderBannerGate && (
         <ReminderBanner
           visible={showReminderPrompt}
           onEnable={enableReminder}

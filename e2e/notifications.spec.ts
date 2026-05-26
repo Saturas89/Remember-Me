@@ -287,6 +287,26 @@ test.describe('REQ-016 – Milestone Notifications (FR-16.7)', () => {
   })
 })
 
+// Helper: seed a streak with lastAnswerDate = yesterday so the
+// reminderBannerGate (daysSinceLastAnswer >= 1) is satisfied.
+// profile is kept null so completeOnboarding() can still run the name step.
+function seedYesterdayStreak(page: Page) {
+  return page.addInitScript(() => {
+    const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000)
+      .toISOString()
+      .split('T')[0]
+    localStorage.setItem('remember-me-state', JSON.stringify({
+      profile: null,
+      answers: {},
+      friends: [],
+      friendAnswers: [],
+      customQuestions: [],
+      appMode: 'full',
+      streak: { current: 1, longest: 1, lastAnswerDate: yesterday },
+    }))
+  })
+}
+
 test.describe('REQ-016 – ReminderBanner Permission Flow (FR-16.10)', () => {
   test('shows permission prompt for default permission', async ({ page }) => {
     await page.addInitScript(() => {
@@ -305,6 +325,8 @@ test.describe('REQ-016 – ReminderBanner Permission Flow (FR-16.10)', () => {
         },
       )
     })
+    // ReminderBanner requires daysSinceLastAnswer >= 1 – seed yesterday's date
+    await seedYesterdayStreak(page)
 
     await completeOnboarding(page)
     await openProfileTab(page)
@@ -331,6 +353,8 @@ test.describe('REQ-016 – ReminderBanner Permission Flow (FR-16.10)', () => {
         },
       )
     })
+    // ReminderBanner requires daysSinceLastAnswer >= 1 – seed yesterday's date
+    await seedYesterdayStreak(page)
 
     await completeOnboarding(page)
     await openProfileTab(page)
