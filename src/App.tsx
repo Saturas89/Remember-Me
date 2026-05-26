@@ -378,7 +378,7 @@ export default function App() {
   // Empty lastAnswerDate means a brand-new user → gate is false → banner never shows.
   const daysSinceLastAnswer = streak.lastAnswerDate
     ? Math.floor(
-        (Date.now() - new Date(streak.lastAnswerDate).getTime()) /
+        (Date.now() - new Date(streak.lastAnswerDate + 'T00:00:00').getTime()) /
           (24 * 60 * 60 * 1000),
       )
     : null
@@ -838,7 +838,7 @@ export default function App() {
         />
       )}
 
-      {installVisible && <InstallBanner state={installState} onInstall={triggerInstall} onDismiss={dismissInstall} />}
+      {installVisible && answeredCount >= 3 && <InstallBanner state={installState} onInstall={triggerInstall} onDismiss={dismissInstall} />}
       {needRefresh && <UpdateBanner onUpdate={applyUpdate} onDismiss={dismissUpdate} onViewNotes={() => setShowReleaseNotes(true)} />}
       {showShareMigration && !installVisible && !needRefresh && (
         <ShareMigrationBanner
