@@ -353,6 +353,17 @@ export default function App() {
   const { state: installState, visible: installVisible, triggerInstall, dismiss: dismissInstall } = useInstallPrompt()
   const { needRefresh, applyUpdate, dismiss: dismissUpdate } = useServiceWorker()
   const { showPrompt: showReminderPrompt, requestPermission: enableReminder, dismissPrompt: dismissReminder, reschedule } = useReminder()
+
+  // Only show reminder banner after the user has answered at least 3 questions –
+  // at that point they've experienced real value and are more likely to allow notifications.
+  const answeredCount = Object.values(answers).filter(a =>
+    a.value.trim() !== '' ||
+    (a.imageIds?.length ?? 0) > 0 ||
+    (a.videoIds?.length ?? 0) > 0 ||
+    !!a.audioId ||
+    !!a.audioTranscript,
+  ).length
+
   const { streak, recordAnswer, checkStreakReset } = useStreak({
     isLoaded,
     answers,
@@ -825,7 +836,7 @@ export default function App() {
           onDismiss={dismissShareMigration}
         />
       )}
-      {!installVisible && !needRefresh && !showShareMigration && !showWelcomeBack && !welcomeBackShownThisSession && showReminderPrompt && (
+      {!installVisible && !needRefresh && !showShareMigration && !showWelcomeBack && !welcomeBackShownThisSession && showReminderPrompt && answeredCount >= 3 && (
         <ReminderBanner
           visible={showReminderPrompt}
           onEnable={enableReminder}
