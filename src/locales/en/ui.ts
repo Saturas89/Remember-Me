@@ -704,6 +704,7 @@ export const UI_EN = {
     deactivateHeading: 'Deactivate sync',
     deactivateSectionHint: 'You can either disconnect this device only – your cloud file stays intact – or delete the cloud file as well. Memories stored locally on this device remain unchanged either way.',
     tagEncrypted: 'Encrypted',
+    comingSoon: 'Coming soon',
   },
 
   landing: {

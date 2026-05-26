@@ -480,13 +480,10 @@ export function PrivateSyncSetupView({ onComplete }: Props) {
   }
 
   if (step === 'provider-choice') {
-    // OneDrive support is fully implemented (handleMicrosoftSignIn below);
-    // only the provider-choice card was missing — the Sandra persona caught
-    // this stille Inkonsistenz in #175.
     const providers = [
-      { id: 'google-drive' as SyncProviderType, title: s.googleDriveTitle, desc: s.googleDriveDesc, privacy: s.googleDrivePrivacy, icon: '☁️', colorClass: 'provider-card__icon--google' },
-      { id: 'onedrive'     as SyncProviderType, title: s.oneDriveTitle,   desc: s.oneDriveDesc,   privacy: s.oneDrivePrivacy,   icon: '🪟', colorClass: 'provider-card__icon--onedrive' },
-      { id: 'supabase'     as SyncProviderType, title: s.supabaseTitle,   desc: s.supabaseDesc,   privacy: s.supabasePrivacy,   icon: '🔒', colorClass: 'provider-card__icon--server' },
+      { id: 'google-drive' as SyncProviderType, title: s.googleDriveTitle, desc: s.googleDriveDesc, privacy: s.googleDrivePrivacy, icon: '☁️', colorClass: 'provider-card__icon--google',  comingSoon: false },
+      { id: 'onedrive'     as SyncProviderType, title: s.oneDriveTitle,   desc: s.oneDriveDesc,   privacy: s.oneDrivePrivacy,   icon: '🪟', colorClass: 'provider-card__icon--onedrive', comingSoon: true  },
+      { id: 'supabase'     as SyncProviderType, title: s.supabaseTitle,   desc: s.supabaseDesc,   privacy: s.supabasePrivacy,   icon: '🔒', colorClass: 'provider-card__icon--server',   comingSoon: false },
     ]
     const handleContinue = () => {
       if (provider === 'google-drive') return handleGoogleSignIn()
@@ -514,10 +511,10 @@ export function PrivateSyncSetupView({ onComplete }: Props) {
             {providers.map(p => (
               <button
                 key={p.id}
-                className={`provider-card${provider === p.id ? ' provider-card--selected' : ''}`}
-                onClick={() => setProvider(p.id)}
+                className={`provider-card${provider === p.id ? ' provider-card--selected' : ''}${p.comingSoon ? ' provider-card--disabled' : ''}`}
+                onClick={() => !p.comingSoon && setProvider(p.id)}
                 type="button"
-                disabled={loading}
+                disabled={loading || p.comingSoon}
               >
                 <span className={`provider-card__icon ${p.colorClass}`}>{p.icon}</span>
                 <div className="provider-card__body">
@@ -525,7 +522,10 @@ export function PrivateSyncSetupView({ onComplete }: Props) {
                   <p className="provider-card__desc">{p.desc}</p>
                   <p className="provider-card__privacy">{p.privacy}</p>
                 </div>
-                {provider === p.id && (
+                {p.comingSoon && (
+                  <span className="provider-card__badge provider-card__badge--soon" aria-hidden="true">{s.comingSoon ?? 'Coming soon'}</span>
+                )}
+                {!p.comingSoon && provider === p.id && (
                   <span className="provider-card__badge" aria-hidden="true">✓</span>
                 )}
               </button>
