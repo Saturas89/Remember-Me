@@ -287,23 +287,19 @@ test.describe('REQ-016 – Milestone Notifications (FR-16.7)', () => {
   })
 })
 
-// Helper: seed a streak with lastAnswerDate = yesterday so the
-// reminderBannerGate (daysSinceLastAnswer >= 1) is satisfied.
-// profile is kept null so completeOnboarding() can still run the name step.
-function seedYesterdayStreak(page: Page) {
-  return page.addInitScript(() => {
+// Helper: inject lastAnswerDate = yesterday into an already-loaded app state.
+// Called via page.evaluate() AFTER onboarding so profile is preserved,
+// then page.reload() picks up the new streak. Avoids addInitScript ordering
+// issues that caused mobile-safari failures when profile was set back to null.
+async function injectYesterdayStreak(page: Page) {
+  await page.evaluate(() => {
     const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000)
       .toISOString()
       .split('T')[0]
-    localStorage.setItem('remember-me-state', JSON.stringify({
-      profile: null,
-      answers: {},
-      friends: [],
-      friendAnswers: [],
-      customQuestions: [],
-      appMode: 'full',
-      streak: { current: 1, longest: 1, lastAnswerDate: yesterday },
-    }))
+    const raw = localStorage.getItem('remember-me-state')
+    const state = raw ? JSON.parse(raw) as Record<string, unknown> : {}
+    state.streak = { current: 1, longest: 1, lastAnswerDate: yesterday }
+    localStorage.setItem('remember-me-state', JSON.stringify(state))
   })
 }
 
@@ -325,10 +321,16 @@ test.describe('REQ-016 – ReminderBanner Permission Flow (FR-16.10)', () => {
         },
       )
     })
-    // ReminderBanner requires daysSinceLastAnswer >= 1 – seed yesterday's date
-    await seedYesterdayStreak(page)
 
+    // Complete onboarding first so profile is saved in state
     await completeOnboarding(page)
+    // Now inject yesterday's streak (profile preserved) and reload so the
+    // app reads the updated state. init scripts restore the Notification mock;
+    // beforeEach guard keeps the existing state (profile + streak intact).
+    await injectYesterdayStreak(page)
+    await page.reload()
+    await expect(page.getByText(/Hallo,\s*Test User/)).toBeVisible()
+
     await openProfileTab(page)
 
     // ReminderBanner should appear
@@ -353,10 +355,13 @@ test.describe('REQ-016 – ReminderBanner Permission Flow (FR-16.10)', () => {
         },
       )
     })
-    // ReminderBanner requires daysSinceLastAnswer >= 1 – seed yesterday's date
-    await seedYesterdayStreak(page)
 
+    // Complete onboarding, then inject yesterday streak + reload (see above test)
     await completeOnboarding(page)
+    await injectYesterdayStreak(page)
+    await page.reload()
+    await expect(page.getByText(/Hallo,\s*Test User/)).toBeVisible()
+
     await openProfileTab(page)
 
     const reminderBanner = page.getByTestId('reminder-banner')
