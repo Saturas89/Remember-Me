@@ -91,12 +91,10 @@ test.describe('Multi-Empfänger und Drei-Geräte (Real-DB)', () => {
       }, { timeout: 20_000, intervals: [2_000] })
       .toBeGreaterThanOrEqual(2)
 
-    await bob.page.reload()
-    await openFamilyHub(bob.page)
+    await reopenFamilyHub(bob.page)
     await expect(bob.page.getByTestId('feed-item').first()).toBeVisible({ timeout: 30_000 })
 
-    await carol.page.reload()
-    await openFamilyHub(carol.page)
+    await reopenFamilyHub(carol.page)
     await expect(carol.page.getByTestId('feed-item').first()).toBeVisible({ timeout: 30_000 })
 
     await alice.ctx.close()
@@ -161,12 +159,10 @@ test.describe('Multi-Empfänger und Drei-Geräte (Real-DB)', () => {
     await reopenFamilyHub(alice.page)
     await waitForRealShares(admin, alice.id.deviceId, memories.length, 90_000)
 
-    await bob.page.reload()
-    await openFamilyHub(bob.page)
+    await reopenFamilyHub(bob.page)
     await expect(bob.page.getByTestId('feed-item').first()).toBeVisible({ timeout: 30_000 })
 
-    await carol.page.reload()
-    await openFamilyHub(carol.page)
+    await reopenFamilyHub(carol.page)
     await expect(carol.page.getByTestId('feed-item').first()).toBeVisible({ timeout: 30_000 })
 
     await alice.ctx.close()
@@ -191,8 +187,7 @@ test.describe('Multi-Empfänger und Drei-Geräte (Real-DB)', () => {
       .limit(1)
     const shareId = shareRows![0].id
 
-    await bob.page.reload()
-    await openFamilyHub(bob.page)
+    await reopenFamilyHub(bob.page)
     const bobFeedItem = bob.page.getByTestId('feed-item').first()
     await expect(bobFeedItem).toBeVisible({ timeout: 30_000 })
     await bobFeedItem.click()
@@ -202,8 +197,7 @@ test.describe('Multi-Empfänger und Drei-Geräte (Real-DB)', () => {
     await bob.page.getByTestId('send-annotation').click()
     await expect(bob.page.getByTestId('annotation-sent')).toBeVisible({ timeout: 15_000 })
 
-    await carol.page.reload()
-    await openFamilyHub(carol.page)
+    await reopenFamilyHub(carol.page)
     const carolFeedItem = carol.page.getByTestId('feed-item').first()
     await expect(carolFeedItem).toBeVisible({ timeout: 30_000 })
     await carolFeedItem.click()
@@ -223,8 +217,7 @@ test.describe('Multi-Empfänger und Drei-Geräte (Real-DB)', () => {
       }, { timeout: 20_000, intervals: [2_000] })
       .toBe(2)
 
-    await alice.page.reload()
-    await openFamilyHub(alice.page)
+    await reopenFamilyHub(alice.page)
     const aliceFeedItem = alice.page.getByTestId('feed-item').first()
     await expect(aliceFeedItem).toBeVisible({ timeout: 30_000 })
     await aliceFeedItem.click()
