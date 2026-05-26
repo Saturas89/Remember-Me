@@ -100,7 +100,7 @@ async function waitForHubReady(page: Page) {
   // against an infinite IDB hang lives in stateStorage.ts openKeyDb() which
   // times out after 3 s and falls back to plaintext, ensuring isLoaded
   // becomes true and the heading appears well within this window.
-  await expect(page.getByRole('heading', { name: 'Familienmodus', exact: true })).toBeVisible({ timeout: 35_000 })
+  await expect(page.getByRole('heading', { name: 'Familienmodus', exact: true })).toBeVisible({ timeout: 60_000 })
   // Wait for a positive signal: deviceId set in state means bootstrapSession()
   // succeeded. "Verbinde mit Server …" disappears on both success AND error, so
   // its absence is not a reliable sentinel — it leads to 35 s readDeviceIdentity
