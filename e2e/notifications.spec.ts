@@ -288,12 +288,16 @@ test.describe('REQ-016 – Milestone Notifications (FR-16.7)', () => {
 })
 
 test.describe('REQ-016 – ReminderBanner Permission Flow (FR-16.10)', () => {
-  test('shows permission prompt for default permission', async ({ page }) => {
-    await page.addInitScript(() => {
-      // Mobile Safari has no window.Notification — full replacement (instead
-      // of `Object.defineProperty(window.Notification, ...)` on possibly-
-      // undefined Notification) makes the test work across all browser
-      // projects.
+  // Shared helper: one combined addInitScript that seeds BOTH the Notification
+  // mock AND the full app state (profile + yesterday streak) so the test never
+  // needs completeOnboarding → evaluate → reload. That multi-step flow was
+  // unreliable on firefox because page.reload() re-runs ALL init scripts in
+  // registration order, and the ordering between the beforeEach guard and the
+  // per-test Notification mock caused the streak to be wiped on some browsers.
+  function addReminderSeedScript(page: Page) {
+    return page.addInitScript(() => {
+      // Replace window.Notification (full replacement works on Mobile Safari
+      // where the API may be absent and also avoids defineProperty pitfalls).
       const proto: Record<string, unknown> = window.Notification?.prototype ?? {}
       proto.showTrigger = true
       ;(window as unknown as { Notification: unknown }).Notification = Object.assign(
@@ -304,9 +308,26 @@ test.describe('REQ-016 – ReminderBanner Permission Flow (FR-16.10)', () => {
           prototype: proto,
         },
       )
+      // Seed complete app state: profile + yesterday streak so that
+      // reminderBannerGate (daysSince ≥ 1) is satisfied from the first load.
+      // This script runs after the beforeEach guard which sets profile:null —
+      // since init scripts run in registration order this overwrites that.
+      const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000)
+        .toISOString()
+        .split('T')[0]
+      localStorage.setItem('remember-me-state', JSON.stringify({
+        profile: { name: 'Test User', createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z' },
+        answers: {}, friends: [], friendAnswers: [], customQuestions: [], appMode: 'full',
+        streak: { current: 1, longest: 1, lastAnswerDate: yesterday },
+      }))
     })
+  }
 
-    await completeOnboarding(page)
+  test('shows permission prompt for default permission', async ({ page }) => {
+    await addReminderSeedScript(page)
+
+    await page.goto('/')
+    await expect(page.getByText(/Hallo,\s*Test User/)).toBeVisible()
     await openProfileTab(page)
 
     // ReminderBanner should appear
@@ -319,20 +340,10 @@ test.describe('REQ-016 – ReminderBanner Permission Flow (FR-16.10)', () => {
   })
 
   test('dismisses banner and stays dismissed after rejection', async ({ page }) => {
-    await page.addInitScript(() => {
-      const proto: Record<string, unknown> = window.Notification?.prototype ?? {}
-      proto.showTrigger = true
-      ;(window as unknown as { Notification: unknown }).Notification = Object.assign(
-        function Notification() { /* noop */ },
-        {
-          permission: 'default' as NotificationPermission,
-          requestPermission: async () => 'default' as NotificationPermission,
-          prototype: proto,
-        },
-      )
-    })
+    await addReminderSeedScript(page)
 
-    await completeOnboarding(page)
+    await page.goto('/')
+    await expect(page.getByText(/Hallo,\s*Test User/)).toBeVisible()
     await openProfileTab(page)
 
     const reminderBanner = page.getByTestId('reminder-banner')
@@ -345,7 +356,9 @@ test.describe('REQ-016 – ReminderBanner Permission Flow (FR-16.10)', () => {
     // Banner disappears
     await expect(reminderBanner).not.toBeVisible()
 
-    // Reload page - banner should stay dismissed
+    // Reload page - banner should stay dismissed (rm-reminder-state persists the
+    // dismissed permission; the seed script only writes remember-me-state so it
+    // does not undo the dismissal on re-run).
     await page.reload()
     await expect(reminderBanner).not.toBeVisible()
   })

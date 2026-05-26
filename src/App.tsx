@@ -353,12 +353,36 @@ export default function App() {
   const { state: installState, visible: installVisible, triggerInstall, dismiss: dismissInstall } = useInstallPrompt()
   const { needRefresh, applyUpdate, dismiss: dismissUpdate } = useServiceWorker()
   const { showPrompt: showReminderPrompt, requestPermission: enableReminder, dismissPrompt: dismissReminder, reschedule } = useReminder()
+
+  // Only show the install/add-to-homescreen banner after the user has answered
+  // at least 3 questions – at that point they've experienced real value and are
+  // more likely to actually install the app.
+  const answeredCount = Object.values(answers).filter(a =>
+    a.value.trim() !== '' ||
+    (a.imageIds?.length ?? 0) > 0 ||
+    (a.videoIds?.length ?? 0) > 0 ||
+    !!a.audioId ||
+    !!a.audioTranscript,
+  ).length
+
   const { streak, recordAnswer, checkStreakReset } = useStreak({
     isLoaded,
     answers,
     streak: storedStreak,
     saveStreak,
   })
+
+  // Only show the notification opt-in banner when the user returns after ≥1 day
+  // of absence. Showing it on the very first session (or while actively using
+  // the app today) creates no perceived value and increases reflexive dismissals.
+  // Empty lastAnswerDate means a brand-new user → gate is false → banner never shows.
+  const daysSinceLastAnswer = streak.lastAnswerDate
+    ? Math.floor(
+        (Date.now() - new Date(streak.lastAnswerDate + 'T00:00:00').getTime()) /
+          (24 * 60 * 60 * 1000),
+      )
+    : null
+  const reminderBannerGate = daysSinceLastAnswer !== null && daysSinceLastAnswer >= 1
 
   // Welcome back banner state
   const WELCOME_BACK_SESSION_KEY = 'rm-welcome-back-shown-this-session'
@@ -536,7 +560,7 @@ export default function App() {
           onComplete={saveProfile}
           onImportBackup={restoreBackup}
         />
-        {installVisible && <InstallBanner state={installState} onInstall={triggerInstall} onDismiss={dismissInstall} />}
+        {installVisible && answeredCount >= 3 && <InstallBanner state={installState} onInstall={triggerInstall} onDismiss={dismissInstall} />}
         {needRefresh && <UpdateBanner onUpdate={applyUpdate} onDismiss={dismissUpdate} onViewNotes={() => setShowReleaseNotes(true)} />}
       </AppModeProvider>
     )
@@ -624,7 +648,7 @@ export default function App() {
               : goTo({ name: 'home' })
           }
         />
-        {installVisible && <InstallBanner state={installState} onInstall={triggerInstall} onDismiss={dismissInstall} />}
+        {installVisible && answeredCount >= 3 && <InstallBanner state={installState} onInstall={triggerInstall} onDismiss={dismissInstall} />}
         {needRefresh && <UpdateBanner onUpdate={applyUpdate} onDismiss={dismissUpdate} onViewNotes={() => setShowReleaseNotes(true)} />}
       </AppModeProvider>
     )
@@ -814,7 +838,7 @@ export default function App() {
         />
       )}
 
-      {installVisible && <InstallBanner state={installState} onInstall={triggerInstall} onDismiss={dismissInstall} />}
+      {installVisible && answeredCount >= 3 && <InstallBanner state={installState} onInstall={triggerInstall} onDismiss={dismissInstall} />}
       {needRefresh && <UpdateBanner onUpdate={applyUpdate} onDismiss={dismissUpdate} onViewNotes={() => setShowReleaseNotes(true)} />}
       {showShareMigration && !installVisible && !needRefresh && (
         <ShareMigrationBanner
@@ -825,7 +849,7 @@ export default function App() {
           onDismiss={dismissShareMigration}
         />
       )}
-      {!installVisible && !needRefresh && !showShareMigration && !showWelcomeBack && !welcomeBackShownThisSession && showReminderPrompt && (
+      {!installVisible && !needRefresh && !showShareMigration && !showWelcomeBack && !welcomeBackShownThisSession && showReminderPrompt && reminderBannerGate && (
         <ReminderBanner
           visible={showReminderPrompt}
           onEnable={enableReminder}
