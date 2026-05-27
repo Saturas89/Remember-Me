@@ -1,19 +1,14 @@
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useEffect, useCallback, useMemo } from 'react'
 import { useAnswers } from './hooks/useAnswers'
 import { useInstallPrompt } from './hooks/useInstallPrompt'
 import { CATEGORIES } from './data/categories'
-import {
-  isSecureInviteHash,
-  isAnswerHash,
-  isMemoryShareHash,
-  parseSecureInviteFromHash,
-  parseAnswerFromHash,
-  parseMemoryShareFromHash,
-  isPersonalQuestionPack,
-} from './utils/secureLink'
+import { isPersonalQuestionPack } from './utils/secureLink'
 import { usePendingInviteResponses } from './hooks/usePendingInviteResponses'
-import type { QuestionPack } from './types'
 import type { PersonalQuestionPack } from './types/sandraFlow'
+import { useUrlParsing } from './hooks/useUrlParsing'
+import { useBanners } from './hooks/useBanners'
+import { useNavigation } from './hooks/useNavigation'
+import type { View } from './hooks/useNavigation'
 import { HomeView } from './views/HomeView'
 import { QuizView } from './views/QuizView'
 import { ArchiveView } from './views/ArchiveView'
@@ -60,55 +55,8 @@ import { useStreak } from './hooks/useStreak'
 import { AppModeProvider } from './hooks/useAppMode'
 import { exportAsMarkdown, exportAsEnrichedJSON, downloadFile, toSafeFilename } from './utils/export'
 import { clearAllData } from './utils/clearAllData'
-import { trackTabChanged, trackFeatureOpened } from './lib/analytics'
-import type { Category, InviteData, AnswerExport, MemorySharePayload, ContactHandshake } from './types'
+import type { Category } from './types'
 import './App.css'
-
-type View =
-  | { name: 'home' }
-  | { name: 'landing' }
-  | { name: 'quiz'; categoryId: string }
-  | { name: 'archive' }
-  | { name: 'friends' }
-  | { name: 'profile' }
-  | { name: 'sync' }
-  | { name: 'custom-questions' }
-  | { name: 'faq'; from: 'profile' | 'home' }
-  | { name: 'impressum'; from: 'profile' | 'home' }
-  | { name: 'online-intro' }
-  | { name: 'online-hub' }
-  | { name: 'sandra-flow'; initialStep?: import('./views/SandraFlowView').SandraStep }
-  | { name: 'debug' }
-
-type MainTab = 'home' | 'friends' | 'archive' | 'sync' | 'profile'
-
-// /join/CODE: short invite code – payload fetched async from Supabase.
-const joinMatch = window.location.pathname.match(/^\/join\/([A-Z0-9]{6})$/i)
-const isJoinPath = Boolean(joinMatch)
-
-const needsAsyncParse =
-  isJoinPath || isSecureInviteHash() || isAnswerHash() || isMemoryShareHash()
-
-const initialSandraHash = !needsAsyncParse && window.location.hash.startsWith('#/ask')
-
-// ── Pathname ↔ View mapping (for Vercel Analytics page tracking) ──────────
-function pathToView(pathname: string): View {
-  switch (pathname.split('/')[1]) {
-    case 'friends': return { name: 'friends' }
-    case 'archive': return { name: 'archive' }
-    case 'profile': return { name: 'profile' }
-    case 'sync':    return { name: 'sync' }
-    case 'debug':   return { name: 'debug' }
-    case 'landing': return { name: 'landing' }
-    case 'join':    return { name: 'home' }
-    default:        return { name: 'home' }
-  }
-}
-
-// Views that are hidden in Simple Mode (also blocked from deep-links).
-const HIDDEN_IN_SIMPLE: ReadonlySet<View['name']> = new Set([
-  'friends', 'sync', 'online-intro', 'online-hub', 'custom-questions', 'sandra-flow',
-])
 
 /** Returns true when an answer has any meaningful content (text, media, or transcript). */
 function hasContent(a: { value: string; imageIds?: string[]; videoIds?: string[]; audioId?: string | null; audioTranscript?: string | null }): boolean {
@@ -122,12 +70,6 @@ function hasContent(a: { value: string; imageIds?: string[]; videoIds?: string[]
 }
 
 export default function App() {
-  // State for async URL parsing (#mi/ secure invite, #ma/ answer import, #ms/ memory share, ?qp/ question pack)
-  const [asyncInvite, setAsyncInvite] = useState<InviteData | null>(null)
-  const [pendingAnswerImport, setPendingAnswerImport] = useState<AnswerExport | null>(null)
-  const [sharedMemory, setSharedMemory] = useState<MemorySharePayload | null>(null)
-  const [incomingPack, setIncomingPack] = useState<QuestionPack | null>(null)
-  const [urlParsing, setUrlParsing] = useState(needsAsyncParse)
   const {
     isLoaded,
     profile,
@@ -181,16 +123,6 @@ export default function App() {
     },
   )
 
-  // ContactHandshakeView is shown after the quiz when the invite had a contact.
-  const [pendingContact, setPendingContact] = useState<ContactHandshake | null>(null)
-
-  // Contact embedded in the resolved /join/ invite – shown after the quiz.
-  const [embeddedContact, setEmbeddedContact] = useState<ContactHandshake | null>(null)
-
-  // Short code from the /join/ URL – threaded to ContactHandshakeView so
-  // Ingrid's contact is auto-submitted to Supabase after acceptance.
-  const [activeInviteCode, setActiveInviteCode] = useState<string | null>(null)
-
   // Online-sync is a no-op unless the user has opted in. The hook internally
   // dynamic-imports the Supabase client module only when enabled === true.
   const onlineSync = useOnlineSync(onlineSharing, (deviceId, publicKey) => {
@@ -216,6 +148,59 @@ export default function App() {
     return ans.questionId
   }, [customQuestionsById])
 
+  // ── Navigation ──────────────────────────────────────────────────────────
+
+  const { view, setView, goTo, navigate, showNav, activeTab } = useNavigation({
+    isSimple,
+    isLoaded,
+    friends,
+    onlineSharing,
+  })
+
+  // ── URL parsing ─────────────────────────────────────────────────────────
+
+  const {
+    asyncInvite,
+    sharedMemory,
+    incomingPack,
+    setIncomingPack,
+    embeddedContact,
+    setEmbeddedContact,
+    activeInviteCode,
+    setActiveInviteCode,
+    pendingContact,
+    setPendingContact,
+    urlParsing,
+  } = useUrlParsing({
+    isLoaded,
+    importFriendAnswers,
+    onFriendAnswersImported: () => setView({ name: 'friends' }),
+  })
+
+  // ── Banner state ────────────────────────────────────────────────────────
+
+  const { streak, recordAnswer, checkStreakReset } = useStreak({
+    isLoaded,
+    answers,
+    streak: storedStreak,
+    saveStreak,
+  })
+
+  const {
+    showShareMigration,
+    dismissShareMigration,
+    showReleaseNotes,
+    setShowReleaseNotes,
+    showWelcomeBack,
+    setShowWelcomeBack,
+    welcomeBackShownThisSession,
+    reminderBannerGate,
+  } = useBanners({ isLoaded, friends, streak, checkStreakReset })
+
+  const { state: installState, visible: installVisible, triggerInstall, dismiss: dismissInstall } = useInstallPrompt()
+  const { needRefresh, applyUpdate, dismiss: dismissUpdate } = useServiceWorker()
+  const { showPrompt: showReminderPrompt, requestPermission: enableReminder, dismissPrompt: dismissReminder, reschedule } = useReminder()
+
   // Auto-share (REQ-022): no-op until online sharing is enabled AND there's
   // at least one friend with online.shareAll === true. Idempotent and
   // resumable across mounts.
@@ -234,226 +219,6 @@ export default function App() {
     (name, _inviteCode, online) => addFriend(name, undefined, online),
   )
 
-  // Resolve secure invite / answer-import / memory-share / join-code URL asynchronously on first mount
-  useEffect(() => {
-    if (!needsAsyncParse) return
-    if (isJoinPath && joinMatch) {
-      const code = joinMatch[1].toUpperCase()
-      import('./utils/inviteService')
-        .then(m => m.resolveInviteCode(code))
-        .then(({ pack, contact }) => {
-          setIncomingPack(pack)
-          setEmbeddedContact(contact)
-          setActiveInviteCode(code)
-          history.replaceState({}, '', '/')
-        })
-        .catch(() => {
-          // Unknown / expired code – clear the path and stay on home.
-          history.replaceState({}, '', '/')
-        })
-        .finally(() => setUrlParsing(false))
-    } else if (isSecureInviteHash()) {
-      parseSecureInviteFromHash()
-        .then(invite => { setAsyncInvite(invite) })
-        .finally(() => setUrlParsing(false))
-    } else if (isAnswerHash()) {
-      parseAnswerFromHash()
-        .then(answers => { if (answers) setPendingAnswerImport(answers) })
-        .finally(() => setUrlParsing(false))
-    } else if (isMemoryShareHash()) {
-      parseMemoryShareFromHash()
-        .then(payload => { if (payload) setSharedMemory(payload) })
-        .finally(() => setUrlParsing(false))
-    }
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Auto-import answers when an #ma/ URL was opened and state is ready
-  useEffect(() => {
-    if (!pendingAnswerImport || !isLoaded) return
-    importFriendAnswers(pendingAnswerImport)
-    setPendingAnswerImport(null)
-    history.replaceState({}, '', '/friends')
-    setView({ name: 'friends' })
-  }, [pendingAnswerImport, isLoaded]) // eslint-disable-line react-hooks/exhaustive-deps
-
-
-  const exportData = { profile, answers, friends, friendAnswers, customQuestions }
-  const safeName = toSafeFilename(profile?.name ?? '')
-
-  function handleExportMarkdown() {
-    const date = new Date().toISOString().split('T')[0]
-    downloadFile(exportAsMarkdown(exportData), `storyhold-${safeName}-${date}.md`, 'text/markdown')
-  }
-  function handleExportJson() {
-    const date = new Date().toISOString().split('T')[0]
-    downloadFile(exportAsEnrichedJSON(exportData), `storyhold-${safeName}-${date}.json`, 'application/json')
-  }
-
-  // Enhanced answer saving with streak tracking
-  function handleSaveAnswer(questionId: string, categoryId: string, value: string) {
-    saveAnswer(questionId, categoryId, value)
-    // Record streak and update reminders
-    recordAnswer()
-    reschedule()
-  }
-
-  // Find next unanswered question across all categories
-  function findNextQuestion() {
-    const categories = CATEGORIES
-    for (const category of categories) {
-      for (const question of category.questions) {
-        if (!getAnswer(question.id)) {
-          return { categoryId: category.id, questionId: question.id }
-        }
-      }
-    }
-    // Check custom questions
-    for (const question of customQuestions) {
-      if (!getAnswer(question.id)) {
-        return { categoryId: 'custom', questionId: question.id }
-      }
-    }
-    return null
-  }
-
-  // Handle welcome back continue button
-  function handleWelcomeBackContinue() {
-    setShowWelcomeBack(false)
-    const next = findNextQuestion()
-    if (next) {
-      if (next.categoryId === 'custom') {
-        goTo({ name: 'custom-questions' })
-      } else {
-        goTo({ name: 'quiz', categoryId: next.categoryId })
-      }
-    } else {
-      // All questions answered, go to archive
-      goTo({ name: 'archive' })
-    }
-  }
-
-  const [view, setView] = useState<View>(() => {
-    if (needsAsyncParse) return { name: 'home' }
-    if (initialSandraHash) return { name: 'sandra-flow' }
-    return pathToView(window.location.pathname)
-  })
-  const [showReleaseNotes, setShowReleaseNotes] = useState(false)
-  // REQ-022 §4.6 one-time migration banner.
-  const SHARE_MIGRATION_MARKER = 'rm-share-migration-v213'
-  const [showShareMigration, setShowShareMigration] = useState(false)
-  useEffect(() => {
-    if (!isLoaded) return
-    try {
-      if (localStorage.getItem(SHARE_MIGRATION_MARKER)) return
-      const hasOnlineFriends = friends.some(f => f.online)
-      if (!hasOnlineFriends) {
-        // Fresh installs / users without legacy connections – pre-set the
-        // marker so a future connection doesn't trigger the migration banner.
-        localStorage.setItem(SHARE_MIGRATION_MARKER, new Date().toISOString())
-        return
-      }
-      setShowShareMigration(true)
-    } catch {
-      // localStorage unavailable (private mode etc.) – silently skip.
-    }
-  }, [isLoaded, friends])
-  const dismissShareMigration = useCallback(() => {
-    try { localStorage.setItem(SHARE_MIGRATION_MARKER, new Date().toISOString()) } catch { /* noop */ }
-    setShowShareMigration(false)
-  }, [])
-  const { state: installState, visible: installVisible, triggerInstall, dismiss: dismissInstall } = useInstallPrompt()
-  const { needRefresh, applyUpdate, dismiss: dismissUpdate } = useServiceWorker()
-  const { showPrompt: showReminderPrompt, requestPermission: enableReminder, dismissPrompt: dismissReminder, reschedule } = useReminder()
-
-  // Only show the install/add-to-homescreen banner after the user has answered
-  // at least 3 questions – at that point they've experienced real value and are
-  // more likely to actually install the app.
-  const answeredCount = Object.values(answers).filter(hasContent).length
-
-  const { streak, recordAnswer, checkStreakReset } = useStreak({
-    isLoaded,
-    answers,
-    streak: storedStreak,
-    saveStreak,
-  })
-
-  // Only show the notification opt-in banner when the user returns after ≥1 day
-  // of absence. Showing it on the very first session (or while actively using
-  // the app today) creates no perceived value and increases reflexive dismissals.
-  // Empty lastAnswerDate means a brand-new user → gate is false → banner never shows.
-  const daysSinceLastAnswer = streak.lastAnswerDate
-    ? Math.floor(
-        (Date.now() - new Date(streak.lastAnswerDate + 'T00:00:00').getTime()) /
-          (24 * 60 * 60 * 1000),
-      )
-    : null
-  const reminderBannerGate = daysSinceLastAnswer !== null && daysSinceLastAnswer >= 1
-
-  // Welcome back banner state
-  const WELCOME_BACK_SESSION_KEY = 'rm-welcome-back-shown-this-session'
-  const [showWelcomeBack, setShowWelcomeBack] = useState(false)
-  // Track per-tab whether the welcome-back banner was already shown so the
-  // reminder/permission banner doesn't pop up immediately after dismissal
-  // (Ingrid persona, #156).
-  const [welcomeBackShownThisSession, setWelcomeBackShownThisSession] = useState(() => {
-    try { return sessionStorage.getItem(WELCOME_BACK_SESSION_KEY) === '1' } catch { return false }
-  })
-
-  // Check for welcome back scenario on load
-  useEffect(() => {
-    if (!isLoaded || !streak.lastAnswerDate) return
-
-    const today = new Date().toISOString().split('T')[0]
-    const lastAnswer = new Date(streak.lastAnswerDate + 'T00:00:00')
-    const todayDate = new Date(today + 'T00:00:00')
-    const daysDiff = Math.floor((todayDate.getTime() - lastAnswer.getTime()) / (24 * 60 * 60 * 1000))
-
-    if (daysDiff >= 3) {
-      setShowWelcomeBack(true)
-      setWelcomeBackShownThisSession(true)
-      try { sessionStorage.setItem(WELCOME_BACK_SESSION_KEY, '1') } catch { /* private mode */ }
-      // Also check for streak reset
-      checkStreakReset()
-    }
-  }, [isLoaded, streak.lastAnswerDate, checkStreakReset])
-
-  // Sync view with browser back/forward navigation
-  useEffect(() => {
-    const onPopstate = () => setView(pathToView(window.location.pathname))
-    const onHashChange = () => {
-      if (window.location.hash.startsWith('#/ask')) {
-        setView({ name: 'sandra-flow' })
-      }
-    }
-    window.addEventListener('popstate', onPopstate)
-    window.addEventListener('hashchange', onHashChange)
-    return () => {
-      window.removeEventListener('popstate', onPopstate)
-      window.removeEventListener('hashchange', onHashChange)
-    }
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Redirect hidden routes to home whenever simple mode is active. This
-  // covers initial landing on a deep link (/friends, /sync) as well as
-  // the user toggling into simple mode while already on a hidden view.
-  useEffect(() => {
-    if (!isSimple) return
-    if (HIDDEN_IN_SIMPLE.has(view.name)) {
-      history.replaceState({}, '', '/')
-      setView({ name: 'home' })
-    }
-  }, [isSimple, view.name]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Redirect /friends deep-links to the right sub-view
-  useEffect(() => {
-    if (view.name !== 'friends' || !isLoaded) return
-    if (friends.some(f => f.online) || onlineSharing?.enabled) {
-      setView({ name: 'online-hub' })
-    } else {
-      setView({ name: 'online-intro' })
-    }
-  }, [view.name, isLoaded]) // eslint-disable-line react-hooks/exhaustive-deps
-
   // Pull on visibility change (app resumes from background)
   useEffect(() => {
     if (!isLoaded) return
@@ -465,6 +230,63 @@ export default function App() {
     document.addEventListener('visibilitychange', onVisible)
     return () => document.removeEventListener('visibilitychange', onVisible)
   }, [isLoaded, privateSync.isEnabled]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Derived values ──────────────────────────────────────────────────────
+
+  const answeredCount = Object.values(answers).filter(hasContent).length
+  const friendsBadge = friendAnswers.filter(a => a.value.trim() || (a.imageIds?.length ?? 0) > 0 || (a.videoIds?.length ?? 0) > 0 || !!a.audioId).length
+
+  const exportData = { profile, answers, friends, friendAnswers, customQuestions }
+  const safeName = toSafeFilename(profile?.name ?? '')
+
+  // ── Handlers ────────────────────────────────────────────────────────────
+
+  function handleExportMarkdown() {
+    const date = new Date().toISOString().split('T')[0]
+    downloadFile(exportAsMarkdown(exportData), `storyhold-${safeName}-${date}.md`, 'text/markdown')
+  }
+  function handleExportJson() {
+    const date = new Date().toISOString().split('T')[0]
+    downloadFile(exportAsEnrichedJSON(exportData), `storyhold-${safeName}-${date}.json`, 'application/json')
+  }
+
+  function handleSaveAnswer(questionId: string, categoryId: string, value: string) {
+    saveAnswer(questionId, categoryId, value)
+    recordAnswer()
+    reschedule()
+  }
+
+  function findNextQuestion() {
+    for (const category of CATEGORIES) {
+      for (const question of category.questions) {
+        if (!getAnswer(question.id)) {
+          return { categoryId: category.id, questionId: question.id }
+        }
+      }
+    }
+    for (const question of customQuestions) {
+      if (!getAnswer(question.id)) {
+        return { categoryId: 'custom', questionId: question.id }
+      }
+    }
+    return null
+  }
+
+  function handleWelcomeBackContinue() {
+    setShowWelcomeBack(false)
+    const next = findNextQuestion()
+    if (next) {
+      if (next.categoryId === 'custom') {
+        goTo({ name: 'custom-questions' })
+      } else {
+        goTo({ name: 'quiz', categoryId: next.categoryId })
+      }
+    } else {
+      goTo({ name: 'archive' })
+    }
+  }
+
+  // ── Early exits ─────────────────────────────────────────────────────────
 
   if (!isLoaded || urlParsing) {
     return null // avoid flicker while loading or parsing URL
@@ -503,8 +325,6 @@ export default function App() {
             setIncomingPack(null)
             if (embedded) {
               // Sandra invite: after the quiz, hand off to ContactHandshakeView.
-              // The invite code is kept in state so Ingrid's contact is
-              // auto-submitted to Supabase after acceptance.
               setEmbeddedContact(null)
               setPendingContact(embedded)
               history.replaceState({}, '', '/friends')
@@ -571,47 +391,7 @@ export default function App() {
     )
   }
 
-  // Navigate to a main tab and update the URL so Vercel Analytics tracks the page view
-  function goTo(v: View) {
-    if (isSimple && HIDDEN_IN_SIMPLE.has(v.name)) {
-      v = { name: 'home' }
-    }
-    window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior })
-    const paths: Partial<Record<View['name'], string>> = {
-      home: '/', friends: '/friends', archive: '/archive', profile: '/profile', sync: '/sync',
-      'online-hub': '/friends', 'online-intro': '/friends',
-    }
-    let path = paths[v.name]
-    // Quiz lands on its own pseudo-route so deep-link & welcome-back-continue
-    // can leave the home URL.
-    if (v.name === 'quiz') path = `/quiz/${v.categoryId}`
-    if (v.name === 'custom-questions') path = '/custom-questions'
-    if (path !== undefined) history.pushState({}, '', path)
-
-    const mainTabs = new Set(['home', 'friends', 'archive', 'profile', 'sync'])
-    if (mainTabs.has(v.name)) {
-      trackTabChanged(v.name)
-    } else {
-      trackFeatureOpened(v.name)
-    }
-
-    setView(v)
-  }
-
-  function navigate(tab: MainTab) {
-    if (tab === 'friends') {
-      goTo({ name: (friends.some(f => f.online) || onlineSharing?.enabled) ? 'online-hub' : 'online-intro' })
-      return
-    }
-    goTo({ name: tab } as View)
-  }
-
-  const friendsBadge = friendAnswers.filter(a => a.value.trim() || (a.imageIds?.length ?? 0) > 0 || (a.videoIds?.length ?? 0) > 0 || !!a.audioId).length
-  const FRIENDS_TAB_VIEWS = new Set<View['name']>(['friends', 'online-intro', 'online-hub', 'sandra-flow'])
-  const activeTab = FRIENDS_TAB_VIEWS.has(view.name) ? 'friends' : view.name
-
-  // Bottom nav shown on all main views (not during focused quiz/friend-answer/sandra-flow/landing)
-  const showNav = view.name !== 'quiz' && view.name !== 'sandra-flow' && view.name !== 'landing'
+  // ── Quiz view (full-screen, no bottom nav) ───────────────────────────────
 
   if (view.name === 'quiz') {
     let category: Category | undefined
@@ -659,12 +439,14 @@ export default function App() {
     )
   }
 
+  // ── Main shell ──────────────────────────────────────────────────────────
+
   return (
     <AppModeProvider appMode={appMode} setAppMode={saveAppMode}>
       <SEOHead viewName={view.name} />
+
       {view.name === 'archive' && (
         <ArchiveView
-
           answers={answers}
           friendAnswers={friendAnswers}
           friends={friends}
@@ -718,8 +500,8 @@ export default function App() {
       )}
 
       {view.name === 'profile' && (
-        <ProfileView profile={profile}
-
+        <ProfileView
+          profile={profile}
           answers={answers}
           friendCount={friends.length}
           exportData={exportData}
