@@ -108,15 +108,3 @@ describe('CustomQuestionsView – Share-Mechanismus entfernt', () => {
   })
 })
 
-describe('CustomQuestionsView – Sandra-Cross-Hint', () => {
-  it('zeigt Cross-Hint wenn onOpenSandraFlow übergeben wird', () => {
-    const onOpenSandraFlow = vi.fn()
-    const { container } = render(<CustomQuestionsView {...makeProps({ onOpenSandraFlow })} />)
-    expect(container.querySelector('[data-testid="custom-q-cross-hint-sandra"]')).toBeTruthy()
-  })
-
-  it('versteckt Cross-Hint wenn onOpenSandraFlow nicht übergeben wird', () => {
-    const { container } = render(<CustomQuestionsView {...makeProps()} />)
-    expect(container.querySelector('[data-testid="custom-q-cross-hint-sandra"]')).toBeNull()
-  })
-})
