@@ -25,9 +25,6 @@ interface Props {
   ) => CustomQuestion
   onRemove: (id: string) => void
   onBack: () => void
-  /** Optional jump to the Sandra-flow gift-composer (ADR-002, #178).
-   *  When omitted, the cross-hint section is hidden. */
-  onOpenSandraFlow?: () => void
 }
 
 export function CustomQuestionsView({
@@ -43,7 +40,6 @@ export function CustomQuestionsView({
   onAdd,
   onRemove,
   onBack,
-  onOpenSandraFlow,
 }: Props) {
   const { t } = useTranslation()
   const { cache, loadImages, addImage, removeImage } = useImageStore()
@@ -78,28 +74,6 @@ export function CustomQuestionsView({
       </div>
 
       <p className="friends-intro">{t.customQ.intro}</p>
-
-      {/* Cross-Hint zum Sandra-Flow (ADR-002, #178). Sichtbar nur wenn der
-          Caller eine Navigations-Funktion durchreicht — der Sandra-Flow ist
-          im Vereinfachten Modus ausgeblendet, in Voll-Modus aber sinnvoll. */}
-      {onOpenSandraFlow && (
-        <section
-          className="friends-section custom-q-cross-hint"
-          data-testid="custom-q-cross-hint-sandra"
-        >
-          <h3 className="friends-section-title">{t.customQ.crossHintToSandraTitle}</h3>
-          <p className="friends-hint">{t.customQ.crossHintToSandraBody}</p>
-          <div className="friends-share">
-            <button
-              type="button"
-              className="btn btn--ghost btn--sm"
-              onClick={onOpenSandraFlow}
-            >
-              {t.customQ.crossHintToSandraCta}
-            </button>
-          </div>
-        </section>
-      )}
 
       <section className="friends-section">
         <h3 className="friends-section-title">{t.customQ.addHeading}</h3>

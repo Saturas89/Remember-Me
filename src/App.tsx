@@ -520,7 +520,6 @@ export default function App() {
           onAdd={addCustomQuestion}
           onRemove={removeCustomQuestion}
           onBack={() => goTo({ name: 'home' })}
-          onOpenSandraFlow={isSimple ? undefined : () => goTo({ name: 'sandra-flow' })}
         />
       )}
 
