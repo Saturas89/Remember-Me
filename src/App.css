@@ -292,6 +292,27 @@
   font-weight: 700;
 }
 
+.provider-card--disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.provider-card--disabled:hover {
+  border-color: var(--border);
+  transform: none;
+  box-shadow: none;
+}
+
+.provider-card__badge--soon {
+  background: var(--text-faint);
+  border-radius: 999px;
+  width: auto;
+  height: auto;
+  padding: 0.15rem 0.5rem;
+  font-size: 0.65rem;
+  white-space: nowrap;
+}
+
 /* ── Private-sync setup: forms, errors ────── */
 .private-sync-view__form {
   display: flex;

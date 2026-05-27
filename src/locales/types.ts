@@ -790,6 +790,7 @@ export interface Translations {
     deactivateHeading: string
     deactivateSectionHint: string
     tagEncrypted: string
+    comingSoon: string
   }
 
   landing: {
