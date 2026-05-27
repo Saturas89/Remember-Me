@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from '../locales'
 import { SyncStatusBadge } from '../components/SyncStatusBadge'
+import { localeTag } from '../utils/localeDate'
 import type { PrivateSyncState } from '../types'
 import type { UsePrivateSyncReturn } from '../hooks/usePrivateSync'
 
@@ -19,7 +20,7 @@ interface Props {
 const SYNC_ACTIVITY_AUTO_DISMISS_MS = 12_000
 
 function formatDateTime(iso: string, locale: string): string {
-  return new Date(iso).toLocaleString(locale === 'de' ? 'de-DE' : 'en-US', {
+  return new Date(iso).toLocaleString(localeTag(locale), {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',

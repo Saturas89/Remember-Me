@@ -1,6 +1,5 @@
 import { useEffect, useState, useCallback, useMemo } from 'react'
 import { useTranslation } from '../locales'
-import { useSandraFlowStrings } from '../i18n/sandraFlow'
 import { findTrigger } from '../data/loadPersonalQuestions'
 import { buildPersonalPack } from '../lib/sandraFlow/packBuilder'
 import type { ContactHandshake } from '../types'
@@ -100,8 +99,7 @@ export function SandraFlowView({
   onEnableOnlineSharing,
   initialStep,
 }: Props) {
-  const { locale } = useTranslation()
-  const t = useSandraFlowStrings()
+  const { locale, t: { sandraFlow: t } } = useTranslation()
 
   const [draft, setDraftState] = useState<SandraDraft>(loadDraft)
   const [step, setStep] = useState<SandraStep>(() => {

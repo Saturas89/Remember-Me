@@ -1,4 +1,4 @@
-import type { SandraFlowStrings } from '../../i18n/de/sandraFlow'
+import type { SandraFlowStrings } from '../../locales/types'
 
 interface Props {
   t: SandraFlowStrings

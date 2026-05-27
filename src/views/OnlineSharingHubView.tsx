@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import { useTranslation } from '../locales'
 import type { Translations } from '../locales/types'
+import { localeTag } from '../utils/localeDate'
 import type {
   Friend,
   SharedMemory,
@@ -35,6 +36,9 @@ interface Props {
   /** Open the Sandra-flow as the canonical entry for new connections
    *  (REQ-022 FR-22.17 / FR-22.23). */
   onOpenSandraFlow: () => void
+  /** Last error from the useAutoShare background push loop (REQ-022).
+   *  Displayed as a secondary warning when the main sync is otherwise ready. */
+  autoShareError?: string | null
 }
 
 type Tab = 'feed' | 'contacts'
@@ -53,6 +57,7 @@ export function OnlineSharingHubView({
   onDeactivate,
   onRemoveContact,
   onOpenSandraFlow,
+  autoShareError,
 }: Props) {
   const { t } = useTranslation()
   const h = t.onlineSharingHub
@@ -116,6 +121,14 @@ export function OnlineSharingHubView({
               {h.syncErrorPrefix}{sync.error}
             </p>
           </details>
+        </section>
+      )}
+
+      {autoShareError && sync.ready && (
+        <section className="friends-section">
+          <p className="friends-hint friends-hint--warn" data-testid="autoshare-error">
+            {friendlySyncError(autoShareError, h)}
+          </p>
         </section>
       )}
 
@@ -309,7 +322,7 @@ function SharedMemoryCard({
       <header>
         <strong>{memory.ownerName}</strong>
         <span className="shared-memory-date">
-          {new Date(memory.createdAt).toLocaleDateString(locale === 'en' ? 'en-GB' : 'de-DE')}
+          {new Date(memory.createdAt).toLocaleDateString(localeTag(locale))}
         </span>
         {annotations.length > 0 && (
           <span data-testid="annotation-count" className="shared-memory-annotation-count">

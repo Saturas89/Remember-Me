@@ -204,7 +204,7 @@ export default function App() {
   // Auto-share (REQ-022): no-op until online sharing is enabled AND there's
   // at least one friend with online.shareAll === true. Idempotent and
   // resumable across mounts.
-  useAutoShare({
+  const { lastError: autoShareError } = useAutoShare({
     answers,
     friends,
     sync: onlineSync,
@@ -487,6 +487,7 @@ export default function App() {
             }
           }}
           onOpenSandraFlow={() => goTo({ name: 'sandra-flow' })}
+          autoShareError={autoShareError}
           onDeactivate={async () => {
             const svc = onlineSync.service
             if (svc) {

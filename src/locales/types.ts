@@ -1,4 +1,8 @@
 import type { Category, FriendTopic } from '../types'
+import type { SANDRA_FLOW_DE } from './de/sandraFlow'
+
+/** All Sandra-flow UI strings (DE is the canonical shape; EN must mirror it). */
+export type SandraFlowStrings = typeof SANDRA_FLOW_DE
 
 export type Locale = 'de' | 'en'
 
@@ -849,4 +853,5 @@ export interface Translations {
 
   categories: Category[]
   friendTopics: FriendTopic[]
+  sandraFlow: SandraFlowStrings
 }

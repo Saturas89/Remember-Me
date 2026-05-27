@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { getCategoriesForLocale } from '../data/categories'
 import { getFriendQuestionsForLocale } from '../data/friendQuestions'
+import { localeTag } from '../utils/localeDate'
 import { ImageAttachment } from '../components/ImageAttachment'
 import { VideoAttachment } from '../components/VideoAttachment'
 import { AudioPlayer } from '../components/AudioPlayer'
@@ -159,7 +160,7 @@ export function ArchiveView({
 
   function displayDate(answer: Answer): string {
     const raw = answer.eventDate ?? answer.createdAt
-    return new Date(raw).toLocaleDateString(locale === 'en' ? 'en-GB' : 'de-DE', {
+    return new Date(raw).toLocaleDateString(localeTag(locale), {
       day: 'numeric', month: 'long', year: 'numeric',
     })
   }
@@ -238,7 +239,7 @@ export function ArchiveView({
     :                                'bookReadinessFar'
   const readinessSentence = t.archiveView[readinessCopyKey]
     .replace('{n}', String(totalMemories))
-    .replace('{words}', totalWords.toLocaleString(locale === 'en' ? 'en-GB' : 'de-DE'))
+    .replace('{words}', totalWords.toLocaleString(localeTag(locale)))
 
   // ── Shared edit form ─────────────────────────────────────
 
@@ -524,7 +525,7 @@ export function ArchiveView({
                       )}
                       {a.audioId && <AudioPlayer audioId={a.audioId} />}
                       <span className="archive-entry__date">
-                        {new Date(a.createdAt).toLocaleDateString(locale === 'en' ? 'en-GB' : 'de-DE')}
+                        {new Date(a.createdAt).toLocaleDateString(localeTag(locale))}
                       </span>
                     </div>
                   )

@@ -1,3 +1,5 @@
+import { SANDRA_FLOW_DE } from './sandraFlow'
+
 export const UI_DE = {
   nav: {
     home: 'Lebensweg',
@@ -788,4 +790,5 @@ export const UI_DE = {
       imgAlt: 'Gerahmtes Familienfoto auf einem Tisch mit Blumen',
     },
   },
+  sandraFlow: SANDRA_FLOW_DE,
 }

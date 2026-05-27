@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback } from 'react'
 import { getCategoriesForLocale } from '../data/categories'
+import { localeTag } from '../utils/localeDate'
 import { THEMES, useTheme } from '../hooks/useTheme'
 import { useAppMode } from '../hooks/useAppMode'
 import { ArchiveExportCard } from '../components/ArchiveExportCard'
@@ -112,7 +113,7 @@ export function ProfileView({
   const overallPct = totalQuestions > 0 ? Math.round((totalAnswered / totalQuestions) * 100) : 0
 
   const memberSince = profile?.createdAt
-    ? new Date(profile.createdAt).toLocaleDateString(locale === 'en' ? 'en-GB' : 'de-DE', {
+    ? new Date(profile.createdAt).toLocaleDateString(localeTag(locale), {
         day: 'numeric', month: 'long', year: 'numeric',
       })
     : null

@@ -1,3 +1,5 @@
+import { SANDRA_FLOW_EN } from './sandraFlow'
+
 export const UI_EN = {
   nav: {
     home: 'Journey',
@@ -781,4 +783,5 @@ export const UI_EN = {
       imgAlt: 'Framed family photo on a table with flowers',
     },
   },
+  sandraFlow: SANDRA_FLOW_EN,
 }
