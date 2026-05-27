@@ -2,7 +2,7 @@ import { useEffect, useCallback, useMemo } from 'react'
 import { useAnswers } from './hooks/useAnswers'
 import { useInstallPrompt } from './hooks/useInstallPrompt'
 import { CATEGORIES } from './data/categories'
-import { isPersonalQuestionPack } from './utils/secureLink'
+import { isPersonalQuestionPack } from './lib/sandraFlow/packBuilder'
 import { usePendingInviteResponses } from './hooks/usePendingInviteResponses'
 import type { PersonalQuestionPack } from './types/sandraFlow'
 import { useUrlParsing } from './hooks/useUrlParsing'
@@ -12,13 +12,11 @@ import type { View } from './hooks/useNavigation'
 import { HomeView } from './views/HomeView'
 import { QuizView } from './views/QuizView'
 import { ArchiveView } from './views/ArchiveView'
-import { FriendAnswerView } from './views/FriendAnswerView'
 import { ProfileView } from './views/ProfileView'
 import { CustomQuestionsView } from './views/CustomQuestionsView'
 import { FaqView } from './views/FaqView'
 import { ImpressumView } from './views/ImpressumView'
 import { OnboardingView } from './views/OnboardingView'
-import { SharedMemoryView } from './views/SharedMemoryView'
 import { PrivateSyncSetupView } from './views/PrivateSyncSetupView'
 import { PrivateSyncHubView } from './views/PrivateSyncHubView'
 import { OnlineSharingIntroView } from './views/OnlineSharingIntroView'
@@ -87,10 +85,8 @@ export default function App() {
     saveProfile,
     addFriend,
     removeFriend,
-    importFriendAnswers,
     addCustomQuestion,
     removeCustomQuestion,
-    importCustomQuestions,
     importPersonalPackAnswers,
     deleteAnswer,
     setAnswerAudio,
@@ -160,8 +156,6 @@ export default function App() {
   // ── URL parsing ─────────────────────────────────────────────────────────
 
   const {
-    asyncInvite,
-    sharedMemory,
     incomingPack,
     setIncomingPack,
     embeddedContact,
@@ -171,11 +165,7 @@ export default function App() {
     pendingContact,
     setPendingContact,
     urlParsing,
-  } = useUrlParsing({
-    isLoaded,
-    importFriendAnswers,
-    onFriendAnswersImported: () => setView({ name: 'friends' }),
-  })
+  } = useUrlParsing()
 
   // ── Banner state ────────────────────────────────────────────────────────
 
@@ -294,14 +284,6 @@ export default function App() {
 
   if (view.name === 'debug') {
     return <DebugPostHogView />
-  }
-
-  if (asyncInvite) {
-    return <FriendAnswerView invite={asyncInvite} />
-  }
-
-  if (sharedMemory) {
-    return <SharedMemoryView payload={sharedMemory} />
   }
 
   if (incomingPack && isPersonalQuestionPack(incomingPack)) {
@@ -537,7 +519,6 @@ export default function App() {
           onSetAudio={setAnswerAudio}
           onAdd={addCustomQuestion}
           onRemove={removeCustomQuestion}
-          onImport={importCustomQuestions}
           onBack={() => goTo({ name: 'home' })}
           onOpenSandraFlow={isSimple ? undefined : () => goTo({ name: 'sandra-flow' })}
         />
@@ -583,12 +564,7 @@ export default function App() {
           myPublicKey={onlineSync.publicKeyB64}
           onEnableOnlineSharing={() => enableOnlineSharing()}
           initialStep={view.initialStep}
-          onBack={() => {
-            if (window.location.hash.startsWith('#/ask')) {
-              history.replaceState({}, '', '/')
-            }
-            goTo({ name: 'home' })
-          }}
+          onBack={() => goTo({ name: 'home' })}
         />
       )}
 

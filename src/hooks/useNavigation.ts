@@ -14,7 +14,7 @@
 // of the view state machine.
 
 import { useState, useEffect } from 'react'
-import { needsAsyncParse, initialSandraHash } from './useUrlParsing'
+import { needsAsyncParse } from './useUrlParsing'
 import { trackTabChanged, trackFeatureOpened } from '../lib/analytics'
 import type { Friend } from '../types'
 
@@ -85,24 +85,14 @@ export function useNavigation({
 }: UseNavigationOptions): NavigationState {
   const [view, setView] = useState<View>(() => {
     if (needsAsyncParse) return { name: 'home' }
-    if (initialSandraHash) return { name: 'sandra-flow' }
     return pathToView(window.location.pathname)
   })
 
-  // Sync view with browser back/forward navigation and #/ask hash links
+  // Sync view with browser back/forward navigation
   useEffect(() => {
     const onPopstate = () => setView(pathToView(window.location.pathname))
-    const onHashChange = () => {
-      if (window.location.hash.startsWith('#/ask')) {
-        setView({ name: 'sandra-flow' })
-      }
-    }
     window.addEventListener('popstate', onPopstate)
-    window.addEventListener('hashchange', onHashChange)
-    return () => {
-      window.removeEventListener('popstate', onPopstate)
-      window.removeEventListener('hashchange', onHashChange)
-    }
+    return () => window.removeEventListener('popstate', onPopstate)
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Redirect hidden routes to home whenever simple mode is active.
