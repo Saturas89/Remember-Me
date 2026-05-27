@@ -118,7 +118,7 @@ export function OnlineSharingHubView({
           <details className="sync-error-details">
             <summary className="friends-hint">{h.syncErrorDetailsToggle}</summary>
             <p className="friends-hint sync-error-details__raw">
-              {h.syncErrorPrefix}{sync.error}
+              {h.syncErrorPrefix}{sync.error.slice(0, 200)}
             </p>
           </details>
         </section>
@@ -311,8 +311,8 @@ function SharedMemoryCard({
       setStatus('sent')
       await sync.refresh()
       setTimeout(() => setStatus('idle'), 2000)
-    } catch (err) {
-      console.error(err)
+    } catch {
+      console.error('[annotation] submit failed')
       setStatus('error')
     }
   }

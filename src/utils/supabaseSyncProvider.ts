@@ -21,8 +21,8 @@ export class SupabaseSyncProvider implements SyncProvider {
     else {
       getSyncSupabaseClient().auth.getUser().then(({ data }) => {
         this._userId = data.user?.id ?? null
-      }).catch((err: unknown) => {
-        console.warn('[SupabaseSyncProvider] Background auth check failed', err)
+      }).catch(() => {
+        console.warn('[SupabaseSyncProvider] Background auth check failed')
       })
     }
   }
@@ -102,7 +102,10 @@ export class SupabaseSyncProvider implements SyncProvider {
     if (!data) return null
 
     const plain = await decryptText(data.state_ct as string, data.state_iv as string, key)
-    const parsed = JSON.parse(plain) as AppState | { state: AppState; envelopeVersion?: number }
+    const parsed: unknown = JSON.parse(plain)
+    if (!parsed || typeof parsed !== 'object') {
+      throw new SyncError('Ungültiger Sync-Stand: Daten konnten nicht gelesen werden', 'unknown')
+    }
 
     // H5: payloads pushed before this PR are the raw AppState; new payloads
     // wrap it in `{ state, envelopeVersion }`. Detect via presence of the
@@ -110,7 +113,7 @@ export class SupabaseSyncProvider implements SyncProvider {
     // history yet", first pull accepts anything).
     let remote: AppState
     let remoteVersion = 0
-    if (parsed && typeof parsed === 'object' && 'state' in parsed && typeof (parsed as { envelopeVersion?: unknown }).envelopeVersion === 'number') {
+    if ('state' in parsed && typeof (parsed as { envelopeVersion?: unknown }).envelopeVersion === 'number') {
       const wrapped = parsed as { state: AppState; envelopeVersion: number }
       remote = wrapped.state
       remoteVersion = wrapped.envelopeVersion

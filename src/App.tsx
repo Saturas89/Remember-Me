@@ -463,9 +463,9 @@ export default function App() {
             removeFriend(friendId)
             if (friend?.online?.deviceId && onlineSync.service) {
               onlineSync.service.unshareAllWithFriend(friend.online.deviceId)
-                .catch(e => console.error('[removeContact] unshareAllWithFriend failed', e))
+                .catch(() => console.error('[removeContact] unshareAllWithFriend failed'))
               onlineSync.refresh()
-                .catch(e => console.error('[removeContact] refresh failed', e))
+                .catch(() => console.error('[removeContact] refresh failed'))
             }
           }}
           onOpenSandraFlow={() => goTo({ name: 'sandra-flow' })}
@@ -473,7 +473,7 @@ export default function App() {
           onDeactivate={async () => {
             const svc = onlineSync.service
             if (svc) {
-              try { await svc.deactivateOnlineSharing() } catch (e) { console.error(e) }
+              try { await svc.deactivateOnlineSharing() } catch { console.error('[deactivate] deactivateOnlineSharing failed') }
             }
             removeOnlineFriends()
             disableOnlineSharing()
