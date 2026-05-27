@@ -1,7 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
-import { decodeQuestionPack } from '../utils/sharing'
-import { generateMemoryShareUrlSync } from '../utils/secureLink'
-import { generateShareCard } from '../utils/shareCard'
+import { useState } from 'react'
 import { useImageStore } from '../hooks/useImageStore'
 import { addAudio, removeAudio } from '../hooks/useAudioStore'
 import { addVideo, removeVideo } from '../hooks/useVideoStore'
@@ -27,7 +24,6 @@ interface Props {
     options?: string[],
   ) => CustomQuestion
   onRemove: (id: string) => void
-  onImport: (questions: CustomQuestion[]) => void
   onBack: () => void
   /** Optional jump to the Sandra-flow gift-composer (ADR-002, #178).
    *  When omitted, the cross-hint section is hidden. */
@@ -36,7 +32,6 @@ interface Props {
 
 export function CustomQuestionsView({
   customQuestions,
-  profileName,
   getAnswer,
   getAnswerImageIds,
   getAnswerVideoIds,
@@ -47,7 +42,6 @@ export function CustomQuestionsView({
   onSetAudio,
   onAdd,
   onRemove,
-  onImport,
   onBack,
   onOpenSandraFlow,
 }: Props) {
@@ -56,37 +50,6 @@ export function CustomQuestionsView({
   const [newText, setNewText] = useState('')
   const [answeringId, setAnsweringId] = useState<string | null>(null)
   const [draftAnswer, setDraftAnswer] = useState('')
-  const [importCode, setImportCode] = useState('')
-  const [importMsg, setImportMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
-  const [isSharing, setIsSharing] = useState(false)
-  const [shareStatus, setShareStatus] = useState<'idle' | 'copied' | 'error'>('idle')
-  // #179: privacy default is "share questions only"; the user has to actively
-  // opt in to including their own answers, with a final confirm before sending.
-  const [includeAnswersInShare, setIncludeAnswersInShare] = useState(false)
-  const shareCardRef = useRef<File | null>(null)
-
-  // Count questions with substantive answers – used to decide whether to show
-  // the opt-in warning at all and what the confirm dialog should say.
-  const answeredCount = customQuestions.filter(q => getAnswer(q.id).trim().length > 0).length
-
-  useEffect(() => {
-    if (shareStatus === 'idle') return
-    const timer = setTimeout(() => setShareStatus('idle'), 2500)
-    return () => clearTimeout(timer)
-  }, [shareStatus])
-
-  useEffect(() => {
-    if (customQuestions.length === 0) { shareCardRef.current = null; return }
-    const name = profileName.trim()
-    fetch('/pwa-192x192.png')
-      .then(r => r.blob())
-      .then(b => generateShareCard(b, {
-        title: name ? `${name}s Erinnerungen` : 'Meine Erinnerungen',
-        items: customQuestions.map(q => q.text),
-      }))
-      .then(f => { shareCardRef.current = f })
-      .catch(() => {})
-  }, [customQuestions, profileName])
 
   function handleAdd() {
     if (!newText.trim()) return
@@ -102,96 +65,6 @@ export function CustomQuestionsView({
   function saveAnswer(q: CustomQuestion) {
     onSave(q.id, 'custom', draftAnswer)
     setAnsweringId(null)
-  }
-
-  // Synchronous handler – URL is built before any await so navigator.share()
-  // is called directly inside the click gesture (required by Safari / iOS).
-  function handleShare() {
-    if (customQuestions.length === 0 || isSharing) return
-
-    // #179: Sandra-persona reported the silent leak of own answers as a
-    // privacy/trust risk. Even when the user opted in, ask one last time
-    // before the URL is generated and the share-sheet pops up.
-    if (includeAnswersInShare && answeredCount > 0) {
-      const label = answeredCount === 1
-        ? t.customQ.shareIncludeAnswersWarningLabelOne
-        : t.customQ.shareIncludeAnswersWarningLabelMany
-      const msg = t.customQ.shareIncludeAnswersConfirm
-        .replace('{n}', String(answeredCount))
-        .replace('{label}', label)
-      if (!window.confirm(msg)) return
-    }
-
-    let url: string
-    try {
-      const memories = customQuestions.map(q => ({
-        title: q.text,
-        // Default = questions only. Answers are only attached when the user
-        // explicitly ticked the opt-in checkbox AND confirmed the prompt.
-        content: includeAnswersInShare
-          ? getAnswer(q.id).trim() || undefined
-          : undefined,
-      }))
-      url = generateMemoryShareUrlSync({ memories, sharedBy: profileName || undefined })
-    } catch {
-      setShareStatus('error')
-      return
-    }
-    const name = profileName.trim()
-    const title = name ? `${name}s Erinnerungen` : 'Meine Erinnerungen'
-    const text = `${title}\n\n${url}`
-
-    setIsSharing(true)
-
-    const card = shareCardRef.current
-    if (card && typeof navigator.share === 'function') {
-      if (navigator.canShare?.({ files: [card] })) {
-        navigator
-          .share({ files: [card], title, text })
-          .then(() => setIsSharing(false))
-          .catch(err => {
-            setIsSharing(false)
-            if ((err as Error).name !== 'AbortError') {
-              navigator.clipboard?.writeText(url)
-                .then(() => setShareStatus('copied'))
-                .catch(() => setShareStatus('error'))
-            }
-          })
-        return
-      }
-    }
-
-    if (typeof navigator.share === 'function') {
-      navigator
-        .share({ title, url })
-        .then(() => setIsSharing(false))
-        .catch(err => {
-          setIsSharing(false)
-          if ((err as Error).name === 'AbortError') return
-          navigator.clipboard
-            ?.writeText(url)
-            .then(() => setShareStatus('copied'))
-            .catch(() => setShareStatus('error'))
-        })
-    } else {
-      navigator.clipboard
-        .writeText(url)
-        .then(() => setShareStatus('copied'))
-        .catch(() => setShareStatus('error'))
-        .finally(() => setIsSharing(false))
-    }
-  }
-
-  function handleImport() {
-    const pack = decodeQuestionPack(importCode.trim())
-    if (!pack) {
-      setImportMsg({ type: 'error', text: t.customQ.importFailed })
-      return
-    }
-    onImport(pack.questions)
-    setImportCode('')
-    setImportMsg({ type: 'success', text: t.customQ.importSuccess.replace('{n}', String(pack.questions.length)) })
-    setTimeout(() => setImportMsg(null), 3000)
   }
 
   return (
@@ -369,75 +242,6 @@ export function CustomQuestionsView({
           </div>
         </section>
       )}
-
-      {customQuestions.length > 0 && (
-        <section className="friends-section">
-          <h3 className="friends-section-title">{t.customQ.shareHeading}</h3>
-          <p className="friends-hint">{t.customQ.shareHint}</p>
-          {/* #179: Default is "share questions only". The checkbox below is
-              the explicit opt-in for including the user's own answers; the
-              warning appears as soon as ticking would actually leak content. */}
-          <label className="custom-q-share-toggle" data-testid="custom-q-include-answers">
-            <input
-              type="checkbox"
-              checked={includeAnswersInShare}
-              onChange={e => setIncludeAnswersInShare(e.target.checked)}
-            />
-            <span>{t.customQ.shareIncludeAnswersLabel}</span>
-          </label>
-          {includeAnswersInShare && answeredCount > 0 && (
-            <p className="friends-hint friends-hint--warn">
-              {t.customQ.shareIncludeAnswersWarning
-                .replace('{n}', String(answeredCount))
-                .replace('{label}',
-                  answeredCount === 1
-                    ? t.customQ.shareIncludeAnswersWarningLabelOne
-                    : t.customQ.shareIncludeAnswersWarningLabelMany)}
-            </p>
-          )}
-          <div className="friends-share">
-            <button
-              className={`share-cta-btn${shareStatus === 'copied' ? ' share-cta-btn--success' : shareStatus === 'error' ? ' share-cta-btn--error' : ''}`}
-              onClick={handleShare}
-              disabled={isSharing}
-            >
-              {isSharing ? (
-                <><span className="share-cta-btn__spinner" aria-hidden="true" />{t.customQ.opening}</>
-              ) : shareStatus === 'copied' ? (
-                t.customQ.linkCopied
-              ) : shareStatus === 'error' ? (
-                t.customQ.shareRetry
-              ) : (
-                t.customQ.shareCta
-              )}
-            </button>
-          </div>
-        </section>
-      )}
-
-      <section className="friends-section">
-        <h3 className="friends-section-title">{t.customQ.importHeading}</h3>
-        <textarea
-          className="input-textarea"
-          rows={3}
-          value={importCode}
-          onChange={e => setImportCode(e.target.value)}
-          placeholder={t.customQ.importPlaceholder}
-          style={{ marginBottom: '0.6rem' }}
-        />
-        {importMsg && (
-          <p className={`import-msg import-msg--${importMsg.type}`} style={{ marginBottom: '0.6rem' }}>
-            {importMsg.text}
-          </p>
-        )}
-        <button
-          className="btn btn--outline"
-          onClick={handleImport}
-          disabled={!importCode.trim()}
-        >
-          {t.customQ.importButton}
-        </button>
-      </section>
     </div>
   )
 }

@@ -1,3 +1,5 @@
+import { SANDRA_FLOW_EN } from './sandraFlow'
+
 export const UI_EN = {
   nav: {
     home: 'Journey',
@@ -253,6 +255,9 @@ export const UI_EN = {
     attachmentsHeading: 'Receive memories with attachments',
     attachmentsHint: 'Did a friend include photos, recordings or videos? Open the file here and it will land in your archive.',
     openGift: '🎁 Open memories',
+    friendAnsweredCount: '{answered} of {total} questions answered',
+    friendNoAnswers: 'No answers yet',
+    friendRemoveTitle: 'Remove',
     lastActiveToday: 'active today',
     lastActiveYesterday: 'active yesterday',
     lastActiveDays: 'last active {n} days ago',
@@ -778,4 +783,5 @@ export const UI_EN = {
       imgAlt: 'Framed family photo on a table with flowers',
     },
   },
+  sandraFlow: SANDRA_FLOW_EN,
 }

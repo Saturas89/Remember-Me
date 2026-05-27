@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useSandraFlowStrings } from '../i18n/sandraFlow'
+import { useTranslation } from '../locales'
 import { useAppMode } from '../hooks/useAppMode'
 import type { PersonalQuestionPack } from '../lib/sandraFlow/packBuilder'
 
@@ -38,7 +38,7 @@ const PRIMARY_CTA_MIN_SIZE = 80
  *  - No pack-code / no edit tools / no settings sidebar
  */
 export function PersonalPackReceiveView({ pack, existingProfileName, onSubmit, onDismiss }: Props) {
-  const t = useSandraFlowStrings()
+  const { t: { sandraFlow: t } } = useTranslation()
   const { appMode, setAppMode } = useAppMode()
 
   // #163: when the sender (Sandra) ticked the simple-mode-handoff checkbox in

@@ -1,4 +1,8 @@
 import type { Category, FriendTopic } from '../types'
+import type { SANDRA_FLOW_DE } from './de/sandraFlow'
+
+/** All Sandra-flow UI strings (DE is the canonical shape; EN must mirror it). */
+export type SandraFlowStrings = typeof SANDRA_FLOW_DE
 
 export type Locale = 'de' | 'en'
 
@@ -266,6 +270,10 @@ export interface Translations {
     attachmentsHeading: string
     attachmentsHint: string
     openGift: string
+    /** FriendCard answer count + status labels. */
+    friendAnsweredCount: string
+    friendNoAnswers: string
+    friendRemoveTitle: string
     lastActiveToday: string
     lastActiveYesterday: string
     lastActiveDays: string
@@ -845,4 +853,5 @@ export interface Translations {
 
   categories: Category[]
   friendTopics: FriendTopic[]
+  sandraFlow: SandraFlowStrings
 }

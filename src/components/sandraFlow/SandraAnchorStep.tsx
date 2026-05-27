@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import type { SandraFlowStrings } from '../../i18n/de/sandraFlow'
+import type { SandraFlowStrings } from '../../locales/types'
 import type { SandraAnchor } from '../../types/sandraFlow'
 
 interface Props {

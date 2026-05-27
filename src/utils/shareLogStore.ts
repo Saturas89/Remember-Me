@@ -8,20 +8,13 @@
 // (unshareAllWithFriend / FR-22.14) so a later toggle-on triggers a full
 // backfill.
 
+import { openIdb, idbGet, idbPut } from './idb'
+
 const DB_NAME = 'rm-share-log'
 const STORE = 'share-log'
 
 function buildKey(answerId: string, friendDeviceId: string): string {
   return `${answerId}-${friendDeviceId}`
-}
-
-function openDB(): Promise<IDBDatabase> {
-  return new Promise((resolve, reject) => {
-    const req = indexedDB.open(DB_NAME, 1)
-    req.onupgradeneeded = () => req.result.createObjectStore(STORE)
-    req.onsuccess = () => resolve(req.result)
-    req.onerror = () => reject(req.error)
-  })
 }
 
 interface StoredEntry {
@@ -32,17 +25,10 @@ export async function getShareLogEntry(
   answerId: string,
   friendDeviceId: string,
 ): Promise<string | null> {
-  const db = await openDB()
+  const db = await openIdb(DB_NAME, STORE)
   try {
-    return await new Promise<string | null>((resolve, reject) => {
-      const tx = db.transaction(STORE, 'readonly')
-      const req = tx.objectStore(STORE).get(buildKey(answerId, friendDeviceId))
-      req.onsuccess = () => {
-        const value = req.result as StoredEntry | undefined
-        resolve(value ? value.lastSharedAt : null)
-      }
-      req.onerror = () => reject(req.error)
-    })
+    const entry = await idbGet<StoredEntry>(db, STORE, buildKey(answerId, friendDeviceId))
+    return entry ? entry.lastSharedAt : null
   } finally {
     db.close()
   }
@@ -53,17 +39,9 @@ export async function setShareLogEntry(
   friendDeviceId: string,
   lastSharedAt: string,
 ): Promise<void> {
-  const db = await openDB()
+  const db = await openIdb(DB_NAME, STORE)
   try {
-    await new Promise<void>((resolve, reject) => {
-      const tx = db.transaction(STORE, 'readwrite')
-      const req = tx.objectStore(STORE).put(
-        { lastSharedAt } satisfies StoredEntry,
-        buildKey(answerId, friendDeviceId),
-      )
-      req.onsuccess = () => resolve()
-      req.onerror = () => reject(req.error)
-    })
+    await idbPut(db, STORE, { lastSharedAt } satisfies StoredEntry, buildKey(answerId, friendDeviceId))
   } finally {
     db.close()
   }
@@ -72,7 +50,7 @@ export async function setShareLogEntry(
 export async function deleteShareLogForFriend(
   friendDeviceId: string,
 ): Promise<void> {
-  const db = await openDB()
+  const db = await openIdb(DB_NAME, STORE)
   try {
     // Suffix match on the synthetic key. The keyset is small (#answers per
     // device × #friends) and only ever scanned on user-initiated pause, so a

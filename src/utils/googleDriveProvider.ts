@@ -3,6 +3,7 @@ import type { SyncProvider, MediaStoreAccessor, PullResult } from './privateSync
 import { SyncError } from './privateSyncProvider'
 import { mergeStates } from './privateSyncMerge'
 import { loadCachedVaultKey } from './recoveryCode'
+import { openIdb, idbGet, idbPut, idbDelete } from './idb'
 import {
   encryptSyncEnvelope,
   decryptSyncEnvelope,
@@ -39,80 +40,41 @@ interface StoredToken {
 const TOKEN_IDB = 'rm-sync-auth'
 const TOKEN_STORE = 'tokens'
 
-async function openTokenDb(): Promise<IDBDatabase> {
-  return new Promise((resolve, reject) => {
-    const req = indexedDB.open(TOKEN_IDB, 1)
-    req.onupgradeneeded = () => req.result.createObjectStore(TOKEN_STORE)
-    req.onsuccess = () => resolve(req.result)
-    req.onerror = () => reject(req.error)
-  })
-}
-
 async function loadToken(): Promise<StoredToken | null> {
   try {
-    const db = await openTokenDb()
-    return await new Promise((resolve, reject) => {
-      const tx = db.transaction(TOKEN_STORE, 'readonly')
-      const req = tx.objectStore(TOKEN_STORE).get(TOKEN_KEY)
-      req.onsuccess = () => resolve((req.result as StoredToken | undefined) ?? null)
-      req.onerror = () => reject(req.error)
-    })
+    const db = await openIdb(TOKEN_IDB, TOKEN_STORE)
+    return (await idbGet<StoredToken>(db, TOKEN_STORE, TOKEN_KEY)) ?? null
   } catch { return null }
 }
 
 async function saveToken(t: StoredToken): Promise<void> {
-  const db = await openTokenDb()
-  await new Promise<void>((resolve, reject) => {
-    const tx = db.transaction(TOKEN_STORE, 'readwrite')
-    tx.objectStore(TOKEN_STORE).put(t, TOKEN_KEY)
-    tx.oncomplete = () => resolve()
-    tx.onerror = () => reject(tx.error)
-  })
+  const db = await openIdb(TOKEN_IDB, TOKEN_STORE)
+  await idbPut(db, TOKEN_STORE, t, TOKEN_KEY)
 }
 
 async function clearToken(): Promise<void> {
   try {
-    const db = await openTokenDb()
-    await new Promise<void>((resolve, reject) => {
-      const tx = db.transaction(TOKEN_STORE, 'readwrite')
-      tx.objectStore(TOKEN_STORE).delete(TOKEN_KEY)
-      tx.oncomplete = () => resolve()
-      tx.onerror = () => reject(tx.error)
-    })
+    const db = await openIdb(TOKEN_IDB, TOKEN_STORE)
+    await idbDelete(db, TOKEN_STORE, TOKEN_KEY)
   } catch { /* best-effort */ }
 }
 
 async function loadFileId(): Promise<string | null> {
   try {
-    const db = await openTokenDb()
-    return await new Promise((resolve, reject) => {
-      const tx = db.transaction(TOKEN_STORE, 'readonly')
-      const req = tx.objectStore(TOKEN_STORE).get(FILE_ID_KEY)
-      req.onsuccess = () => resolve((req.result as string | undefined) ?? null)
-      req.onerror = () => reject(req.error)
-    })
+    const db = await openIdb(TOKEN_IDB, TOKEN_STORE)
+    return (await idbGet<string>(db, TOKEN_STORE, FILE_ID_KEY)) ?? null
   } catch { return null }
 }
 
 async function saveFileId(id: string): Promise<void> {
-  const db = await openTokenDb()
-  await new Promise<void>((resolve, reject) => {
-    const tx = db.transaction(TOKEN_STORE, 'readwrite')
-    tx.objectStore(TOKEN_STORE).put(id, FILE_ID_KEY)
-    tx.oncomplete = () => resolve()
-    tx.onerror = () => reject(tx.error)
-  })
+  const db = await openIdb(TOKEN_IDB, TOKEN_STORE)
+  await idbPut(db, TOKEN_STORE, id, FILE_ID_KEY)
 }
 
 async function clearFileId(): Promise<void> {
   try {
-    const db = await openTokenDb()
-    await new Promise<void>((resolve, reject) => {
-      const tx = db.transaction(TOKEN_STORE, 'readwrite')
-      tx.objectStore(TOKEN_STORE).delete(FILE_ID_KEY)
-      tx.oncomplete = () => resolve()
-      tx.onerror = () => reject(tx.error)
-    })
+    const db = await openIdb(TOKEN_IDB, TOKEN_STORE)
+    await idbDelete(db, TOKEN_STORE, FILE_ID_KEY)
   } catch { /* best-effort */ }
 }
 

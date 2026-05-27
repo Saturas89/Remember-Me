@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import { render, cleanup, waitFor } from '@testing-library/react'
 import { SandraShareStep } from './SandraShareStep'
-import { SANDRA_FLOW_DE } from '../../i18n/de/sandraFlow'
-import { SANDRA_FLOW_EN } from '../../i18n/en/sandraFlow'
+import { SANDRA_FLOW_DE } from '../../locales/de/sandraFlow'
+import { SANDRA_FLOW_EN } from '../../locales/en/sandraFlow'
 import type { ComposedQuestion, SandraAnchor } from '../../types/sandraFlow'
 
 // ─────────────────────────────────────────────────────────────────────────────

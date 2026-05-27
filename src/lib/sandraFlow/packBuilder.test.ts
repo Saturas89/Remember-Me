@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { buildPersonalPack, isPersonalPack } from './packBuilder'
 import type { ComposedQuestion, SandraDraft } from '../../types/sandraFlow'
-import { decodeQuestionPack, encodeQuestionPack } from '../../utils/sharing'
 import type { QuestionPack } from '../../types'
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -80,35 +79,6 @@ describe('buildPersonalPack – question inclusion', () => {
   })
 })
 
-describe('buildPersonalPack – encode/decode round-trip', () => {
-  it('produces a pack accepted by decodeQuestionPack', () => {
-    const pack = buildPersonalPack(makeDraft([Q_BIO, Q_REL]), 'Sandra')
-    const code = encodeQuestionPack(pack as unknown as QuestionPack)
-    const decoded = decodeQuestionPack(code)
-    expect(decoded).not.toBeNull()
-    expect(decoded!.questions).toHaveLength(2)
-    expect(decoded!.questions.map(q => q.text)).toEqual(
-      expect.arrayContaining([Q_BIO.text, Q_REL.text]),
-    )
-  })
-
-  it('an old non-personal pack code still decodes (backward-compat snapshot)', () => {
-    const legacyPack: QuestionPack = {
-      createdBy: 'Alte App',
-      questions: [
-        {
-          id: 'legacy-1',
-          text: 'Was war dein Beruf?',
-          type: 'text',
-          createdAt: '2024-01-01T00:00:00.000Z',
-        },
-      ],
-    }
-    const code = encodeQuestionPack(legacyPack)
-    const decoded = decodeQuestionPack(code)
-    expect(decoded).toEqual(legacyPack)
-  })
-})
 
 describe('buildPersonalPack – personal-pack metadata', () => {
   it('sets personalPack: true', () => {

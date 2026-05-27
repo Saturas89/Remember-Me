@@ -3,6 +3,7 @@ import type { SyncProvider, MediaStoreAccessor, PullResult } from './privateSync
 import { SyncError } from './privateSyncProvider'
 import { mergeStates } from './privateSyncMerge'
 import { loadCachedVaultKey } from './recoveryCode'
+import { openIdb, idbGet, idbPut, idbDelete } from './idb'
 import {
   encryptSyncEnvelope,
   decryptSyncEnvelope,
@@ -35,46 +36,22 @@ type MediaManifestEntry = {
 const GRAPH_BASE = 'https://graph.microsoft.com/v1.0'
 const APP_ROOT = `${GRAPH_BASE}/me/drive/special/approot`
 
-async function openTokenDb(): Promise<IDBDatabase> {
-  return new Promise((resolve, reject) => {
-    const req = indexedDB.open(TOKEN_IDB, 1)
-    req.onupgradeneeded = () => req.result.createObjectStore(TOKEN_STORE)
-    req.onsuccess = () => resolve(req.result)
-    req.onerror = () => reject(req.error)
-  })
-}
-
 async function loadToken(): Promise<StoredToken | null> {
   try {
-    const db = await openTokenDb()
-    return await new Promise((resolve, reject) => {
-      const tx = db.transaction(TOKEN_STORE, 'readonly')
-      const req = tx.objectStore(TOKEN_STORE).get(ONEDRIVE_TOKEN_KEY)
-      req.onsuccess = () => resolve((req.result as StoredToken | undefined) ?? null)
-      req.onerror = () => reject(req.error)
-    })
+    const db = await openIdb(TOKEN_IDB, TOKEN_STORE)
+    return (await idbGet<StoredToken>(db, TOKEN_STORE, ONEDRIVE_TOKEN_KEY)) ?? null
   } catch { return null }
 }
 
 async function saveToken(t: StoredToken): Promise<void> {
-  const db = await openTokenDb()
-  await new Promise<void>((resolve, reject) => {
-    const tx = db.transaction(TOKEN_STORE, 'readwrite')
-    tx.objectStore(TOKEN_STORE).put(t, ONEDRIVE_TOKEN_KEY)
-    tx.oncomplete = () => resolve()
-    tx.onerror = () => reject(tx.error)
-  })
+  const db = await openIdb(TOKEN_IDB, TOKEN_STORE)
+  await idbPut(db, TOKEN_STORE, t, ONEDRIVE_TOKEN_KEY)
 }
 
 async function clearToken(): Promise<void> {
   try {
-    const db = await openTokenDb()
-    await new Promise<void>((resolve, reject) => {
-      const tx = db.transaction(TOKEN_STORE, 'readwrite')
-      tx.objectStore(TOKEN_STORE).delete(ONEDRIVE_TOKEN_KEY)
-      tx.oncomplete = () => resolve()
-      tx.onerror = () => reject(tx.error)
-    })
+    const db = await openIdb(TOKEN_IDB, TOKEN_STORE)
+    await idbDelete(db, TOKEN_STORE, ONEDRIVE_TOKEN_KEY)
   } catch { /* best-effort */ }
 }
 

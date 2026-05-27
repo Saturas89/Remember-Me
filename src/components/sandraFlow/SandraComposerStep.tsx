@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react'
-import type { SandraFlowStrings } from '../../i18n/de/sandraFlow'
+import type { SandraFlowStrings } from '../../locales/types'
 import type { Locale } from '../../locales'
 import type { SandraAnchor } from '../../types/sandraFlow'
 import { findTrigger, getInspirationQuestions } from '../../data/loadPersonalQuestions'

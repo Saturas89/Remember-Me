@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import type { SandraFlowStrings } from '../../i18n/de/sandraFlow'
+import type { SandraFlowStrings } from '../../locales/types'
 import type { ComposedQuestion, SandraAnchor } from '../../types/sandraFlow'
 
 function pronounForRelation(relation: string): string {

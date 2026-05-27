@@ -1,21 +1,8 @@
-import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest'
-import { render, cleanup, fireEvent, act } from '@testing-library/react'
+import { describe, it, expect, vi, afterEach } from 'vitest'
+import { render, cleanup, fireEvent } from '@testing-library/react'
 import { CustomQuestionsView } from './CustomQuestionsView'
-import { generateMemoryShareUrlSync } from '../utils/secureLink'
 import type { CustomQuestion } from '../types'
 
-// ── Module mocks ──────────────────────────────────────────────────────────────
-
-// vi.mock factories are hoisted before variable declarations, so SHARE_URL
-// must be declared with vi.hoisted() to be accessible inside the factory.
-const { SHARE_URL } = vi.hoisted(() => ({ SHARE_URL: 'https://example.com/#ms/test123' }))
-
-vi.mock('../utils/secureLink', () => ({
-  generateMemoryShareUrlSync: vi.fn().mockReturnValue(SHARE_URL),
-}))
-vi.mock('../utils/shareCard', () => ({
-  generateShareCard: vi.fn().mockResolvedValue(null),
-}))
 vi.mock('../hooks/useImageStore', () => ({
   useImageStore: () => ({ cache: {}, loadImages: vi.fn(), addImage: vi.fn(), removeImage: vi.fn() }),
 }))
@@ -46,214 +33,90 @@ function makeProps(overrides: Partial<Parameters<typeof CustomQuestionsView>[0]>
     onSetAudio: vi.fn(),
     onAdd: vi.fn((): CustomQuestion => ({ id: 'new', text: 'New', type: 'text', createdAt: '' })),
     onRemove: vi.fn(),
-    onImport: vi.fn(),
     onBack: vi.fn(),
     ...overrides,
   }
 }
-
-function getShareBtn(container: HTMLElement) {
-  return container.querySelector<HTMLButtonElement>('.share-cta-btn')
-}
-
-/** Stub navigator.clipboard.writeText. Returns the mock fn. */
-function stubClipboard(resolves = true) {
-  const writeText = resolves
-    ? vi.fn().mockResolvedValue(undefined)
-    : vi.fn().mockRejectedValue(new Error('NotAllowedError'))
-  Object.defineProperty(navigator, 'clipboard', {
-    value: { writeText },
-    configurable: true,
-  })
-  return writeText
-}
-
-/** Stub navigator.share. Returns the mock fn. */
-function stubShare(rejects?: Error) {
-  const fn = rejects
-    ? vi.fn().mockRejectedValue(rejects)
-    : vi.fn().mockResolvedValue(undefined)
-  Object.defineProperty(navigator, 'share', { value: fn, configurable: true })
-  return fn
-}
-
-function clearShare() {
-  Object.defineProperty(navigator, 'share', { value: undefined, configurable: true })
-}
-
-// ── Suite ─────────────────────────────────────────────────────────────────────
 
 afterEach(() => {
   cleanup()
   vi.clearAllMocks()
 })
 
-describe('CustomQuestionsView – Erinnerungen teilen', () => {
-  beforeEach(clearShare)
+// ── Suite ─────────────────────────────────────────────────────────────────────
 
-  // ── Sichtbarkeit ────────────────────────────────────────────────────────────
-
-  describe('Sichtbarkeit', () => {
-    it('versteckt den Teilen-Bereich wenn keine Fragen vorhanden sind', () => {
-      const { container } = render(<CustomQuestionsView {...makeProps({ customQuestions: [] })} />)
-      expect(getShareBtn(container)).toBeNull()
-    })
-
-    it('zeigt den share-cta-btn wenn Fragen vorhanden sind', () => {
-      const { container } = render(<CustomQuestionsView {...makeProps()} />)
-      const btn = getShareBtn(container)
-      expect(btn).toBeTruthy()
-      expect(btn?.textContent).toContain('Erinnerungen teilen')
-    })
-
-    it('Button ist nicht deaktiviert wenn Fragen vorhanden sind', () => {
-      const { container } = render(<CustomQuestionsView {...makeProps()} />)
-      expect(getShareBtn(container)?.disabled).toBe(false)
-    })
+describe('CustomQuestionsView – Frage hinzufügen', () => {
+  it('ruft onAdd auf wenn Text eingegeben und auf Hinzufügen geklickt wird', () => {
+    const onAdd = vi.fn((): CustomQuestion => ({ id: 'new', text: 'Test', type: 'text', createdAt: '' }))
+    const { container } = render(<CustomQuestionsView {...makeProps({ onAdd })} />)
+    const input = container.querySelector<HTMLInputElement>('.input-text')!
+    fireEvent.change(input, { target: { value: 'Neue Frage' } })
+    fireEvent.click(container.querySelector('.btn--primary')!)
+    expect(onAdd).toHaveBeenCalledWith('Neue Frage', 'text')
   })
 
-  // ── Clipboard-Pfad (navigator.share nicht verfügbar) ────────────────────────
-
-  describe('Clipboard-Pfad (navigator.share nicht verfügbar)', () => {
-    it('kopiert die generierte URL in die Zwischenablage', async () => {
-      const writeText = stubClipboard()
-      const { container } = render(<CustomQuestionsView {...makeProps()} />)
-      await act(async () => { fireEvent.click(getShareBtn(container)!) })
-      expect(writeText).toHaveBeenCalledWith(SHARE_URL)
-    })
-
-    it('zeigt "Link kopiert!" und success-Klasse nach erfolgreichem Kopieren', async () => {
-      stubClipboard()
-      const { container } = render(<CustomQuestionsView {...makeProps()} />)
-      await act(async () => { fireEvent.click(getShareBtn(container)!) })
-      const btn = getShareBtn(container)!
-      expect(btn.textContent).toContain('Link kopiert!')
-      expect(btn.className).toContain('share-cta-btn--success')
-    })
-
-    it('zeigt "Nochmal versuchen" und error-Klasse wenn Clipboard-Schreiben fehlschlägt', async () => {
-      stubClipboard(false)
-      const { container } = render(<CustomQuestionsView {...makeProps()} />)
-      await act(async () => { fireEvent.click(getShareBtn(container)!) })
-      const btn = getShareBtn(container)!
-      expect(btn.textContent).toContain('Nochmal versuchen')
-      expect(btn.className).toContain('share-cta-btn--error')
-    })
+  it('Hinzufügen-Button ist deaktiviert wenn kein Text eingegeben ist', () => {
+    const { container } = render(<CustomQuestionsView {...makeProps()} />)
+    const btn = container.querySelector<HTMLButtonElement>('.btn--primary')!
+    expect(btn.disabled).toBe(true)
   })
 
-  // ── navigator.share-Pfad ────────────────────────────────────────────────────
+  it('Enter-Taste ruft onAdd auf', () => {
+    const onAdd = vi.fn((): CustomQuestion => ({ id: 'new', text: 'Test', type: 'text', createdAt: '' }))
+    const { container } = render(<CustomQuestionsView {...makeProps({ onAdd })} />)
+    const input = container.querySelector<HTMLInputElement>('.input-text')!
+    fireEvent.change(input, { target: { value: 'Per Enter' } })
+    fireEvent.keyDown(input, { key: 'Enter' })
+    expect(onAdd).toHaveBeenCalledWith('Per Enter', 'text')
+  })
+})
 
-  describe('navigator.share-Pfad', () => {
-    it('ruft navigator.share mit title, text und url auf', async () => {
-      const shareFn = stubShare()
-      const { container } = render(<CustomQuestionsView {...makeProps()} />)
-      await act(async () => { fireEvent.click(getShareBtn(container)!) })
-      expect(shareFn).toHaveBeenCalledWith({
-        title: 'Annas Erinnerungen',
-        url: SHARE_URL,
-      })
-    })
+describe('CustomQuestionsView – Frage löschen', () => {
+  it('ruft onRemove mit der richtigen ID auf', () => {
+    const onRemove = vi.fn()
+    const { container } = render(<CustomQuestionsView {...makeProps({ onRemove })} />)
+    fireEvent.click(container.querySelector('.custom-q-delete')!)
+    expect(onRemove).toHaveBeenCalledWith('q-1')
+  })
+})
 
-    it('ignoriert AbortError – kein Fehler- oder Erfolgs-Status', async () => {
-      const abortErr = Object.assign(new Error('Aborted'), { name: 'AbortError' })
-      stubShare(abortErr)
-      const { container } = render(<CustomQuestionsView {...makeProps()} />)
-      await act(async () => { fireEvent.click(getShareBtn(container)!) })
-      const btn = getShareBtn(container)!
-      expect(btn.className).not.toContain('share-cta-btn--error')
-      expect(btn.className).not.toContain('share-cta-btn--success')
-    })
-
-    it('fällt bei einem anderen share-Fehler auf Clipboard zurück', async () => {
-      stubShare(new Error('share failed'))
-      const writeText = stubClipboard()
-      const { container } = render(<CustomQuestionsView {...makeProps()} />)
-      await act(async () => { fireEvent.click(getShareBtn(container)!) })
-      expect(writeText).toHaveBeenCalledWith(SHARE_URL)
-      expect(getShareBtn(container)!.className).toContain('share-cta-btn--success')
-    })
+describe('CustomQuestionsView – Fragenliste', () => {
+  it('zeigt Fragentext in der Liste an', () => {
+    const { container } = render(<CustomQuestionsView {...makeProps()} />)
+    expect(container.querySelector('.custom-q-item__text')?.textContent).toBe('Lieblingsort')
   })
 
-  // ── Payload an generateMemoryShareUrl ───────────────────────────────────────
+  it('zeigt keinen Fragen-Bereich wenn keine Fragen vorhanden sind', () => {
+    const { container } = render(<CustomQuestionsView {...makeProps({ customQuestions: [] })} />)
+    expect(container.querySelector('.custom-q-list')).toBeNull()
+  })
+})
 
-  describe('Payload an generateMemoryShareUrl', () => {
-    it('teilt standardmäßig nur Fragen (kein content), auch wenn Antworten vorhanden sind (#179)', async () => {
-      stubClipboard()
-      const getAnswer = vi.fn((id: string) => (id === 'q-1' ? 'Mein Lieblingsort' : ''))
-      const { container } = render(<CustomQuestionsView {...makeProps({ getAnswer })} />)
-      await act(async () => { fireEvent.click(getShareBtn(container)!) })
-      expect(vi.mocked(generateMemoryShareUrlSync)).toHaveBeenCalledWith({
-        memories: [{ title: 'Lieblingsort', content: undefined }],
-        sharedBy: 'Anna',
-      })
-    })
-
-    it('inkludiert Antworten nur, wenn die Opt-In-Checkbox aktiv ist (#179)', async () => {
-      stubClipboard()
-      const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true)
-      const getAnswer = vi.fn((id: string) => (id === 'q-1' ? 'Mein Lieblingsort' : ''))
-      const { container } = render(<CustomQuestionsView {...makeProps({ getAnswer })} />)
-      // Tick the include-answers checkbox + confirm the dialog → blob includes content.
-      const checkbox = container.querySelector(
-        '[data-testid="custom-q-include-answers"] input[type="checkbox"]',
-      ) as HTMLInputElement
-      await act(async () => { fireEvent.click(checkbox) })
-      await act(async () => { fireEvent.click(getShareBtn(container)!) })
-      expect(confirmSpy).toHaveBeenCalledOnce()
-      expect(vi.mocked(generateMemoryShareUrlSync)).toHaveBeenCalledWith({
-        memories: [{ title: 'Lieblingsort', content: 'Mein Lieblingsort' }],
-        sharedBy: 'Anna',
-      })
-      confirmSpy.mockRestore()
-    })
-
-    it('lässt content weg wenn keine Antwort vorhanden ist', async () => {
-      stubClipboard()
-      // default getAnswer returns '' → content should be undefined
-      const { container } = render(<CustomQuestionsView {...makeProps()} />)
-      await act(async () => { fireEvent.click(getShareBtn(container)!) })
-      expect(vi.mocked(generateMemoryShareUrlSync)).toHaveBeenCalledWith({
-        memories: [{ title: 'Lieblingsort', content: undefined }],
-        sharedBy: 'Anna',
-      })
-    })
-
-    it('setzt sharedBy auf undefined wenn kein Profilname vorhanden ist', async () => {
-      stubClipboard()
-      const { container } = render(<CustomQuestionsView {...makeProps({ profileName: '' })} />)
-      await act(async () => { fireEvent.click(getShareBtn(container)!) })
-      expect(vi.mocked(generateMemoryShareUrlSync)).toHaveBeenCalledWith(
-        expect.objectContaining({ sharedBy: undefined }),
-      )
-    })
-
-    it('schließt alle Fragen als memories ein (content nur via Opt-In)', async () => {
-      stubClipboard()
-      const q2: CustomQuestion = { id: 'q-2', text: 'Lieblingsessen', type: 'text', createdAt: '' }
-      const getAnswer = vi.fn((id: string) => (id === 'q-1' ? 'Berge' : 'Pizza'))
-      const { container } = render(
-        <CustomQuestionsView {...makeProps({ customQuestions: [Q1, q2], getAnswer })} />,
-      )
-      await act(async () => { fireEvent.click(getShareBtn(container)!) })
-      // Default (no opt-in): titles only, no content.
-      expect(vi.mocked(generateMemoryShareUrlSync)).toHaveBeenCalledWith({
-        memories: [
-          { title: 'Lieblingsort', content: undefined },
-          { title: 'Lieblingsessen', content: undefined },
-        ],
-        sharedBy: 'Anna',
-      })
-    })
+describe('CustomQuestionsView – Share-Mechanismus entfernt', () => {
+  it('hat keinen Share-Button mehr', () => {
+    const { container } = render(<CustomQuestionsView {...makeProps()} />)
+    expect(container.querySelector('.share-cta-btn')).toBeNull()
   })
 
-  // ── Fehlerbehandlung ────────────────────────────────────────────────────────
+  it('hat kein Import-Formular mehr', () => {
+    const { container } = render(<CustomQuestionsView {...makeProps()} />)
+    // No import textarea
+    const textareas = Array.from(container.querySelectorAll('textarea'))
+    // There should only be answer textareas, not an import-code area visible by default
+    // (answer textarea only shows when editing a question)
+    expect(textareas).toHaveLength(0)
+  })
+})
 
-  describe('Fehlerbehandlung', () => {
-    it('zeigt Fehler-Status wenn generateMemoryShareUrlSync wirft', async () => {
-      vi.mocked(generateMemoryShareUrlSync).mockImplementationOnce(() => { throw new Error('URL generation failed') })
-      const { container } = render(<CustomQuestionsView {...makeProps()} />)
-      await act(async () => { fireEvent.click(getShareBtn(container)!) })
-      expect(getShareBtn(container)!.className).toContain('share-cta-btn--error')
-    })
+describe('CustomQuestionsView – Sandra-Cross-Hint', () => {
+  it('zeigt Cross-Hint wenn onOpenSandraFlow übergeben wird', () => {
+    const onOpenSandraFlow = vi.fn()
+    const { container } = render(<CustomQuestionsView {...makeProps({ onOpenSandraFlow })} />)
+    expect(container.querySelector('[data-testid="custom-q-cross-hint-sandra"]')).toBeTruthy()
+  })
+
+  it('versteckt Cross-Hint wenn onOpenSandraFlow nicht übergeben wird', () => {
+    const { container } = render(<CustomQuestionsView {...makeProps()} />)
+    expect(container.querySelector('[data-testid="custom-q-cross-hint-sandra"]')).toBeNull()
   })
 })
