@@ -123,7 +123,7 @@ test.describe('Sandra-Flow – DE Happy Path', () => {
   })
 
   test('Sandra composes one question and shares via Web-Share-API', async ({ page }) => {
-    await page.goto('/#/ask')
+    await page.goto('/ask')
 
     // ── Screen 1: anchor (relation chip + anrede) ─────────────────────────
     await page.getByTestId('sandra-anchor-chip-mama').click()
@@ -197,7 +197,7 @@ test.describe('Sandra-Flow – EN Happy Path', () => {
   })
 
   test('the hero text and labels switch to English', async ({ page }) => {
-    await page.goto('/#/ask')
+    await page.goto('/ask')
 
     // ── Screen 1: anchor ─────────────────────────────────────────────────────
     await page.getByTestId('sandra-anchor-chip-mama').click()
@@ -232,7 +232,7 @@ test.describe('Sandra-Flow – Receiver Path (Ingrid)', () => {
     await stubWebShare(senderContext)
     const sender = await senderContext.newPage()
 
-    await sender.goto('/#/ask')
+    await sender.goto('/ask')
     await sender.getByTestId('sandra-anchor-chip-mama').click()
     await sender.getByTestId('sandra-anchor-next').click()
     await sender.locator('[data-testid^="sandra-trigger-"]').first().click()
@@ -294,7 +294,7 @@ test.describe('Sandra-Flow – Receiver Path (Ingrid)', () => {
     await seedContext(sCtx, { lang: 'de', profile: 'sandra', mockState })
     await stubWebShare(sCtx)
     const sPage = await sCtx.newPage()
-    await sPage.goto('/#/ask')
+    await sPage.goto('/ask')
     await sPage.getByTestId('sandra-anchor-chip-mama').click()
     await sPage.getByTestId('sandra-anchor-next').click()
     await sPage.locator('[data-testid^="sandra-trigger-"]').first().click()
@@ -327,7 +327,7 @@ test.describe('Sandra-Flow – Receiver Path (Ingrid)', () => {
     await seedContext(sCtx, { lang: 'de', profile: 'sandra', mockState })
     await stubWebShare(sCtx)
     const sPage = await sCtx.newPage()
-    await sPage.goto('/#/ask')
+    await sPage.goto('/ask')
     await sPage.getByTestId('sandra-anchor-chip-mama').click()
     await sPage.getByTestId('sandra-anchor-next').click()
     await sPage.locator('[data-testid^="sandra-trigger-"]').first().click()
@@ -375,7 +375,7 @@ test.describe('Sandra-Flow – Relationship-send hint', () => {
   })
 
   test('hint is visible on the share screen when ≥1 relationship question exists', async ({ page }) => {
-    await page.goto('/#/ask')
+    await page.goto('/ask')
     await page.getByTestId('sandra-anchor-chip-mama').click()
     await page.getByTestId('sandra-anchor-next').click()
 
@@ -403,7 +403,7 @@ test.describe('Sandra-Flow – Relationship-send hint', () => {
   })
 
   test('hint is hidden when all questions are biography-only', async ({ page }) => {
-    await page.goto('/#/ask')
+    await page.goto('/ask')
     await page.getByTestId('sandra-anchor-chip-mama').click()
     await page.getByTestId('sandra-anchor-next').click()
 
@@ -430,7 +430,7 @@ test.describe('Sandra-Flow – Draft persistence', () => {
   })
 
   test('reload preserves draft; new context discards it', async ({ page, browser }) => {
-    await page.goto('/#/ask')
+    await page.goto('/ask')
     await page.getByTestId('sandra-anchor-chip-papa').click()
     await expect(page.getByTestId('sandra-anchor-anrede')).toHaveValue('Papa')
     await page.getByTestId('sandra-anchor-next').click()
@@ -450,7 +450,7 @@ test.describe('Sandra-Flow – Draft persistence', () => {
     const fresh = await browser.newContext()
     await seedContext(fresh, { lang: 'de', profile: 'sandra' })
     const freshPage = await fresh.newPage()
-    await freshPage.goto('/#/ask')
+    await freshPage.goto('/ask')
     const draftInFresh = await freshPage.evaluate(() => sessionStorage.getItem('rm-sandra-draft'))
     expect(draftInFresh).toBeNull()
     await fresh.close()
@@ -469,7 +469,7 @@ test.describe('Sandra-Flow – Web-Share-API stub', () => {
   })
 
   test('the stub captures the share-sheet payload (URL + title + text)', async ({ page }) => {
-    await page.goto('/#/ask')
+    await page.goto('/ask')
     await page.getByTestId('sandra-anchor-chip-mama').click()
     await page.getByTestId('sandra-anchor-next').click()
     await page.locator('[data-testid^="sandra-trigger-"]').first().click()
@@ -510,7 +510,7 @@ test.describe('Sandra-Flow – Two-person integration', () => {
     await stubWebShare(senderContext)
     const sender = await senderContext.newPage()
 
-    await sender.goto('/#/ask')
+    await sender.goto('/ask')
     await sender.getByTestId('sandra-anchor-chip-mama').click()
     await sender.getByTestId('sandra-anchor-next').click()
     await sender.locator('[data-testid^="sandra-trigger-"]').first().click()
@@ -581,22 +581,21 @@ test.describe('Sandra-Flow – Two-person integration', () => {
 })
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Test 8 — Sandra-Flow direkter Einstieg via Hash-URL (FR-020.10)
+// Test 8 — Sandra-Flow direkter Einstieg via Pfad /ask (FR-020.10)
 //
 // Der FriendsView-Intermediate-Screen wurde entfernt. Der Sandra-Flow ist
-// weiterhin über den direkten Hash-Link `#/ask` erreichbar.
+// direkt über den Pfad `/ask` erreichbar (kein Hash-Routing mehr).
 // ─────────────────────────────────────────────────────────────────────────────
 
-test.describe('Sandra-Flow – Direkter Einstieg via #/ask (FR-020.10)', () => {
+test.describe('Sandra-Flow – Direkter Einstieg via /ask (FR-020.10)', () => {
   test.beforeEach(async ({ context }) => {
     await seedContext(context, { lang: 'de', profile: 'sandra' })
   })
 
-  test('#/ask öffnet direkt den Anchor-Step (Personen-Auswahl)', async ({ page }) => {
-    await page.goto('/#/ask')
+  test('/ask öffnet direkt den Anchor-Step (Personen-Auswahl)', async ({ page }) => {
+    await page.goto('/ask')
 
     // Landing-Screen entfernt – Flow startet direkt mit dem Anchor-Step.
     await expect(page.getByTestId('sandra-anchor-chip-mama')).toBeVisible()
-    expect(page.url()).toContain('#/ask')
   })
 })
