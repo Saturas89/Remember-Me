@@ -253,7 +253,9 @@ export const UI_DE = {
     attachmentsHeading: 'Erinnerungen mit Anhängen empfangen',
     attachmentsHint: 'Hat ein Freund Fotos, Aufnahmen oder Videos mitgeschickt? Öffne die Datei hier und sie landen in deinem Archiv.',
     openGift: '🎁 Erinnerungen öffnen',
-    /** FriendCard relatives Datum (#167). */
+    friendAnsweredCount: '{answered} von {total} Fragen beantwortet',
+    friendNoAnswers: 'Noch keine Antworten',
+    friendRemoveTitle: 'Entfernen',
     lastActiveToday: 'heute aktiv',
     lastActiveYesterday: 'gestern aktiv',
     lastActiveDays: 'zuletzt aktiv vor {n} Tagen',

@@ -54,8 +54,10 @@ export function FriendCard({ friend, answers, onRemove }: Props) {
         <span className="friend-card__name">{friend.name}</span>
         <span className="friend-card__status">
           {answered > 0
-            ? `${answered} von ${FRIEND_QUESTIONS.length} Fragen beantwortet`
-            : 'Noch keine Antworten'}
+            ? t.friends.friendAnsweredCount
+                .replace('{answered}', String(answered))
+                .replace('{total}', String(FRIEND_QUESTIONS.length))
+            : t.friends.friendNoAnswers}
         </span>
         <span className="friend-card__last-active">{lastActiveLabel}</span>
         {answered > 0 && (
@@ -65,7 +67,7 @@ export function FriendCard({ friend, answers, onRemove }: Props) {
         )}
       </div>
       <div className="friend-card__actions">
-        <button className="btn btn--ghost btn--sm" onClick={onRemove} title="Entfernen">
+        <button className="btn btn--ghost btn--sm" onClick={onRemove} title={t.friends.friendRemoveTitle}>
           ✕
         </button>
       </div>

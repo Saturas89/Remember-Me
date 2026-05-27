@@ -266,6 +266,10 @@ export interface Translations {
     attachmentsHeading: string
     attachmentsHint: string
     openGift: string
+    /** FriendCard answer count + status labels. */
+    friendAnsweredCount: string
+    friendNoAnswers: string
+    friendRemoveTitle: string
     lastActiveToday: string
     lastActiveYesterday: string
     lastActiveDays: string

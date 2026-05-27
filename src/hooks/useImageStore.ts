@@ -1,43 +1,11 @@
 import { useState, useCallback, useRef } from 'react'
+import { openIdb, makeIdbSingleton, idbGet, idbPut, idbDelete } from '../utils/idb'
 
 const DB_NAME = 'rm-images'
 const STORE = 'images'
 
-function openDB(): Promise<IDBDatabase> {
-  return new Promise((resolve, reject) => {
-    const req = indexedDB.open(DB_NAME, 1)
-    req.onupgradeneeded = () => req.result.createObjectStore(STORE)
-    req.onsuccess = () => resolve(req.result)
-    req.onerror = () => reject(req.error)
-  })
-}
-
-function idbGet(db: IDBDatabase, id: string): Promise<string | undefined> {
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE, 'readonly')
-    const req = tx.objectStore(STORE).get(id)
-    req.onsuccess = () => resolve(req.result as string | undefined)
-    req.onerror = () => reject(req.error)
-  })
-}
-
-function idbPut(db: IDBDatabase, id: string, value: string): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE, 'readwrite')
-    const req = tx.objectStore(STORE).put(value, id)
-    req.onsuccess = () => resolve()
-    req.onerror = () => reject(req.error)
-  })
-}
-
-function idbDelete(db: IDBDatabase, id: string): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE, 'readwrite')
-    const req = tx.objectStore(STORE).delete(id)
-    req.onsuccess = () => resolve()
-    req.onerror = () => reject(req.error)
-  })
-}
+// Module-level singleton for archive export / import (runs outside React lifecycle)
+const { getDB: getExportDB } = makeIdbSingleton(DB_NAME, STORE)
 
 function compressImage(file: File, maxDim = 1200, quality = 0.82): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -68,7 +36,7 @@ export function useImageStore() {
   const pendingRef = useRef(new Set<string>())
 
   async function getDB() {
-    if (!dbRef.current) dbRef.current = await openDB()
+    if (!dbRef.current) dbRef.current = await openIdb(DB_NAME, STORE)
     return dbRef.current
   }
 
@@ -86,7 +54,7 @@ export function useImageStore() {
       const results: Record<string, string> = {}
       await Promise.all(
         toLoad.map(async id => {
-          const val = await idbGet(db, id)
+          const val = await idbGet<string>(db, STORE, id)
           if (val) results[id] = val
         }),
       )
@@ -100,14 +68,14 @@ export function useImageStore() {
     const dataUrl = await compressImage(file)
     const id = `img-${Date.now()}-${crypto.randomUUID()}`
     const db = await getDB()
-    await idbPut(db, id, dataUrl)
+    await idbPut(db, STORE, dataUrl, id)
     pushToCache({ [id]: dataUrl })
     return id
   }, [])
 
   const removeImage = useCallback(async (id: string) => {
     const db = await getDB()
-    await idbDelete(db, id)
+    await idbDelete(db, STORE, id)
     delete cacheRef.current[id]
     setCache({ ...cacheRef.current })
   }, [])
@@ -115,21 +83,15 @@ export function useImageStore() {
   return { cache, loadImages, addImage, removeImage }
 }
 
-// ── Module-level accessor for archive export (outside React) ──
-let _exportDb: IDBDatabase | null = null
-async function getExportDB(): Promise<IDBDatabase> {
-  if (_exportDb) return _exportDb
-  _exportDb = await openDB()
-  return _exportDb
-}
+// ── Module-level accessors for archive export / import (outside React) ─────
 
 export async function getImageDataUrl(id: string): Promise<string | undefined> {
   const db = await getExportDB()
-  return idbGet(db, id)
+  return idbGet<string>(db, STORE, id)
 }
 
 /** Restore an image with its original ID (used during archive import). */
 export async function putImageById(id: string, dataUrl: string): Promise<void> {
   const db = await getExportDB()
-  await idbPut(db, id, dataUrl)
+  await idbPut(db, STORE, dataUrl, id)
 }
