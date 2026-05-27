@@ -54,6 +54,7 @@ export function pathToView(pathname: string): View {
     case 'sync':    return { name: 'sync' }
     case 'debug':   return { name: 'debug' }
     case 'landing': return { name: 'landing' }
+    case 'ask':     return { name: 'sandra-flow' }
     case 'join':    return { name: 'home' }
     default:        return { name: 'home' }
   }
