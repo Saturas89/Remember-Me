@@ -1,15 +1,12 @@
-import { CATEGORIES } from '../data/categories'
 import { getCategoriesForLocale } from '../data/categories'
 import { useTranslation } from '../locales'
 import { useAppMode } from '../hooks/useAppMode'
 import { CategoryCard } from '../components/CategoryCard'
 import { HeroLogo } from '../components/Logo'
-import type { Friend, FriendAnswer, CustomQuestion } from '../types'
+import type { CustomQuestion } from '../types'
 
 interface Props {
   profileName: string
-  friends: Friend[]
-  friendAnswers: FriendAnswer[]
   customQuestions: CustomQuestion[]
   getCategoryProgress: (categoryId: string, total: number) => number
   onSelectCategory: (categoryId: string) => void
@@ -18,8 +15,6 @@ interface Props {
 
 export function HomeView({
   profileName,
-  friends,
-  friendAnswers,
   customQuestions,
   getCategoryProgress,
   onSelectCategory,
@@ -28,7 +23,6 @@ export function HomeView({
   const { t, locale } = useTranslation()
   const { isSimple } = useAppMode()
   const categories = getCategoriesForLocale(locale)
-  void CATEGORIES
   const totalQuestions = categories.reduce((s, c) => s + c.questions.length, 0)
   const totalAnswered = categories.reduce(
     (s, c) =>
@@ -36,9 +30,6 @@ export function HomeView({
     0,
   )
   const overallProgress = Math.round((totalAnswered / totalQuestions) * 100)
-
-  void friends
-  void friendAnswers
 
   return (
     <div className="home-view">

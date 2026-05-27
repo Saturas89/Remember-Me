@@ -110,6 +110,17 @@ const HIDDEN_IN_SIMPLE: ReadonlySet<View['name']> = new Set([
   'friends', 'sync', 'online-intro', 'online-hub', 'custom-questions', 'sandra-flow',
 ])
 
+/** Returns true when an answer has any meaningful content (text, media, or transcript). */
+function hasContent(a: { value: string; imageIds?: string[]; videoIds?: string[]; audioId?: string | null; audioTranscript?: string | null }): boolean {
+  return (
+    a.value.trim() !== '' ||
+    (a.imageIds?.length ?? 0) > 0 ||
+    (a.videoIds?.length ?? 0) > 0 ||
+    !!a.audioId ||
+    !!a.audioTranscript
+  )
+}
+
 export default function App() {
   // State for async URL parsing (#mi/ secure invite, #ma/ answer import, #ms/ memory share, ?qp/ question pack)
   const [asyncInvite, setAsyncInvite] = useState<InviteData | null>(null)
@@ -357,13 +368,7 @@ export default function App() {
   // Only show the install/add-to-homescreen banner after the user has answered
   // at least 3 questions – at that point they've experienced real value and are
   // more likely to actually install the app.
-  const answeredCount = Object.values(answers).filter(a =>
-    a.value.trim() !== '' ||
-    (a.imageIds?.length ?? 0) > 0 ||
-    (a.videoIds?.length ?? 0) > 0 ||
-    !!a.audioId ||
-    !!a.audioTranscript,
-  ).length
+  const answeredCount = Object.values(answers).filter(hasContent).length
 
   const { streak, recordAnswer, checkStreakReset } = useStreak({
     isLoaded,
@@ -760,13 +765,7 @@ export default function App() {
           ? <PrivateSyncHubView
               syncState={privateSyncState}
               sync={privateSync}
-              memoriesCount={Object.values(answers).filter(a =>
-                a.value.trim() !== '' ||
-                (a.imageIds?.length ?? 0) > 0 ||
-                (a.videoIds?.length ?? 0) > 0 ||
-                !!a.audioId ||
-                !!a.audioTranscript,
-              ).length}
+              memoriesCount={Object.values(answers).filter(hasContent).length}
               onDeactivated={() => savePrivateSync(undefined)}
             />
           : <PrivateSyncSetupView
@@ -817,8 +816,6 @@ export default function App() {
       {view.name === 'home' && (
         <HomeView
           profileName={profile?.name ?? ''}
-          friends={friends}
-          friendAnswers={friendAnswers}
           customQuestions={customQuestions}
           getCategoryProgress={getCategoryProgress}
           onSelectCategory={id => {
@@ -859,13 +856,7 @@ export default function App() {
       {showWelcomeBack && (
         <WelcomeBackBanner
           visible={showWelcomeBack}
-          memoriesCount={Object.values(answers).filter(a =>
-            a.value.trim() !== '' ||
-            (a.imageIds?.length ?? 0) > 0 ||
-            (a.videoIds?.length ?? 0) > 0 ||
-            !!a.audioId ||
-            !!a.audioTranscript,
-          ).length}
+          memoriesCount={Object.values(answers).filter(hasContent).length}
           onContinue={handleWelcomeBackContinue}
           onDismiss={() => setShowWelcomeBack(false)}
         />
