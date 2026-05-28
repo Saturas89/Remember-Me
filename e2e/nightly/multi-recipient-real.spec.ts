@@ -19,7 +19,7 @@ import {
   reopenFamilyHub,
   seedAnswer,
 } from '../helpers/family-mode-helpers'
-import { cleanupUsers, readDeviceId, spawnRealDevice, supabaseAdmin, waitForRealShares } from './helpers'
+import { cleanupUsers, readDeviceId, spawnRealDevice, supabaseAdmin, waitForRealShares, waitForHubReady } from './helpers'
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -118,12 +118,12 @@ test.describe('Multi-Empfänger und Drei-Geräte (Real-DB)', () => {
     await reopenFamilyHub(alice.page)
     await waitForRealShares(admin, alice.id.deviceId, 1, 30_000)
 
-    await bob.page.reload()
-    await openFamilyHub(bob.page)
+    await reopenFamilyHub(bob.page)
     await expect(bob.page.getByTestId('feed-item').first()).toBeVisible({ timeout: 30_000 })
 
-    await dave.reload()
-    await openFamilyHub(dave)
+    // Dave is contactless: skip reload+evaluate to avoid iOS double-navigation race
+    await dave.goto('/friends')
+    await waitForHubReady(dave)
     await dave.waitForTimeout(4_000)
     expect(await dave.getByTestId('feed-item').count()).toBe(0)
 
