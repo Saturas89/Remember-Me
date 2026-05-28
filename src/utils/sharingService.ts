@@ -387,7 +387,7 @@ export async function fetchIncomingShares(): Promise<{
         contentKeys.set(row.id as string, contentKey)
       } catch (err) {
         // Unreadable share → skip (wrong recipient, tampered, key mismatch, etc.)
-        console.warn('[sharingService] Could not decrypt share', row.id, err)
+        console.warn('[sharingService] Could not decrypt share', row.id)
       }
     }
   }
@@ -445,7 +445,7 @@ export async function fetchIncomingShares(): Promise<{
         })
       } catch (err) {
         // Unreadable annotation → skip (wrong recipient, tampered, key mismatch)
-        console.warn('[sharingService] Could not decrypt annotation', row.id, 'on share', row.share_id, err)
+        console.warn('[sharingService] Could not decrypt annotation', row.id)
       }
     }
   }

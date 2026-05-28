@@ -37,10 +37,16 @@ export function initPostHog(): void {
     // long-running nightly tests; smoke tests use waitForLoadState('networkidle')
     // which waits for the outgoing batch request before the context closes.
   })
-  const githubRunId = localStorage.getItem('github_run_id') ?? undefined
-  const testRunId = localStorage.getItem('test_run_id') ?? undefined
-  const browserProfile = localStorage.getItem('browser_profile') ?? undefined
-  const deviceProfile = localStorage.getItem('device_profile') ?? undefined
+  let githubRunId: string | undefined
+  let testRunId: string | undefined
+  let browserProfile: string | undefined
+  let deviceProfile: string | undefined
+  try {
+    githubRunId = localStorage.getItem('github_run_id') ?? undefined
+    testRunId = localStorage.getItem('test_run_id') ?? undefined
+    browserProfile = localStorage.getItem('browser_profile') ?? undefined
+    deviceProfile = localStorage.getItem('device_profile') ?? undefined
+  } catch { /* private browsing or storage quota */ }
 
   posthog.register({
     traffic_type: trafficType,

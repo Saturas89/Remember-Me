@@ -142,7 +142,9 @@ export async function loadStoredState(): Promise<AppState | null> {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (!raw) return null
     const json = await decryptStored(raw)
-    const state = JSON.parse(json) as AppState
+    const parsed: unknown = JSON.parse(json)
+    if (!parsed || typeof parsed !== 'object') return null
+    const state = parsed as AppState
     _currentState = state
     return state
   } catch {

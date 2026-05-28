@@ -52,7 +52,7 @@ async function triggerMilestoneNotification(count: number, locale: 'de' | 'en' =
       data: { url: '/archive' }
     })
   } catch (e) {
-    console.error('Error showing milestone notification:', e)
+    console.error('Error showing milestone notification')
   }
 }
 
