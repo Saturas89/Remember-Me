@@ -23,6 +23,7 @@
 import type { AppState } from '../types'
 import { encryptText, decryptText } from './recoveryCode'
 import { SyncError } from './privateSyncProvider'
+import { toB64u, fromB64u } from './base64url'
 
 // H7: schema v3 carries explicit PBKDF2 salt + iteration count so the recovery
 // key can be re-derived on a new device under the same params that were used
@@ -44,7 +45,7 @@ export interface EncryptedSyncEnvelope {
   appVersion: string
   /** AES-256-GCM ciphertext of JSON.stringify({ state, mediaManifest }) */
   ciphertext: string
-  /** AES-GCM IV, base64 */
+  /** AES-GCM IV, base64url */
   iv: string
   /** H7: base64url 16-byte random salt. Present iff schemaVersion === 3. */
   kdfSalt?: string
@@ -134,7 +135,7 @@ export async function encryptMediaBlob(
   )
   return {
     ciphertext: new Blob([ct], { type: 'application/octet-stream' }),
-    iv: btoa(String.fromCharCode(...ivBytes)),
+    iv: toB64u(ivBytes),
     mimeType: blob.type || 'application/octet-stream',
   }
 }
@@ -150,7 +151,7 @@ export async function decryptMediaBlob(
   vaultKey: CryptoKey,
 ): Promise<Blob> {
   try {
-    const ivBytes = Uint8Array.from(atob(iv), c => c.charCodeAt(0))
+    const ivBytes = fromB64u(iv)
     const ctBytes = await ciphertext.arrayBuffer()
     const plain = await crypto.subtle.decrypt(
       { name: 'AES-GCM', iv: ivBytes },

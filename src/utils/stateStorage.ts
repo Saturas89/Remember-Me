@@ -23,6 +23,11 @@ let _key: CryptoKey | null = null
 let _keyUnavailable = false
 let _pendingWrite: Promise<void> = Promise.resolve()
 let _currentState: AppState | null = null
+// Monotonic write counter. Each saveState() bumps it; a queued encryption only
+// writes its ciphertext if it is still the latest write, so an older encrypted
+// payload can never overwrite a newer one's plaintext (which would briefly
+// expose stale state to an immediate reload).
+let _writeSeq = 0
 
 function hasCryptoSupport(): boolean {
   if (import.meta.env.VITE_E2E === 'true') return false
@@ -163,6 +168,7 @@ export async function loadStoredState(): Promise<AppState | null> {
 export function saveState(state: AppState): void {
   _currentState = state
   const json = JSON.stringify(state)
+  const seq = ++_writeSeq
   try {
     localStorage.setItem(STORAGE_KEY, json)
   } catch (err) {
@@ -172,8 +178,13 @@ export function saveState(state: AppState): void {
   if (_key) {
     const key = _key
     _pendingWrite = _pendingWrite.then(async () => {
+      // Superseded by a newer save before we even started? Its plaintext is
+      // already current and its own encryption is queued — skip ours.
+      if (seq !== _writeSeq) return
       try {
         const encrypted = await encryptJson(json, key)
+        // Re-check: a newer save may have landed while we were encrypting.
+        if (seq !== _writeSeq) return
         localStorage.setItem(STORAGE_KEY, encrypted)
       } catch {
         // Plaintext fallback is already in localStorage; not fatal.
@@ -193,6 +204,7 @@ export function _resetForTests(): void {
   _keyUnavailable = false
   _pendingWrite = Promise.resolve()
   _currentState = null
+  _writeSeq = 0
 }
 
 // ── E2E / debug bridge ────────────────────────────────────────────────────────
@@ -201,12 +213,16 @@ export function _resetForTests(): void {
 // helpers can introspect and inject state without having to parse the
 // (possibly encrypted) localStorage key directly.
 //
-// This is intentionally available in all builds: the bridge only returns
-// what any XSS could already read from the React in-memory state, so it
-// adds no meaningful attack surface.
+// `get` is intentionally available in all builds: it only returns what any XSS
+// could already read from the React in-memory state, so it adds no meaningful
+// attack surface. `save`, however, lets a caller inject arbitrary state, so it
+// is exposed only under the E2E build flag where the Playwright helpers need it.
 if (typeof window !== 'undefined') {
-  ;(window as Window & { __rmState?: { get: () => AppState | null; save: (s: AppState) => void } }).__rmState = {
+  const bridge: { get: () => AppState | null; save?: (s: AppState) => void } = {
     get: () => _currentState,
-    save: saveState,
   }
+  if (import.meta.env.VITE_E2E === 'true') {
+    bridge.save = saveState
+  }
+  ;(window as Window & { __rmState?: typeof bridge }).__rmState = bridge
 }

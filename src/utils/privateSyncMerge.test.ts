@@ -1,11 +1,12 @@
 // @vitest-environment node
 //
 // Unit tests for REQ-017 Private Sync LWW merge.
-// Test IDs M-01 .. M-10 from Master-Spec §12.1.
+// Test IDs M-01 .. M-11 from Master-Spec §12.1; M-12 .. M-14 cover the
+// union-merge of content collections (friends / customQuestions / friendAnswers).
 
 import { describe, it, expect } from 'vitest'
 import { mergeStates } from './privateSyncMerge'
-import type { AppState, Answer, Profile } from '../types'
+import type { AppState, Answer, Profile, Friend, CustomQuestion, FriendAnswer } from '../types'
 
 function makeAnswer(id: string, value: string, updatedAt: string): Answer {
   return {
@@ -185,5 +186,53 @@ describe('mergeStates – LWW per answer', () => {
     expect(Object.keys(merged.answers).sort()).toEqual(['A', 'B'])
     expect(merged.answers.A.value).toBe('a')
     expect(merged.answers.B.value).toBe('b')
+  })
+})
+
+describe('mergeStates – Union-Merge der Content-Collections', () => {
+  const friend = (id: string, name: string): Friend => ({
+    id, name, addedAt: '2024-01-01T00:00:00.000Z',
+  })
+  const customQuestion = (id: string, text: string): CustomQuestion => ({
+    id, text, type: 'text', createdAt: '2024-01-01T00:00:00.000Z',
+  })
+  const friendAnswer = (id: string, value: string): FriendAnswer => ({
+    id, friendId: 'f1', friendName: 'F', questionId: 'q1', value,
+    createdAt: '2024-01-01T00:00:00.000Z',
+  })
+
+  it('M-12: Neues Gerät (leer lokal) erhält Remote friends/customQuestions/friendAnswers', () => {
+    const local = makeState()
+    const remote = makeState({
+      friends: [friend('f1', 'Anna')],
+      customQuestions: [customQuestion('c1', 'Lieblingsort?')],
+      friendAnswers: [friendAnswer('fa1', 'hallo')],
+    })
+    const merged = mergeStates(local, remote)
+    expect(merged.friends.map(f => f.id)).toEqual(['f1'])
+    expect(merged.customQuestions.map(q => q.id)).toEqual(['c1'])
+    expect(merged.friendAnswers.map(a => a.id)).toEqual(['fa1'])
+  })
+
+  it('M-13: Disjunkte IDs → Union (lokal zuerst, dann remote-only)', () => {
+    const local = makeState({
+      friends: [friend('f1', 'Anna')],
+      customQuestions: [customQuestion('c1', 'A?')],
+    })
+    const remote = makeState({
+      friends: [friend('f2', 'Ben')],
+      customQuestions: [customQuestion('c2', 'B?')],
+    })
+    const merged = mergeStates(local, remote)
+    expect(merged.friends.map(f => f.id)).toEqual(['f1', 'f2'])
+    expect(merged.customQuestions.map(q => q.id)).toEqual(['c1', 'c2'])
+  })
+
+  it('M-14: ID-Konflikt → lokaler Eintrag gewinnt', () => {
+    const local = makeState({ friends: [friend('f1', 'Anna-lokal')] })
+    const remote = makeState({ friends: [friend('f1', 'Anna-remote')] })
+    const merged = mergeStates(local, remote)
+    expect(merged.friends).toHaveLength(1)
+    expect(merged.friends[0].name).toBe('Anna-lokal')
   })
 })
