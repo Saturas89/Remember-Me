@@ -1,4 +1,5 @@
 import { SyncError } from './privateSyncProvider'
+import { toB64u, fromB64u } from './base64url'
 
 const BASE62 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
 const CODE_LENGTH = 24
@@ -100,8 +101,8 @@ export async function encryptText(
     enc.encode(plaintext),
   )
   return {
-    ct: btoa(String.fromCharCode(...new Uint8Array(ciphertext))),
-    iv: btoa(String.fromCharCode(...ivBytes)),
+    ct: toB64u(new Uint8Array(ciphertext)),
+    iv: toB64u(ivBytes),
   }
 }
 
@@ -111,8 +112,8 @@ export async function decryptText(
   key: CryptoKey,
 ): Promise<string> {
   try {
-    const ctBytes = Uint8Array.from(atob(ct), c => c.charCodeAt(0))
-    const ivBytes = Uint8Array.from(atob(iv), c => c.charCodeAt(0))
+    const ctBytes = fromB64u(ct)
+    const ivBytes = fromB64u(iv)
     const plain = await crypto.subtle.decrypt(
       { name: 'AES-GCM', iv: ivBytes },
       key,
