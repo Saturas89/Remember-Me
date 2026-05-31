@@ -56,6 +56,7 @@ import { useServiceWorker } from './hooks/useServiceWorker'
 import { useReminder } from './hooks/useReminder'
 import { useStreak } from './hooks/useStreak'
 import { AppModeProvider } from './hooks/useAppMode'
+import { AppDataProvider, useAppData } from './hooks/useAppData'
 import { exportAsMarkdown, exportAsEnrichedJSON, downloadFile, toSafeFilename } from './utils/export'
 import { clearAllData } from './utils/clearAllData'
 import { answerHasContent } from './lib/answerContent'
@@ -63,6 +64,17 @@ import type { Category } from './types'
 import './App.css'
 
 export default function App() {
+  // Own the single useAnswers() instance and publish it so views can pull
+  // what they need from context instead of receiving drilled props.
+  const appData = useAnswers()
+  return (
+    <AppDataProvider value={appData}>
+      <AppShell />
+    </AppDataProvider>
+  )
+}
+
+function AppShell() {
   const {
     isLoaded,
     profile,
@@ -80,7 +92,6 @@ export default function App() {
     saveProfile,
     addFriend,
     removeFriend,
-    addCustomQuestion,
     removeCustomQuestion,
     importPersonalPackAnswers,
     deleteAnswer,
@@ -100,7 +111,7 @@ export default function App() {
     getAnswerVideoIds,
     getAnswerAudioId,
     getCategoryProgress,
-  } = useAnswers()
+  } = useAppData()
   const isSimple = appMode === 'simple'
 
   const privateSync = usePrivateSync(
@@ -507,18 +518,7 @@ export default function App() {
 
       {view.name === 'custom-questions' && (
         <CustomQuestionsView
-          customQuestions={customQuestions}
-          profileName={profile?.name ?? ''}
-          getAnswer={getAnswer}
-          getAnswerImageIds={getAnswerImageIds}
-          getAnswerVideoIds={getAnswerVideoIds}
-          getAnswerAudioId={getAnswerAudioId}
           onSave={handleSaveAnswer}
-          onSetImages={setAnswerImages}
-          onSetVideos={setAnswerVideos}
-          onSetAudio={setAnswerAudio}
-          onAdd={addCustomQuestion}
-          onRemove={removeCustomQuestion}
           onBack={() => goTo({ name: 'home' })}
         />
       )}

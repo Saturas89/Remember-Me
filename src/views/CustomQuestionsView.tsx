@@ -3,44 +3,30 @@ import { useImageStore } from '../hooks/useImageStore'
 import { addAudio, removeAudio } from '../hooks/useAudioStore'
 import { addVideo, removeVideo } from '../hooks/useVideoStore'
 import { MediaCapture } from '../components/MediaCapture'
+import { useAppData } from '../hooks/useAppData'
 import { useTranslation } from '../locales'
 import type { CustomQuestion } from '../types'
 
 interface Props {
-  customQuestions: CustomQuestion[]
-  profileName: string
-  getAnswer: (questionId: string) => string
-  getAnswerImageIds: (questionId: string) => string[]
-  getAnswerVideoIds: (questionId: string) => string[]
-  getAnswerAudioId: (questionId: string) => string | undefined
+  /** Wraps saveAnswer with streak + reminder side-effects, so it stays an
+   *  App-composed prop rather than the raw context action. */
   onSave: (questionId: string, categoryId: string, value: string) => void
-  onSetImages: (questionId: string, categoryId: string, imageIds: string[]) => void
-  onSetVideos: (questionId: string, categoryId: string, videoIds: string[]) => void
-  onSetAudio: (questionId: string, categoryId: string, audioId: string | undefined, audioTranscribedAt: string | undefined, audioTranscript?: string) => void
-  onAdd: (
-    text: string,
-    type: CustomQuestion['type'],
-    helpText?: string,
-    options?: string[],
-  ) => CustomQuestion
-  onRemove: (id: string) => void
   onBack: () => void
 }
 
-export function CustomQuestionsView({
-  customQuestions,
-  getAnswer,
-  getAnswerImageIds,
-  getAnswerVideoIds,
-  getAnswerAudioId,
-  onSave,
-  onSetImages,
-  onSetVideos,
-  onSetAudio,
-  onAdd,
-  onRemove,
-  onBack,
-}: Props) {
+export function CustomQuestionsView({ onSave, onBack }: Props) {
+  const {
+    customQuestions,
+    getAnswer,
+    getAnswerImageIds,
+    getAnswerVideoIds,
+    getAnswerAudioId,
+    setAnswerImages: onSetImages,
+    setAnswerVideos: onSetVideos,
+    setAnswerAudio: onSetAudio,
+    addCustomQuestion: onAdd,
+    removeCustomQuestion: onRemove,
+  } = useAppData()
   const { t } = useTranslation()
   const { cache, loadImages, addImage, removeImage } = useImageStore()
   const [newText, setNewText] = useState('')
