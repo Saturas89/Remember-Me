@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useMemo } from 'react'
+import { useEffect, useCallback, useMemo, lazy, Suspense } from 'react'
 import { useAnswers } from './hooks/useAnswers'
 import { useInstallPrompt } from './hooks/useInstallPrompt'
 import { CATEGORIES } from './data/categories'
@@ -9,23 +9,28 @@ import { useUrlParsing } from './hooks/useUrlParsing'
 import { useBanners } from './hooks/useBanners'
 import { useNavigation } from './hooks/useNavigation'
 import type { View } from './hooks/useNavigation'
+// Eager: first-paint and full-screen flow views (home, quiz, onboarding,
+// landing) plus the two deep-link early-return views.
 import { HomeView } from './views/HomeView'
 import { QuizView } from './views/QuizView'
-import { ArchiveView } from './views/ArchiveView'
-import { ProfileView } from './views/ProfileView'
-import { CustomQuestionsView } from './views/CustomQuestionsView'
-import { FaqView } from './views/FaqView'
-import { ImpressumView } from './views/ImpressumView'
 import { OnboardingView } from './views/OnboardingView'
-import { PrivateSyncSetupView } from './views/PrivateSyncSetupView'
-import { PrivateSyncHubView } from './views/PrivateSyncHubView'
-import { OnlineSharingIntroView } from './views/OnlineSharingIntroView'
-import { OnlineSharingHubView } from './views/OnlineSharingHubView'
 import { ContactHandshakeView } from './views/ContactHandshakeView'
-import { SandraFlowView } from './views/SandraFlowView'
 import { LandingView } from './views/LandingView'
 import { PersonalPackReceiveView } from './views/PersonalPackReceiveView'
-import { DebugPostHogView } from './views/DebugPostHogView'
+
+// Lazy: secondary tab/route views split out of the main bundle. Named exports
+// are mapped to a default for React.lazy. Rendered inside a <Suspense>.
+const ArchiveView = lazy(() => import('./views/ArchiveView').then(m => ({ default: m.ArchiveView })))
+const ProfileView = lazy(() => import('./views/ProfileView').then(m => ({ default: m.ProfileView })))
+const CustomQuestionsView = lazy(() => import('./views/CustomQuestionsView').then(m => ({ default: m.CustomQuestionsView })))
+const FaqView = lazy(() => import('./views/FaqView').then(m => ({ default: m.FaqView })))
+const ImpressumView = lazy(() => import('./views/ImpressumView').then(m => ({ default: m.ImpressumView })))
+const PrivateSyncSetupView = lazy(() => import('./views/PrivateSyncSetupView').then(m => ({ default: m.PrivateSyncSetupView })))
+const PrivateSyncHubView = lazy(() => import('./views/PrivateSyncHubView').then(m => ({ default: m.PrivateSyncHubView })))
+const OnlineSharingIntroView = lazy(() => import('./views/OnlineSharingIntroView').then(m => ({ default: m.OnlineSharingIntroView })))
+const OnlineSharingHubView = lazy(() => import('./views/OnlineSharingHubView').then(m => ({ default: m.OnlineSharingHubView })))
+const SandraFlowView = lazy(() => import('./views/SandraFlowView').then(m => ({ default: m.SandraFlowView })))
+const DebugPostHogView = lazy(() => import('./views/DebugPostHogView').then(m => ({ default: m.DebugPostHogView })))
 import { useOnlineSync } from './hooks/useOnlineSync'
 import { useAutoShare } from './hooks/useAutoShare'
 import { usePrivateSync } from './hooks/usePrivateSync'
@@ -273,7 +278,11 @@ export default function App() {
   }
 
   if (view.name === 'debug') {
-    return <DebugPostHogView />
+    return (
+      <Suspense fallback={null}>
+        <DebugPostHogView />
+      </Suspense>
+    )
   }
 
   if (incomingPack && isPersonalQuestionPack(incomingPack)) {
@@ -417,6 +426,7 @@ export default function App() {
     <AppModeProvider appMode={appMode} setAppMode={saveAppMode}>
       <SEOHead viewName={view.name} />
 
+      <Suspense fallback={null}>
       {view.name === 'archive' && (
         <ArchiveView
           answers={answers}
@@ -574,6 +584,7 @@ export default function App() {
           onOpenFaq={() => { window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior }); setView({ name: 'faq', from: 'home' }) }}
         />
       )}
+      </Suspense>
 
       {showNav && (
         <BottomNav
