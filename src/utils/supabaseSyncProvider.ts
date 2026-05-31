@@ -8,6 +8,13 @@ import {
   cacheVaultKey,
   loadCachedVaultKey,
   clearCachedVaultKey,
+  loadKdfParams,
+  loadLastSeenVersion,
+  saveLastSeenVersion,
+  deriveVaultKey,
+  freshKdfParams,
+  legacyKdfParams,
+  cacheKdfParams,
 } from './recoveryCode'
 import { getSyncSupabaseClient, resetSyncSupabaseClient } from './privateSyncClient'
 
@@ -52,8 +59,6 @@ export class SupabaseSyncProvider implements SyncProvider {
     // to bypass the replay guard. The bigint `version` column is kept
     // for back-compat and as an optimistic-concurrency aid, but the
     // authoritative counter is the encrypted one.
-    const { loadKdfParams, loadLastSeenVersion, saveLastSeenVersion } =
-      await import('./recoveryCode')
     const nextVersion = (await loadLastSeenVersion(userId)) + 1
     const json = JSON.stringify({ state, envelopeVersion: nextVersion })
     const { ct, iv } = await encryptText(json, key)
@@ -121,7 +126,6 @@ export class SupabaseSyncProvider implements SyncProvider {
       remote = parsed as AppState
     }
 
-    const { loadLastSeenVersion, saveLastSeenVersion } = await import('./recoveryCode')
     const lastSeen = await loadLastSeenVersion(userId)
     if (remoteVersion < lastSeen) {
       throw new SyncError(
@@ -151,9 +155,6 @@ export class SupabaseSyncProvider implements SyncProvider {
   }
 
   async setupVaultKey(recoveryCode: string, userId: string): Promise<void> {
-    const { deriveVaultKey, freshKdfParams, legacyKdfParams, cacheKdfParams } =
-      await import('./recoveryCode')
-
     // H7: try to read an existing row's salt first — covers the "returning
     // user on a new device" case where we must use the same params the
     // first device generated. If the row is absent (first-ever setup) we

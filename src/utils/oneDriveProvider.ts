@@ -2,7 +2,13 @@ import type { AppState, SyncProviderType } from '../types'
 import type { SyncProvider, MediaStoreAccessor, PullResult } from './privateSyncProvider'
 import { SyncError } from './privateSyncProvider'
 import { mergeStates } from './privateSyncMerge'
-import { loadCachedVaultKey } from './recoveryCode'
+import {
+  loadCachedVaultKey,
+  loadKdfParams,
+  loadLastSeenVersion,
+  saveLastSeenVersion,
+  clearCachedVaultKey,
+} from './recoveryCode'
 import { openIdb, idbGet, idbPut, idbDelete } from './idb'
 import {
   encryptSyncEnvelope,
@@ -218,8 +224,6 @@ export class OneDriveProvider implements SyncProvider {
 
     // H7: same as Drive — forward locally cached PBKDF2 params so a new
     // device can re-derive the vault key from the recovery code.
-    const { loadKdfParams, loadLastSeenVersion, saveLastSeenVersion } =
-      await import('./recoveryCode')
     const cachedKdf = await loadKdfParams(syncId)
     const kdfMeta = cachedKdf
       ? { salt: btoa(String.fromCharCode(...cachedKdf.salt)), iterations: cachedKdf.iterations }
@@ -252,7 +256,6 @@ export class OneDriveProvider implements SyncProvider {
     const manifest = decrypted.mediaManifest ?? {}
 
     // H5: see GoogleDriveProvider.pull — same replay guard.
-    const { loadLastSeenVersion, saveLastSeenVersion } = await import('./recoveryCode')
     const remoteVersion = typeof decrypted.envelopeVersion === 'number' ? decrypted.envelopeVersion : 0
     const lastSeen = await loadLastSeenVersion(syncId)
     if (remoteVersion < lastSeen) {
@@ -290,7 +293,6 @@ export class OneDriveProvider implements SyncProvider {
 
   async deactivate(_deleteRemote: boolean): Promise<void> {
     if (this._syncId) {
-      const { clearCachedVaultKey } = await import('./recoveryCode')
       await clearCachedVaultKey(this._syncId).catch(() => {})
     }
     await clearToken()
