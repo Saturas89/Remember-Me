@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { answerHasContent } from '../lib/answerContent'
 import type { AppState, SyncProviderType, SyncStatus } from '../types'
 import type { SyncProvider, MediaStoreAccessor } from '../utils/privateSyncProvider'
 import { SyncError } from '../utils/privateSyncProvider'
@@ -136,13 +137,7 @@ export function usePrivateSync(
         let addedOwnAnswers = 0
         for (const [id, a] of Object.entries(result.merged.answers)) {
           if (beforeAnswers.has(id)) continue
-          if (
-            a.value.trim() !== '' ||
-            (a.imageIds?.length ?? 0) > 0 ||
-            (a.videoIds?.length ?? 0) > 0 ||
-            !!a.audioId ||
-            !!a.audioTranscript
-          ) addedOwnAnswers++
+          if (answerHasContent(a)) addedOwnAnswers++
         }
         const addedFriendAnswers = (result.merged.friendAnswers ?? [])
           .filter(a => !beforeFriendAnswers.has(a.id))

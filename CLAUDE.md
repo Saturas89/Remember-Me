@@ -60,27 +60,27 @@ Beim Backfill mehrerer Features: eine Sammelversion, kein Eintrag pro Commit.
 
 ---
 
-## Design-System: Friends-Tab als Referenz
+## Design-System: Family-Tab als Referenz
 
-Alle neuen Views, Modals und Komponenten müssen sich am Friends-Tab orientieren. Eigene Farben, Spacing-Werte oder Ad-hoc-Patterns sind verboten.
+Alle neuen Views, Modals und Komponenten müssen sich am Family-Tab orientieren. Eigene Farben, Spacing-Werte oder Ad-hoc-Patterns sind verboten.
 
 **Kanonische Referenz:**
-- `src/views/FriendsView.tsx`, `src/components/FriendCard.tsx`
-- `src/App.css` (Friends-Block), `src/index.css` (Theme-Variablen)
+- `src/views/OnlineSharingHubView.tsx` (der Family-Tab, Route `/friends`), `src/components/FamilyCard.tsx` (Karten-Referenz)
+- `src/App.css` (Family-/`.friends-section`-Block), `src/index.css` (Theme-Variablen)
 
 **Pflicht-Bausteine:**
 - **Farben:** ausschließlich CSS-Variablen aus `:root` (`--bg`, `--surface`, `--surface-raised`, `--text`, `--text-muted`, `--text-faint`, `--accent`, `--accent-tinted`, `--success`, `--warn`, `--border`, `--border-focus`). Keine Hex-/RGB-Literals. Alle vier Themes (sepia, nacht, hell, ozean) müssen funktionieren.
 - **Spacing:** `0.2 / 0.4 / 0.6 / 0.75 / 1 / 2 / 3 rem` – keine Zwischenwerte
 - **Border-Radius:** 8 px Inputs · 10 px Buttons · 12 px Cards/Sections · 999 px Pills
-- **Layout:** `.friends-section`, `.friends-section-title`, `.friends-list` (gap `0.75rem`), `.friend-card` (flex + gap `1rem` + surface-Background), `.friends-hint`, `.friends-hint--warn`
+- **Layout:** `.friends-section`, `.friends-section-title`, `.friends-list` (gap `0.75rem`), `.family-card` (flex + gap `1rem` + surface-Background; geteilte Basis-Klasse, auch von Sandra-Karten genutzt), `.friends-hint`, `.friends-hint--warn`
 - **Buttons:** sekundär `.btn.btn--ghost.btn--sm`, primäre CTA im Stil `.share-cta-btn` (Logo-Gradient + Shadow + Hover-Transform)
 - **Badges/Pills:** `.friends-tag`-Pattern (pill-shaped, `--surface-raised`)
-- **Progress:** `.friend-progress-bar` / `.friend-progress-fill` (4 px Höhe, `--success`)
+- **Progress:** `.family-progress-bar` / `.family-progress-fill` (4 px Höhe, `--success`)
 
 **Vorgehen bei neuen Features:**
-1. Vor dem Stylen `src/views/FriendsView.tsx` und `src/App.css` lesen und prüfen, welches existierende Pattern passt.
+1. Vor dem Stylen `src/views/OnlineSharingHubView.tsx`, `src/components/FamilyCard.tsx` und `src/App.css` lesen und prüfen, welches existierende Pattern passt.
 2. Bestehende Klassen/Tokens wiederverwenden. Nur wenn nichts passt, neue Klasse mit denselben Tokens ergänzen und im PR begründen.
-3. Beim Review explizit gegen Friends-Tab vergleichen (Spacing, Card-Look, Button-Hierarchie, Empty-/Hint-States).
+3. Beim Review explizit gegen Family-Tab vergleichen (Spacing, Card-Look, Button-Hierarchie, Empty-/Hint-States).
 
 Ausnahme: Nutzer fordert für eine konkrete View bewusst ein abweichendes Design.
 

@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from 'react'
 import { BACKUP_TYPE } from '../utils/export'
 import { initStorageKey, loadStoredState, saveState } from '../utils/stateStorage'
+import { answerHasContent } from '../lib/answerContent'
 import type { Profile, AppState, AppMode, Answer, Friend, FriendAnswer, AnswerExport, CustomQuestion, FriendAnswerZipPayload, OnlineSharingState, PrivateSyncState } from '../types'
 
 /** REQ-022 migration: old Friends stored without `online.shareAll` get
@@ -619,13 +620,7 @@ export function useAnswers() {
   const getCategoryProgress = useCallback(
     (categoryId: string, totalQuestions: number): number => {
       const answered = Object.values(state.answers).filter(
-        a =>
-          a.categoryId === categoryId &&
-          (a.value.trim() !== '' ||
-           (a.imageIds?.length ?? 0) > 0 ||
-           (a.videoIds?.length ?? 0) > 0 ||
-           !!a.audioId ||
-           !!a.audioTranscript),
+        a => a.categoryId === categoryId && answerHasContent(a),
       ).length
       return totalQuestions > 0 ? Math.round((answered / totalQuestions) * 100) : 0
     },

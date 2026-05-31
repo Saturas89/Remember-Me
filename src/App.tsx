@@ -53,19 +53,9 @@ import { useStreak } from './hooks/useStreak'
 import { AppModeProvider } from './hooks/useAppMode'
 import { exportAsMarkdown, exportAsEnrichedJSON, downloadFile, toSafeFilename } from './utils/export'
 import { clearAllData } from './utils/clearAllData'
+import { answerHasContent } from './lib/answerContent'
 import type { Category } from './types'
 import './App.css'
-
-/** Returns true when an answer has any meaningful content (text, media, or transcript). */
-function hasContent(a: { value: string; imageIds?: string[]; videoIds?: string[]; audioId?: string | null; audioTranscript?: string | null }): boolean {
-  return (
-    a.value.trim() !== '' ||
-    (a.imageIds?.length ?? 0) > 0 ||
-    (a.videoIds?.length ?? 0) > 0 ||
-    !!a.audioId ||
-    !!a.audioTranscript
-  )
-}
 
 export default function App() {
   const {
@@ -223,8 +213,8 @@ export default function App() {
 
   // ── Derived values ──────────────────────────────────────────────────────
 
-  const answeredCount = Object.values(answers).filter(hasContent).length
-  const friendsBadge = friendAnswers.filter(a => a.value.trim() || (a.imageIds?.length ?? 0) > 0 || (a.videoIds?.length ?? 0) > 0 || !!a.audioId).length
+  const answeredCount = Object.values(answers).filter(answerHasContent).length
+  const friendsBadge = friendAnswers.filter(answerHasContent).length
 
   const exportData = { profile, answers, friends, friendAnswers, customQuestions }
   const safeName = toSafeFilename(profile?.name ?? '')
@@ -528,7 +518,7 @@ export default function App() {
           ? <PrivateSyncHubView
               syncState={privateSyncState}
               sync={privateSync}
-              memoriesCount={Object.values(answers).filter(hasContent).length}
+              memoriesCount={Object.values(answers).filter(answerHasContent).length}
               onDeactivated={() => savePrivateSync(undefined)}
             />
           : <PrivateSyncSetupView
@@ -614,7 +604,7 @@ export default function App() {
       {showWelcomeBack && (
         <WelcomeBackBanner
           visible={showWelcomeBack}
-          memoriesCount={Object.values(answers).filter(hasContent).length}
+          memoriesCount={Object.values(answers).filter(answerHasContent).length}
           onContinue={handleWelcomeBackContinue}
           onDismiss={() => setShowWelcomeBack(false)}
         />

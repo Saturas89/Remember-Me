@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback } from 'react'
 import { getCategoriesForLocale } from '../data/categories'
+import { answerHasContent } from '../lib/answerContent'
 import { localeTag } from '../utils/localeDate'
 import { THEMES, useTheme } from '../hooks/useTheme'
 import { useAppMode } from '../hooks/useAppMode'
@@ -107,9 +108,7 @@ export function ProfileView({
 
   const categories = getCategoriesForLocale(locale)
   const totalQuestions = categories.reduce((s, c) => s + c.questions.length, 0)
-  const totalAnswered = Object.values(answers).filter(
-    a => a.value.trim() || (a.imageIds?.length ?? 0) > 0,
-  ).length
+  const totalAnswered = Object.values(answers).filter(answerHasContent).length
   const overallPct = totalQuestions > 0 ? Math.round((totalAnswered / totalQuestions) * 100) : 0
 
   const memberSince = profile?.createdAt

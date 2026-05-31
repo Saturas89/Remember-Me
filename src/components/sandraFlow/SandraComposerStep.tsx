@@ -168,7 +168,7 @@ export function SandraComposerStep({
                 return (
                   <div
                     key={template.id}
-                    className="friend-card sandra-suggestion"
+                    className="family-card sandra-suggestion"
                     data-testid={`sandra-suggestion-${template.id}`}
                   >
                     {isEditing ? (

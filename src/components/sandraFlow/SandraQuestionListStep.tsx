@@ -66,7 +66,7 @@ export function SandraQuestionListStep({
 
         <div className="friends-list">
           {questions.map((q, idx) => (
-            <div key={q.id} className="friend-card sandra-question-row">
+            <div key={q.id} className="family-card sandra-question-row">
               {editingId === q.id ? (
                 <div className="sandra-question-row__edit">
                   <textarea

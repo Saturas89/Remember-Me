@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef } from 'react'
+import { answerHasContent } from '../lib/answerContent'
 import type { Answer, AppState } from '../types'
 
 export interface StreakState {
@@ -80,13 +81,7 @@ export function useStreak(args: UseStreakArgs): UseStreakReturn {
   }
 
   const streak = storedStreak || defaultStreak
-  const totalAnswered = Object.values(answers).filter(
-    a => a.value.trim() !== '' ||
-         (a.imageIds?.length ?? 0) > 0 ||
-         (a.videoIds?.length ?? 0) > 0 ||
-         !!a.audioId ||
-         !!a.audioTranscript
-  ).length
+  const totalAnswered = Object.values(answers).filter(answerHasContent).length
 
   const recordAnswer = useCallback((answeredAt?: string, totalAnsweredCount?: number) => {
     if (!isLoaded) return
