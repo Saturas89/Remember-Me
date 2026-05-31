@@ -22,7 +22,10 @@ export default defineConfig({
   fullyParallel: false,
   workers: 1,
   forbidOnly: !!process.env.CI,
-  retries: 0,
+  // One retry absorbs the network / RLS-timing flakiness inherent to hitting
+  // the live production stack, so a single transient blip no longer reds the
+  // whole nightly run (the smoke + PR configs already retry once in CI).
+  retries: 1,
   timeout: 90_000,
   globalSetup: './e2e/global-setup.production.ts',
   reporter: process.env.CI
