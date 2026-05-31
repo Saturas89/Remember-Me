@@ -262,7 +262,7 @@ export function ArchiveView({
           onSaveAudio={(transcript, blob, replaceText) =>
             handleSaveAudio(questionId, categoryId, transcript, blob, replaceText)
           }
-          onRemoveAudio={() => handleDeleteAudio(questionId, categoryId, answer?.audioId!)}
+          onRemoveAudio={() => handleDeleteAudio(questionId, categoryId, answer?.audioId ?? '')}
         />
         <div className="archive-entry__edit-actions">
           <button

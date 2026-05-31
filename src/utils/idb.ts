@@ -24,9 +24,8 @@ export function makeIdbSingleton(
         dbPromise = new Promise((resolve, reject) => {
           const req = indexedDB.open(dbName, 1)
           req.onupgradeneeded = () => {
-            keyPath
-              ? req.result.createObjectStore(storeName, { keyPath })
-              : req.result.createObjectStore(storeName)
+            if (keyPath) req.result.createObjectStore(storeName, { keyPath })
+            else req.result.createObjectStore(storeName)
           }
           req.onsuccess = () => resolve(req.result)
           req.onerror = () => { dbPromise = null; reject(req.error) }
@@ -47,9 +46,8 @@ export function openIdb(
   return new Promise((resolve, reject) => {
     const req = indexedDB.open(dbName, 1)
     req.onupgradeneeded = () => {
-      keyPath
-        ? req.result.createObjectStore(storeName, { keyPath })
-        : req.result.createObjectStore(storeName)
+      if (keyPath) req.result.createObjectStore(storeName, { keyPath })
+      else req.result.createObjectStore(storeName)
     }
     req.onsuccess = () => resolve(req.result)
     req.onerror = () => reject(req.error)

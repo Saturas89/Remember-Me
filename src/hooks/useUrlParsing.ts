@@ -62,7 +62,7 @@ export function useUrlParsing(): UrlParsingState {
         history.replaceState({}, '', '/')
       })
       .finally(() => setUrlParsing(false))
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [])
 
   return {
     incomingPack,

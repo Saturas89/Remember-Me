@@ -114,7 +114,7 @@ export function PrivateSyncSetupView({ onComplete }: Props) {
         setLoading(false)
       }
     })()
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [])
 
   async function handleGoogleSignIn() {
     if (!provider) return

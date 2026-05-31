@@ -116,7 +116,7 @@ function oauthLog(message: string, data?: Record<string, unknown>): void {
     const dev = (import.meta as unknown as { env?: { DEV?: boolean } }).env?.DEV === true
     const flag = typeof localStorage !== 'undefined' && localStorage.getItem('rm-debug-oauth') === '1'
     if (!dev && !flag) return
-    // eslint-disable-next-line no-console
+
     console.log(`[oauth] ${message}`, data ?? '')
   } catch {
     /* logging must never throw */
