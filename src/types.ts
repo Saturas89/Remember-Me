@@ -138,6 +138,17 @@ export interface PrivateSyncState {
 
 export type AppMode = 'simple' | 'full'
 
+/** Soft-deletion registry (tombstones). Maps a deleted record's id to the ISO
+ *  timestamp it was deleted, per collection. Without this, a record removed on
+ *  one device gets resurrected by another device on the next sync because the
+ *  union-merge can't tell "never seen" from "deliberately deleted". */
+export interface DeletionTombstones {
+  answers?: Record<string, string>
+  friends?: Record<string, string>
+  friendAnswers?: Record<string, string>
+  customQuestions?: Record<string, string>
+}
+
 export interface AppState {
   /** Schema version of this persisted state (see lib/appStateSchema). Absent on
    *  states written before versioning was introduced ⇒ treated as version 1. */
@@ -160,6 +171,8 @@ export interface AppState {
   privateSync?: PrivateSyncState
   /** Undefined ⇒ user hasn't picked yet (triggers mode-choice in onboarding). */
   appMode?: AppMode
+  /** Tombstones for records deleted on this (or a synced) device. */
+  deletions?: DeletionTombstones
 }
 
 export interface OnlineSharingState {
