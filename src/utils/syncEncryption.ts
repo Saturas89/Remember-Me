@@ -21,6 +21,7 @@
 // upgrading from the H1-prefix release.
 
 import type { AppState } from '../types'
+import { isAppStateShape } from '../lib/appStateSchema'
 import { encryptText, decryptText } from './recoveryCode'
 import { SyncError } from './privateSyncProvider'
 import { toB64u, fromB64u } from './base64url'
@@ -103,7 +104,14 @@ export async function decryptSyncEnvelope<TManifest>(
   vaultKey: CryptoKey,
 ): Promise<EncryptedPayload<TManifest>> {
   const plain = await decryptText(envelope.ciphertext, envelope.iv, vaultKey)
-  return JSON.parse(plain) as EncryptedPayload<TManifest>
+  const payload = JSON.parse(plain) as EncryptedPayload<TManifest>
+  // Structural guard: AES-GCM proves the bytes are authentic, but a payload
+  // from an incompatible client version could still be the wrong shape and
+  // crash the merge. Reject it cleanly instead.
+  if (!isAppStateShape(payload?.state)) {
+    throw new Error('Sync-Envelope enthält keinen gültigen App-Zustand')
+  }
+  return payload
 }
 
 // ── Media blob encryption ────────────────────────────────────────────────────

@@ -12,6 +12,7 @@
 // plaintext and parsed directly; the next save re-encrypts it.
 
 import type { AppState } from '../types'
+import { isAppStateShape, CURRENT_APP_SCHEMA_VERSION } from '../lib/appStateSchema'
 
 const STORAGE_KEY = 'remember-me-state'
 const KEY_DB = 'rm-state-key'
@@ -148,10 +149,12 @@ export async function loadStoredState(): Promise<AppState | null> {
     if (!raw) return null
     const json = await decryptStored(raw)
     const parsed: unknown = JSON.parse(json)
-    if (!parsed || typeof parsed !== 'object') return null
-    const state = parsed as AppState
-    _currentState = state
-    return state
+    // Structural guard: a corrupt write or a payload from an incompatible
+    // client version must not crash the whole app on first render. Treat an
+    // unrecognizable shape like an empty store so the app starts cleanly.
+    if (!isAppStateShape(parsed)) return null
+    _currentState = parsed
+    return parsed
   } catch {
     return null
   }
@@ -167,7 +170,7 @@ export async function loadStoredState(): Promise<AppState | null> {
  */
 export function saveState(state: AppState): void {
   _currentState = state
-  const json = JSON.stringify(state)
+  const json = JSON.stringify({ schemaVersion: CURRENT_APP_SCHEMA_VERSION, ...state })
   const seq = ++_writeSeq
   try {
     localStorage.setItem(STORAGE_KEY, json)

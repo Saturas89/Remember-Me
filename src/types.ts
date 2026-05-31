@@ -139,6 +139,9 @@ export interface PrivateSyncState {
 export type AppMode = 'simple' | 'full'
 
 export interface AppState {
+  /** Schema version of this persisted state (see lib/appStateSchema). Absent on
+   *  states written before versioning was introduced ⇒ treated as version 1. */
+  schemaVersion?: number
   profile: Profile | null
   answers: Record<string, Answer>
   friends: Friend[]

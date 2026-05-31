@@ -2,6 +2,7 @@ import type { AppState, SyncProviderType } from '../types'
 import type { SyncProvider, MediaStoreAccessor, PullResult } from './privateSyncProvider'
 import { SyncError } from './privateSyncProvider'
 import { mergeStates } from './privateSyncMerge'
+import { isAppStateShape } from '../lib/appStateSchema'
 import {
   encryptText,
   decryptText,
@@ -119,11 +120,16 @@ export class SupabaseSyncProvider implements SyncProvider {
     let remote: AppState
     let remoteVersion = 0
     if ('state' in parsed && typeof (parsed as { envelopeVersion?: unknown }).envelopeVersion === 'number') {
-      const wrapped = parsed as { state: AppState; envelopeVersion: number }
+      const wrapped = parsed as { state: unknown; envelopeVersion: number }
+      if (!isAppStateShape(wrapped.state)) {
+        throw new SyncError('Ungültiger Sync-Stand: Daten konnten nicht gelesen werden', 'unknown')
+      }
       remote = wrapped.state
       remoteVersion = wrapped.envelopeVersion
+    } else if (isAppStateShape(parsed)) {
+      remote = parsed
     } else {
-      remote = parsed as AppState
+      throw new SyncError('Ungültiger Sync-Stand: Daten konnten nicht gelesen werden', 'unknown')
     }
 
     const lastSeen = await loadLastSeenVersion(userId)
