@@ -50,10 +50,20 @@ function mergeAnswers(
 
 /**
  * Union-merge two id-keyed collections. Items present only on the remote side
- * are appended so a freshly set-up device actually receives them; on an id
- * clash the local item wins (these records carry no `updatedAt`, and local is
- * the device the user is actively editing). Local order is preserved, with
- * remote-only items appended in remote order for determinism.
+ * are appended so a freshly set-up device actually receives them. Local order
+ * is preserved, with remote-only items appended in remote order for
+ * determinism.
+ *
+ * On an id clash the side with the newer `createdAtOf` wins; ties keep the
+ * local item. These records have no `updatedAt`, so `createdAtOf` is the only
+ * recency signal — and for records that are *replaced* on edit (notably
+ * `friendAnswer`, whose id is the deterministic `friendId-questionId` and whose
+ * `createdAt` is re-stamped on every (re-)import) it is exactly the right one:
+ * a friend's corrected resubmission imported on device A then propagates to
+ * device B instead of B silently keeping its stale copy forever. For records
+ * whose `createdAt` never changes after creation (`friend.addedAt`,
+ * `customQuestion.createdAt`) the timestamps are equal, so the tie-break keeps
+ * local and behaviour is unchanged.
  *
  * Deletions propagate via tombstones: an item is dropped when a tombstone for
  * its id exists, unless the item's own creation timestamp is newer than the
@@ -66,9 +76,15 @@ function mergeById<T extends { id: string }>(
   createdAtOf: (item: T) => string | undefined,
 ): T[] {
   const byId = new Map<string, T>()
-  // Local first so it wins the id clash; remote-only items appended after.
+  // Local first so it holds the slot (and its insertion order); a remote item
+  // only displaces it on clash when strictly newer, and Map.set preserves the
+  // existing key's position. Remote-only items are appended in remote order.
   for (const item of local) if (!byId.has(item.id)) byId.set(item.id, item)
-  for (const item of remote) if (!byId.has(item.id)) byId.set(item.id, item)
+  for (const item of remote) {
+    const existing = byId.get(item.id)
+    if (!existing) byId.set(item.id, item)
+    else if (newerTimestamp(createdAtOf(item), createdAtOf(existing))) byId.set(item.id, item)
+  }
 
   const result: T[] = []
   for (const item of byId.values()) {

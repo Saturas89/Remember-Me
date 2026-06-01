@@ -196,9 +196,8 @@ describe('mergeStates – Union-Merge der Content-Collections', () => {
   const customQuestion = (id: string, text: string): CustomQuestion => ({
     id, text, type: 'text', createdAt: '2024-01-01T00:00:00.000Z',
   })
-  const friendAnswer = (id: string, value: string): FriendAnswer => ({
-    id, friendId: 'f1', friendName: 'F', questionId: 'q1', value,
-    createdAt: '2024-01-01T00:00:00.000Z',
+  const friendAnswer = (id: string, value: string, createdAt = '2024-01-01T00:00:00.000Z'): FriendAnswer => ({
+    id, friendId: 'f1', friendName: 'F', questionId: 'q1', value, createdAt,
   })
 
   it('M-12: Neues Gerät (leer lokal) erhält Remote friends/customQuestions/friendAnswers', () => {
@@ -228,12 +227,43 @@ describe('mergeStates – Union-Merge der Content-Collections', () => {
     expect(merged.customQuestions.map(q => q.id)).toEqual(['c1', 'c2'])
   })
 
-  it('M-14: ID-Konflikt → lokaler Eintrag gewinnt', () => {
+  it('M-14: ID-Konflikt bei gleichem createdAt → lokaler Eintrag gewinnt (Tie)', () => {
+    // friend.addedAt ist nach dem Anlegen stabil ⇒ Timestamps gleich ⇒ Tie ⇒ lokal.
     const local = makeState({ friends: [friend('f1', 'Anna-lokal')] })
     const remote = makeState({ friends: [friend('f1', 'Anna-remote')] })
     const merged = mergeStates(local, remote)
     expect(merged.friends).toHaveLength(1)
     expect(merged.friends[0].name).toBe('Anna-lokal')
+  })
+
+  it('M-14b: ID-Konflikt → neuerer createdAt gewinnt (Freund-Antwort neu eingespielt)', () => {
+    // Geräte-übergreifender Re-Import: Freund korrigiert seine Antwort, Gerät A
+    // spielt sie neu ein (createdAt re-stamped). Gerät B (local) hält noch die
+    // alte – darf sie NICHT behalten, sonst divergieren die Geräte dauerhaft.
+    const local = makeState({
+      friendAnswers: [friendAnswer('f1-q1', 'alt', '2024-01-01T00:00:00.000Z')],
+    })
+    const remote = makeState({
+      friendAnswers: [friendAnswer('f1-q1', 'korrigiert', '2024-03-01T00:00:00.000Z')],
+    })
+    const merged = mergeStates(local, remote)
+    expect(merged.friendAnswers).toHaveLength(1)
+    expect(merged.friendAnswers[0].value).toBe('korrigiert')
+  })
+
+  it('M-14c: ID-Konflikt → älterer Remote-createdAt verliert (Position bleibt erhalten)', () => {
+    const local = makeState({
+      friendAnswers: [
+        friendAnswer('f1-q1', 'lokal-neu', '2024-03-01T00:00:00.000Z'),
+        friendAnswer('f1-q2', 'zweite', '2024-01-01T00:00:00.000Z'),
+      ],
+    })
+    const remote = makeState({
+      friendAnswers: [friendAnswer('f1-q1', 'remote-alt', '2024-01-01T00:00:00.000Z')],
+    })
+    const merged = mergeStates(local, remote)
+    expect(merged.friendAnswers.map(a => a.id)).toEqual(['f1-q1', 'f1-q2'])
+    expect(merged.friendAnswers[0].value).toBe('lokal-neu')
   })
 })
 
