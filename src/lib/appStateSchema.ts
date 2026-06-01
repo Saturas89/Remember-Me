@@ -3,11 +3,13 @@ import type { AppState } from '../types'
 /**
  * On-disk / on-wire schema version of the persisted AppState.
  *
- * Stamped onto every save and onto every sync envelope. Today it is only
- * recorded (the structure has been backward-compatible so far), but having an
- * explicit version is the hook point for a real migration step the day a
- * breaking field change lands — instead of the ad-hoc, hard-coded migrations
- * currently scattered through useAnswers.
+ * Stamped onto every localStorage save. On load, `loadStoredState` refuses a
+ * payload whose version is greater than this constant (a future client may
+ * carry field changes an older build cannot safely interpret); missing/equal/
+ * older versions load normally, as the structure has been backward-compatible
+ * so far. The constant is also the hook point for a real forward-migration step
+ * the day a breaking field change lands — instead of the ad-hoc, hard-coded
+ * migrations currently scattered through useAnswers.
  */
 export const CURRENT_APP_SCHEMA_VERSION = 1
 

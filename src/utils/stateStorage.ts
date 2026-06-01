@@ -149,6 +149,18 @@ export async function loadStoredState(): Promise<AppState | null> {
     if (!raw) return null
     const json = await decryptStored(raw)
     const parsed: unknown = JSON.parse(json)
+    // Version guard: a payload stamped by a *future* client (schemaVersion
+    // greater than this build understands) may carry field changes we cannot
+    // safely interpret. Refuse it rather than load it as-if-current and risk
+    // corrupting it on the next save. A missing/equal/older version is fine —
+    // older states have stayed backward-compatible and are normalized below.
+    if (
+      parsed && typeof parsed === 'object' &&
+      typeof (parsed as { schemaVersion?: unknown }).schemaVersion === 'number' &&
+      (parsed as { schemaVersion: number }).schemaVersion > CURRENT_APP_SCHEMA_VERSION
+    ) {
+      return null
+    }
     // Structural guard: a corrupt write or a payload from an incompatible
     // client version must not crash the whole app on first render. Treat an
     // unrecognizable shape like an empty store so the app starts cleanly.
