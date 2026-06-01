@@ -20,15 +20,16 @@ export const CURRENT_APP_SCHEMA_VERSION = 1
  * AppState` would sail through and then crash deep inside a render (e.g.
  * `Object.values(answers)` on a non-object).
  *
- * Intentionally lenient — only `answers` is hard-required (the app cannot
- * function without its map). The list collections are validated only when
- * present so older states that predate a field still load and get normalized
- * by the loader downstream.
+ * Intentionally lenient: it only rejects values that would actually crash the
+ * app (a non-object, or a field that exists with the wrong type). Every field
+ * is optional — partial states such as `{ streak, appMode }` are valid because
+ * the loader downstream normalizes missing collections to their empty defaults
+ * (and several flows, e.g. notification seeds, persist exactly such partials).
  */
 export function isAppStateShape(x: unknown): x is AppState {
-  if (!x || typeof x !== 'object') return false
+  if (!x || typeof x !== 'object' || Array.isArray(x)) return false
   const s = x as Record<string, unknown>
-  if (typeof s.answers !== 'object' || s.answers === null || Array.isArray(s.answers)) return false
+  if (s.answers !== undefined && (typeof s.answers !== 'object' || s.answers === null || Array.isArray(s.answers))) return false
   if (s.friends !== undefined && !Array.isArray(s.friends)) return false
   if (s.friendAnswers !== undefined && !Array.isArray(s.friendAnswers)) return false
   if (s.customQuestions !== undefined && !Array.isArray(s.customQuestions)) return false

@@ -18,17 +18,24 @@ describe('isAppStateShape', () => {
     expect(isAppStateShape({ profile: null, answers: {} })).toBe(true)
   })
 
+  it('accepts a partial state without answers (loader normalizes it)', () => {
+    expect(isAppStateShape({ streak: { current: 0, longest: 1, lastAnswerDate: '' }, appMode: 'full' })).toBe(true)
+    expect(isAppStateShape({ profile: null })).toBe(true)
+    expect(isAppStateShape({})).toBe(true)
+  })
+
   it('rejects non-objects', () => {
     expect(isAppStateShape(null)).toBe(false)
     expect(isAppStateShape(undefined)).toBe(false)
     expect(isAppStateShape('x')).toBe(false)
     expect(isAppStateShape(42)).toBe(false)
+    expect(isAppStateShape([])).toBe(false)
   })
 
-  it('rejects a missing or non-object answers map', () => {
-    expect(isAppStateShape({ profile: null })).toBe(false)
+  it('rejects an answers field present with the wrong type', () => {
     expect(isAppStateShape({ answers: [] })).toBe(false)
     expect(isAppStateShape({ answers: null })).toBe(false)
+    expect(isAppStateShape({ answers: 'nope' })).toBe(false)
   })
 
   it('rejects list collections that are not arrays', () => {
