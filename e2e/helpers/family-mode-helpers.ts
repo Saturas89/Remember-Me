@@ -61,13 +61,23 @@ export const openFriendsTab = openFamilyTab
 export async function openFamilyHub(page: Page) {
   // Inject onlineSharing.enabled if not already set.
   await page.evaluate(() => {
-    type Bridge = { get: () => Record<string, unknown> | null; save: (s: unknown) => void }
+    type Bridge = { get: () => Record<string, unknown> | null; save?: (s: unknown) => void }
     const bridge = (window as unknown as { __rmState?: Bridge }).__rmState
     const state: Record<string, unknown> = bridge?.get() ?? {}
     const os = state.onlineSharing as Record<string, unknown> | undefined
     if (!os?.enabled) {
       state.onlineSharing = { enabled: true, activatedAt: new Date().toISOString() }
-      bridge?.save(state)
+      if (bridge?.save) {
+        // E2E build (VITE_E2E=true): update in-memory state via bridge.
+        bridge.save(state)
+      } else {
+        // Production build: bridge.save is not exposed. Write onlineSharing
+        // directly to localStorage so the next page.goto picks it up.
+        const raw = localStorage.getItem('remember-me-state')
+        const stored: Record<string, unknown> = raw ? JSON.parse(raw) : {}
+        stored.onlineSharing = { enabled: true, activatedAt: new Date().toISOString() }
+        localStorage.setItem('remember-me-state', JSON.stringify(stored))
+      }
     }
   })
   await page.goto('/friends')
