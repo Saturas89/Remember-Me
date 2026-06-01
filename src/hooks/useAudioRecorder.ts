@@ -153,7 +153,7 @@ export function useAudioRecorder(): UseAudioRecorder {
     }, 1000)
 
     setRecState('recording')
-  }, [])  // eslint-disable-line react-hooks/exhaustive-deps
+  }, [])
 
   // Internal stop – does not depend on state
   function stopRecording() {
@@ -171,7 +171,7 @@ export function useAudioRecorder(): UseAudioRecorder {
     }
   }
 
-  const stop = useCallback(() => stopRecording(), [])  // eslint-disable-line react-hooks/exhaustive-deps
+  const stop = useCallback(() => stopRecording(), [])
 
   const cancel = useCallback(() => {
     cleanup()

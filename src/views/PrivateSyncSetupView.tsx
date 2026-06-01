@@ -9,6 +9,7 @@ import {
   cacheKdfParams,
   freshKdfParams,
   legacyKdfParams,
+  decryptText,
   type KdfParams,
 } from '../utils/recoveryCode'
 import { getSyncSupabaseClient } from '../utils/privateSyncClient'
@@ -113,7 +114,7 @@ export function PrivateSyncSetupView({ onComplete }: Props) {
         setLoading(false)
       }
     })()
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [])
 
   async function handleGoogleSignIn() {
     if (!provider) return
@@ -397,7 +398,6 @@ export function PrivateSyncSetupView({ onComplete }: Props) {
           .eq('user_id', userId)
           .single()
         if (data) {
-          const { decryptText } = await import('../utils/recoveryCode')
           // Throws on wrong key → caught below.
           await decryptText(data.state_ct as string, data.state_iv as string, key)
         }
@@ -440,7 +440,7 @@ export function PrivateSyncSetupView({ onComplete }: Props) {
       onComplete(provider, userId)
     } catch {
       // Drop the cached key on a failed verification so the user can try again.
-      await import('../utils/recoveryCode').then(m => m.clearCachedVaultKey(userId)).catch(() => {})
+      await clearCachedVaultKey(userId).catch(() => {})
       setCodeError(s.enterCodeError)
     } finally {
       setLoading(false)

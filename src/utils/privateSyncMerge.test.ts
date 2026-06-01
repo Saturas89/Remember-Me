@@ -236,3 +236,72 @@ describe('mergeStates – Union-Merge der Content-Collections', () => {
     expect(merged.friends[0].name).toBe('Anna-lokal')
   })
 })
+
+describe('mergeStates – Tombstones (Löschungen propagieren)', () => {
+  const friend = (id: string, name: string, addedAt = '2024-01-01T00:00:00.000Z'): Friend => ({
+    id, name, addedAt,
+  })
+  const customQuestion = (id: string, text: string): CustomQuestion => ({
+    id, text, type: 'text', createdAt: '2024-01-01T00:00:00.000Z',
+  })
+
+  it('M-15: lokale Löschung verdrängt die Remote-Antwort statt sie wiederzubeleben', () => {
+    const local = makeState({
+      answers: {},
+      deletions: { answers: { A: '2024-02-01T00:00:00.000Z' } },
+    })
+    const remote = makeState({
+      answers: { A: makeAnswer('A', 'remote', '2024-01-15T00:00:00.000Z') },
+    })
+    const merged = mergeStates(local, remote)
+    expect(merged.answers.A).toBeUndefined()
+    // Tombstone bleibt erhalten, damit auch ein drittes Gerät die Löschung sieht.
+    expect(merged.deletions?.answers?.A).toBe('2024-02-01T00:00:00.000Z')
+  })
+
+  it('M-16: Antwort, die nach der Löschung neu beantwortet wurde, überlebt', () => {
+    const local = makeState({
+      answers: { A: makeAnswer('A', 'neu', '2024-03-01T00:00:00.000Z') },
+      deletions: { answers: { A: '2024-02-01T00:00:00.000Z' } },
+    })
+    const remote = makeState({ answers: {} })
+    const merged = mergeStates(local, remote)
+    expect(merged.answers.A?.value).toBe('neu')
+  })
+
+  it('M-17: Tombstone für einen Freund entfernt ihn aus dem Union-Merge', () => {
+    const local = makeState({
+      friends: [],
+      deletions: { friends: { f1: '2024-02-01T00:00:00.000Z' } },
+    })
+    const remote = makeState({ friends: [friend('f1', 'Anna')] })
+    const merged = mergeStates(local, remote)
+    expect(merged.friends).toHaveLength(0)
+  })
+
+  it('M-18: nach der Löschung neu hinzugefügter Freund (neuerer addedAt) bleibt', () => {
+    const local = makeState({
+      friends: [friend('f1', 'Anna-neu', '2024-03-01T00:00:00.000Z')],
+      deletions: { friends: { f1: '2024-02-01T00:00:00.000Z' } },
+    })
+    const remote = makeState({ friends: [] })
+    const merged = mergeStates(local, remote)
+    expect(merged.friends.map(f => f.id)).toEqual(['f1'])
+  })
+
+  it('M-19: Tombstones beider Seiten werden vereinigt (jüngster Zeitstempel gewinnt)', () => {
+    const local = makeState({
+      deletions: { customQuestions: { c1: '2024-02-01T00:00:00.000Z' } },
+    })
+    const remote = makeState({
+      customQuestions: [customQuestion('c1', 'A?')],
+      deletions: { customQuestions: { c2: '2024-03-01T00:00:00.000Z' } },
+    })
+    const merged = mergeStates(local, remote)
+    expect(merged.customQuestions).toHaveLength(0)
+    expect(merged.deletions?.customQuestions).toEqual({
+      c1: '2024-02-01T00:00:00.000Z',
+      c2: '2024-03-01T00:00:00.000Z',
+    })
+  })
+})

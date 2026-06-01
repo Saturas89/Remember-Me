@@ -94,7 +94,7 @@ export function useNavigation({
     const onPopstate = () => setView(pathToView(window.location.pathname))
     window.addEventListener('popstate', onPopstate)
     return () => window.removeEventListener('popstate', onPopstate)
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [])
 
   // Redirect hidden routes to home whenever simple mode is active.
   // Covers initial landing on a deep link (/friends, /sync) as well as
@@ -105,7 +105,7 @@ export function useNavigation({
       history.replaceState({}, '', '/')
       setView({ name: 'home' })
     }
-  }, [isSimple, view.name]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [isSimple, view.name])
 
   // Redirect /friends deep-links to the correct sub-view
   useEffect(() => {

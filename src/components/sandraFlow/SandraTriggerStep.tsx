@@ -34,7 +34,7 @@ export function SandraTriggerStep({ t, locale, anrede, onBack, onPick, onPickFre
             <button
               key={tr.id}
               type="button"
-              className="friend-card sandra-trigger-card"
+              className="family-card sandra-trigger-card"
               onClick={() => onPick(tr.id)}
               data-testid={`sandra-trigger-${tr.id}`}
             >
@@ -55,7 +55,7 @@ export function SandraTriggerStep({ t, locale, anrede, onBack, onPick, onPickFre
             <button
               key={tr.id}
               type="button"
-              className="friend-card sandra-trigger-card sandra-trigger-card--accent"
+              className="family-card sandra-trigger-card sandra-trigger-card--accent"
               onClick={() => onPick(tr.id)}
               data-testid={`sandra-trigger-${tr.id}`}
             >

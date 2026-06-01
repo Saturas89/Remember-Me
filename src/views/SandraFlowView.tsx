@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback, useMemo } from 'react'
 import { useTranslation } from '../locales'
 import { findTrigger } from '../data/loadPersonalQuestions'
 import { buildPersonalPack } from '../lib/sandraFlow/packBuilder'
+import { storePendingInvite } from '../utils/inviteLogStore'
 import type { ContactHandshake } from '../types'
 import type {
   ComposedQuestion,
@@ -218,7 +219,6 @@ export function SandraFlowView({
         displayName: profileName,
       }
       const { createInviteAndGetUrl } = await import('../utils/inviteService')
-      const { storePendingInvite } = await import('../utils/inviteLogStore')
       const url = await createInviteAndGetUrl(pack, handshake)
       const code = url.split('/join/').pop() ?? ''
       if (code) await storePendingInvite(code).catch(() => {})

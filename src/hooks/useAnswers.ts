@@ -1,6 +1,8 @@
 import { useState, useCallback, useEffect } from 'react'
 import { BACKUP_TYPE } from '../utils/export'
 import { initStorageKey, loadStoredState, saveState } from '../utils/stateStorage'
+import { answerHasContent } from '../lib/answerContent'
+import { recordDeletions } from '../lib/tombstones'
 import type { Profile, AppState, AppMode, Answer, Friend, FriendAnswer, AnswerExport, CustomQuestion, FriendAnswerZipPayload, OnlineSharingState, PrivateSyncState } from '../types'
 
 /** REQ-022 migration: old Friends stored without `online.shareAll` get
@@ -164,8 +166,15 @@ export function useAnswers() {
 
   const deleteAnswer = useCallback((questionId: string) => {
     setState(prev => {
+      const removed = prev.answers[questionId]
       const { [questionId]: _removed, ...rest } = prev.answers
-      const next: AppState = { ...prev, answers: rest }
+      const next: AppState = {
+        ...prev,
+        answers: rest,
+        deletions: removed
+          ? recordDeletions(prev.deletions, 'answers', [removed.id])
+          : prev.deletions,
+      }
       saveState(next)
       return next
     })
@@ -222,10 +231,17 @@ export function useAnswers() {
 
   const removeFriend = useCallback((friendId: string) => {
     setState(prev => {
+      const removedAnswerIds = prev.friendAnswers
+        .filter(a => a.friendId === friendId)
+        .map(a => a.id)
+      const at = new Date().toISOString()
+      let deletions = recordDeletions(prev.deletions, 'friends', [friendId], at)
+      deletions = recordDeletions(deletions, 'friendAnswers', removedAnswerIds, at)
       const next: AppState = {
         ...prev,
         friends: prev.friends.filter(f => f.id !== friendId),
         friendAnswers: prev.friendAnswers.filter(a => a.friendId !== friendId),
+        deletions,
       }
       saveState(next)
       return next
@@ -350,6 +366,7 @@ export function useAnswers() {
       const next: AppState = {
         ...prev,
         customQuestions: prev.customQuestions.filter(q => q.id !== id),
+        deletions: recordDeletions(prev.deletions, 'customQuestions', [id]),
       }
       saveState(next)
       return next
@@ -619,13 +636,7 @@ export function useAnswers() {
   const getCategoryProgress = useCallback(
     (categoryId: string, totalQuestions: number): number => {
       const answered = Object.values(state.answers).filter(
-        a =>
-          a.categoryId === categoryId &&
-          (a.value.trim() !== '' ||
-           (a.imageIds?.length ?? 0) > 0 ||
-           (a.videoIds?.length ?? 0) > 0 ||
-           !!a.audioId ||
-           !!a.audioTranscript),
+        a => a.categoryId === categoryId && answerHasContent(a),
       ).length
       return totalQuestions > 0 ? Math.round((answered / totalQuestions) * 100) : 0
     },

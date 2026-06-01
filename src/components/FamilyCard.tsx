@@ -1,5 +1,6 @@
 import type { Friend, FriendAnswer } from '../types'
 import { FRIEND_QUESTIONS } from '../data/friendQuestions'
+import { answerHasContent } from '../lib/answerContent'
 import { useTranslation } from '../locales'
 
 function avatarColor(name: string): string {
@@ -7,9 +8,9 @@ function avatarColor(name: string): string {
   return `hsl(${hue}, 55%, 38%)`
 }
 
-/** Pick the most recent createdAt among answers as the friend's last activity.
- *  Maps to a relative-date string via the locale, so Sandra can spot inactive
- *  contributors without having to ask via WhatsApp (#167). */
+/** Pick the most recent createdAt among answers as the family member's last
+ *  activity. Maps to a relative-date string via the locale, so Sandra can spot
+ *  inactive contributors without having to ask via WhatsApp (#167). */
 function formatLastActive(
   iso: string,
   s: ReturnType<typeof useTranslation>['t']['friends'],
@@ -32,9 +33,9 @@ interface Props {
   onRemove: () => void
 }
 
-export function FriendCard({ friend, answers, onRemove }: Props) {
+export function FamilyCard({ friend, answers, onRemove }: Props) {
   const { t } = useTranslation()
-  const answered = answers.filter(a => a.value.trim() || (a.imageIds?.length ?? 0) > 0 || (a.videoIds?.length ?? 0) > 0 || !!a.audioId).length
+  const answered = answers.filter(answerHasContent).length
   const progress = Math.round((answered / FRIEND_QUESTIONS.length) * 100)
 
   // Most recent activity = latest createdAt across substantive answers.
@@ -46,27 +47,27 @@ export function FriendCard({ friend, answers, onRemove }: Props) {
   const lastActiveLabel = formatLastActive(lastActivityIso, t.friends)
 
   return (
-    <div className="friend-card">
-      <div className="friend-card__avatar" style={{ background: avatarColor(friend.name) }}>
+    <div className="family-card">
+      <div className="family-card__avatar" style={{ background: avatarColor(friend.name) }}>
         {friend.name.charAt(0).toUpperCase()}
       </div>
-      <div className="friend-card__body">
-        <span className="friend-card__name">{friend.name}</span>
-        <span className="friend-card__status">
+      <div className="family-card__body">
+        <span className="family-card__name">{friend.name}</span>
+        <span className="family-card__status">
           {answered > 0
             ? t.friends.friendAnsweredCount
                 .replace('{answered}', String(answered))
                 .replace('{total}', String(FRIEND_QUESTIONS.length))
             : t.friends.friendNoAnswers}
         </span>
-        <span className="friend-card__last-active">{lastActiveLabel}</span>
+        <span className="family-card__last-active">{lastActiveLabel}</span>
         {answered > 0 && (
-          <div className="friend-progress-bar">
-            <div className="friend-progress-fill" style={{ width: `${progress}%` }} />
+          <div className="family-progress-bar">
+            <div className="family-progress-fill" style={{ width: `${progress}%` }} />
           </div>
         )}
       </div>
-      <div className="friend-card__actions">
+      <div className="family-card__actions">
         <button className="btn btn--ghost btn--sm" onClick={onRemove} title={t.friends.friendRemoveTitle}>
           ✕
         </button>

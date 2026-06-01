@@ -1535,7 +1535,7 @@
 }
 
 /* ── Friend card ─────────────────────────────────────── */
-.friend-card {
+.family-card {
   display: flex;
   align-items: center;
   gap: 1rem;
@@ -1545,7 +1545,7 @@
   padding: 1rem;
 }
 
-.friend-card__avatar {
+.family-card__avatar {
   width: 2.8rem;
   height: 2.8rem;
   border-radius: 50%;
@@ -1558,7 +1558,7 @@
   flex-shrink: 0;
 }
 
-.friend-card__body {
+.family-card__body {
   flex: 1;
   min-width: 0;
   display: flex;
@@ -1566,9 +1566,9 @@
   gap: 0.25rem;
 }
 
-.friend-card__name   { font-weight: 700; font-size: 0.97rem; color: var(--text); }
-.friend-card__status { font-size: 0.78rem; color: var(--text-muted); }
-.friend-card__last-active {
+.family-card__name   { font-weight: 700; font-size: 0.97rem; color: var(--text); }
+.family-card__status { font-size: 0.78rem; color: var(--text-muted); }
+.family-card__last-active {
   font-size: 0.74rem;
   color: var(--text-faint);
   font-style: italic;
@@ -1616,7 +1616,7 @@
   gap: 0.5rem;
 }
 
-.friend-progress-bar {
+.family-progress-bar {
   height: 4px;
   background: var(--surface-raised);
   border-radius: 2px;
@@ -1624,14 +1624,14 @@
   margin-top: 0.25rem;
 }
 
-.friend-progress-fill {
+.family-progress-fill {
   height: 100%;
   background: var(--success);
   border-radius: 2px;
   transition: width 0.3s ease;
 }
 
-.friend-card__actions { display: flex; gap: 0.4rem; flex-shrink: 0; }
+.family-card__actions { display: flex; gap: 0.4rem; flex-shrink: 0; }
 
 /* ── Friend answer view ──────────────────────────────── */
 .friend-welcome {
@@ -1901,7 +1901,7 @@
 }
 
 /* ── Sandra-first flow (REQ-020) ─────────────────────────────────────
-   Inherits Friends-tab tokens: friends-section / friend-card / share-cta-btn.
+   Inherits Friends-tab tokens: friends-section / family-card / share-cta-btn.
    Only adds what the existing Friends classes don't cover.
 
    Outer container mirrors `.home-view` / `.friends-view`: 720px max-width,
@@ -2020,7 +2020,7 @@
 
 /* Section variant: soft accent stripe for the "Über uns zwei" group.
    Earlier this had a tinted card background which fought visually with the
-   nested .friend-card surface – we now use a subtle border + accent-colored
+   nested .family-card surface – we now use a subtle border + accent-colored
    title so the section reads as "more intimate" without nesting cards. */
 .sandra-section--accent {
   position: relative;

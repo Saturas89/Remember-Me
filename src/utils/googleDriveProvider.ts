@@ -2,7 +2,13 @@ import type { AppState, SyncProviderType } from '../types'
 import type { SyncProvider, MediaStoreAccessor, PullResult } from './privateSyncProvider'
 import { SyncError } from './privateSyncProvider'
 import { mergeStates } from './privateSyncMerge'
-import { loadCachedVaultKey } from './recoveryCode'
+import {
+  loadCachedVaultKey,
+  loadKdfParams,
+  loadLastSeenVersion,
+  saveLastSeenVersion,
+  clearCachedVaultKey,
+} from './recoveryCode'
 import { openIdb, idbGet, idbPut, idbDelete } from './idb'
 import {
   encryptSyncEnvelope,
@@ -110,7 +116,7 @@ function oauthLog(message: string, data?: Record<string, unknown>): void {
     const dev = (import.meta as unknown as { env?: { DEV?: boolean } }).env?.DEV === true
     const flag = typeof localStorage !== 'undefined' && localStorage.getItem('rm-debug-oauth') === '1'
     if (!dev && !flag) return
-    // eslint-disable-next-line no-console
+
     console.log(`[oauth] ${message}`, data ?? '')
   } catch {
     /* logging must never throw */
@@ -472,8 +478,6 @@ export class GoogleDriveProvider implements SyncProvider {
     // (single-device users who never re-cached after the H7 upgrade) →
     // envelope falls back to schemaVersion=2, decrypt path treats it as
     // "salt = syncId, iter = 200_000".
-    const { loadKdfParams, loadLastSeenVersion, saveLastSeenVersion } =
-      await import('./recoveryCode')
     const cachedKdf = await loadKdfParams(syncId)
     const kdfMeta = cachedKdf
       ? { salt: btoa(String.fromCharCode(...cachedKdf.salt)), iterations: cachedKdf.iterations }
@@ -536,7 +540,6 @@ export class GoogleDriveProvider implements SyncProvider {
     // H5: reject a remote envelope whose version is below the locally
     // cached high-water mark — that signals a replay of a stale backup
     // (malicious server, recovered cached file, etc.).
-    const { loadLastSeenVersion, saveLastSeenVersion } = await import('./recoveryCode')
     const remoteVersion = typeof decrypted.envelopeVersion === 'number' ? decrypted.envelopeVersion : 0
     const lastSeen = await loadLastSeenVersion(syncId)
     if (remoteVersion < lastSeen) {
@@ -590,7 +593,6 @@ export class GoogleDriveProvider implements SyncProvider {
       } catch { /* best-effort */ }
     }
     if (this._syncId) {
-      const { clearCachedVaultKey } = await import('./recoveryCode')
       await clearCachedVaultKey(this._syncId).catch(() => {})
     }
     await clearToken()

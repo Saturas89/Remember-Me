@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { getCategoriesForLocale } from '../data/categories'
+import { answerHasContent } from '../lib/answerContent'
 import { getFriendQuestionsForLocale } from '../data/friendQuestions'
 import { localeTag } from '../utils/localeDate'
 import { ImageAttachment } from '../components/ImageAttachment'
@@ -53,8 +54,7 @@ export function ArchiveView({
 
   const friendAnswersByFriendId = useMemo(() => {
     return friendAnswers.reduce((acc, a) => {
-      const hasContent = a.value.trim() || (a.imageIds?.length ?? 0) > 0 || (a.videoIds?.length ?? 0) > 0 || !!a.audioId
-      if (hasContent) {
+      if (answerHasContent(a)) {
         acc[a.friendId] = acc[a.friendId] || []
         acc[a.friendId].push(a)
       }
@@ -149,13 +149,7 @@ export function ArchiveView({
 
   function hasContent(questionId: string) {
     const a = answers[questionId]
-    return a && (
-      a.value.trim() !== '' ||
-      (a.imageIds?.length ?? 0) > 0 ||
-      (a.videoIds?.length ?? 0) > 0 ||
-      !!a.audioId ||
-      !!a.audioTranscript
-    )
+    return Boolean(a && answerHasContent(a))
   }
 
   function displayDate(answer: Answer): string {
@@ -268,7 +262,7 @@ export function ArchiveView({
           onSaveAudio={(transcript, blob, replaceText) =>
             handleSaveAudio(questionId, categoryId, transcript, blob, replaceText)
           }
-          onRemoveAudio={() => handleDeleteAudio(questionId, categoryId, answer?.audioId!)}
+          onRemoveAudio={() => handleDeleteAudio(questionId, categoryId, answer?.audioId ?? '')}
         />
         <div className="archive-entry__edit-actions">
           <button
