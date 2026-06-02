@@ -71,12 +71,11 @@ export async function openFamilyHub(page: Page) {
         // E2E build (VITE_E2E=true): update in-memory state via bridge.
         bridge.save(state)
       } else {
-        // Production build: bridge.save is not exposed. Write onlineSharing
-        // directly to localStorage so the next page.goto picks it up.
-        const raw = localStorage.getItem('remember-me-state')
-        const stored: Record<string, unknown> = raw ? JSON.parse(raw) : {}
-        stored.onlineSharing = { enabled: true, activatedAt: new Date().toISOString() }
-        localStorage.setItem('remember-me-state', JSON.stringify(stored))
+        // Production build: bridge.save is not exposed. Write the full
+        // in-memory state (already has onlineSharing set above) as plaintext
+        // JSON. loadStoredState() treats values without "enc1:" as legacy
+        // plaintext and re-encrypts on the next save, so this is safe.
+        localStorage.setItem('remember-me-state', JSON.stringify(state))
       }
     }
   })
