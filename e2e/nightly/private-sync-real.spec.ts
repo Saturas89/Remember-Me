@@ -241,7 +241,7 @@ test.describe('Private Sync – Storyhold Server (Real-DB)', () => {
       const now = new Date().toISOString()
       answers['sync-q1'] = { id: 'sync-q1', questionId: 'sync-q1', categoryId: 'childhood', value: 'Gesyncter Wert.', createdAt: now, updatedAt: now }
       state.answers = answers
-      bridge?.save(state)
+      bridge?.save?.(state)
     })
 
     await expect
@@ -300,7 +300,7 @@ test.describe('Private Sync – Storyhold Server (Real-DB)', () => {
       const now = new Date().toISOString()
       answers['rls-q1'] = { id: 'rls-q1', questionId: 'rls-q1', categoryId: 'family', value: 'Privat.', createdAt: now, updatedAt: now }
       state.answers = answers
-      bridge?.save(state)
+      bridge?.save?.(state)
     })
     await expect
       .poll(
@@ -353,7 +353,7 @@ test.describe('Private Sync – Storyhold Server (Real-DB)', () => {
         id: 'deact-q1', questionId: 'deact-q1', categoryId: 'childhood',
         value: 'Wird gelöscht.', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
       }
-      bridge?.save(state)
+      bridge?.save?.(state)
     })
     await expect
       .poll(
@@ -411,7 +411,7 @@ test.describe('Private Sync – Storyhold Server (Real-DB)', () => {
         id: 'newdev-q1', questionId: 'newdev-q1', categoryId: 'childhood',
         value: 'Zweites Gerät Test.', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
       }
-      bridge?.save(state)
+      bridge?.save?.(state)
     })
     await expect
       .poll(
@@ -466,7 +466,7 @@ test.describe('Private Sync – Storyhold Server (Real-DB)', () => {
 
     const testValue = 'Meine Kindheitserinnerung – Roundtrip-Test.'
     await page1.evaluate((val: string) => {
-      const bridge = (window as unknown as { __rmState?: { get: () => Record<string, unknown> | null; save: (s: unknown) => void } }).__rmState
+      const bridge = (window as unknown as { __rmState?: { get: () => Record<string, unknown> | null; save?: (s: unknown) => void } }).__rmState
       const state = bridge?.get() ?? {}
       // Use a real question ID from the childhood category so the ArchiveView
       // can find and render the answer (it looks up answers by category question id).
@@ -474,8 +474,22 @@ test.describe('Private Sync – Storyhold Server (Real-DB)', () => {
         id: 'childhood-02', questionId: 'childhood-02', categoryId: 'childhood',
         value: val, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
       }
-      bridge?.save(state)
+      if (bridge?.save) {
+        bridge.save(state)
+      } else {
+        // Production build: write plaintext so React picks it up on next load.
+        // loadStoredState() treats values without "enc1:" as legacy plaintext.
+        localStorage.setItem('remember-me-state', JSON.stringify(state))
+      }
     }, testValue)
+    // In production the page needs a reload so React re-hydrates the answer
+    // from localStorage into state before the sync debounce fires.
+    if (!await page1.evaluate(() =>
+      typeof (window as unknown as { __rmState?: { save?: unknown } }).__rmState?.save === 'function',
+    )) {
+      await page1.goto('/sync')
+      await expect(page1.getByRole('heading', { name: 'Privater Sync', exact: true })).toBeVisible({ timeout: 30_000 })
+    }
 
     // Warte bis Gerät 1 den verschlüsselten Blob hochgeladen hat
     await expect
@@ -541,7 +555,7 @@ test.describe('Private Sync – Storyhold Server (Real-DB)', () => {
 
     const loginTestValue = 'Relogin-Erinnerung.'
     await page1.evaluate((val: string) => {
-      const bridge = (window as unknown as { __rmState?: { get: () => Record<string, unknown> | null; save: (s: unknown) => void } }).__rmState
+      const bridge = (window as unknown as { __rmState?: { get: () => Record<string, unknown> | null; save?: (s: unknown) => void } }).__rmState
       const state = bridge?.get() ?? {}
       // Use a real question ID from the family category so the ArchiveView
       // can find and render the answer (it looks up answers by category question id).
@@ -549,8 +563,22 @@ test.describe('Private Sync – Storyhold Server (Real-DB)', () => {
         id: 'family-01', questionId: 'family-01', categoryId: 'family',
         value: val, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
       }
-      bridge?.save(state)
+      if (bridge?.save) {
+        bridge.save(state)
+      } else {
+        // Production build: write plaintext so React picks it up on next load.
+        // loadStoredState() treats values without "enc1:" as legacy plaintext.
+        localStorage.setItem('remember-me-state', JSON.stringify(state))
+      }
     }, loginTestValue)
+    // In production the page needs a reload so React re-hydrates the answer
+    // from localStorage into state before the sync debounce fires.
+    if (!await page1.evaluate(() =>
+      typeof (window as unknown as { __rmState?: { save?: unknown } }).__rmState?.save === 'function',
+    )) {
+      await page1.goto('/sync')
+      await expect(page1.getByRole('heading', { name: 'Privater Sync', exact: true })).toBeVisible({ timeout: 30_000 })
+    }
 
     await expect
       .poll(
